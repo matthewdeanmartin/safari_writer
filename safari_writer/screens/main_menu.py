@@ -82,7 +82,7 @@ class MainMenuScreen(Screen):
         Binding("l", "menu_action('load')", "Load File", show=False),
         Binding("s", "menu_action('save')", "Save File", show=False),
         Binding("d", "menu_action('delete')", "Delete File", show=False),
-        Binding("f", "menu_action('format_disk')", "Format Disk", show=False),
+        Binding("f", "menu_action('new_folder')", "New Folder", show=False),
     ]
 
     def compose(self) -> ComposeResult:

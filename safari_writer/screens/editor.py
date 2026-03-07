@@ -16,6 +16,12 @@ CTRL_SUPER     = "\x06"  # superscript
 CTRL_SUB       = "\x07"  # subscript
 CTRL_PARA      = "\x10"  # paragraph mark (non-printing indent)
 CTRL_MERGE     = "\x11"  # mail merge @ marker
+CTRL_HEADER    = "\x12"  # header line marker
+CTRL_FOOTER    = "\x13"  # footer line marker
+CTRL_HEADING   = "\x14"  # section heading marker (followed by level digit 1-9)
+CTRL_EJECT     = "\x15"  # hard page break / page eject
+CTRL_CHAIN     = "\x16"  # chain print file (followed by filename)
+CTRL_FORM      = "\x17"  # form printing blank
 
 # Human-readable glyphs for control chars (shown in editor, not printed)
 CTRL_GLYPHS = {
@@ -28,7 +34,16 @@ CTRL_GLYPHS = {
     CTRL_SUB:       "↓",
     CTRL_PARA:      "¶",
     CTRL_MERGE:     "@",
+    CTRL_HEADER:    "H:",
+    CTRL_FOOTER:    "F:",
+    CTRL_HEADING:   "H",   # followed by level digit in buffer
+    CTRL_EJECT:     "↡",
+    CTRL_CHAIN:     "»",
+    CTRL_FORM:      "_",
 }
+
+# These markers toggle a rendering state — text after them is styled differently
+TOGGLE_MARKERS = {CTRL_BOLD, CTRL_UNDERLINE, CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB}
 
 EDITOR_CSS = """
 EditorScreen {
@@ -105,62 +120,108 @@ HelpScreen {
 """
 
 HELP_TEXT = (
-    "^X Cut  ^C Copy  ^V Paste  ^F Find  ^H Replace  "
-    "^B Bold  ^U Underline  ^E Center  "
-    "F1 Help  Esc Menu"
+    "^X Cut  ^C Copy  ^V Paste  ^F Find  ^B Bold  ^U Underline  "
+    "^E Center  ^G Elongate  F1 Help  Esc Menu"
 )
 
 HELP_CONTENT = """\
 NAVIGATION
-  Arrow keys          Move cursor
-  Ctrl+Left/Right     Jump word
-  Home / End          Line start / end
-  Ctrl+Home/End       Top / bottom of file
-  Page Up/Down        Scroll page
-  Tab                 Jump to next tab stop
+  Arrow keys              Move cursor (clears selection)
+  Shift+Arrow             Extend selection
+  Shift+Home/End          Extend selection to line start/end
+  Shift+Ctrl+Home/End     Extend selection to file start/end
+  Ctrl+Left/Right         Jump word
+  Home / End              Line start / end
+  Ctrl+Home/End           Top / bottom of file
+  Page Up/Down            Scroll page
+  Tab                     Jump to next tab stop
 
 EDITING
-  Insert              Toggle Insert / Type-over mode
-  Shift+F3            Toggle case of character at cursor
-  Ctrl+M              Insert paragraph mark (¶)
-  Enter               New line (hard carriage return)
+  Insert                  Toggle Insert / Type-over mode
+  Shift+F3                Toggle case of character at cursor
+  Ctrl+M                  Insert paragraph mark (¶)
+  Enter                   New line (hard carriage return)
 
 DELETION
-  Backspace           Delete character before cursor
-  Delete              Delete character at cursor
-  Shift+Delete        Delete to end of line (saved for Undelete)
-  Ctrl+Z              Undelete (restore last deleted line)
-  Ctrl+Shift+Delete   Delete to end of file
+  Backspace               Delete char before cursor (or selection)
+  Delete                  Delete char at cursor (or selection)
+  Shift+Delete            Delete to end of line (saved for Undelete)
+  Ctrl+Z                  Undelete (restore last deleted line)
+  Ctrl+Shift+Delete       Delete to end of file
 
 BLOCK OPERATIONS
-  Ctrl+X              Cut current line to clipboard
-  Ctrl+C              Copy current line to clipboard
-  Ctrl+V              Paste clipboard below cursor
-  Alt+W               Word count (whole file)
-  Alt+A               Alphabetize lines
+  Ctrl+X                  Cut selection (or current line) to clipboard
+  Ctrl+C                  Copy selection (or current line) to clipboard
+  Ctrl+V                  Paste clipboard at cursor (replaces selection)
+  Alt+W                   Word count (selection or whole file)
+  Alt+A                   Alphabetize selected lines (or all lines)
 
 SEARCH & REPLACE
-  Ctrl+F              Find (prompt for search string)
-  F3                  Find next occurrence
-  Ctrl+H              Set replacement string
-  Alt+F3              Replace current occurrence, find next
-  Alt+R               Global replace to end of file
+  Ctrl+F                  Find (prompt for search string)
+  F3                      Find next occurrence
+  Ctrl+H                  Set replacement string
+  Alt+F3                  Replace current occurrence, find next
+  Alt+R                   Global replace to end of file
 
-INLINE FORMATTING
-  Ctrl+B              Bold toggle (← marker)
-  Ctrl+U              Underline toggle (▄ marker)
-  Ctrl+E              Center line (↔ marker)
-  Ctrl+R              Flush right (→→ marker)
-  Alt+M               Mail merge field marker (@)
+INLINE FORMATTING (markers visible in editor, invisible when printed)
+  Ctrl+B                  Bold toggle          ← marker, bold text
+  Ctrl+U                  Underline toggle     ▄ marker, inverse-video text
+  Ctrl+G                  Elongated toggle     E marker, dim text
+  Ctrl+[                  Superscript toggle   ↑ marker, bright text
+  Ctrl+]                  Subscript toggle     ↓ marker, bright text
+  Ctrl+E                  Center line          ↔ marker at line start
+  Ctrl+R                  Flush right          →→ marker at line start
+  Ctrl+M                  Paragraph indent     ¶ marker
+  Alt+M                   Mail merge field     @ marker
+
+DOCUMENT STRUCTURE
+  Ctrl+Shift+H            Insert header line   (H: marker, own line)
+  Ctrl+Shift+F            Insert footer line   (F: marker, own line)
+  Ctrl+Shift+S            Insert section heading  (H + level 1-9)
+  Ctrl+Shift+E            Page eject / hard page break  (↡ marker)
+  Ctrl+Shift+C            Chain print file     (» marker + filename)
+  Alt+F                   Form printing blank  (_ marker, prompts at print)
 
 OTHER
-  Ctrl+P              Print Preview (not yet implemented)
-  F1 / ?              Show this help screen
-  Escape              Return to Main Menu\
+  Ctrl+P                  Print Preview (not yet implemented)
+  F1 / ?                  Show this help screen
+  Escape                  Return to Main Menu\
 """
 
 # Default tab stop every 5 columns (16 stops shown in header)
 DEFAULT_TAB_STOPS = set(range(5, 81, 5))
+
+
+# ---------------------------------------------------------------------------
+# Helpers: flat-position ↔ (row, col) conversion
+# ---------------------------------------------------------------------------
+
+def _to_flat(buffer: list[str], row: int, col: int) -> int:
+    """Convert (row, col) to a flat character position in the joined buffer."""
+    return sum(len(buffer[r]) + 1 for r in range(row)) + col
+
+
+def _from_flat(buffer: list[str], pos: int) -> tuple[int, int]:
+    """Convert a flat position back to (row, col)."""
+    for i, line in enumerate(buffer):
+        if pos <= len(line):
+            return i, pos
+        pos -= len(line) + 1
+    last = len(buffer) - 1
+    return last, len(buffer[last])
+
+
+def _selection_range(
+    buffer: list[str],
+    anchor: tuple[int, int],
+    cursor: tuple[int, int],
+) -> tuple[tuple[int, int], tuple[int, int]]:
+    """Return (start, end) in (row, col) order, start <= end."""
+    a = _to_flat(buffer, *anchor)
+    c = _to_flat(buffer, *cursor)
+    if a <= c:
+        return anchor, cursor
+    return cursor, anchor
 
 
 # ---------------------------------------------------------------------------
@@ -192,44 +253,191 @@ class EditorArea(Widget, can_focus=True):
         super().__init__(id="editor-area")
         self.state = state
         self.tab_stops: set[int] = set(DEFAULT_TAB_STOPS)
-        self._search_active = False  # True when prompting for search string
-        self._replace_active = False  # True when prompting for replace string
-        self._input_buffer = ""  # accumulates prompt input
+        self._search_active = False
+        self._replace_active = False
+        self._heading_active = False
+        self._chain_active = False
+        self._input_buffer = ""
+
+    # ------------------------------------------------------------------
+    # Selection helpers
+    # ------------------------------------------------------------------
+
+    def _has_selection(self) -> bool:
+        s = self.state
+        return (
+            s.selection_anchor is not None
+            and s.selection_anchor != (s.cursor_row, s.cursor_col)
+        )
+
+    def _clear_selection(self) -> None:
+        self.state.selection_anchor = None
+
+    def _begin_selection(self) -> None:
+        """Start a selection anchored at the current cursor position."""
+        s = self.state
+        if s.selection_anchor is None:
+            s.selection_anchor = (s.cursor_row, s.cursor_col)
+
+    def _selected_text(self) -> str:
+        """Return the selected text as a single string (newlines between lines)."""
+        s = self.state
+        if not self._has_selection():
+            return ""
+        start, end = _selection_range(
+            s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
+        )
+        sr, sc = start
+        er, ec = end
+        if sr == er:
+            return s.buffer[sr][sc:ec]
+        parts = [s.buffer[sr][sc:]]
+        for r in range(sr + 1, er):
+            parts.append(s.buffer[r])
+        parts.append(s.buffer[er][:ec])
+        return "\n".join(parts)
+
+    def _delete_selection(self) -> None:
+        """Delete the selected region, leaving cursor at the start."""
+        s = self.state
+        if not self._has_selection():
+            return
+        start, end = _selection_range(
+            s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
+        )
+        sr, sc = start
+        er, ec = end
+        if sr == er:
+            line = s.buffer[sr]
+            s.buffer[sr] = line[:sc] + line[ec:]
+        else:
+            head = s.buffer[sr][:sc]
+            tail = s.buffer[er][ec:]
+            s.buffer[sr] = head + tail
+            del s.buffer[sr + 1 : er + 1]
+        s.cursor_row, s.cursor_col = sr, sc
+        s.selection_anchor = None
+        s.modified = True
 
     # ------------------------------------------------------------------
     # Rendering
     # ------------------------------------------------------------------
 
     def render(self) -> str:
+        s = self.state
+        if self._has_selection():
+            start, end = _selection_range(
+                s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
+            )
+        else:
+            start = end = None
+
+        # Carry toggle state across lines (bold/underline/etc. can span lines)
+        fmt_state: dict[str, bool] = {
+            CTRL_BOLD: False,
+            CTRL_UNDERLINE: False,
+            CTRL_ELONGATE: False,
+            CTRL_SUPER: False,
+            CTRL_SUB: False,
+        }
+
         lines = []
-        for row, line in enumerate(self.state.buffer):
-            lines.append(self._render_line(line, row))
+        for row, line in enumerate(s.buffer):
+            rendered, fmt_state = self._render_line(line, row, start, end, fmt_state)
+            lines.append(rendered)
         return "\n".join(lines)
 
-    def _render_line(self, line: str, row: int) -> str:
+    def _render_line(
+        self,
+        line: str,
+        row: int,
+        sel_start: tuple[int, int] | None,
+        sel_end: tuple[int, int] | None,
+        fmt_state: dict[str, bool],
+    ) -> tuple[str, dict[str, bool]]:
+        """Render one buffer line, applying format state and returning updated state."""
+        s = self.state
         out = ""
         for col, ch in enumerate(line):
-            glyph = CTRL_GLYPHS.get(ch, ch)
-            if row == self.state.cursor_row and col == self.state.cursor_col:
-                out += f"[reverse]{glyph}[/reverse]"
+            is_cursor = (row == s.cursor_row and col == s.cursor_col)
+            in_sel = self._in_selection(row, col, sel_start, sel_end)
+
+            if ch in TOGGLE_MARKERS:
+                # Toggle the format state and emit the glyph as a marker
+                fmt_state[ch] = not fmt_state[ch]
+                glyph = CTRL_GLYPHS[ch]
+                if is_cursor:
+                    out += f"[reverse]{glyph}[/reverse]"
+                elif in_sel:
+                    out += f"[on blue]{glyph}[/on blue]"
+                else:
+                    out += f"[dim]{glyph}[/dim]"
             else:
-                out += glyph
+                glyph = CTRL_GLYPHS.get(ch, ch)
+                # Build markup based on active format state
+                markup = self._format_markup(fmt_state, is_cursor, in_sel)
+                if markup:
+                    out += f"[{markup}]{glyph}[/{markup}]"
+                else:
+                    out += glyph
+
         # Cursor at end of line
-        if row == self.state.cursor_row and self.state.cursor_col >= len(line):
+        if row == s.cursor_row and s.cursor_col >= len(line):
             out += "[reverse] [/reverse]"
-        return out
+
+        return out, fmt_state
+
+    def _format_markup(
+        self,
+        fmt: dict[str, bool],
+        is_cursor: bool,
+        in_sel: bool,
+    ) -> str:
+        """Return a Rich markup tag string for the current format state."""
+        if is_cursor:
+            return "reverse"
+        if in_sel:
+            return "on blue"
+        parts = []
+        if fmt.get(CTRL_BOLD):
+            parts.append("bold")
+        if fmt.get(CTRL_UNDERLINE):
+            parts.append("reverse")   # inverse video = underline in TUI
+        if fmt.get(CTRL_ELONGATE):
+            parts.append("dim")
+        if fmt.get(CTRL_SUPER) or fmt.get(CTRL_SUB):
+            parts.append("bright_white")
+        return " ".join(parts)
+
+    def _in_selection(
+        self,
+        row: int,
+        col: int,
+        sel_start: tuple[int, int] | None,
+        sel_end: tuple[int, int] | None,
+    ) -> bool:
+        if sel_start is None or sel_end is None:
+            return False
+        sr, sc = sel_start
+        er, ec = sel_end
+        if row < sr or row > er:
+            return False
+        if row == sr and col < sc:
+            return False
+        if row == er and col >= ec:
+            return False
+        return True
 
     # ------------------------------------------------------------------
     # Key handling
     # ------------------------------------------------------------------
 
     def on_key(self, event: events.Key) -> None:
-        # If a prompt is active, route all input there
-        if self._search_active or self._replace_active:
+        if self._search_active or self._replace_active or self._heading_active or self._chain_active:
             self._handle_prompt_key(event)
             return
 
-        state = self.state
+        s = self.state
         key = event.key
         handled = True
 
@@ -237,57 +445,108 @@ class EditorArea(Widget, can_focus=True):
         if key in ("f1", "question_mark"):
             self.app.push_screen(HelpScreen())
 
-        # Navigation
+        # --- Selection-extending navigation ---
+        elif key == "shift+left":
+            self._begin_selection()
+            self._move_left()
+        elif key == "shift+right":
+            self._begin_selection()
+            self._move_right()
+        elif key == "shift+up":
+            self._begin_selection()
+            self._move_up()
+        elif key == "shift+down":
+            self._begin_selection()
+            self._move_down()
+        elif key == "shift+home":
+            self._begin_selection()
+            s.cursor_col = 0
+        elif key == "shift+end":
+            self._begin_selection()
+            s.cursor_col = len(s.buffer[s.cursor_row])
+        elif key == "shift+ctrl+home":
+            self._begin_selection()
+            s.cursor_row, s.cursor_col = 0, 0
+        elif key == "shift+ctrl+end":
+            self._begin_selection()
+            s.cursor_row = len(s.buffer) - 1
+            s.cursor_col = len(s.buffer[s.cursor_row])
+
+        # --- Plain navigation (clears selection) ---
         elif key == "up":
+            self._clear_selection()
             self._move_up()
         elif key == "down":
+            self._clear_selection()
             self._move_down()
         elif key == "left":
+            self._clear_selection()
             self._move_left()
         elif key == "right":
+            self._clear_selection()
             self._move_right()
         elif key == "ctrl+left":
+            self._clear_selection()
             self._word_jump(-1)
         elif key == "ctrl+right":
+            self._clear_selection()
             self._word_jump(1)
         elif key == "home":
-            state.cursor_col = 0
+            self._clear_selection()
+            s.cursor_col = 0
         elif key == "end":
-            state.cursor_col = len(state.buffer[state.cursor_row])
+            self._clear_selection()
+            s.cursor_col = len(s.buffer[s.cursor_row])
         elif key == "ctrl+home":
-            state.cursor_row = 0
-            state.cursor_col = 0
+            self._clear_selection()
+            s.cursor_row, s.cursor_col = 0, 0
         elif key == "ctrl+end":
-            state.cursor_row = len(state.buffer) - 1
-            state.cursor_col = len(state.buffer[state.cursor_row])
+            self._clear_selection()
+            s.cursor_row = len(s.buffer) - 1
+            s.cursor_col = len(s.buffer[s.cursor_row])
         elif key == "pageup":
+            self._clear_selection()
             self._page_scroll(-1)
         elif key == "pagedown":
+            self._clear_selection()
             self._page_scroll(1)
         elif key == "tab":
+            self._clear_selection()
             self._tab_forward()
 
         # Enter — split line
         elif key == "enter":
+            if self._has_selection():
+                self._delete_selection()
             self._insert_newline()
 
         # Mode toggles
         elif key == "insert":
-            state.insert_mode = not state.insert_mode
+            s.insert_mode = not s.insert_mode
             self._update_status()
         elif key == "shift+f3":
+            self._clear_selection()
             self._toggle_case_at_cursor()
 
         # Deletion
         elif key == "backspace":
-            self._backspace()
+            if self._has_selection():
+                self._delete_selection()
+            else:
+                self._backspace()
         elif key == "delete":
-            self._delete_char()
+            if self._has_selection():
+                self._delete_selection()
+            else:
+                self._delete_char()
         elif key == "shift+delete":
+            self._clear_selection()
             self._delete_to_eol()
         elif key == "ctrl+z":
+            self._clear_selection()
             self._undelete()
         elif key == "ctrl+shift+delete":
+            self._clear_selection()
             self._delete_to_eof()
 
         # Block ops
@@ -319,6 +578,12 @@ class EditorArea(Widget, can_focus=True):
             self._insert_control(CTRL_BOLD)
         elif key == "ctrl+u":
             self._insert_control(CTRL_UNDERLINE)
+        elif key == "ctrl+g":
+            self._insert_control(CTRL_ELONGATE)
+        elif key == "ctrl+left_square_bracket":
+            self._insert_control(CTRL_SUPER)
+        elif key == "ctrl+right_square_bracket":
+            self._insert_control(CTRL_SUB)
         elif key == "ctrl+e":
             self._insert_control(CTRL_CENTER)
         elif key == "ctrl+r":
@@ -327,6 +592,20 @@ class EditorArea(Widget, can_focus=True):
             self._insert_control(CTRL_PARA)
         elif key == "alt+m":
             self._insert_control(CTRL_MERGE)
+        elif key == "alt+f":
+            self._insert_control(CTRL_FORM)
+
+        # Document structure markers
+        elif key == "ctrl+shift+h":
+            self._insert_structure_marker(CTRL_HEADER)
+        elif key == "ctrl+shift+f":
+            self._insert_structure_marker(CTRL_FOOTER)
+        elif key == "ctrl+shift+s":
+            self._prompt_heading()
+        elif key == "ctrl+shift+e":
+            self._insert_structure_marker(CTRL_EJECT)
+        elif key == "ctrl+shift+c":
+            self._prompt_chain()
 
         # Print preview stub
         elif key == "ctrl+p":
@@ -334,10 +613,13 @@ class EditorArea(Widget, can_focus=True):
 
         # Exit to main menu
         elif key == "escape":
+            self._clear_selection()
             self.app.pop_screen()
 
         # Printable characters
         elif event.character and event.character.isprintable():
+            if self._has_selection():
+                self._delete_selection()
             self._type_char(event.character)
 
         else:
@@ -364,44 +646,84 @@ class EditorArea(Widget, can_focus=True):
 
     def _handle_prompt_key(self, event: events.Key) -> None:
         key = event.key
+
+        if key == "escape":
+            self._search_active = False
+            self._replace_active = False
+            self._heading_active = False
+            self._chain_active = False
+            self._input_buffer = ""
+            self.screen.set_message("")  # type: ignore[attr-defined]
+            event.stop()
+            self.refresh()
+            return
+
         if key == "enter":
             if self._search_active:
                 self.state.search_string = self._input_buffer
                 self._search_active = False
                 self.screen.set_message(f"Find: {self._input_buffer!r}  — press F3 to find")  # type: ignore[attr-defined]
-                # Jump to first occurrence from start of doc
                 self.state.last_search_row = 0
                 self.state.last_search_col = 0
                 self._find_next()
-            else:
+            elif self._replace_active:
                 self.state.replace_string = self._input_buffer
                 self._replace_active = False
                 self.screen.set_message(f"Replace: {self._input_buffer!r}  — Alt+F3 replace, Alt+R global")  # type: ignore[attr-defined]
-        elif key == "escape":
-            self._search_active = False
-            self._replace_active = False
-            self.screen.set_message("")  # type: ignore[attr-defined]
+            elif self._heading_active:
+                self._heading_active = False
+                level = self._input_buffer.strip()
+                if level and level in "123456789":
+                    s = self.state
+                    row = s.cursor_row
+                    s.buffer.insert(row, CTRL_HEADING + level)
+                    s.cursor_row = row + 1
+                    s.cursor_col = 0
+                    s.modified = True
+                    self.screen.set_message(f"Heading level {level} inserted")  # type: ignore[attr-defined]
+                else:
+                    self.screen.set_message("Cancelled — level must be 1-9")  # type: ignore[attr-defined]
+            elif self._chain_active:
+                self._chain_active = False
+                filename = self._input_buffer.strip()
+                if filename:
+                    s = self.state
+                    # Chain marker goes at end of document on its own line
+                    s.buffer.append(CTRL_CHAIN + filename)
+                    s.cursor_row = len(s.buffer) - 1
+                    s.cursor_col = len(s.buffer[s.cursor_row])
+                    s.modified = True
+                    self.screen.set_message(f"Chain: {filename}")  # type: ignore[attr-defined]
+                else:
+                    self.screen.set_message("Cancelled")  # type: ignore[attr-defined]
         elif key == "backspace":
             self._input_buffer = self._input_buffer[:-1]
-            prompt = "Find: " if self._search_active else "Replace with: "
-            self.screen.set_message(prompt + self._input_buffer)  # type: ignore[attr-defined]
+            self.screen.set_message(self._current_prompt() + self._input_buffer)  # type: ignore[attr-defined]
         elif event.character and event.character.isprintable():
-            if len(self._input_buffer) < 37:
+            max_len = 1 if self._heading_active else 37
+            if len(self._input_buffer) < max_len:
                 self._input_buffer += event.character
-                prompt = "Find: " if self._search_active else "Replace with: "
-                self.screen.set_message(prompt + self._input_buffer)  # type: ignore[attr-defined]
+                self.screen.set_message(self._current_prompt() + self._input_buffer)  # type: ignore[attr-defined]
+
         event.stop()
         self.refresh()
+
+    def _current_prompt(self) -> str:
+        if self._search_active:
+            return "Find: "
+        if self._replace_active:
+            return "Replace with: "
+        if self._heading_active:
+            return "Heading level (1-9): "
+        if self._chain_active:
+            return "Chain to file: "
+        return ""
 
     # ------------------------------------------------------------------
     # Search & replace logic
     # ------------------------------------------------------------------
 
     def _find_next(self) -> bool:
-        """Find next occurrence of search_string from last_search position.
-
-        Returns True if found, False otherwise.
-        """
         s = self.state
         needle = s.search_string
         if not needle:
@@ -411,7 +733,6 @@ class EditorArea(Widget, can_focus=True):
         start_row = s.last_search_row
         start_col = s.last_search_col
 
-        # Search from current position forward, wrapping around
         rows = list(range(start_row, len(s.buffer))) + list(range(0, start_row))
         for i, row in enumerate(rows):
             line = s.buffer[row]
@@ -420,7 +741,6 @@ class EditorArea(Widget, can_focus=True):
             if idx != -1:
                 s.cursor_row = row
                 s.cursor_col = idx
-                # Next search starts after this match
                 s.last_search_row = row
                 s.last_search_col = idx + len(needle)
                 self.screen.set_message(f"Found: {needle!r}")  # type: ignore[attr-defined]
@@ -430,10 +750,8 @@ class EditorArea(Widget, can_focus=True):
         return False
 
     def _find_in_line(self, line: str, needle: str, start: int = 0) -> int:
-        """Find needle in line from start, supporting '?' wildcard."""
         if "?" not in needle:
             return line.find(needle, start)
-        # Wildcard match
         nl, nn = len(line), len(needle)
         for i in range(start, nl - nn + 1):
             if all(needle[j] == "?" or line[i + j] == needle[j] for j in range(nn)):
@@ -441,7 +759,6 @@ class EditorArea(Widget, can_focus=True):
         return -1
 
     def _replace_current_and_find_next(self) -> None:
-        """Replace match at cursor position then find next."""
         s = self.state
         needle = s.search_string
         repl = s.replace_string
@@ -450,10 +767,8 @@ class EditorArea(Widget, can_focus=True):
             return
         row, col = s.cursor_row, s.cursor_col
         line = s.buffer[row]
-        # Check if the cursor is actually sitting on a match
         idx = self._find_in_line(line, needle, col)
         if idx == col:
-            # Replace in-place
             s.buffer[row] = line[:idx] + repl + line[idx + len(needle):]
             s.cursor_col = idx + len(repl)
             s.last_search_row = row
@@ -461,11 +776,9 @@ class EditorArea(Widget, can_focus=True):
             s.modified = True
             self._find_next()
         else:
-            # Cursor not on a match — just find next
             self._find_next()
 
     def _global_replace(self) -> None:
-        """Replace all occurrences from cursor to end of file."""
         s = self.state
         needle = s.search_string
         repl = s.replace_string
@@ -484,11 +797,9 @@ class EditorArea(Widget, can_focus=True):
         self.screen.set_message(f"Replaced {count} occurrence(s)")  # type: ignore[attr-defined]
 
     def _replace_all_in_line(self, line: str, needle: str, repl: str) -> tuple[str, int]:
-        """Replace all occurrences of needle in line (wildcard-aware)."""
         if "?" not in needle:
             count = line.count(needle)
             return line.replace(needle, repl), count
-        # Wildcard: build manually
         result = ""
         count = 0
         i = 0
@@ -552,7 +863,6 @@ class EditorArea(Widget, can_focus=True):
                 flat_pos -= 1
             while flat_pos > 0 and not text[flat_pos - 1].isspace():
                 flat_pos -= 1
-        # Convert flat_pos back to row/col
         for i, line in enumerate(s.buffer):
             if flat_pos <= len(line):
                 s.cursor_row, s.cursor_col = i, flat_pos
@@ -566,7 +876,6 @@ class EditorArea(Widget, can_focus=True):
         s.cursor_col = min(s.cursor_col, len(s.buffer[s.cursor_row]))
 
     def _tab_forward(self) -> None:
-        """Advance cursor to the next tab stop, inserting spaces in insert mode."""
         s = self.state
         col = s.cursor_col
         next_stop = min((t for t in self.tab_stops if t > col), default=col + 1)
@@ -623,7 +932,6 @@ class EditorArea(Widget, can_focus=True):
             s.buffer[row + 1] = tail + (" " if tail and next_line else "") + next_line
         else:
             s.buffer.insert(row + 1, tail)
-        # If cursor was in the wrapped portion, move it to the next line
         if s.cursor_col > len(head):
             s.cursor_col = s.cursor_col - len(head) - (len(line[wrap_at:]) - len(tail))
             s.cursor_row = row + 1
@@ -635,6 +943,30 @@ class EditorArea(Widget, can_focus=True):
         s.buffer[row] = line[:col] + ctrl + line[col:]
         s.cursor_col += 1
         s.modified = True
+
+    def _insert_structure_marker(self, marker: str) -> None:
+        """Insert a structure marker on its own line at the cursor position."""
+        s = self.state
+        row = s.cursor_row
+        # Insert a new line above cursor containing just the marker
+        s.buffer.insert(row, marker)
+        s.cursor_row = row + 1
+        s.cursor_col = 0
+        s.modified = True
+
+    def _prompt_heading(self) -> None:
+        """Prompt for heading level and insert CTRL_HEADING + digit."""
+        self.screen.set_message("Heading level (1-9): ")  # type: ignore[attr-defined]
+        self._search_active = False
+        self._replace_active = False
+        self._heading_active = True
+        self._input_buffer = ""
+
+    def _prompt_chain(self) -> None:
+        """Prompt for chain filename."""
+        self.screen.set_message("Chain to file: ")  # type: ignore[attr-defined]
+        self._chain_active = True
+        self._input_buffer = ""
 
     def _backspace(self) -> None:
         s = self.state
@@ -702,39 +1034,81 @@ class EditorArea(Widget, can_focus=True):
 
     def _cut(self) -> None:
         s = self.state
-        row = s.cursor_row
-        s.clipboard = s.buffer[row]
-        if len(s.buffer) > 1:
-            s.buffer.pop(row)
-            s.cursor_row = min(row, len(s.buffer) - 1)
+        if self._has_selection():
+            s.clipboard = self._selected_text()
+            self._delete_selection()
         else:
-            s.buffer[row] = ""
-        s.cursor_col = 0
-        s.modified = True
+            # Fall back: cut current line
+            row = s.cursor_row
+            s.clipboard = s.buffer[row]
+            if len(s.buffer) > 1:
+                s.buffer.pop(row)
+                s.cursor_row = min(row, len(s.buffer) - 1)
+            else:
+                s.buffer[row] = ""
+            s.cursor_col = 0
+            s.modified = True
 
     def _copy(self) -> None:
-        self.state.clipboard = self.state.buffer[self.state.cursor_row]
+        s = self.state
+        if self._has_selection():
+            s.clipboard = self._selected_text()
+        else:
+            s.clipboard = s.buffer[s.cursor_row]
 
     def _paste(self) -> None:
         s = self.state
         if not s.clipboard:
             return
-        row = s.cursor_row
-        s.buffer.insert(row + 1, s.clipboard)
-        s.cursor_row += 1
-        s.cursor_col = 0
+        if self._has_selection():
+            self._delete_selection()
+        row, col = s.cursor_row, s.cursor_col
+        lines = s.clipboard.split("\n")
+        if len(lines) == 1:
+            # Single-line paste: insert inline
+            line = s.buffer[row]
+            s.buffer[row] = line[:col] + lines[0] + line[col:]
+            s.cursor_col = col + len(lines[0])
+        else:
+            # Multi-line paste: split current line and insert
+            line = s.buffer[row]
+            before = line[:col]
+            after = line[col:]
+            s.buffer[row] = before + lines[0]
+            for i, ln in enumerate(lines[1:], start=1):
+                s.buffer.insert(row + i, ln)
+            s.buffer[row + len(lines) - 1] += after
+            s.cursor_row = row + len(lines) - 1
+            s.cursor_col = len(lines[-1])
         s.modified = True
 
     def _word_count(self) -> None:
-        text = "\n".join(self.state.buffer)
+        if self._has_selection():
+            text = self._selected_text()
+            label = "Selection"
+        else:
+            text = "\n".join(self.state.buffer)
+            label = "Document"
         count = len(text.split())
-        self.screen.set_message(f"Word count: {count}")  # type: ignore[attr-defined]
+        self.screen.set_message(f"Word count ({label}): {count}")  # type: ignore[attr-defined]
 
     def _alphabetize(self) -> None:
         s = self.state
-        s.buffer.sort()
-        s.cursor_row = 0
-        s.cursor_col = 0
+        if self._has_selection():
+            start, end = _selection_range(
+                s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
+            )
+            sr, _ = start
+            er, _ = end
+            # Sort only the lines covered by the selection
+            s.buffer[sr:er + 1] = sorted(s.buffer[sr:er + 1])
+            s.cursor_row = sr
+            s.cursor_col = 0
+            s.selection_anchor = None
+        else:
+            s.buffer.sort()
+            s.cursor_row = 0
+            s.cursor_col = 0
         s.modified = True
 
     def _update_status(self) -> None:

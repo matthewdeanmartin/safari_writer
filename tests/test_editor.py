@@ -26,6 +26,9 @@ def make_editor(text: str = "") -> EditorArea:
         ed = EditorArea.__new__(EditorArea)
         ed.state = state
         ed.tab_stops = set(range(5, 81, 5))
+        ed._search_active = False
+        ed._replace_active = False
+        ed._input_buffer = ""
     return ed
 
 
@@ -223,13 +226,14 @@ class TestClipboard:
         assert ed.state.clipboard == "hello"
         assert ed.state.buffer == ["hello", "world"]
 
-    def test_paste_inserts_below(self):
+    def test_paste_inline_at_cursor(self):
         ed = make_editor("hello\nworld")
         ed.state.clipboard = "middle"
         ed.state.cursor_row = 0
+        ed.state.cursor_col = 5  # end of "hello"
         ed._paste()
-        assert ed.state.buffer == ["hello", "middle", "world"]
-        assert ed.state.cursor_row == 1
+        assert ed.state.buffer[0] == "hellomiddle"
+        assert ed.state.cursor_col == 5 + len("middle")
 
 
 # ---------------------------------------------------------------------------
@@ -281,14 +285,14 @@ class TestWordCount:
         mock_screen = MagicMock()
         with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
             ed._word_count()
-        mock_screen.set_message.assert_called_once_with("Word count: 3")
+        mock_screen.set_message.assert_called_once_with("Word count (Document): 3")
 
     def test_word_count_multiline(self):
         ed = make_editor("one two\nthree four")
         mock_screen = MagicMock()
         with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
             ed._word_count()
-        mock_screen.set_message.assert_called_once_with("Word count: 4")
+        mock_screen.set_message.assert_called_once_with("Word count (Document): 4")
 
 
 # ---------------------------------------------------------------------------

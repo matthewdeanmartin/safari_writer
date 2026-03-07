@@ -48,6 +48,8 @@ class AppState:
     modified: bool = False
     # Session-kept spellings (Proofreader "Keep This Spelling")
     kept_spellings: set[str] = field(default_factory=set)
+    # Selection anchor: (row, col) where the selection started, or None
+    selection_anchor: tuple[int, int] | None = None
     # Search / replace state
     search_string: str = ""
     replace_string: str = ""

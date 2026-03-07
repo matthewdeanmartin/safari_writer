@@ -9,104 +9,114 @@
 
 ## Phase 1: Project Scaffold
 
-- [ ] Create `pyproject.toml` with dependencies (`textual`, `pyenchant` or `symspellpy` for spellcheck)
-- [ ] Create entry point `main.py`
-- [ ] Set up basic Textual `App` class
-- [ ] Define app-level state: document buffer, clipboard, format settings, mode flags
+- [x] Create `pyproject.toml` with dependencies (`textual`, `pyenchant` or `symspellpy` for spellcheck)
+- [x] Create entry point `main.py`
+- [x] Set up basic Textual `App` class
+- [x] Define app-level state: document buffer, clipboard, format settings, mode flags
 
 ---
 
 ## Phase 2: Main Menu Screen
 
-- [ ] `MainMenuScreen` — list of options with highlighted first letter
-- [ ] Key bindings: C, E, V, P, G, M, 1, 2, L, S, D, F
-- [ ] Routing: each key navigates to appropriate screen/action
-- [ ] Status bar: "Bytes Free" display
+- [x] `MainMenuScreen` — list of options with highlighted first letter
+- [x] Key bindings: C, E, V, P, G, M, 1, 2, L, S, D, F
+- [x] Routing: each key navigates to appropriate screen/action
+- [x] Status bar: "Bytes Free" display
 
 ---
 
 ## Phase 3: Editor Screen (Core)
 
 ### 3a. Status Header
-- [ ] Message window (top line) — prompts, errors, questions
-- [ ] System status line: Bytes Free | Insert/Type-over mode | Lower/Uppercase mode
-- [ ] Tab indicator row: 16 downward arrows reflecting current tab stops
+- [x] Message window (top line) — prompts, errors, questions
+- [x] System status line: Bytes Free | Insert/Type-over mode | Lower/Uppercase mode
+- [x] Tab indicator row: 16 downward arrows reflecting current tab stops
 
 ### 3b. Document Buffer & Rendering
-- [ ] In-memory text buffer (list of lines or rope structure)
-- [ ] Word wrap logic (auto-wrap at right margin, hard CR only for paragraphs)
-- [ ] Paragraph mark (`Ctrl+M`) — non-printing symbol stored in buffer, displayed as special char
-- [ ] Render inline control characters as visible symbols (bold marker, underline, etc.)
-- [ ] Blinking block cursor
+- [x] In-memory text buffer (list of lines or rope structure)
+- [x] Word wrap logic (auto-wrap at right margin, hard CR only for paragraphs)
+- [x] Paragraph mark (`Ctrl+M`) — non-printing symbol stored in buffer, displayed as special char
+- [x] Render inline control characters as visible symbols (bold marker, underline, etc.)
+- [ ] Blinking block cursor (Textual renders reverse-video block; true blink not yet implemented)
 
 ### 3c. Navigation
-- [ ] Arrow keys (char/line movement)
-- [ ] `Ctrl+Left/Right` — word jump
-- [ ] `Home/End` — line start/end
-- [ ] `Ctrl+Home/End` — top/bottom of file
-- [ ] `Page Up/Down` — page scroll
+- [x] Arrow keys (char/line movement)
+- [x] `Ctrl+Left/Right` — word jump
+- [x] `Home/End` — line start/end
+- [x] `Ctrl+Home/End` — top/bottom of file
+- [x] `Page Up/Down` — page scroll
+- [x] `Tab` — advance to next tab stop (inserts spaces in insert mode)
 
 ### 3d. Edit Modes
-- [ ] `Insert` key — toggle Insert vs. Type-over mode
-- [ ] Insert mode: push text right
-- [ ] Type-over mode: replace text under cursor
+- [x] `Insert` key — toggle Insert vs. Type-over mode
+- [x] Insert mode: push text right
+- [x] Type-over mode: replace text under cursor
 
 ### 3e. Deletion
-- [ ] `Backspace` / `Delete` — character deletion
-- [ ] `Shift+Delete` — delete to end of screen line (store for undelete)
-- [ ] `Ctrl+Z` — undelete (restore last deleted line at cursor)
-- [ ] `Ctrl+Shift+Delete` — delete to end of file
+- [x] `Backspace` / `Delete` — character deletion
+- [x] `Shift+Delete` — delete to end of screen line (store for undelete)
+- [x] `Ctrl+Z` — undelete (restore last deleted line at cursor)
+- [x] `Ctrl+Shift+Delete` — delete to end of file
 
 ### 3f. Case Toggle
-- [ ] `Shift+F3` — toggle case of character under cursor
+- [x] `Shift+F3` — toggle case of character under cursor
+
+### 3g. Help Screen
+- [x] `F1` / `?` — modal overlay listing all key commands
 
 ---
 
 ## Phase 4: Block Operations
 
-- [ ] Standard text selection (highlight region)
-- [ ] `Ctrl+X` — cut to failsafe buffer
-- [ ] `Ctrl+C` — copy to failsafe buffer
-- [ ] `Ctrl+V` — paste from failsafe buffer
-- [ ] `Alt+W` — word count (selection or whole file), display in message window
-- [ ] `Alt+A` — alphabetize selected list of lines
+- [x] Standard text selection — Shift+Arrow/Home/End/Ctrl+Home/End; rendered in inverse blue
+- [x] `Ctrl+X` — cut selection (or current line) to failsafe buffer
+- [x] `Ctrl+C` — copy selection (or current line) to failsafe buffer
+- [x] `Ctrl+V` — paste at cursor inline (replaces selection if active); multi-line clipboard supported
+- [x] `Alt+W` — word count (selection or whole file), display in message window
+- [x] `Alt+A` — alphabetize selected lines (or all lines)
 
 ---
 
 ## Phase 5: Search & Replace
 
-- [ ] `Ctrl+F` — prompt for search string (up to 37 chars), find first occurrence
-- [ ] `Ctrl+H` — prompt for replacement string
-- [ ] `F3` — find next occurrence
-- [ ] `Shift+F3` — replace current occurrence (note: conflicts with case toggle — resolve)
-- [ ] `Alt+R` — global replace to end of file
-- [ ] Wildcard `?` support in search strings
+- [x] `Ctrl+F` — prompt for search string (up to 37 chars), find first occurrence
+- [x] `Ctrl+H` — prompt for replacement string
+- [x] `F3` — find next occurrence (wraps around end of file)
+- [x] `Shift+F3` — kept as case toggle; replace-occurrence mapped to `Alt+F3` instead
+- [x] `Alt+F3` — replace current occurrence, then find next
+- [x] `Alt+R` — global replace to end of file, reports count
+- [x] Wildcard `?` support in search strings
 
 ---
 
 ## Phase 6: Inline Formatting
 
-- [ ] `Ctrl+B` — bold toggle; display left-arrow marker `←` in buffer
-- [ ] `Ctrl+U` — underline toggle; render affected text in inverse video
-- [ ] `Ctrl+E` — center line; display center marker at line start
-- [ ] `Ctrl+R` — flush right; display double-marker at line start
-- [ ] Elongated (double-width) toggle; display `E` marker
-- [ ] Subscript / superscript toggles; display up/down arrow markers
-- [ ] Header/footer command + text (own dedicated line, ends with CR)
-- [ ] `@` in header/footer = page number placeholder
-- [ ] Section heading: insert `H` marker + level (1-9); auto-number on print
-- [ ] Page eject (hard page break) command
-- [ ] Chain print file command at document end
-- [ ] `Alt+F` — form printing blank (fill-in prompt at print time)
-- [ ] `Alt+M` — insert mail merge `@N` field marker
+- [x] `Ctrl+B` — bold toggle; `←` marker; text after marker rendered **bold**
+- [x] `Ctrl+U` — underline toggle; `▄` marker; text after marker rendered in inverse video
+- [x] `Ctrl+G` — elongated toggle; `E` marker; text after marker rendered dim
+- [x] `Ctrl+[` — superscript toggle; `↑` marker; text rendered bright_white
+- [x] `Ctrl+]` — subscript toggle; `↓` marker; text rendered bright_white
+- [x] `Ctrl+E` — center line; `↔` marker at line start
+- [x] `Ctrl+R` — flush right; `→→` marker at line start
+- [x] `Ctrl+M` — paragraph indent marker `¶`
+- [x] `Alt+M` — mail merge `@` field marker
+- [x] `Alt+F` — form printing blank `_` marker
+- [x] Toggle markers carry format state across lines (bold/underline/etc. span line breaks)
+- [x] `Ctrl+Shift+H` — insert header line marker (`H:`) on its own line
+- [x] `Ctrl+Shift+F` — insert footer line marker (`F:`) on its own line
+- [x] `@` in header/footer text = page number placeholder (typed naturally)
+- [x] `Ctrl+Shift+S` — insert section heading (`H` + level 1-9, prompted), own line
+- [x] `Ctrl+Shift+E` — page eject / hard page break (`↡` marker), own line
+- [x] `Ctrl+Shift+C` — chain print file (`»` + filename, prompted), appended at end
 - [ ] Mid-document global format override (inline margin/spacing change)
+- [ ] Auto-numbering of section headings at print time
 
 ---
 
 ## Phase 7: Global Format Screen
 
-- [ ] `GlobalFormatScreen` — vertical list of parameters with letter keys
-- [ ] Parameters with defaults:
+- [x] `GlobalFormatScreen` — vertical list of parameters with letter keys
+- [x] Parameters with defaults:
   - T: Top Margin (12)
   - B: Bottom Margin (12)
   - L: Left Margin (10)
@@ -121,9 +131,9 @@
   - Q: Page Number start (1)
   - Y: Page Length (132)
   - W: Page Wait (0)
-- [ ] Press letter → cursor jumps to value field → user types new value → `Enter` confirms
-- [ ] `Tab` — reset all to defaults
-- [ ] `Esc` — accept and return to Main Menu
+- [x] Press letter → cursor jumps to value field → user types new value → `Enter` confirms
+- [x] `Tab` — reset all to defaults
+- [x] `Esc` — accept and return to Main Menu
 
 ---
 
@@ -133,14 +143,15 @@
 - [ ] `S` Save File — prompt for filename, write buffer to disk
 - [ ] `D` Delete File — prompt for filename, confirm, delete
 - [ ] `1`/`2` Index Drive — directory listing display
-- [ ] `F` Format Disk — stub / not applicable (show message)
+- [x] `F` Format Disk — stub (shows "not applicable" message)
 - [ ] File format: plain text with embedded control character sequences
 
 ---
 
 ## Phase 9: Print / Print Preview
 
-- [ ] `Ctrl+P` — Print Preview screen
+- [x] `Ctrl+P` — stub in editor (shows "not yet implemented" message)
+- [ ] Print Preview screen with paginated output
 - [ ] Apply global format settings to render paginated output
 - [ ] Apply inline formatting during render
 - [ ] Mail merge injection at print time
@@ -153,21 +164,21 @@
 
 ## Phase 10: Proofreader Module
 
-- [ ] `ProofreaderScreen` — terminal-style, accessed from Main Menu "V"
-- [ ] Mode selection: Highlight Errors / Print Errors / Correct Errors
-- [ ] Load master dictionary (36,000+ words) — use `pyenchant` or bundled wordlist
-- [ ] **Highlight mode**: scroll through doc, flag unrecognized words in inverse video
-- [ ] **Print Errors mode**: scan, display list, optionally send to printer
-- [ ] **Correct Errors mode**:
-  - [ ] Stop at each flagged word
-  - [ ] Correction menu: Correct Word / Search Dictionary / Keep This Spelling
-  - [ ] "Correct Word" → prompt for replacement → "Are you sure? Y/N" → replace
-  - [ ] "Search Dictionary" → prompt 2+ letters → display up to 18 matching words, pageable
-  - [ ] "Keep This Spelling" → add to session memory, skip on future hits
-- [ ] Standalone dictionary search (2+ letters → up to 126 matches per page)
-- [ ] Personal dictionary: save session "kept" words (up to 256) to file
-- [ ] Load personal dictionary file(s) before proofing session
-- [ ] Manual dictionary creation via editor (space/CR-separated word list)
+- [x] `ProofreaderScreen` — terminal-style, accessed from Main Menu "V"
+- [x] Mode selection: Highlight Errors / Print Errors / Correct Errors
+- [x] Load master dictionary (36,000+ words) — uses `pyenchant` en_US
+- [x] **Highlight mode**: scan doc, flag unrecognized words in inverse video
+- [x] **Print Errors mode**: scan, display list on-screen
+- [x] **Correct Errors mode**:
+  - [x] Stop at each flagged word
+  - [x] Correction menu: Correct Word / Search Dictionary / Keep This Spelling
+  - [x] "Correct Word" → prompt for replacement → "Are you sure? Y/N" → replace
+  - [x] "Search Dictionary" → prompt 2+ letters → display up to 126 matching words, pageable
+  - [x] "Keep This Spelling" → add to session memory, skip on future hits
+- [x] Standalone dictionary search (2+ letters → up to 126 matches per page)
+- [x] Personal dictionary: save session "kept" words (up to 256) to file
+- [x] Load personal dictionary file(s) before proofing session
+- [ ] Manual dictionary creation via editor (space/CR-separated word list) — use editor directly
 
 ---
 
@@ -199,11 +210,11 @@
 
 ## Phase 12: Polish & Edge Cases
 
-- [ ] Resolve `Shift+F3` conflict (case toggle vs. replace — pick one or use context)
-- [ ] Bytes Free: track actual buffer size and display live
+- [x] Resolve `Shift+F3` conflict — kept as case toggle; replace-occurrence is `Alt+F3`
+- [x] Bytes Free: tracked live from buffer size
 - [ ] Caps lock mode indicator and behavior
 - [ ] Tab stop management (set/clear individual tabs, clear all, UI arrow row updates)
 - [ ] Double-column layout rendering (M/N margins)
 - [ ] Confirm all keyboard shortcuts work correctly in Textual
-- [ ] Error messages displayed in message window (not dialog boxes)
+- [x] Error messages displayed in message window (not dialog boxes)
 - [ ] All destructive actions require Y/N confirmation in message window

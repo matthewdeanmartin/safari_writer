@@ -6,6 +6,8 @@ from textual.widgets import Static
 from safari_writer.state import AppState
 from safari_writer.screens.main_menu import MainMenuScreen
 from safari_writer.screens.editor import EditorScreen
+from safari_writer.screens.global_format import GlobalFormatScreen
+from safari_writer.screens.proofreader import ProofreaderScreen
 
 
 class SafariWriterApp(App):
@@ -35,11 +37,11 @@ class SafariWriterApp(App):
         elif action == "edit":
             self._action_edit()
         elif action == "verify":
-            self.set_message("Proofreader: not yet implemented")
+            self.push_screen(ProofreaderScreen(self.state))
         elif action == "print":
             self.set_message("Print: not yet implemented")
         elif action == "global_format":
-            self.set_message("Global Format: not yet implemented")
+            self.push_screen(GlobalFormatScreen(self.state.fmt))
         elif action == "mail_merge":
             self.set_message("Mail Merge: not yet implemented")
         elif action in ("index1", "index2"):
@@ -51,8 +53,8 @@ class SafariWriterApp(App):
             self.set_message("Save File: not yet implemented")
         elif action == "delete":
             self.set_message("Delete File: not yet implemented")
-        elif action == "format_disk":
-            self.set_message("Format Disk: not applicable")
+        elif action == "new_folder":
+            self.set_message("New Folder: not yet implemented")
 
     def _action_create(self) -> None:
         """Start a fresh document and open the editor."""
