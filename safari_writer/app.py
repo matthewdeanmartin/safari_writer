@@ -4,6 +4,7 @@ from pathlib import Path
 
 from textual.app import App
 
+from safari_writer.cli_types import StartupRequest
 from safari_writer.state import AppState
 from safari_writer.screens.main_menu import MainMenuScreen
 from safari_writer.screens.editor import EditorScreen
@@ -14,6 +15,8 @@ from safari_writer.screens.file_ops import FilePromptScreen, ConfirmScreen
 from safari_writer.screens.index_screen import IndexScreen, DrivePickerScreen, _find_external_drives
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
 from safari_writer.format_codec import encode_sfw, decode_sfw, strip_controls, has_controls, is_sfw
+
+__all__ = ["SafariWriterApp"]
 
 
 class SafariWriterApp(App):
@@ -26,12 +29,76 @@ class SafariWriterApp(App):
     }
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        state: AppState | None = None,
+        startup_request: StartupRequest | None = None,
+    ) -> None:
         super().__init__()
-        self.state = AppState()
+        self.state = state or AppState()
+        self.startup_request = startup_request or StartupRequest()
 
     def on_mount(self) -> None:
         self.push_screen(MainMenuScreen())
+        self._apply_startup_request()
+
+    def _apply_startup_request(self) -> None:
+        request = self.startup_request
+        destination = request.destination
+        if destination == "menu":
+            return
+        if destination == "edit":
+            self._set_initial_cursor(
+                request.cursor_line,
+                request.cursor_column,
+            )
+            self._open_editor()
+            return
+        if destination == "proofreader":
+            self.push_screen(
+                ProofreaderScreen(
+                    self.state,
+                    initial_mode=request.proofreader_mode,
+                    personal_dict_paths=request.personal_dict_paths,
+                )
+            )
+            return
+        if destination == "global_format":
+            self.push_screen(GlobalFormatScreen(self.state.fmt))
+            return
+        if destination == "mail_merge":
+            initial_mode = {
+                "menu": "main",
+                "enter": "enter",
+                "update": "update",
+                "format": "schema",
+                "subset": "subset",
+                None: "main",
+            }[request.mail_merge_mode]
+            self.push_screen(MailMergeScreen(self.state, initial_mode=initial_mode))
+            return
+        if destination == "print":
+            if request.print_target:
+                self._on_print_choice(request.print_target)
+            else:
+                self._action_print()
+            return
+        if destination == "index_current":
+            directory = request.index_path or Path.cwd()
+            self.push_screen(IndexScreen(directory, label="Current Folder"))
+            return
+        if destination == "index_external":
+            self._action_index_external()
+
+    def _set_initial_cursor(self, line: int | None, column: int | None) -> None:
+        if not self.state.buffer:
+            self.state.buffer = [""]
+        target_row = max(0, (line or 1) - 1)
+        target_row = min(target_row, len(self.state.buffer) - 1)
+        target_col = max(0, (column or 1) - 1)
+        target_col = min(target_col, len(self.state.buffer[target_row]))
+        self.state.cursor_row = target_row
+        self.state.cursor_col = target_col
 
     # ------------------------------------------------------------------
     # Screen routing from Main Menu

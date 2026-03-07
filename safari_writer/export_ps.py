@@ -15,6 +15,8 @@ from safari_writer.screens.editor import (
     CTRL_EJECT, CTRL_CHAIN, CTRL_FORM,
 )
 
+__all__ = ["export_postscript"]
+
 # PostScript points per inch
 _PPI = 72
 # US Letter dimensions in points

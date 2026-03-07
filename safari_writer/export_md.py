@@ -11,6 +11,8 @@ from safari_writer.screens.editor import (
     CTRL_EJECT, CTRL_CHAIN, CTRL_FORM, TOGGLE_MARKERS,
 )
 
+__all__ = ["export_markdown"]
+
 
 def export_markdown(buffer: list[str], fmt: GlobalFormat) -> str:
     """Convert a document buffer to Markdown text.

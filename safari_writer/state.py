@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass, field, fields
 
+__all__ = ["AppState", "GlobalFormat"]
+
 
 @dataclass
 class GlobalFormat:

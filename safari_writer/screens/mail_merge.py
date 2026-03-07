@@ -2,95 +2,26 @@
 
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass, field
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
 from textual import events
+from safari_writer.mail_merge_db import (
+    DEFAULT_FIELDS as _DEFAULT_FIELDS,
+    MAX_FIELD_DATA_LEN,
+    MAX_FIELD_NAME_LEN,
+    MAX_FIELDS,
+    MAX_RECORDS as _MAX_RECORDS,
+    FieldDef,
+    MailMergeDB,
+    load_mail_merge_db,
+    save_mail_merge_db,
+)
 
-# ---------------------------------------------------------------------------
-# Data model
-# ---------------------------------------------------------------------------
-
-MAX_FIELDS   = 15
-MAX_RECORDS  = 255
-MAX_FIELD_NAME_LEN = 12
-MAX_FIELD_DATA_LEN = 20
-
-DEFAULT_FIELDS: list[tuple[str, int]] = [
-    ("Last Name",    20),
-    ("First Name",   20),
-    ("Company",      20),
-    ("Address",      20),
-    ("City",         20),
-    ("State",        10),
-    ("Zipcode",      10),
-    ("Phone",        15),
-    ("Salutation",   20),
-    ("Title",        20),
-    ("Department",   20),
-    ("Country",      20),
-    ("Email",        20),
-    ("Fax",          15),
-    ("Notes",        20),
-]
-
-
-@dataclass
-class FieldDef:
-    name: str
-    max_len: int = MAX_FIELD_DATA_LEN
-
-
-@dataclass
-class MailMergeDB:
-    """In-memory mail merge database."""
-    fields: list[FieldDef] = field(default_factory=lambda: [
-        FieldDef(name, ml) for name, ml in DEFAULT_FIELDS
-    ])
-    records: list[list[str]] = field(default_factory=list)
-    filename: str = ""
-
-    @property
-    def records_free(self) -> int:
-        return MAX_RECORDS - len(self.records)
-
-    def new_record(self) -> list[str]:
-        return [""] * len(self.fields)
-
-    def to_dict(self) -> dict:
-        return {
-            "fields": [{"name": f.name, "max_len": f.max_len} for f in self.fields],
-            "records": self.records,
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "MailMergeDB":
-        db = cls.__new__(cls)
-        db.fields = [FieldDef(f["name"], f["max_len"]) for f in data["fields"]]
-        db.records = data["records"]
-        db.filename = ""
-        return db
-
-    def schema_matches(self, other: "MailMergeDB") -> bool:
-        if len(self.fields) != len(other.fields):
-            return False
-        return all(
-            a.max_len == b.max_len
-            for a, b in zip(self.fields, other.fields)
-        )
-
-    def apply_subset(self, field_idx: int, low: str, high: str) -> list[int]:
-        """Return indices of records where fields[field_idx] is in [low, high]."""
-        results = []
-        for i, rec in enumerate(self.records):
-            val = rec[field_idx] if field_idx < len(rec) else ""
-            if low.lower() <= val.lower() <= high.lower():
-                results.append(i)
-        return results
+DEFAULT_FIELDS = _DEFAULT_FIELDS
+MAX_RECORDS = _MAX_RECORDS
 
 
 # ---------------------------------------------------------------------------
@@ -167,9 +98,10 @@ class MailMergeScreen(Screen):
         Binding("escape", "exit_module", "Exit", show=False),
     ]
 
-    def __init__(self, app_state) -> None:
+    def __init__(self, app_state, initial_mode: str = MODE_MAIN) -> None:
         super().__init__()
         self._app_state = app_state
+        self._initial_mode = initial_mode
         # Each app gets one shared DB instance stored on app state
         if not hasattr(app_state, "mail_merge_db"):
             app_state.mail_merge_db = MailMergeDB()
@@ -210,6 +142,14 @@ class MailMergeScreen(Screen):
 
     def on_mount(self) -> None:
         self._enter_main()
+        if self._initial_mode == MODE_ENTER:
+            self._enter_data_entry()
+        elif self._initial_mode == MODE_UPDATE:
+            self._enter_update()
+        elif self._initial_mode == MODE_SCHEMA:
+            self._enter_schema()
+        elif self._initial_mode == MODE_SUBSET:
+            self._enter_subset()
 
     # ------------------------------------------------------------------
     # Mode entry
@@ -760,7 +700,7 @@ class MailMergeScreen(Screen):
 
     def _save_db(self, filename: str) -> None:
         try:
-            Path(filename).write_text(json.dumps(self._db.to_dict(), indent=2))
+            save_mail_merge_db(self._db, Path(filename))
             self._db.filename = filename
             self._set_message(f"Saved {len(self._db.records)} records to '{filename}'.")
         except OSError as e:
@@ -769,20 +709,18 @@ class MailMergeScreen(Screen):
 
     def _load_db(self, filename: str) -> None:
         try:
-            data = json.loads(Path(filename).read_text())
-            self._db = MailMergeDB.from_dict(data)
+            self._db = load_mail_merge_db(Path(filename))
             self._db.filename = filename
             self._app_state.mail_merge_db = self._db
             self._refresh_status()
             self._set_message(f"Loaded {len(self._db.records)} records from '{filename}'.")
-        except (OSError, json.JSONDecodeError, KeyError) as e:
+        except (OSError, ValueError) as e:
             self._set_message(f"Load error: {e}")
         self._enter_main()
 
     def _append_db(self, filename: str) -> None:
         try:
-            data = json.loads(Path(filename).read_text())
-            other = MailMergeDB.from_dict(data)
+            other = load_mail_merge_db(Path(filename))
             if not self._db.schema_matches(other):
                 self._set_message("Cannot append — schemas do not match (field count or lengths differ).")
                 self._enter_main()
@@ -792,7 +730,7 @@ class MailMergeScreen(Screen):
             self._db.records.extend(to_add)
             self._refresh_status()
             self._set_message(f"Appended {len(to_add)} records (of {len(other.records)}).")
-        except (OSError, json.JSONDecodeError, KeyError) as e:
+        except (OSError, ValueError) as e:
             self._set_message(f"Append error: {e}")
         self._enter_main()
 

@@ -9,6 +9,8 @@ Plain-text files use no encoding — control characters are stripped on save.
 
 from __future__ import annotations
 
+__all__ = ["decode_sfw", "encode_sfw", "has_controls", "is_sfw", "strip_controls"]
+
 # Internal control bytes → .sfw tag (without the leading backslash)
 _ENCODE_MAP: dict[str, str] = {
     "\x01": "B",   # bold toggle

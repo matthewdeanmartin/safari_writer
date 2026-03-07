@@ -244,3 +244,19 @@
 - [ ] Mid-document global format override (inline margin/spacing change, new control chars)
 - [x] Error messages displayed in message window (not dialog boxes)
 - [x] Destructive actions require confirmation: Delete File ✓, plain-text save ✓, Create with unsaved changes ✓
+
+---
+
+## Phase 13: CLI Interface
+
+- [x] Write exhaustive CLI specification for argparse-based subcommands and direct-entry TUI startup (`spec/08_cli_interface.md`)
+- [x] Refactor `safari_writer.main` to expose a pytest-friendly `main(argv=None) -> int`
+- [x] Add `argparse` parser builder with nested subcommands for `tui`, `export`, `proof`, `format`, and `mail-merge`
+- [x] Add a startup request/config object so `SafariWriterApp` can launch directly into menu, editor, proofreader, global format, mail merge, print, preview, or file index flows
+- [x] Support bare-file shorthand (`safari-writer FILE`) as an alias for direct-entry editor startup
+- [x] Extract reusable headless helpers for document load/save, export, proofing, and mail-merge inspection so CLI commands do not depend on Textual screens
+- [x] Implement headless export subcommands for Markdown, PostScript, and ANSI render output
+- [x] Implement headless proof subcommands for check/list/suggest with stable exit codes
+- [x] Implement headless format subcommands for `.sfw` encode/decode/strip workflows
+- [x] Implement headless mail-merge subcommands for inspect/subset/append/validate workflows
+- [x] Add pytest coverage for parser defaults, invalid combinations, startup request mapping, headless handlers, and exit-code contracts

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -10,68 +9,13 @@ from textual.screen import Screen
 from textual.widgets import Static
 from textual import events
 
-# Control chars that should be stripped before spell-checking
-_CTRL_CHARS = re.compile(r"[\x01-\x1f]")
-
-# ---------------------------------------------------------------------------
-# Dictionary backend (pyenchant)
-# ---------------------------------------------------------------------------
-
-def _make_checker():
-    """Return an enchant Dict, or None if enchant is unavailable."""
-    try:
-        import enchant
-        return enchant.Dict("en_US")
-    except Exception:
-        return None
-
-
-def _check_word(word: str, checker, kept: set[str], personal: set[str]) -> bool:
-    """Return True if word is correctly spelled."""
-    w = word.strip(".,;:!?\"'()-")
-    if not w or not w[0].isalpha():
-        return True
-    if w.lower() in kept or w.lower() in personal:
-        return True
-    if checker is None:
-        return True  # no dictionary — assume OK
-    return checker.check(w)
-
-
-def _suggest(word: str, checker) -> list[str]:
-    if checker is None:
-        return []
-    try:
-        return checker.suggest(word)[:18]
-    except Exception:
-        return []
-
-
-def _dict_lookup(prefix: str, checker) -> list[str]:
-    """Return up to 126 dictionary words starting with prefix (via suggestions heuristic)."""
-    if checker is None or len(prefix) < 2:
-        return []
-    try:
-        suggestions = checker.suggest(prefix)
-        matches = [w for w in suggestions if w.lower().startswith(prefix.lower())]
-        return matches[:126]
-    except Exception:
-        return []
-
-
-# ---------------------------------------------------------------------------
-# Word extraction: return list of (row, col_start, word) from buffer
-# ---------------------------------------------------------------------------
-
-def _extract_words(buffer: list[str]) -> list[tuple[int, int, str]]:
-    """Yield (row, col, word) for every word token in the buffer."""
-    word_re = re.compile(r"[A-Za-z']+")
-    results = []
-    for row, line in enumerate(buffer):
-        clean = _CTRL_CHARS.sub(" ", line)
-        for m in word_re.finditer(clean):
-            results.append((row, m.start(), m.group()))
-    return results
+from safari_writer.proofing import (
+    check_word as _check_word,
+    dict_lookup as _dict_lookup,
+    extract_words as _extract_words,
+    load_personal_dictionary,
+    make_checker as _make_checker,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -139,9 +83,16 @@ class ProofreaderScreen(Screen):
         Binding("escape", "exit_proofreader", "Exit", show=False),
     ]
 
-    def __init__(self, state) -> None:
+    def __init__(
+        self,
+        state,
+        initial_mode: str | None = None,
+        personal_dict_paths: list[Path] | tuple[Path, ...] | None = None,
+    ) -> None:
         super().__init__()
         self._state = state
+        self._initial_mode = initial_mode
+        self._personal_dict_paths = tuple(personal_dict_paths or ())
         self._checker = None
         self._checker_loaded = False
         self._personal: set[str] = set()   # loaded personal dict words
@@ -177,6 +128,16 @@ class ProofreaderScreen(Screen):
 
     def on_mount(self) -> None:
         self._enter_menu()
+        for path in self._personal_dict_paths:
+            self._personal.update(load_personal_dictionary(path))
+        if self._initial_mode == "highlight":
+            self._enter_highlight()
+        elif self._initial_mode == "print":
+            self._enter_print()
+        elif self._initial_mode == "correct":
+            self._enter_correct()
+        elif self._initial_mode == "search":
+            self._enter_dict_search(from_correct=False)
 
     def _ensure_checker(self):
         """Load the spell-check dictionary on first use only."""
@@ -525,9 +486,7 @@ class ProofreaderScreen(Screen):
 
     def _load_personal_dict(self, filename: str) -> None:
         try:
-            text = Path(filename).read_text()
-            new_words = re.split(r"[\s\n]+", text.strip().lower())
-            new_words = [w for w in new_words if w]
+            new_words = load_personal_dictionary(Path(filename))
             self._personal.update(new_words)
             self._set_message(f"Loaded {len(new_words)} words from '{filename}'.")
         except OSError as e:
