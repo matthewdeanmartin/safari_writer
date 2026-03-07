@@ -1,0 +1,31 @@
+\H:Safari Writer Demo
+\F:Reopen Demo Mode any time for a fresh copy.
+\CWelcome to Safari Writer
+This built-in demo is both a quick tour and a safe practice file for new users.
+Use the arrow keys to move, type directly into the text, and Press F1 or ? whenever you want the full help screen.
+Press Ctrl+P to open Print / Export when you are ready to preview or save your work.
+
+\S1Getting Started
+This document lives inside Safari Writer, but Demo Mode loads it as a working copy in memory.
+That means you can experiment freely, then save your own version if you want to keep the changes.
+\PStart on this paragraph line to see how a paragraph marker looks inside the editor.
+\RMarch 1986
+
+\S2Inline Formatting
+You can toggle \Bbold\B, \Uunderline\U, and \Gelongated\G text without leaving the keyboard.
+Scientific notation can use E=mc\^2\^, and chemistry can use H\v2\vO.
+Mail merge fields can appear inline too: Dear \@1,
+Form blanks are useful for worksheets and templates: Name \_  Role \_
+
+\S2Document Structure
+The centered title at the top of this file uses the center-line marker.
+The header and footer are stored on their own lines so preview and export can reuse them.
+Section headings, like this one, are numbered automatically when Safari Writer prints or exports the document.
+The next line is a hard page break so you can see multi-page behavior in preview.
+\E
+\S1Second Page
+Try typing below, then use Esc to return to the Main Menu when you are done exploring.
+
+Type here:
+
+\>next-lesson.sfw
