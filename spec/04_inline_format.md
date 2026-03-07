@@ -65,7 +65,7 @@ Styling commands wrap around text or alter its display state on the screen.
 
 
 * 
-**Custom Tabs**: Users can override the default tab stops (which appear every 5 spaces). Using specific keystrokes, the user can clear all tabs, clear individual tabs, or set new ones. The UI updates the row of arrows in the top margin header to reflect custom tab placements.
+**Custom Tabs**: Users can override the default tab stops (which appear every 5 spaces). Press `Ctrl+T` at any column to set or clear a tab stop at that position. Press `Ctrl+Shift+T` to clear all tab stops at once. The UI updates the row of arrows in the top margin header immediately to reflect the current tab placements.
 
 
 

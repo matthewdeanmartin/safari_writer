@@ -43,7 +43,7 @@ letter of the command.
 
 *
 
-**1** Index Drive 1 / **2** Index Drive 2: Displays a directory of files on the selected storage drive.
+**1** Index Current Folder / **2** Index External Drive: Displays a directory listing. "1" shows the current working folder; "2" scans for removable/external drives (USB thumb drives, secondary disks) and shows their contents.
 
 *
 
@@ -59,7 +59,7 @@ letter of the command.
 
 *
 
-**F**ormat Disk: Prepares storage media.
+**F**older (New): Creates a new folder in the current directory.
 
 ## 3. The Text Screen (UI)
 

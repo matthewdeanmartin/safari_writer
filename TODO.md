@@ -46,6 +46,8 @@
 - [x] `Ctrl+Home/End` — top/bottom of file
 - [x] `Page Up/Down` — page scroll
 - [x] `Tab` — advance to next tab stop (inserts spaces in insert mode)
+- [x] `Ctrl+T` — toggle tab stop at cursor column
+- [x] `Ctrl+Shift+T` — clear all tab stops
 
 ### 3d. Edit Modes
 - [x] `Insert` key — toggle Insert vs. Type-over mode
@@ -109,8 +111,7 @@
 - [x] `Ctrl+Shift+E` — page eject / hard page break (`↡` marker), own line
 - [x] `Ctrl+Shift+C` — chain print file (`»` + filename, prompted), appended at end
 - [ ] Mid-document global format override (inline margin/spacing change)
-- [ ] Auto-numbering of section headings at print time
-
+- [x] Auto-numbering of section headings at print/export time
 ---
 
 ## Phase 7: Global Format Screen
@@ -139,26 +140,46 @@
 
 ## Phase 8: File Operations
 
-- [ ] `L` Load File — file picker / prompt for filename, load into buffer
-- [ ] `S` Save File — prompt for filename, write buffer to disk
-- [ ] `D` Delete File — prompt for filename, confirm, delete
-- [ ] `1`/`2` Index Drive — directory listing display
-- [x] `F` Format Disk — stub (shows "not applicable" message)
-- [ ] File format: plain text with embedded control character sequences
+- [x] `L` Load File — prompt for filename, load into buffer
+- [x] `S` Save File — prompt for filename, write buffer to disk
+- [x] `D` Delete File — prompt for filename, Y/N confirm, delete
+- [x] `1` Index Current Folder — directory listing with navigation, load, delete, new folder
+- [x] `2` Index External Drive — detect removable/external drives, directory listing
+- [x] `F` New Folder — prompt for name, create directory
+- [x] IndexScreen — AtariWriter-style directory listing (name, size, type columns)
+- [x] DrivePickerScreen — select from multiple external drives
+- [x] ConfirmScreen — Y/N confirmation dialog for destructive actions
+- [x] File format: `.sfw` (Safari Writer Formatted) with escaped tags; plain text for all other extensions
+- [x] `format_codec.py` — `encode_sfw()`, `decode_sfw()`, `strip_controls()`
+- [x] Load/save in `app.py` routes through codec based on file extension
+- [x] Plain text save strips control chars with warning if formatting present
+- [x] Status bar shows `[SFW]` or `[TXT]` based on filename extension
 
 ---
 
-## Phase 9: Print / Print Preview
+## Phase 9: Print / Export (see spec/07_file_format_and_print.md)
 
-- [x] `Ctrl+P` — stub in editor (shows "not yet implemented" message)
-- [ ] Print Preview screen with paginated output
-- [ ] Apply global format settings to render paginated output
-- [ ] Apply inline formatting during render
-- [ ] Mail merge injection at print time
-- [ ] Form printing blanks — prompt user to fill at print time
-- [ ] Page wait support
-- [ ] Chain file support
-- [ ] Actual print: send to system printer or export to file (PDF/text)
+- [x] `Ctrl+P` — opens Print/Export dialog from editor
+- [x] `PrintScreen` modal dialog: ANSI Preview / Markdown Export / PostScript Export
+- [x] `Ctrl+P` in editor and `P` on main menu both open `PrintScreen`
+- [x] **ANSI Preview** (`PrintPreviewScreen`):
+  - [x] Read-only paginated view applying global format + inline formatting
+  - [x] Headers/footers rendered per page, page numbering
+  - [x] Page breaks shown as horizontal rules
+  - [x] Margins, spacing, justification applied (justification is placeholder, left-aligns)
+  - [x] Navigation: PgUp/PgDn, Up/Down, Home/End, Esc
+- [x] **Markdown export** (`export_md.py`):
+  - [x] Bold → `**...**`, underline → `<u>`, section headings → `#` levels
+  - [x] Page breaks → `---`, merge fields → `{{field_N}}`
+  - [x] Prompt for output filename
+- [x] **PostScript export** (`export_ps.py`):
+  - [x] Full page layout engine using GlobalFormat settings
+  - [x] Font mapping, margins, pagination, headers/footers
+  - [x] Bold/underline/super/subscript rendered with PS font changes
+  - [x] Prompt for output filename
+- [ ] Mail merge injection at print/export time (prompt for DB file, iterate records)
+- [x] Form printing blanks — rendered as `[________]` in preview/export
+- [x] Chain file support — shown as comment in markdown, ignored in PS
 
 ---
 
@@ -184,27 +205,29 @@
 
 ## Phase 11: Mail Merge Module
 
-- [ ] `MailMergeScreen` — accessed from Main Menu "M"
-- [ ] Status header: Bytes Free + Records Free (max 255)
-- [ ] **Record Format (schema)**:
-  - [ ] Default 15-field address template
-  - [ ] Add / delete / rename fields (name up to 12 chars)
-  - [ ] Adjust field character limits (max 20 chars per field)
-  - [ ] Max 15 fields per schema
-- [ ] **Data Entry**:
-  - [ ] Form-fill UI per record
-  - [ ] `Enter` advances to next field; empty fields allowed
-  - [ ] Final field → "Definitions Complete Y/N?" confirm
-- [ ] **Record Management (Update Menu)**:
-  - [ ] `Page Up/Down` — previous/next record
-  - [ ] `Ctrl+D` — delete record with "Are You Sure? Y/N"
-- [ ] Append external Mail Merge file (must match schema exactly)
-- [ ] **Build Subset (filtering)**:
-  - [ ] Display all fields with Low Value / High Value columns
-  - [ ] Apply alphabetical/numeric range filter to specified field
+- [x] `MailMergeScreen` — accessed from Main Menu "M"
+- [x] Status header: Bytes Free + Records Free (max 255)
+- [x] **Record Format (schema)**:
+  - [x] Default 15-field address template
+  - [x] Add / delete / rename fields (name up to 12 chars)
+  - [x] Adjust field character limits (max 20 chars per field)
+  - [x] Max 15 fields per schema
+- [x] **Data Entry**:
+  - [x] Form-fill UI per record
+  - [x] `Enter` advances to next field; empty fields allowed
+  - [x] Final field → "Definitions Complete Y/N?" confirm
+- [x] **Record Management (Update Menu)**:
+  - [x] `Page Up/Down` — previous/next record
+  - [x] `Ctrl+D` — delete record with "Are You Sure? Y/N"
+  - [x] `E` — edit fields of current record inline
+- [x] Append external Mail Merge file (must match schema exactly)
+- [x] Save / Load database to/from JSON file
+- [x] **Build Subset (filtering)**:
+  - [x] Display all fields with Low Value / High Value columns
+  - [x] Apply alphabetical/numeric range filter to specified field
 - [ ] **Document integration**:
-  - [ ] `@N` merge markers in editor (inverse `@` display)
-  - [ ] At print time: prompt for DB filename, iterate records, inject field values
+  - [x] `@N` merge markers in editor (inverse `@` display) — markers already supported in editor
+  - [ ] At print time: prompt for DB filename, iterate records, inject field values (Phase 9)
 
 ---
 
@@ -212,9 +235,12 @@
 
 - [x] Resolve `Shift+F3` conflict — kept as case toggle; replace-occurrence is `Alt+F3`
 - [x] Bytes Free: tracked live from buffer size
-- [ ] Caps lock mode indicator and behavior
-- [ ] Tab stop management (set/clear individual tabs, clear all, UI arrow row updates)
-- [ ] Double-column layout rendering (M/N margins)
-- [ ] Confirm all keyboard shortcuts work correctly in Textual
+- [x] Caps lock mode indicator (`[Uppercase]` / `[Lowercase]` in status bar) and `Caps Lock` key binding
+- [x] Tab stop management: `Ctrl+T` toggles stop at cursor column, `Ctrl+Shift+T` clears all, tab bar updates live
+- [x] Unsaved changes check on "Create File" — Y/N confirmation before discarding buffer
+- [ ] Double-column layout rendering (M/N margins in preview and PostScript)
+- [x] Auto-numbering of section headings at print/export time (1.0, 1.1, 2.0, etc.)
+- [ ] Mail merge injection at print/export time — prompt for DB file, iterate records, substitute `@N` fields
+- [ ] Mid-document global format override (inline margin/spacing change, new control chars)
 - [x] Error messages displayed in message window (not dialog boxes)
-- [ ] All destructive actions require Y/N confirmation in message window
+- [x] Destructive actions require confirmation: Delete File ✓, plain-text save ✓, Create with unsaved changes ✓

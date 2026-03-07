@@ -5,7 +5,6 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
-from textual.reactive import reactive
 
 from safari_writer.state import GlobalFormat
 
@@ -128,9 +127,9 @@ class GFRow(Static):
         self._param = param
         self._value = value
         self._editing = editing
-        super().__init__(self._render_markup(), classes="gf-row")
+        super().__init__(self._row_markup(), classes="gf-row")
 
-    def _render_markup(self) -> str:
+    def _row_markup(self) -> str:
         key = f"[bold underline $accent]{self._param.key}[/]"
         # Pad label to 26 chars
         label = self._param.label.ljust(25)
@@ -145,7 +144,7 @@ class GFRow(Static):
     def refresh_value(self, value: int, editing: bool = False) -> None:
         self._value = value
         self._editing = editing
-        self.update(self._render_markup())
+        self.update(self._row_markup())
 
 
 # ---------------------------------------------------------------------------

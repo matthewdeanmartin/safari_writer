@@ -20,6 +20,8 @@ packages = ["safari_writer"]
 
 [dependency-groups]
 dev = [
+    "pylint>=3.3.0",
+    "ruff>=0.11.0",
     "textual-dev>=1.0.0",
     "pytest>=8.0.0",
 ]

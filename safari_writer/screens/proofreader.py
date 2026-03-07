@@ -142,10 +142,14 @@ class ProofreaderScreen(Screen):
     def __init__(self, state) -> None:
         super().__init__()
         self._state = state
-        self._checker = _make_checker()
+        self._checker = None
+        self._checker_loaded = False
         self._personal: set[str] = set()   # loaded personal dict words
         self._mode = MODE_MENU
         self._input_buf = ""
+        self._message_text = ""
+        self._body_text = ""
+        self._help_text = ""
 
         # Scan state
         self._words: list[tuple[int, int, str]] = []  # (row, col, word) for all words
@@ -166,13 +170,20 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
-        yield Static("", id="pr-message")
+        yield Static(self._message_text, id="pr-message")
         yield Static("*** SAFARI WRITER — PROOFREADER ***", id="pr-title")
-        yield Static("", id="pr-body")
-        yield Static("", id="pr-help")
+        yield Static(self._body_text, id="pr-body")
+        yield Static(self._help_text, id="pr-help")
 
     def on_mount(self) -> None:
         self._enter_menu()
+
+    def _ensure_checker(self):
+        """Load the spell-check dictionary on first use only."""
+        if not self._checker_loaded:
+            self._checker = _make_checker()
+            self._checker_loaded = True
+        return self._checker
 
     # ------------------------------------------------------------------
     # Mode entry helpers
@@ -196,6 +207,7 @@ class ProofreaderScreen(Screen):
     def _enter_highlight(self) -> None:
         self._mode = MODE_HIGHLIGHT
         self._errors = []
+        self._ensure_checker()
         self._words = _extract_words(self._state.buffer)
         self._set_message("Scanning document… (any key to abort)")
         self._set_help(" Any key to abort scan")
@@ -203,10 +215,11 @@ class ProofreaderScreen(Screen):
 
     def _enter_print(self) -> None:
         self._mode = MODE_PRINT
+        checker = self._ensure_checker()
         self._words = _extract_words(self._state.buffer)
         self._errors = [
             (r, c, w) for r, c, w in self._words
-            if not _check_word(w, self._checker, self._state.kept_spellings, self._personal)
+            if not _check_word(w, checker, self._state.kept_spellings, self._personal)
         ]
         if not self._errors:
             self._set_body("No spelling errors found.")
@@ -220,15 +233,17 @@ class ProofreaderScreen(Screen):
 
     def _enter_correct(self) -> None:
         self._mode = MODE_CORRECT
+        self._ensure_checker()
         self._words = _extract_words(self._state.buffer)
         self._scan_idx = 0
         self._errors = []
         self._advance_to_next_error()
 
     def _advance_to_next_error(self) -> None:
+        checker = self._ensure_checker()
         while self._scan_idx < len(self._words):
             r, c, w = self._words[self._scan_idx]
-            if not _check_word(w, self._checker, self._state.kept_spellings, self._personal):
+            if not _check_word(w, checker, self._state.kept_spellings, self._personal):
                 self._current_error = (r, c, w)
                 self._enter_correct_menu()
                 return
@@ -323,7 +338,7 @@ class ProofreaderScreen(Screen):
         if k == "c":
             self._mode = MODE_CORRECT_WORD
             self._input_buf = ""
-            r, c, w = self._current_error
+            _, _, w = self._current_error
             self._set_message(f"Correct [{w}]: type replacement word, Enter to confirm")
             self._set_help(" Enter Confirm  Esc Cancel")
         elif k == "s":
@@ -345,7 +360,7 @@ class ProofreaderScreen(Screen):
             if self._input_buf:
                 self._replacement = self._input_buf
                 self._mode = MODE_CORRECT_CONFIRM
-                r, c, w = self._current_error
+                _, _, w = self._current_error
                 self._set_message(
                     f"Replace '{w}' with '{self._replacement}' — Are you sure? Y/N"
                 )
@@ -358,7 +373,7 @@ class ProofreaderScreen(Screen):
             self._update_word_input()
 
     def _update_word_input(self) -> None:
-        r, c, w = self._current_error
+        _, _, w = self._current_error
         self._set_message(
             f"Correct [{w}]: {self._input_buf}█  (Enter confirm, Esc cancel)"
         )
@@ -395,7 +410,7 @@ class ProofreaderScreen(Screen):
             if len(prefix) < 2:
                 self._set_message("Please enter at least 2 letters.")
                 return
-            results = _dict_lookup(prefix, self._checker)
+            results = _dict_lookup(prefix, self._ensure_checker())
             self._dict_prefix = prefix
             self._dict_results = results
             self._dict_page = 0
@@ -528,7 +543,7 @@ class ProofreaderScreen(Screen):
         words = _extract_words(self._state.buffer)
         error_positions: set[tuple[int, int, int]] = set()
         for r, c, w in words:
-            if not _check_word(w, self._checker, self._state.kept_spellings, self._personal):
+            if not _check_word(w, self._ensure_checker(), self._state.kept_spellings, self._personal):
                 error_positions.add((r, c, len(w)))
 
         lines_out = []
@@ -577,16 +592,19 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def _set_message(self, msg: str) -> None:
+        self._message_text = f" {msg}"
         if self.is_mounted:
-            self.query_one("#pr-message", Static).update(f" {msg}")
+            self.query_one("#pr-message", Static).update(self._message_text)
 
     def _set_body(self, content: str) -> None:
+        self._body_text = content
         if self.is_mounted:
-            self.query_one("#pr-body", Static).update(content)
+            self.query_one("#pr-body", Static).update(self._body_text)
 
     def _set_help(self, text: str) -> None:
+        self._help_text = text
         if self.is_mounted:
-            self.query_one("#pr-help", Static).update(text)
+            self.query_one("#pr-help", Static).update(self._help_text)
 
     # ------------------------------------------------------------------
     # Actions

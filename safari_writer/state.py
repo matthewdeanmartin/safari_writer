@@ -1,6 +1,6 @@
 """Application-level state shared across screens."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 
 
 @dataclass
@@ -22,7 +22,9 @@ class GlobalFormat:
     page_wait: int = 0          # W: 0=off, 1=pause between pages
 
     def reset_defaults(self) -> None:
-        self.__init__()
+        defaults = GlobalFormat()
+        for data_field in fields(self):
+            setattr(self, data_field.name, getattr(defaults, data_field.name))
 
 
 @dataclass
@@ -58,6 +60,7 @@ class AppState:
 
     @property
     def bytes_free(self) -> int:
-        """Rough estimate of memory remaining (simulated, 64K ceiling)."""
-        used = sum(len(line) for line in self.buffer)
-        return max(0, 65536 - used)
+        """Available disk space on the volume containing the working directory."""
+        import shutil
+        import os
+        return shutil.disk_usage(os.getcwd()).free

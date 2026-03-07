@@ -1,10 +1,19 @@
 """Editor screen — the main text editing workspace."""
 
+import logging
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.screen import Screen, ModalScreen
 from textual.widgets import Static
 from textual.widget import Widget
 from textual import events
+
+_log = logging.getLogger("safari_writer.editor")
+_log.setLevel(logging.DEBUG)
+_fh = logging.FileHandler(Path(__file__).resolve().parent.parent / "debug.log", mode="a")
+_fh.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+_log.addHandler(_fh)
 
 # Control character display symbols embedded in the buffer
 CTRL_BOLD      = "\x01"  # bold toggle marker
@@ -135,9 +144,12 @@ NAVIGATION
   Ctrl+Home/End           Top / bottom of file
   Page Up/Down            Scroll page
   Tab                     Jump to next tab stop
+  Ctrl+T                  Toggle tab stop at cursor column
+  Ctrl+Shift+T            Clear all tab stops
 
 EDITING
   Insert                  Toggle Insert / Type-over mode
+  Caps Lock               Toggle Uppercase / Lowercase mode
   Shift+F3                Toggle case of character at cursor
   Ctrl+M                  Insert paragraph mark (¶)
   Enter                   New line (hard carriage return)
@@ -183,7 +195,7 @@ DOCUMENT STRUCTURE
   Alt+F                   Form printing blank  (_ marker, prompts at print)
 
 OTHER
-  Ctrl+P                  Print Preview (not yet implemented)
+  Ctrl+P                  Print / Export menu
   F1 / ?                  Show this help screen
   Escape                  Return to Main Menu\
 """
@@ -248,6 +260,14 @@ class HelpScreen(ModalScreen):
 
 class EditorArea(Widget, can_focus=True):
     """The main text editing widget."""
+
+    from textual.binding import Binding
+
+    BINDINGS = [
+        Binding("ctrl+c", "editor_copy", "Copy", show=False, priority=True),
+        Binding("ctrl+v", "editor_paste", "Paste", show=False, priority=True),
+        Binding("ctrl+x", "editor_cut", "Cut", show=False, priority=True),
+    ]
 
     def __init__(self, state) -> None:
         super().__init__(id="editor-area")
@@ -374,6 +394,9 @@ class EditorArea(Widget, can_focus=True):
                     out += f"[dim]{glyph}[/dim]"
             else:
                 glyph = CTRL_GLYPHS.get(ch, ch)
+                # Escape Rich markup characters in literal text
+                if ch not in CTRL_GLYPHS and ch == "[":
+                    glyph = "\\["
                 # Build markup based on active format state
                 markup = self._format_markup(fmt_state, is_cursor, in_sel)
                 if markup:
@@ -433,6 +456,7 @@ class EditorArea(Widget, can_focus=True):
     # ------------------------------------------------------------------
 
     def on_key(self, event: events.Key) -> None:
+        _log.debug("on_key: key=%r char=%r", event.key, event.character)
         if self._search_active or self._replace_active or self._heading_active or self._chain_active:
             self._handle_prompt_key(event)
             return
@@ -442,7 +466,7 @@ class EditorArea(Widget, can_focus=True):
         handled = True
 
         # Help
-        if key in ("f1", "question_mark"):
+        if key == "f1":
             self.app.push_screen(HelpScreen())
 
         # --- Selection-extending navigation ---
@@ -513,6 +537,12 @@ class EditorArea(Widget, can_focus=True):
         elif key == "tab":
             self._clear_selection()
             self._tab_forward()
+        elif key == "ctrl+t":
+            self._clear_selection()
+            self._tab_toggle()
+        elif key == "ctrl+shift+t":
+            self._clear_selection()
+            self._tab_clear_all()
 
         # Enter — split line
         elif key == "enter":
@@ -523,6 +553,9 @@ class EditorArea(Widget, can_focus=True):
         # Mode toggles
         elif key == "insert":
             s.insert_mode = not s.insert_mode
+            self._update_status()
+        elif key == "caps_lock":
+            s.caps_mode = not s.caps_mode
             self._update_status()
         elif key == "shift+f3":
             self._clear_selection()
@@ -549,13 +582,7 @@ class EditorArea(Widget, can_focus=True):
             self._clear_selection()
             self._delete_to_eof()
 
-        # Block ops
-        elif key == "ctrl+x":
-            self._cut()
-        elif key == "ctrl+c":
-            self._copy()
-        elif key == "ctrl+v":
-            self._paste()
+        # Block ops (ctrl+x/c/v handled via BINDINGS with priority=True)
         elif key == "alt+w":
             self._word_count()
         elif key == "alt+a":
@@ -607,9 +634,9 @@ class EditorArea(Widget, can_focus=True):
         elif key == "ctrl+shift+c":
             self._prompt_chain()
 
-        # Print preview stub
+        # Print / Export — delegate to app-level handler
         elif key == "ctrl+p":
-            self.screen.set_message("Print Preview: not yet implemented")  # type: ignore[attr-defined]
+            self.app._action_print()  # type: ignore[attr-defined]
 
         # Exit to main menu
         elif key == "escape":
@@ -629,6 +656,16 @@ class EditorArea(Widget, can_focus=True):
             event.stop()
             self.refresh()
             self._update_status()
+
+    def on_paste(self, event: events.Paste) -> None:
+        """Terminal sends bracketed paste on Ctrl+V — ignore its text, use internal clipboard."""
+        _log.debug("on_paste: ignoring terminal text=%r, using internal clipboard=%r", event.text, self.state.clipboard)
+        event.stop()
+        # Ctrl+V arrives as a Paste event, not a Key event, so the binding never fires.
+        # Paste from our internal clipboard instead.
+        self._paste()
+        self.refresh()
+        self._update_status()
 
     # ------------------------------------------------------------------
     # Prompt input handling (search / replace)
@@ -887,6 +924,29 @@ class EditorArea(Widget, can_focus=True):
             s.modified = True
         s.cursor_col = next_stop
 
+    def _tab_toggle(self) -> None:
+        """Set or clear a tab stop at the current cursor column."""
+        col = self.state.cursor_col
+        if col in self.tab_stops:
+            self.tab_stops.discard(col)
+            self.screen.set_message(f"Tab stop cleared at column {col}")  # type: ignore[attr-defined]
+        else:
+            self.tab_stops.add(col)
+            self.screen.set_message(f"Tab stop set at column {col}")  # type: ignore[attr-defined]
+        self._update_tab_bar()
+
+    def _tab_clear_all(self) -> None:
+        """Clear all tab stops."""
+        self.tab_stops.clear()
+        self.screen.set_message("All tab stops cleared")  # type: ignore[attr-defined]
+        self._update_tab_bar()
+
+    def _update_tab_bar(self) -> None:
+        try:
+            self.screen.update_tab_bar()  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
     # ------------------------------------------------------------------
     # Editing
     # ------------------------------------------------------------------
@@ -933,7 +993,7 @@ class EditorArea(Widget, can_focus=True):
         else:
             s.buffer.insert(row + 1, tail)
         if s.cursor_col > len(head):
-            s.cursor_col = s.cursor_col - len(head) - (len(line[wrap_at:]) - len(tail))
+            s.cursor_col = max(0, s.cursor_col - len(head) - (len(line[wrap_at:]) - len(tail)))
             s.cursor_row = row + 1
 
     def _insert_control(self, ctrl: str) -> None:
@@ -975,13 +1035,14 @@ class EditorArea(Widget, can_focus=True):
             line = s.buffer[row]
             s.buffer[row] = line[:col - 1] + line[col:]
             s.cursor_col -= 1
+            s.modified = True
         elif row > 0:
             prev = s.buffer[row - 1]
             s.buffer[row - 1] = prev + s.buffer[row]
             s.buffer.pop(row)
             s.cursor_row -= 1
             s.cursor_col = len(prev)
-        s.modified = True
+            s.modified = True
 
     def _delete_char(self) -> None:
         s = self.state
@@ -989,10 +1050,11 @@ class EditorArea(Widget, can_focus=True):
         line = s.buffer[row]
         if col < len(line):
             s.buffer[row] = line[:col] + line[col + 1:]
+            s.modified = True
         elif row < len(s.buffer) - 1:
             s.buffer[row] = line + s.buffer[row + 1]
             s.buffer.pop(row + 1)
-        s.modified = True
+            s.modified = True
 
     def _delete_to_eol(self) -> None:
         s = self.state
@@ -1082,6 +1144,27 @@ class EditorArea(Widget, can_focus=True):
             s.cursor_col = len(lines[-1])
         s.modified = True
 
+    def action_editor_copy(self) -> None:
+        _log.debug("action_editor_copy: selection=%r clipboard_before=%r", self._has_selection(), self.state.clipboard)
+        self._copy()
+        _log.debug("action_editor_copy: clipboard_after=%r", self.state.clipboard)
+        self.refresh()
+        self._update_status()
+
+    def action_editor_paste(self) -> None:
+        _log.debug("action_editor_paste: clipboard=%r cursor=(%d,%d)", self.state.clipboard, self.state.cursor_row, self.state.cursor_col)
+        self._paste()
+        _log.debug("action_editor_paste: buffer[row]=%r cursor=(%d,%d)", self.state.buffer[self.state.cursor_row], self.state.cursor_row, self.state.cursor_col)
+        self.refresh()
+        self._update_status()
+
+    def action_editor_cut(self) -> None:
+        _log.debug("action_editor_cut: selection=%r", self._has_selection())
+        self._cut()
+        _log.debug("action_editor_cut: clipboard=%r", self.state.clipboard)
+        self.refresh()
+        self._update_status()
+
     def _word_count(self) -> None:
         if self._has_selection():
             text = self._selected_text()
@@ -1140,7 +1223,8 @@ class EditorScreen(Screen):
         s = self.state
         mode = "Insert" if s.insert_mode else "Type-over"
         caps = "Uppercase" if s.caps_mode else "Lowercase"
-        return f" Bytes Free: {s.bytes_free:,}   [{mode}]   [{caps}]"
+        fmt_label = "SFW" if s.filename.lower().endswith(".sfw") else "TXT"
+        return f" Bytes Free: {s.bytes_free:,}   [{mode}]   [{caps}]   [{fmt_label}]"
 
     def _tab_bar_text(self) -> str:
         try:
@@ -1160,3 +1244,7 @@ class EditorScreen(Screen):
     def update_status(self) -> None:
         if self.is_mounted:
             self.query_one("#status-bar", Static).update(self._status_text())
+
+    def update_tab_bar(self) -> None:
+        if self.is_mounted:
+            self.query_one("#tab-bar", Static).update(self._tab_bar_text())

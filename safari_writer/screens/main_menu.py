@@ -3,7 +3,7 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Footer, Static
+from textual.widgets import Static
 
 
 MENU_ITEMS = [
@@ -13,12 +13,12 @@ MENU_ITEMS = [
     ("P", "rint File", "print"),
     ("G", "lobal Format", "global_format"),
     ("M", "ail Merge", "mail_merge"),
-    ("1", " Index Drive 1", "index1"),
-    ("2", " Index Drive 2", "index2"),
+    ("1", " Index Current Folder", "index1"),
+    ("2", " Index External Drive", "index2"),
     ("L", "oad File", "load"),
     ("S", "ave File", "save"),
     ("D", "elete File", "delete"),
-    ("F", "ormat Disk", "format_disk"),
+    ("F", "older (New)", "new_folder"),
 ]
 
 MENU_CSS = """
@@ -77,8 +77,8 @@ class MainMenuScreen(Screen):
         Binding("p", "menu_action('print')", "Print File", show=False),
         Binding("g", "menu_action('global_format')", "Global Format", show=False),
         Binding("m", "menu_action('mail_merge')", "Mail Merge", show=False),
-        Binding("1", "menu_action('index1')", "Index Drive 1", show=False),
-        Binding("2", "menu_action('index2')", "Index Drive 2", show=False),
+        Binding("1", "menu_action('index1')", "Index Current Folder", show=False),
+        Binding("2", "menu_action('index2')", "Index External Drive", show=False),
         Binding("l", "menu_action('load')", "Load File", show=False),
         Binding("s", "menu_action('save')", "Save File", show=False),
         Binding("d", "menu_action('delete')", "Delete File", show=False),
@@ -86,7 +86,6 @@ class MainMenuScreen(Screen):
     ]
 
     def compose(self) -> ComposeResult:
-        from textual.widgets import Label
         from textual.containers import Container
 
         with Container(id="menu-container"):
@@ -102,6 +101,10 @@ class MainMenuScreen(Screen):
 
     def on_mount(self) -> None:
         self.query_one("#status-bar", Static).update(self._status_text())
+
+    def set_message(self, msg: str) -> None:
+        if self.is_mounted:
+            self.query_one("#status-bar", Static).update(f" {msg}")
 
     def action_menu_action(self, action: str) -> None:
         self.app.handle_menu_action(action)  # type: ignore[attr-defined]

@@ -1,4 +1,4 @@
-.PHONY: install run dev lint clean
+.PHONY: install run dev test check lint lint-ruff pylint format
 
 install:
 	uv sync
@@ -12,8 +12,17 @@ dev:
 test:
 	uv run pytest tests/ -v
 
+check: test lint
+
 lint:
 	uv run ruff check safari_writer/
+	uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612
 
-clean:
-	rm -rf .venv __pycache__ safari_writer/__pycache__ safari_writer/screens/__pycache__
+lint-ruff:
+	uv run ruff check safari_writer/
+
+pylint:
+	uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612
+
+format:
+	uv run ruff format safari_writer/ tests/

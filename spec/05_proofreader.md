@@ -21,7 +21,7 @@ Users can interact with the Proofreader in three distinct modes depending on the
 * **Highlight Errors**: A read-only scanning mode. The system scrolls through the document and highlights all unrecognized words in inverse video without stopping to prompt for corrections.
 
 
-* **Print Errors**: A batch-processing mode. The system scans the document, provides an on-screen overview of the errors, and simultaneously sends a compiled list of the misspelled words to the printer.
+* **Print Errors**: A batch-processing mode. The system scans the document and displays a compiled list of all unrecognized words on-screen.
 
 
 * **Correct Errors**: An interactive, step-by-step correction mode. The system halts scrolling at the first identified error and opens a "Correction Menu" in the top message window.
@@ -58,11 +58,11 @@ Users can access the dictionary database independently without initiating a full
 To accommodate specialized vocabulary, proper nouns, or industry jargon, Safari Writer supports custom Personal Dictionaries.
 
 * 
-**Filing Learned Words**: At the end of an interactive "Correct Errors" session, the user can save all the words the system "memorized" (via the "Keep This Spelling" command) into a dedicated Personal Dictionary file. The system allows saving up to 256 learned words per session.
+**Filing Learned Words**: At the end of an interactive "Correct Errors" session, the user can save all the words the system "memorized" (via the "Keep This Spelling" command) into a dedicated Personal Dictionary file.
 
 
 * 
-**Manual Dictionary Creation**: Users can proactively build custom dictionaries using the standard text editor. By typing a list of words (separated by spaces or carriage returns) and saving the file, they create a custom dictionary. These custom files can hold up to 8,400 bytes (roughly 1,200 standard-length words).
+**Manual Dictionary Creation**: Users can proactively build custom dictionaries using the standard text editor. By typing a list of words (separated by spaces or carriage returns) and saving the file, they create a custom dictionary.
 
 
 * 

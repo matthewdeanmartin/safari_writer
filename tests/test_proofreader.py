@@ -2,7 +2,9 @@
 
 import pytest
 from unittest.mock import MagicMock, patch, mock_open
+import asyncio
 
+from safari_writer.app import SafariWriterApp
 from safari_writer.state import AppState
 from safari_writer.screens.proofreader import (
     ProofreaderScreen,
@@ -33,9 +35,13 @@ def make_screen(buffer: list[str] | None = None) -> ProofreaderScreen:
         screen = ProofreaderScreen.__new__(ProofreaderScreen)
         screen._state = state
         screen._checker = None  # no real dictionary in unit tests
+        screen._checker_loaded = True
         screen._personal = set()
         screen._mode = MODE_MENU
         screen._input_buf = ""
+        screen._message_text = ""
+        screen._body_text = ""
+        screen._help_text = ""
         screen._words = []
         screen._scan_idx = 0
         screen._errors = []
@@ -180,6 +186,21 @@ class TestModeTransitions:
         screen._advance_to_next_error()
         assert screen._current_error is None
         assert screen._mode == MODE_MENU  # done → back to menu-like state
+
+
+class TestMountBehavior:
+    def test_menu_is_visible_after_mount(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(ProofreaderScreen(app.state))
+                await pilot.pause()
+                screen = app.screen
+                assert "Highlight Errors" in screen._body_text
+                assert "Select a proofing mode." in screen._message_text
+                assert "Highlight" in screen._help_text
+
+        asyncio.run(run())
 
 
 # ---------------------------------------------------------------------------

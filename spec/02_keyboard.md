@@ -43,7 +43,7 @@ This mapping replaces the proprietary Atari keys (`[Option]`, `[Select]`, `[Star
  | **Shift + F3** | Toggles the character under the cursor between upper- and lowercase. |
 | <br>`[Control] [P]` 
 
- | **Ctrl + M** | Marks the beginning of a paragraph for automatic indentation without a carriage return. |
+ | **Ctrl + M** | Marks the beginning of a paragraph for automatic indentation without a carriage return. ⚠️ On many terminals, `Ctrl+M` and `Enter` produce the same keycode. If this shortcut is unreachable, use the inline formatting menu. |
 
 ### Block Operations (Cut, Copy, Paste)
 
@@ -69,7 +69,7 @@ This mapping replaces the proprietary Atari keys (`[Option]`, `[Select]`, `[Star
  | **Ctrl + H** | Prompts for a replacement string. |
 | <br>`[Select] [S]` / `[Select] [R]` 
 
- | **F3 / Shift + F3** | Finds the next occurrence / Replaces the current occurrence. |
+ | **F3 / Alt+F3** | Finds the next occurrence / Replaces the current occurrence and finds next. Note: `Shift+F3` is reserved for case-toggle (see Deletion table). |
 | <br>`[Option] [G]` 
 
  | **Alt + R** | Performs a global search and replace to the end of the file. |
@@ -99,6 +99,8 @@ This mapping replaces the proprietary Atari keys (`[Option]`, `[Select]`, `[Star
 | <br>`[Option] [M]` 
 
  | **Alt + M** | Inserts a Mail Merge database character for generating form letters. |
+| *(no Atari equivalent)* | **Ctrl + T** | Toggle a tab stop on/off at the current cursor column. The tab indicator row updates immediately. |
+| *(no Atari equivalent)* | **Ctrl + Shift + T** | Clear all custom tab stops. |
 
 ---
 

@@ -19,6 +19,8 @@ def make_editor(text: str = "") -> EditorArea:
         ed.tab_stops = set(range(5, 81, 5))
         ed._search_active = False
         ed._replace_active = False
+        ed._heading_active = False
+        ed._chain_active = False
         ed._input_buffer = ""
 
     # Mock screen so set_message / update_status don't fail
