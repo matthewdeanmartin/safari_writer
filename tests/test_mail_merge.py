@@ -1,18 +1,19 @@
 """Unit tests for the Mail Merge module."""
 
+import asyncio
 import json
-import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 
+from safari_writer.app import SafariWriterApp
 from safari_writer.state import AppState
 from safari_writer.screens.mail_merge import (
     MailMergeDB,
+    MailMergeHelpScreen,
     MailMergeScreen,
     FieldDef,
     MAX_FIELDS,
     MAX_RECORDS,
     MAX_FIELD_NAME_LEN,
-    MAX_FIELD_DATA_LEN,
     DEFAULT_FIELDS,
     MODE_MAIN,
     MODE_SCHEMA,
@@ -31,6 +32,7 @@ from safari_writer.screens.mail_merge import (
     SCHEMA_ACTION_MAXLEN,
     SCHEMA_ACTION_INSERT,
     SCHEMA_ACTION_DELETE,
+    MM_CSS,
 )
 
 
@@ -72,6 +74,10 @@ def make_screen(db: MailMergeDB | None = None) -> MailMergeScreen:
         screen._subset_high = ""
         screen._subset_entering = "field"
         screen._active_subset = None
+        screen._message_text = ""
+        screen._status_text = ""
+        screen._body_text = ""
+        screen._help_text = ""
         screen._from_correct = False
     # Stub widget methods
     screen._set_message = MagicMock()
@@ -92,6 +98,61 @@ def make_key(key: str, character: str | None = None):
     ev.character = character if character is not None else (key if len(key) == 1 else None)
     ev.stop = MagicMock()
     return ev
+
+
+# ---------------------------------------------------------------------------
+# Mounting / help
+# ---------------------------------------------------------------------------
+
+class TestMailMergeMountBehavior:
+    def test_menu_is_seeded_before_mount(self):
+        screen = MailMergeScreen(AppState())
+        assert "*** MAIL MERGE ***" in screen._body_text
+        assert "Select an option." in screen._message_text
+        assert "F1/? Help" in screen._help_text
+        assert "Records Free" in screen._status_text
+
+    def test_menu_is_visible_after_mount(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(MailMergeScreen(app.state))
+                await pilot.pause()
+                screen = app.screen
+                assert "*** MAIL MERGE ***" in screen._body_text
+                assert "Select an option." in screen._message_text
+                assert "F1/? Help" in screen._help_text
+                assert "Records Free" in screen._status_text
+
+        asyncio.run(run())
+
+
+class TestMailMergeHelp:
+    def test_show_help_pushes_modal(self):
+        screen = make_screen()
+        app = MagicMock()
+        with patch.object(MailMergeScreen, "app", new_callable=PropertyMock) as app_prop:
+            app_prop.return_value = app
+            screen.action_show_help()
+
+        pushed = app.push_screen.call_args.args[0]
+        assert isinstance(pushed, MailMergeHelpScreen)
+
+    def test_help_key_opens_modal(self):
+        screen = make_screen()
+        event = make_key("f1", None)
+        app = MagicMock()
+
+        with patch.object(MailMergeScreen, "app", new_callable=PropertyMock) as app_prop:
+            app_prop.return_value = app
+            screen.on_key(event)
+
+        pushed = app.push_screen.call_args.args[0]
+        assert isinstance(pushed, MailMergeHelpScreen)
+        event.stop.assert_called_once()
+
+    def test_status_bar_is_docked(self):
+        assert "#mm-status {\n    dock: top;" in MM_CSS
 
 
 # ---------------------------------------------------------------------------
@@ -317,7 +378,7 @@ class TestDataEntry:
         screen._entry_record = screen._db.new_record()
         screen._entry_field_idx = 0
         screen._input_buf = "Smith"
-        screen._key_enter("enter", make_key("enter"))
+        screen._key_data_entry("enter", make_key("enter"))
         assert screen._entry_record[0] == "Smith"
         assert screen._entry_field_idx == 1
 
@@ -327,7 +388,7 @@ class TestDataEntry:
         screen._entry_record = screen._db.new_record()
         screen._entry_field_idx = len(screen._db.fields) - 1
         screen._input_buf = "Some note"
-        screen._key_enter("enter", make_key("enter"))
+        screen._key_data_entry("enter", make_key("enter"))
         assert screen._mode == MODE_ENTER_CONFIRM
 
     def test_backspace_removes_char(self):
@@ -336,7 +397,7 @@ class TestDataEntry:
         screen._entry_record = screen._db.new_record()
         screen._entry_field_idx = 0
         screen._input_buf = "ab"
-        screen._key_enter("backspace", make_key("backspace"))
+        screen._key_data_entry("backspace", make_key("backspace"))
         assert screen._input_buf == "a"
 
     def test_typing_adds_char(self):
@@ -346,7 +407,7 @@ class TestDataEntry:
         screen._entry_field_idx = 0
         screen._input_buf = ""
         ev = make_key("a", "a")
-        screen._key_enter("a", ev)
+        screen._key_data_entry("a", ev)
         assert screen._input_buf == "a"
 
     def test_typing_respects_max_len(self):
@@ -357,7 +418,7 @@ class TestDataEntry:
         fmax = screen._db.fields[0].max_len
         screen._input_buf = "X" * fmax
         ev = make_key("z", "z")
-        screen._key_enter("z", ev)
+        screen._key_data_entry("z", ev)
         assert len(screen._input_buf) == fmax
 
     def test_confirm_y_saves_record(self):
@@ -365,7 +426,7 @@ class TestDataEntry:
         screen._mode = MODE_ENTER_CONFIRM
         screen._entry_record = ["Smith"] + [""] * (len(screen._db.fields) - 1)
         screen._enter_main = MagicMock()
-        screen._key_enter_confirm("y", make_key("y"))
+        screen._key_data_entry_confirm("y", make_key("y"))
         assert len(screen._db.records) == 1
         assert screen._db.records[0][0] == "Smith"
 
@@ -373,7 +434,7 @@ class TestDataEntry:
         screen = make_screen()
         screen._mode = MODE_ENTER_CONFIRM
         screen._entry_record = screen._db.new_record()
-        screen._key_enter_confirm("n", make_key("n"))
+        screen._key_data_entry_confirm("n", make_key("n"))
         assert screen._mode == MODE_ENTER
         assert screen._entry_field_idx == len(screen._db.fields) - 1
 
@@ -389,7 +450,7 @@ class TestDataEntry:
         screen._mode = MODE_ENTER_CONFIRM
         screen._entry_record = screen._db.new_record()  # all empty
         screen._enter_main = MagicMock()
-        screen._key_enter_confirm("y", make_key("y"))
+        screen._key_data_entry_confirm("y", make_key("y"))
         assert len(screen._db.records) == 1
         assert all(v == "" for v in screen._db.records[0])
 

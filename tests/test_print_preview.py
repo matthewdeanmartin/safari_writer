@@ -2,8 +2,10 @@
 
 import pytest
 from safari_writer.state import GlobalFormat
+from safari_writer.mail_merge_db import FieldDef, MailMergeDB
 from safari_writer.screens.print_screen import (
     _render_document,
+    _render_with_mail_merge,
     _count_pages,
     _render_inline,
     _strip_inline,
@@ -45,7 +47,7 @@ class TestRenderInline:
     def test_merge_field_display(self):
         line = f"Dear {CTRL_MERGE}1"
         text, state = _render_inline(line, self._init_state())
-        assert "<<@>>" in text
+        assert "<<@1>>" in text
 
     def test_form_blank_display(self):
         line = f"Name: {CTRL_FORM}"
@@ -204,3 +206,57 @@ class TestHeaderFooterPageNumber:
         lines = _render_document(buf, default_fmt())
         joined = "\n".join(lines)
         assert "- 1 -" in joined
+
+
+class TestMailMergePreview:
+    def _make_db(self, records: list[list[str]]) -> MailMergeDB:
+        db = MailMergeDB()
+        db.fields = [FieldDef("First", 20), FieldDef("Last", 20)]
+        db.records = records
+        return db
+
+    def test_no_merge_markers_renders_normally(self):
+        buf = ["Hello World"]
+        db = self._make_db([["Alice", "Smith"]])
+        lines = _render_with_mail_merge(buf, default_fmt(), db)
+        joined = "\n".join(lines)
+        assert "Hello World" in joined
+
+    def test_merge_markers_substituted_per_record(self):
+        buf = [f"Dear {CTRL_MERGE}1 {CTRL_MERGE}2"]
+        db = self._make_db([["Alice", "Smith"], ["Bob", "Jones"]])
+        lines = _render_with_mail_merge(buf, default_fmt(), db)
+        joined = "\n".join(lines)
+        assert "Alice" in joined
+        assert "Smith" in joined
+        assert "Bob" in joined
+        assert "Jones" in joined
+
+    def test_no_db_shows_placeholders(self):
+        buf = [f"Dear {CTRL_MERGE}1"]
+        lines = _render_with_mail_merge(buf, default_fmt(), None)
+        joined = "\n".join(lines)
+        assert "<<@1>>" in joined
+
+    def test_empty_db_shows_placeholders(self):
+        db = self._make_db([])
+        buf = [f"Dear {CTRL_MERGE}1"]
+        lines = _render_with_mail_merge(buf, default_fmt(), db)
+        joined = "\n".join(lines)
+        assert "<<@1>>" in joined
+
+    def test_multi_digit_field_number(self):
+        db = MailMergeDB()
+        db.fields = [FieldDef(f"F{i}", 20) for i in range(1, 16)]
+        db.records = [[""] * 14 + ["FieldFifteen"]]
+        buf = [f"Val: {CTRL_MERGE}15"]
+        lines = _render_with_mail_merge(buf, default_fmt(), db)
+        joined = "\n".join(lines)
+        assert "FieldFifteen" in joined
+
+    def test_record_separator_between_copies(self):
+        buf = [f"Hi {CTRL_MERGE}1"]
+        db = self._make_db([["Alice", "A"], ["Bob", "B"]])
+        lines = _render_with_mail_merge(buf, default_fmt(), db)
+        joined = "\n".join(lines)
+        assert "Record 2" in joined

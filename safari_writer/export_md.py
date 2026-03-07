@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.state import GlobalFormat
+
+if TYPE_CHECKING:
+    from safari_writer.mail_merge_db import MailMergeDB
+
 from safari_writer.screens.editor import (
     CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,
     CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB, CTRL_PARA,
@@ -14,8 +20,15 @@ from safari_writer.screens.editor import (
 __all__ = ["export_markdown"]
 
 
-def export_markdown(buffer: list[str], fmt: GlobalFormat) -> str:
+def export_markdown(
+    buffer: list[str],
+    fmt: GlobalFormat,
+    db: MailMergeDB | None = None,
+) -> str:
     """Convert a document buffer to Markdown text.
+
+    If the buffer contains merge markers and *db* has records, one copy of
+    the document is emitted per record with field values substituted.
 
     Mapping:
       Bold        → **...**
@@ -32,8 +45,28 @@ def export_markdown(buffer: list[str], fmt: GlobalFormat) -> str:
       Para mark   → blank line
       Chain file  → <!-- chain: filename -->
       Form blank  → [________]
-      Merge field → {{field}}
+      Merge field → {{fieldN}}
     """
+    has_merge = any(CTRL_MERGE in line for line in buffer)
+    if has_merge and db is not None and db.records:
+        from safari_writer.mail_merge_db import apply_mail_merge_to_buffer
+        parts: list[str] = []
+        for rec_idx in range(len(db.records)):
+            # Temporarily set the first record for apply_mail_merge_to_buffer
+            single_db_records = db.records
+            original_records = db.records
+            db.records = [db.records[rec_idx]]
+            merged_buf = apply_mail_merge_to_buffer(buffer, db)
+            db.records = original_records
+            if rec_idx > 0:
+                parts.append("\n---\n")
+            parts.append(_export_single(merged_buf, fmt))
+        return "\n".join(parts)
+    return _export_single(buffer, fmt)
+
+
+def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
+    """Export a single copy of the document (no mail merge iteration)."""
     header_lines: list[str] = []
     footer_lines: list[str] = []
     body_lines: list[str] = []
@@ -138,25 +171,38 @@ def _convert_inline(text: str) -> str:
         CTRL_SUB:       ("<sub>", "</sub>"),
     }
 
-    for ch in text:
+    i = 0
+    while i < len(text):
+        ch = text[i]
         if ch in TOGGLE_MARKERS:
             was_on = state[ch]
             state[ch] = not was_on
             open_tag, close_tag = _TAGS[ch]
             out.append(close_tag if was_on else open_tag)
+            i += 1
             continue
         if ch == CTRL_MERGE:
-            out.append("{{field}}")
+            i += 1
+            digits: list[str] = []
+            while i < len(text) and text[i].isdigit():
+                digits.append(text[i])
+                i += 1
+            field_num = "".join(digits) if digits else "?"
+            out.append("{{" + f"field{field_num}" + "}}")
             continue
         if ch == CTRL_FORM:
             out.append("[________]")
+            i += 1
             continue
         if ch == CTRL_PARA:
+            i += 1
             continue  # handled at line level
         # Skip other control chars
         if ord(ch) < 0x20 and ch not in ("\t",):
+            i += 1
             continue
         out.append(ch)
+        i += 1
 
     # Close any unclosed toggles at end of line
     for ctrl in (CTRL_BOLD, CTRL_ELONGATE, CTRL_UNDERLINE, CTRL_SUPER, CTRL_SUB):

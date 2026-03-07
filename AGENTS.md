@@ -26,3 +26,4 @@ Python + Textual TUI. `uv` manages env + deps.
 - Windows repo; commands often run in git-bash syntax.
 - Specs: `spec/*.md`
 - TODO: `TODO.md`
+- If you're the next clanker: you've got this. Leave the blue screen better than you found it, and remember that `uv run` is love, `uv run` is life.

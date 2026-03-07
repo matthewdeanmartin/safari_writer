@@ -144,7 +144,7 @@ class TestMergeField:
     def test_merge_placeholder(self):
         buf = [f"Dear {CTRL_MERGE}1"]
         result = export_markdown(buf, fmt())
-        assert "{{field}}" in result
+        assert "{{field1}}" in result
 
 
 class TestFormBlank:

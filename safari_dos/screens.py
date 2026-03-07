@@ -21,12 +21,19 @@ from safari_dos.services import (
     duplicate_path,
     format_timestamp,
     get_entry_info,
+    list_favorites,
     list_directory,
     list_garbage,
+    list_recent_documents,
+    list_recent_locations,
     move_paths,
     move_to_garbage,
+    record_recent_document,
+    record_recent_location,
     rename_path,
     restore_from_garbage,
+    set_protected,
+    toggle_favorite,
 )
 from safari_dos.state import SafariDosState
 
@@ -36,6 +43,7 @@ __all__ = [
     "MessageScreen",
     "SafariDosBrowserScreen",
     "SafariDosDevicesScreen",
+    "SafariDosFavoritesScreen",
     "SafariDosGarbageScreen",
     "SafariDosHelpScreen",
     "SafariDosMainMenuScreen",
@@ -43,8 +51,13 @@ __all__ = [
 
 DOS_CSS = """
 Screen {
-    background: #000080;
-    color: #ffffff;
+    background: $surface;
+    color: $text;
+}
+
+SafariDosMainMenuScreen {
+    align: center middle;
+    background: $surface;
 }
 
 #dos-container {
@@ -52,24 +65,51 @@ Screen {
     height: 100%;
 }
 
+#dos-menu-container {
+    width: 40;
+    height: auto;
+    border: solid $primary;
+    padding: 1 2;
+}
+
+#dos-menu-title {
+    text-align: center;
+    text-style: bold;
+    margin-bottom: 1;
+    color: $primary;
+}
+
+.menu-item {
+    height: 1;
+}
+
+#dos-status-bar {
+    dock: bottom;
+    height: 1;
+    background: $primary;
+    color: $text;
+    padding: 0 1;
+}
+
 #dos-header {
     dock: top;
     height: 4;
+    background: $surface;
     padding: 0 1;
 }
 
 #dos-title {
-    color: #ffff00;
+    color: $primary;
     text-style: bold;
     text-align: center;
 }
 
 #dos-path {
-    color: #00ffff;
+    color: $accent;
 }
 
 #dos-columns {
-    color: #ffffff;
+    color: $text;
     text-style: bold;
 }
 
@@ -81,31 +121,34 @@ Screen {
 #dos-footer {
     dock: bottom;
     height: 2;
+    background: $primary;
+    color: $text;
     padding: 0 1;
 }
 
 #dos-status {
-    color: #00ff00;
+    color: $text;
 }
 
 #dos-help {
-    color: #c0c0c0;
+    color: $text;
 }
 
 InputScreen, ConfirmScreen, MessageScreen {
     align: center middle;
+    background: $surface 60%;
 }
 
 #dos-dialog {
     width: 72;
     height: auto;
-    border: solid #ffffff;
-    background: #000080;
+    border: solid $primary;
+    background: $surface;
     padding: 1 2;
 }
 
 #dos-dialog-title {
-    color: #ffff00;
+    color: $primary;
     text-style: bold;
     text-align: center;
 }
@@ -115,7 +158,7 @@ InputScreen, ConfirmScreen, MessageScreen {
 }
 
 #dos-dialog-hint {
-    color: #c0c0c0;
+    color: $text-muted;
     margin-top: 1;
 }
 """
@@ -202,6 +245,13 @@ class MessageScreen(ModalScreen[None]):
         event.stop()
 
 
+class MenuItem(Static):
+    """Lightweight menu item matching Safari Writer's shared menu style."""
+
+    def __init__(self, key: str, label: str) -> None:
+        super().__init__(f"[bold underline]{key}[/]{label}", classes="menu-item")
+
+
 class SafariDosMainMenuScreen(Screen):
     """Atari DOS-style main menu for Safari DOS."""
 
@@ -228,18 +278,11 @@ class SafariDosMainMenuScreen(Screen):
         self._state = state
 
     def compose(self) -> ComposeResult:
-        with Container(id="dos-container"):
-            with Container(id="dos-header"):
-                yield Static("*** SAFARI DOS ***", id="dos-title")
-                yield Static(f"Current Location: {self._state.current_path}", id="dos-path")
-                yield Static("Select Function", id="dos-columns")
-            body = "\n".join(
-                f"[bold underline]{key}[/]{label}" for key, label, _ in self.MENU_ITEMS
-            )
-            yield Static(body, id="dos-body")
-            with Container(id="dos-footer"):
-                yield Static("Ready", id="dos-status")
-                yield Static("F=file list  D=devices  G=garbage  H=help  Q=quit", id="dos-help")
+        with Container(id="dos-menu-container"):
+            yield Static("*** SAFARI DOS ***", id="dos-menu-title")
+            for key, label, _ in self.MENU_ITEMS:
+                yield MenuItem(key, label)
+        yield Static(f" Ready | Current Location: {self._state.current_path}", id="dos-status-bar")
 
     def action_menu_action(self, action: str) -> None:
         app = cast("SafariDosAppProtocol", self.app)
@@ -272,6 +315,7 @@ class SafariDosBrowserScreen(Screen):
         Binding(".", "toggle_hidden", "Hidden", show=False),
         Binding("/", "filter", "Filter", show=False),
         Binding("s", "sort", "Sort", show=False),
+        Binding("f", "favorites", "Favorites", show=False),
         Binding("c", "copy", "Copy", show=False),
         Binding("m", "move", "Move", show=False),
         Binding("r", "rename", "Rename", show=False),
@@ -279,15 +323,18 @@ class SafariDosBrowserScreen(Screen):
         Binding("n", "new_folder", "New Folder", show=False),
         Binding("x", "garbage", "Garbage", show=False),
         Binding("i", "info", "Info", show=False),
+        Binding("p", "toggle_protected", "Protect", show=False),
+        Binding("tab", "choose_current_directory", "Choose Here", show=False),
         Binding("d", "devices", "Devices", show=False),
         Binding("g", "garbage_list", "Garbage List", show=False),
         Binding("h", "home", "Home", show=False),
         Binding("escape", "back_to_menu", "Menu", show=False),
     ]
 
-    def __init__(self, state: SafariDosState) -> None:
+    def __init__(self, state: SafariDosState, *, picker_mode: str | None = None) -> None:
         super().__init__()
         self._state = state
+        self._picker_mode = picker_mode
         self._entries: list[DirectoryEntry] = []
         self._selected_index = 0
         self._message = "Ready"
@@ -297,17 +344,25 @@ class SafariDosBrowserScreen(Screen):
             with Container(id="dos-header"):
                 yield Static("*** SAFARI DOS FILE LIST ***", id="dos-title")
                 yield Static("", id="dos-path")
-                yield Static("SEL NAME                         SIZE     TYPE   MODIFIED         P", id="dos-columns")
+                yield Static("SEL NAME                         SIZE     TYPE   MODIFIED         F", id="dos-columns")
             yield Static("", id="dos-body")
             with Container(id="dos-footer"):
                 yield Static("", id="dos-status")
                 yield Static(
-                    "Enter=open  Space=select  C/M/R/U/N/X ops  /=filter  S=sort  .=hidden  Esc=menu",
+                    self._help_text(),
                     id="dos-help",
                 )
 
     def on_mount(self) -> None:
+        self._sync_recent_locations()
         self.refresh_listing()
+
+    def _help_text(self) -> str:
+        if self._picker_mode == "file":
+            return "Enter=choose/open  Backspace=up  F=favorites  .=hidden  Esc=cancel"
+        if self._picker_mode == "directory":
+            return "Enter=open  Tab=choose folder  F=favorites  .=hidden  Esc=cancel"
+        return "Enter=open  Space=select  C/M/R/U/N/X ops  F=favorites  P=protect  /=filter  S=sort  .=hidden  Esc=menu"
 
     def set_message(self, message: str) -> None:
         self._message = message
@@ -354,9 +409,14 @@ class SafariDosBrowserScreen(Screen):
             for index, entry in enumerate(self._entries):
                 size = "---" if entry.size_bytes is None else f"{entry.size_bytes:>7}"
                 selected = "*" if entry.name in self._state.selected_names else " "
+                flags = [
+                    "P" if entry.protected else "-",
+                    "H" if entry.hidden else "-",
+                    "L" if entry.is_link else "-",
+                ]
                 line = (
                     f" {selected}  {entry.name[:28]:<28} {size:>7}  {entry.kind:<6} "
-                    f"{format_timestamp(entry.modified_at):<16} {'P' if entry.protected else '-'}"
+                    f"{format_timestamp(entry.modified_at):<16} {''.join(flags)}"
                 )
                 if index == self._selected_index:
                     line = f"[reverse]{line}[/reverse]"
@@ -393,16 +453,20 @@ class SafariDosBrowserScreen(Screen):
             return
         self._state.current_path = parent
         self._state.selected_names.clear()
+        self._sync_recent_locations()
         self.set_message("Moved up")
         self.refresh_listing()
 
     def action_home(self) -> None:
         self._state.current_path = Path.home()
         self._state.selected_names.clear()
+        self._sync_recent_locations()
         self.set_message("Home")
         self.refresh_listing()
 
     def action_toggle_select(self) -> None:
+        if self._picker_mode is not None:
+            return
         entry = self._selected_entry()
         if entry is None:
             return
@@ -413,6 +477,8 @@ class SafariDosBrowserScreen(Screen):
         self._refresh_view()
 
     def action_select_all(self) -> None:
+        if self._picker_mode is not None:
+            return
         self._state.selected_names = {entry.name for entry in self._entries}
         self.set_message("All visible items selected")
         self._refresh_view()
@@ -423,6 +489,8 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_filter(self) -> None:
+        if self._picker_mode is not None:
+            return
         self.app.push_screen(
             InputScreen("Name Filter", self._state.filter_text),
             callback=self._on_filter,
@@ -434,6 +502,8 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_sort(self) -> None:
+        if self._picker_mode is not None:
+            return
         fields = ("name", "date", "size", "type")
         current_index = fields.index(self._state.sort_field)
         next_index = (current_index + 1) % len(fields)
@@ -451,12 +521,22 @@ class SafariDosBrowserScreen(Screen):
         if entry.is_dir:
             self._state.current_path = entry.path
             self._state.selected_names.clear()
+            self._sync_recent_locations()
             self.set_message(f"Entered {entry.name}")
             self.refresh_listing()
+            return
+        if self._picker_mode == "directory":
+            self.set_message("Select a folder with Tab")
+            return
+        if self._picker_mode == "file":
+            self._sync_recent_documents(entry.path)
+            self.dismiss(entry.path)
             return
         self._request_open_in_writer(entry.path)
 
     def _request_open_in_writer(self, path: Path) -> None:
+        self._sync_recent_locations()
+        self._sync_recent_documents(path)
         app = self.app
         if hasattr(app, "handle_safari_dos_open"):
             getattr(app, "handle_safari_dos_open")(path)
@@ -467,6 +547,8 @@ class SafariDosBrowserScreen(Screen):
         self.set_message("No writer integration available")
 
     def action_new_folder(self) -> None:
+        if self._picker_mode is not None:
+            return
         self.app.push_screen(InputScreen("New Folder Name"), callback=self._on_new_folder)
 
     def _on_new_folder(self, name: str | None) -> None:
@@ -482,6 +564,8 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_rename(self) -> None:
+        if self._picker_mode is not None:
+            return
         entry = self._selected_entry()
         if entry is None:
             return
@@ -503,6 +587,8 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_duplicate(self) -> None:
+        if self._picker_mode is not None:
+            return
         entry = self._selected_entry()
         if entry is None:
             return
@@ -515,6 +601,8 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_copy(self) -> None:
+        if self._picker_mode is not None:
+            return
         sources = self._selected_paths()
         if not sources:
             return
@@ -525,6 +613,8 @@ class SafariDosBrowserScreen(Screen):
         )
 
     def action_move(self) -> None:
+        if self._picker_mode is not None:
+            return
         sources = self._selected_paths()
         if not sources:
             return
@@ -572,6 +662,8 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_garbage(self) -> None:
+        if self._picker_mode is not None:
+            return
         sources = self._selected_paths()
         if not sources:
             return
@@ -598,6 +690,8 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_info(self) -> None:
+        if self._picker_mode is not None:
+            return
         entry = self._selected_entry()
         if entry is None:
             return
@@ -617,6 +711,7 @@ class SafariDosBrowserScreen(Screen):
             return
         self._state.current_path = path
         self._state.selected_names.clear()
+        self._sync_recent_locations()
         self.set_message(f"Device: {path}")
         self.refresh_listing()
 
@@ -631,7 +726,131 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_back_to_menu(self) -> None:
+        if self._picker_mode is not None:
+            self.dismiss(None)
+            return
         self.app.pop_screen()
+
+    def action_favorites(self) -> None:
+        self.app.push_screen(
+            SafariDosFavoritesScreen(self._state),
+            callback=self._on_choose_favorite,
+        )
+
+    def _on_choose_favorite(self, path: Path | None) -> None:
+        if path is None:
+            self.set_message("Operation cancelled")
+            return
+        if path.is_dir():
+            self._state.current_path = path.resolve()
+            self._state.selected_names.clear()
+            self._sync_recent_locations()
+            self.set_message(f"Location: {path}")
+            self.refresh_listing()
+            return
+        if not path.exists():
+            self.set_message(f"Path not found: {path}")
+            return
+        self._sync_recent_documents(path)
+        if self._picker_mode == "file":
+            self.dismiss(path)
+            return
+        self._request_open_in_writer(path)
+
+    def action_toggle_protected(self) -> None:
+        if self._picker_mode is not None:
+            return
+        sources = self._selected_paths()
+        if not sources:
+            return
+        protected_now = all(path.exists() and next((entry.protected for entry in self._entries if entry.path == path), False) for path in sources)
+        changed = 0
+        try:
+            for path in sources:
+                set_protected(path, not protected_now)
+                changed += 1
+        except (FileNotFoundError, OSError) as exc:
+            self.set_message(str(exc))
+            return
+        action = "Unprotected" if protected_now else "Protected"
+        noun = "item" if changed == 1 else "items"
+        self.set_message(f"{action} {changed} {noun}")
+        self.refresh_listing()
+
+    def action_choose_current_directory(self) -> None:
+        if self._picker_mode != "directory":
+            return
+        self._sync_recent_locations()
+        self.dismiss(self._state.current_path)
+
+    def _sync_recent_locations(self) -> None:
+        self._state.recent_locations = record_recent_location(self._state.current_path)
+
+    def _sync_recent_documents(self, path: Path) -> None:
+        self._state.recent_documents = record_recent_document(path)
+
+
+class SafariDosFavoritesScreen(ModalScreen[Path | None]):
+    """Browse favorite and recent locations shared with Writer."""
+
+    CSS = DOS_CSS
+
+    def __init__(self, state: SafariDosState) -> None:
+        super().__init__()
+        self._state = state
+        self._entries: list[tuple[str, Path]] = []
+        self._selected = 0
+
+    def compose(self) -> ComposeResult:
+        with Container(id="dos-container"):
+            with Container(id="dos-header"):
+                yield Static("*** FAVORITES / RECENT ***", id="dos-title")
+                yield Static("Shared locations and documents", id="dos-path")
+                yield Static("TYPE     NAME                         PATH", id="dos-columns")
+            yield Static("", id="dos-body")
+            with Container(id="dos-footer"):
+                yield Static("Ready", id="dos-status")
+                yield Static("Enter=choose  T=toggle current folder  Esc=cancel", id="dos-help")
+
+    def on_mount(self) -> None:
+        self._refresh()
+
+    def _refresh(self) -> None:
+        favorites = self._state.favorites or list_favorites()
+        recent_locations = self._state.recent_locations or list_recent_locations()
+        recent_documents = self._state.recent_documents or list_recent_documents()
+        entries: list[tuple[str, Path]] = []
+        entries.extend(("FAVORITE", path) for path in favorites)
+        entries.extend(("RECENT", path) for path in recent_locations if path not in favorites)
+        entries.extend(("DOC", path) for path in recent_documents)
+        self._entries = entries
+        self._selected = min(self._selected, max(len(self._entries) - 1, 0))
+        lines: list[str] = []
+        for index, (kind, path) in enumerate(self._entries):
+            line = f"{kind:<8} {path.name[:28]:<28} {str(path)[:40]}"
+            if index == self._selected:
+                line = f"[reverse]{line}[/reverse]"
+            lines.append(line)
+        self.query_one("#dos-body", Static).update("\n".join(lines) if lines else "<empty>")
+
+    def on_key(self, event: events.Key) -> None:
+        if event.key == "escape":
+            self.dismiss(None)
+        elif event.key == "up" and self._selected > 0:
+            self._selected -= 1
+            self._refresh()
+        elif event.key == "down" and self._selected < len(self._entries) - 1:
+            self._selected += 1
+            self._refresh()
+        elif event.key == "enter" and self._entries:
+            self.dismiss(self._entries[self._selected][1])
+        elif event.key == "t":
+            added = toggle_favorite(self._state.current_path)
+            self._state.favorites = list_favorites()
+            status = "Added favorite" if added else "Removed favorite"
+            self.query_one("#dos-status", Static).update(status)
+            self._refresh()
+        event.stop()
 
 
 class SafariDosDevicesScreen(ModalScreen[Path | None]):
@@ -771,9 +990,11 @@ class SafariDosHelpScreen(Screen):
                 "  Space mark items",
                 "  C copy  M move  R rename  U duplicate",
                 "  N new folder  X send to Garbage",
+                "  F favorites/recent  P protect toggle",
                 "  / filter  S sort  . hidden toggle",
                 "",
                 "Garbage restores items without permanent delete.",
+                "Safari DOS stays foreground-only; no background daemon.",
                 "",
                 "Esc returns to menu.",
             ]

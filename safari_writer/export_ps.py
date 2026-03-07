@@ -6,8 +6,14 @@ The output can be printed directly or converted to PDF with ps2pdf.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.state import GlobalFormat
+
+if TYPE_CHECKING:
+    from safari_writer.mail_merge_db import MailMergeDB
+
 from safari_writer.screens.editor import (
     CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,
     CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB, CTRL_PARA,
@@ -37,8 +43,32 @@ def _char_width(font_size: float) -> float:
     return font_size * 0.6
 
 
-def export_postscript(buffer: list[str], fmt: GlobalFormat) -> str:
-    """Convert a document buffer to PostScript source text."""
+def export_postscript(
+    buffer: list[str],
+    fmt: GlobalFormat,
+    db: MailMergeDB | None = None,
+) -> str:
+    """Convert a document buffer to PostScript source text.
+
+    If the buffer contains merge markers and *db* has records, one copy
+    of the document is emitted per record with field values substituted.
+    """
+    has_merge = any(CTRL_MERGE in line for line in buffer)
+    if has_merge and db is not None and db.records:
+        from safari_writer.mail_merge_db import apply_mail_merge_to_buffer
+        parts: list[str] = []
+        for rec_idx in range(len(db.records)):
+            original_records = db.records
+            db.records = [db.records[rec_idx]]
+            merged_buf = apply_mail_merge_to_buffer(buffer, db)
+            db.records = original_records
+            parts.append(_export_single(merged_buf, fmt))
+        return "\n".join(parts)
+    return _export_single(buffer, fmt)
+
+
+def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
+    """Export a single copy of the document to PostScript."""
     reg_font, bold_font, font_size = _FONTS.get(fmt.type_font, _FONTS[1])
     char_w = _char_width(font_size)
     line_height = font_size * (fmt.line_spacing / 2.0) * 1.2
@@ -259,7 +289,9 @@ def _parse_spans(text: str) -> list[_Span]:
             ))
             current_chars.clear()
 
-    for ch in text:
+    i = 0
+    while i < len(text):
+        ch = text[i]
         if ch == CTRL_BOLD:
             flush()
             bold = not bold
@@ -277,16 +309,26 @@ def _parse_spans(text: str) -> list[_Span]:
             subscript = not subscript
         elif ch == CTRL_MERGE:
             flush()
-            spans.append(_Span("<<@>>"))
+            i += 1
+            digits: list[str] = []
+            while i < len(text) and text[i].isdigit():
+                digits.append(text[i])
+                i += 1
+            field_num = "".join(digits) if digits else "?"
+            spans.append(_Span(f"<<@{field_num}>>"))
+            continue
         elif ch == CTRL_FORM:
             flush()
             spans.append(_Span("[________]"))
         elif ch == CTRL_PARA:
+            i += 1
             continue
         elif ord(ch) < 0x20 and ch != "\t":
+            i += 1
             continue
         else:
             current_chars.append(ch)
+        i += 1
 
     flush()
     return spans

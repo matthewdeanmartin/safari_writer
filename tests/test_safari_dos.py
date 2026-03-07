@@ -7,16 +7,26 @@ from pathlib import Path
 
 import safari_dos
 from safari_dos.main import main as safari_dos_main, parse_args
+from safari_dos.screens import SafariDosBrowserScreen
 from safari_dos.services import (
     create_folder,
     duplicate_path,
+    list_favorites,
     list_directory,
     list_garbage,
+    list_recent_documents,
+    list_recent_locations,
     move_to_garbage,
+    record_recent_document,
+    record_recent_location,
     rename_path,
     restore_from_garbage,
+    set_protected,
+    toggle_favorite,
 )
 from safari_dos.state import SafariDosExitRequest
+from safari_writer.app import SafariWriterApp
+from safari_writer.screens.file_ops import FilePromptScreen
 
 
 def test_public_exports_are_explicit():
@@ -93,6 +103,92 @@ def test_create_folder_and_rename_path(tmp_path):
 
     assert renamed == tmp_path / "Revisions"
     assert renamed.is_dir()
+
+
+def test_set_protected_round_trip(tmp_path):
+    draft = tmp_path / "draft.txt"
+    draft.write_text("hello", encoding="utf-8")
+
+    set_protected(draft, True)
+    protected_entry = next(entry for entry in list_directory(tmp_path) if entry.name == "draft.txt")
+    assert protected_entry.protected is True
+
+    set_protected(draft, False)
+    unprotected_entry = next(entry for entry in list_directory(tmp_path) if entry.name == "draft.txt")
+    assert unprotected_entry.protected is False
+
+
+def test_recent_and_favorite_locations_persist(tmp_path, monkeypatch):
+    monkeypatch.setenv("SAFARI_DOS_HOME", str(tmp_path / "support"))
+    project = tmp_path / "Project"
+    project.mkdir()
+    archive = tmp_path / "Archive"
+    archive.mkdir()
+    document = project / "draft.sfw"
+    document.write_text("hello", encoding="utf-8")
+
+    assert toggle_favorite(project) is True
+    assert list_favorites() == [project.resolve()]
+
+    recent_locations = record_recent_location(project)
+    record_recent_location(archive)
+    recent_documents = record_recent_document(document)
+
+    assert recent_locations[0] == project.resolve()
+    assert list_recent_locations()[0] == archive.resolve()
+    assert recent_documents[0] == document.resolve()
+    assert list_recent_documents()[0] == document.resolve()
+
+
+def test_writer_load_and_delete_actions_use_safari_dos(monkeypatch):
+    app = SafariWriterApp()
+    pushed: list[tuple[object, object | None]] = []
+
+    monkeypatch.setattr(
+        app,
+        "push_screen",
+        lambda screen, callback=None, **_: pushed.append((screen, callback)),
+    )
+
+    app.handle_menu_action("load")
+    app.handle_menu_action("delete")
+
+    assert isinstance(pushed[0][0], SafariDosBrowserScreen)
+    assert pushed[0][0]._picker_mode == "file"
+    assert isinstance(pushed[1][0], SafariDosBrowserScreen)
+    assert pushed[1][0]._picker_mode == "file"
+
+
+def test_writer_save_uses_safari_dos_directory_picker(monkeypatch):
+    app = SafariWriterApp()
+    pushed: list[tuple[object, object | None]] = []
+
+    monkeypatch.setattr(
+        app,
+        "push_screen",
+        lambda screen, callback=None, **_: pushed.append((screen, callback)),
+    )
+
+    app.handle_menu_action("save")
+    assert isinstance(pushed[0][0], FilePromptScreen)
+
+    app._on_choose_save_name("draft.sfw")
+
+    assert isinstance(pushed[1][0], SafariDosBrowserScreen)
+    assert pushed[1][0]._picker_mode == "directory"
+
+
+def test_writer_delete_moves_file_to_garbage(tmp_path, monkeypatch):
+    monkeypatch.setenv("SAFARI_DOS_HOME", str(tmp_path / "support"))
+    draft = tmp_path / "draft.sfw"
+    draft.write_text("hello", encoding="utf-8")
+    app = SafariWriterApp()
+    app._pending_delete_path = draft
+
+    app._on_delete_confirm(True)
+
+    assert not draft.exists()
+    assert [entry.name for entry in list_garbage()] == ["draft.sfw"]
 
 
 def test_main_launches_writer_when_app_requests_handoff(monkeypatch, tmp_path):

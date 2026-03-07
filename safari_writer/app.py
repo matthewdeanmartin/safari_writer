@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from textual.app import App
+from textual.app import App, ScreenStackError
 
 from safari_writer.cli_types import StartupRequest
 from safari_writer.state import AppState
@@ -16,7 +16,15 @@ from safari_writer.screens.index_screen import IndexScreen, DrivePickerScreen, _
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
 from safari_writer.document_io import load_demo_document_buffer, load_document_buffer
 from safari_writer.format_codec import encode_sfw, strip_controls, has_controls, is_sfw
-from safari_dos.screens import SafariDosMainMenuScreen
+from safari_dos.screens import SafariDosBrowserScreen, SafariDosMainMenuScreen
+from safari_dos.services import (
+    list_favorites,
+    list_recent_documents,
+    list_recent_locations,
+    move_to_garbage,
+    record_recent_document,
+    record_recent_location,
+)
 from safari_dos.state import SafariDosState
 
 __all__ = ["SafariWriterApp"]
@@ -40,6 +48,9 @@ class SafariWriterApp(App):
         super().__init__()
         self.state = state or AppState()
         self.startup_request = startup_request or StartupRequest()
+        self._pending_delete_path: Path | None = None
+        self._pending_save_filename = ""
+        self._last_safari_dos_path = Path.cwd()
 
     def on_mount(self) -> None:
         self.push_screen(MainMenuScreen())
@@ -95,8 +106,9 @@ class SafariWriterApp(App):
             return
         if destination == "safari_dos":
             start_path = request.safari_dos_path or Path.cwd()
+            self._last_safari_dos_path = start_path.resolve()
             self.push_screen(
-                SafariDosMainMenuScreen(SafariDosState(current_path=start_path.resolve()))
+                SafariDosMainMenuScreen(self._build_safari_dos_state(start_path.resolve()))
             )
             return
 
@@ -134,20 +146,11 @@ class SafariWriterApp(App):
         elif action == "safari_dos":
             self._action_safari_dos()
         elif action == "load":
-            self.push_screen(
-                FilePromptScreen("Load File", self.state.filename),
-                callback=self._on_load_file,
-            )
+            self._action_load_via_safari_dos()
         elif action == "save":
-            self.push_screen(
-                FilePromptScreen("Save File", self.state.filename),
-                callback=self._on_save_file,
-            )
+            self._action_save_via_safari_dos()
         elif action == "delete":
-            self.push_screen(
-                FilePromptScreen("Delete File"),
-                callback=self._on_delete_prompt,
-            )
+            self._action_delete_via_safari_dos()
         elif action == "new_folder":
             self.push_screen(
                 FilePromptScreen("New Folder Name"),
@@ -193,7 +196,7 @@ class SafariWriterApp(App):
             return
         try:
             from safari_writer.export_md import export_markdown
-            text = export_markdown(self.state.buffer, self.state.fmt)
+            text = export_markdown(self.state.buffer, self.state.fmt, self.state.mail_merge_db)
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported Markdown: {filename}")
         except OSError as e:
@@ -204,7 +207,7 @@ class SafariWriterApp(App):
             return
         try:
             from safari_writer.export_ps import export_postscript
-            text = export_postscript(self.state.buffer, self.state.fmt)
+            text = export_postscript(self.state.buffer, self.state.fmt, self.state.mail_merge_db)
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported PostScript: {filename}")
         except OSError as e:
@@ -275,13 +278,16 @@ class SafariWriterApp(App):
         if not filename:
             return
         try:
-            self.state.buffer = load_document_buffer(Path(filename))
+            document_path = Path(filename).resolve()
+            self.state.buffer = load_document_buffer(document_path)
             self.state.cursor_row = 0
             self.state.cursor_col = 0
-            self.state.filename = filename
+            self.state.filename = str(document_path)
             self.state.modified = False
             fmt_label = "SFW" if is_sfw(filename) else "TXT"
-            self.set_message(f"Loaded [{fmt_label}]: {filename}")
+            self._remember_safari_dos_path(document_path.parent)
+            record_recent_document(document_path)
+            self.set_message(f"Loaded [{fmt_label}]: {document_path}")
         except OSError as e:
             self.set_message(f"Load error: {e}")
 
@@ -315,40 +321,47 @@ class SafariWriterApp(App):
 
     def _do_save(self, filename: str) -> None:
         try:
+            target_path = Path(filename).resolve()
             if is_sfw(filename):
                 text = encode_sfw(self.state.buffer)
             else:
                 text = "\n".join(strip_controls(self.state.buffer))
-            Path(filename).write_text(text, encoding="utf-8")
-            self.state.filename = filename
+            target_path.write_text(text, encoding="utf-8")
+            self.state.filename = str(target_path)
             self.state.modified = False
             fmt_label = "SFW" if is_sfw(filename) else "TXT"
-            self.set_message(f"Saved [{fmt_label}]: {filename}")
+            self._remember_safari_dos_path(target_path.parent)
+            record_recent_document(target_path)
+            self.set_message(f"Saved [{fmt_label}]: {target_path}")
         except OSError as e:
             self.set_message(f"Save error: {e}")
 
     def _on_delete_prompt(self, filename: str | None) -> None:
         if not filename:
             return
-        if not Path(filename).exists():
-            self.set_message(f"File not found: {filename}")
+        target_path = Path(filename).resolve()
+        if not target_path.exists():
+            self.set_message(f"File not found: {target_path}")
             return
-        self._pending_delete = filename
+        self._pending_delete_path = target_path
         self.push_screen(
-            ConfirmScreen(f"Delete {filename}?"),
+            ConfirmScreen(f"Move {target_path.name} to Garbage?"),
             callback=self._on_delete_confirm,
         )
 
     def _on_delete_confirm(self, confirmed: bool | None) -> None:
         if not confirmed:
-            self.set_message("Delete cancelled")
+            self.set_message("Garbage move cancelled")
             return
-        filename = self._pending_delete
+        if self._pending_delete_path is None:
+            self.set_message("No file selected")
+            return
         try:
-            Path(filename).unlink()
-            self.set_message(f"Deleted: {filename}")
-        except OSError as e:
-            self.set_message(f"Delete error: {e}")
+            move_to_garbage(self._pending_delete_path)
+            self._remember_safari_dos_path(self._pending_delete_path.parent)
+            self.set_message(f"Moved to Garbage: {self._pending_delete_path.name}")
+        except (FileNotFoundError, OSError, ValueError) as e:
+            self.set_message(f"Garbage error: {e}")
 
     def _on_new_folder(self, name: str | None) -> None:
         if not name:
@@ -371,18 +384,107 @@ class SafariWriterApp(App):
 
     def set_message(self, msg: str) -> None:
         """Display a message in the current screen's message bar if available."""
-        screen = self.screen
+        try:
+            screen = self.screen
+        except ScreenStackError:
+            return
         if hasattr(screen, "set_message"):
             screen.set_message(msg)
 
     def _action_safari_dos(self) -> None:
         """Open the Safari DOS module from the current project location."""
-        start_path = Path(self.state.filename).resolve().parent if self.state.filename else Path.cwd()
+        if self._last_safari_dos_path.exists():
+            start_path = self._last_safari_dos_path
+        elif self.state.filename:
+            start_path = Path(self.state.filename).resolve().parent
+        else:
+            start_path = Path.cwd()
         self.push_screen(
-            SafariDosMainMenuScreen(SafariDosState(current_path=start_path.resolve()))
+            SafariDosMainMenuScreen(self._build_safari_dos_state(start_path.resolve()))
         )
 
     def handle_safari_dos_open(self, path: Path) -> None:
         """Load a document selected from Safari DOS and open it in the editor."""
         self._on_load_file(str(path))
         self._open_editor()
+
+    def _build_safari_dos_state(self, start_path: Path) -> SafariDosState:
+        resolved = start_path.resolve()
+        return SafariDosState(
+            current_path=resolved,
+            favorites=list_favorites(),
+            recent_locations=list_recent_locations(),
+            recent_documents=list_recent_documents(),
+        )
+
+    def _remember_safari_dos_path(self, path: Path) -> None:
+        resolved = path.resolve()
+        self._last_safari_dos_path = resolved
+        record_recent_location(resolved)
+
+    def _default_save_name(self) -> str:
+        if self.state.filename:
+            return Path(self.state.filename).name
+        return "document.sfw" if has_controls(self.state.buffer) else "document.txt"
+
+    def _picker_start_path(self) -> Path:
+        if self.state.filename:
+            return Path(self.state.filename).resolve().parent
+        if self._last_safari_dos_path.exists():
+            return self._last_safari_dos_path
+        return Path.cwd()
+
+    def _action_load_via_safari_dos(self) -> None:
+        self.push_screen(
+            SafariDosBrowserScreen(
+                self._build_safari_dos_state(self._picker_start_path()),
+                picker_mode="file",
+            ),
+            callback=self._on_choose_load_file,
+        )
+
+    def _on_choose_load_file(self, path: Path | None) -> None:
+        if path is None:
+            self.set_message("Load cancelled")
+            return
+        self._on_load_file(str(path))
+        self._open_editor()
+
+    def _action_save_via_safari_dos(self) -> None:
+        self.push_screen(
+            FilePromptScreen("Save File Name", self._default_save_name()),
+            callback=self._on_choose_save_name,
+        )
+
+    def _on_choose_save_name(self, filename: str | None) -> None:
+        if not filename:
+            self.set_message("Save cancelled")
+            return
+        self._pending_save_filename = filename
+        picker_state = self._build_safari_dos_state(self._picker_start_path())
+        picker_state.pending_filename = filename
+        self.push_screen(
+            SafariDosBrowserScreen(picker_state, picker_mode="directory"),
+            callback=self._on_choose_save_location,
+        )
+
+    def _on_choose_save_location(self, directory: Path | None) -> None:
+        if directory is None:
+            self.set_message("Save cancelled")
+            return
+        self._on_save_file(str(directory / self._pending_save_filename))
+
+    def _action_delete_via_safari_dos(self) -> None:
+        self.push_screen(
+            SafariDosBrowserScreen(
+                self._build_safari_dos_state(self._picker_start_path()),
+                picker_mode="file",
+            ),
+            callback=self._on_choose_delete_file,
+        )
+
+    def _on_choose_delete_file(self, path: Path | None) -> None:
+        if path is None:
+            self.set_message("Delete cancelled")
+            return
+        self._on_delete_prompt(str(path))

@@ -8,6 +8,7 @@ from textual.widgets import Static
 from textual import events
 
 from safari_writer.heading_numbering import next_heading_number
+from safari_writer.mail_merge_db import MailMergeDB, apply_mail_merge_to_buffer
 from safari_writer.state import AppState, GlobalFormat
 from safari_writer.screens.editor import (
     CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,
@@ -135,7 +136,9 @@ class PrintPreviewScreen(Screen):
         )
 
     def on_mount(self) -> None:
-        self._rendered_lines = _render_document(self.state.buffer, self.state.fmt)
+        self._rendered_lines = _render_with_mail_merge(
+            self.state.buffer, self.state.fmt, self.state.mail_merge_db
+        )
         self._total_pages = _count_pages(self._rendered_lines)
         self._update_view()
 
@@ -307,20 +310,33 @@ def _render_inline(
 ) -> tuple[str, dict[str, bool]]:
     """Convert a line with control chars into Rich-markup text."""
     out: list[str] = []
-    for ch in text:
+    i = 0
+    while i < len(text):
+        ch = text[i]
         if ch in TOGGLE_MARKERS:
             fmt_state[ch] = not fmt_state[ch]
+            i += 1
             continue  # markers are invisible in print
         if ch == CTRL_MERGE:
-            out.append("[cyan]<<@>>[/cyan]")
+            # Consume following digits for the field number
+            i += 1
+            digits: list[str] = []
+            while i < len(text) and text[i].isdigit():
+                digits.append(text[i])
+                i += 1
+            field_num = "".join(digits) if digits else "?"
+            out.append(f"[cyan]<<@{field_num}>>[/cyan]")
             continue
         if ch == CTRL_FORM:
             out.append("[dim][________][/dim]")
+            i += 1
             continue
         if ch == CTRL_PARA:
+            i += 1
             continue  # consumed at line level
         # Any remaining non-printable control char — skip
         if ord(ch) < 0x20 and ch not in ("\t",):
+            i += 1
             continue
         # Escape Rich markup
         if ch == "[":
@@ -331,6 +347,7 @@ def _render_inline(
             out.append(f"[{markup}]{ch}[/{markup}]")
         else:
             out.append(ch)
+        i += 1
     return "".join(out), fmt_state
 
 
@@ -459,6 +476,65 @@ def _paginate(
             output.append(f"[dim]{'─' * rule_width}  Page {pn}[/dim]")
 
     return output
+
+
+def _buffer_has_merge_markers(buffer: list[str]) -> bool:
+    """Return True if any line contains a mail merge marker."""
+    return any(CTRL_MERGE in line for line in buffer)
+
+
+def _render_with_mail_merge(
+    buffer: list[str],
+    fmt: GlobalFormat,
+    db: MailMergeDB | None,
+) -> list[str]:
+    """Render with mail merge substitution when applicable.
+
+    If the buffer contains merge markers and a DB with records is loaded,
+    renders one copy per record with page breaks between copies.
+    Otherwise renders the buffer as-is.
+    """
+    if not _buffer_has_merge_markers(buffer) or db is None or not db.records:
+        return _render_document(buffer, fmt)
+
+    all_lines: list[str] = []
+    for rec_idx, record in enumerate(db.records):
+        merged_buf = _apply_record(buffer, record)
+        rendered = _render_document(merged_buf, fmt)
+        if rec_idx > 0:
+            rule_width = max(fmt.right_margin, 40)
+            all_lines.append(f"[bold cyan]{'═' * rule_width}  Record {rec_idx + 1}[/bold cyan]")
+        all_lines.extend(rendered)
+    return all_lines
+
+
+def _apply_record(buffer: list[str], record: list[str]) -> list[str]:
+    """Substitute merge markers in buffer with values from one record."""
+    merged: list[str] = []
+    for line in buffer:
+        out: list[str] = []
+        i = 0
+        while i < len(line):
+            ch = line[i]
+            if ch == CTRL_MERGE:
+                i += 1
+                digits: list[str] = []
+                while i < len(line) and line[i].isdigit():
+                    digits.append(line[i])
+                    i += 1
+                if digits:
+                    field_num = int("".join(digits))
+                    if 1 <= field_num <= len(record):
+                        out.append(record[field_num - 1])
+                    else:
+                        out.append(f"<<@{field_num}>>")
+                else:
+                    out.append("<<@?>>")
+                continue
+            out.append(ch)
+            i += 1
+        merged.append("".join(out))
+    return merged
 
 
 def _count_pages(rendered: list[str]) -> int:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.screen import Screen
+from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
 
@@ -61,6 +61,7 @@ MailMergeScreen {
     layout: vertical;
 }
 #mm-status {
+    dock: top;
     height: 1;
     background: $secondary;
     color: $text;
@@ -84,12 +85,103 @@ MailMergeScreen {
     color: $text-muted;
     padding: 0 1;
 }
+
+MailMergeHelpScreen {
+    align: center middle;
+}
+
+#help-dialog {
+    width: 72;
+    height: auto;
+    max-height: 90%;
+    border: solid $primary;
+    background: $surface;
+    padding: 1 2;
+}
+
+#help-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+#help-content {
+    color: $text;
+}
+
+#help-footer {
+    text-align: center;
+    color: $primary;
+    margin-top: 1;
+}
+"""
+
+HELP_CONTENT = """\
+MAIL MERGE OVERVIEW
+  E  Enter / Edit Records      Add a new record one field at a time
+  U  Update Records            Browse, edit, or delete existing records
+  F  Format Record             Change field names and field lengths
+  B  Build Subset              Filter records by a field range
+  S  Save Database             Write the current database to disk
+  L  Load Database             Load a database file from disk
+  A  Append Database           Merge another file with the same schema
+
+RECOMMENDED FLOW
+  1. Start with F to review the record format.
+  2. Use E to enter records.
+  3. Use U to browse or correct records later.
+  4. Use B before printing if you only want some records.
+  5. Save with S when the database looks right.
+
+FORMAT RECORD
+  Up / Down    Select a field
+  R            Rename the selected field
+  M            Change the field max length (1-20)
+  I            Insert a new field after the current one
+  D            Delete the selected field
+
+ENTER / UPDATE RECORDS
+  Type text and press Enter to move to the next field.
+  Empty fields are allowed.
+  On the last field, Y saves the record and N keeps editing.
+  In Update mode, Page Up / Page Down browse records.
+  Ctrl+D deletes the current record after confirmation.
+
+BUILD SUBSET
+  Choose the field number to filter.
+  Enter Low Value, then High Value.
+  Matching records stay active until you clear the subset with Esc.
+
+USING MERGE FIELDS IN A DOCUMENT
+  In the editor, insert the merge marker (@) and type the field number
+  after it, such as @1 for the first field or @3 for the third field.
+
+OTHER
+  F1 / ?       Show this help screen
+  Esc          Return to the previous Mail Merge menu\
 """
 
 
 # ---------------------------------------------------------------------------
 # Screen
 # ---------------------------------------------------------------------------
+
+
+class MailMergeHelpScreen(ModalScreen[None]):
+    """Mail Merge command reference shown as a modal overlay."""
+
+    def compose(self) -> ComposeResult:
+        from textual.containers import Container
+
+        with Container(id="help-dialog"):
+            yield Static("=== MAIL MERGE HELP ===", id="help-title")
+            yield Static(HELP_CONTENT, id="help-content")
+            yield Static("Press any key to close", id="help-footer")
+
+    def on_key(self, event: events.Key) -> None:
+        self.dismiss(None)
+
 
 class MailMergeScreen(Screen):
     """Mail Merge database module."""
@@ -131,16 +223,21 @@ class MailMergeScreen(Screen):
         self._subset_high = ""
         self._subset_entering = "field"  # "field" | "low" | "high"
         self._active_subset: list[int] | None = None  # None = all records
+        self._message_text = ""
+        self._status_text = ""
+        self._body_text = ""
+        self._help_text = ""
+        self._enter_main()
 
     # ------------------------------------------------------------------
     # Compose
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
-        yield Static("", id="mm-message")
-        yield Static("", id="mm-status")
-        yield Static("", id="mm-body")
-        yield Static("", id="mm-help")
+        yield Static(self._message_text, id="mm-message")
+        yield Static(self._status_text, id="mm-status")
+        yield Static(self._body_text, id="mm-body")
+        yield Static(self._help_text, id="mm-help")
 
     def on_mount(self) -> None:
         self._enter_main()
@@ -170,9 +267,9 @@ class MailMergeScreen(Screen):
             "[bold]L[/]  Load Database from file\n"
             "[bold]A[/]  Append database file\n"
             "\n"
-            "[dim]Esc  Return to Main Menu[/]"
+            "[dim]F1/?  Help    Esc  Return to Main Menu[/]"
         )
-        self._set_message("Select an option.")
+        self._set_message("Select an option. F1 or ? for help.")
         self._set_help(" E Enter  U Update  F Format  B Subset  S Save  L Load  A Append  Esc Exit")
 
     def _enter_schema(self) -> None:
@@ -221,13 +318,17 @@ class MailMergeScreen(Screen):
     # ------------------------------------------------------------------
 
     def on_key(self, event: events.Key) -> None:
+        if event.key == "f1" or event.character == "?":
+            self.action_show_help()
+            event.stop()
+            return
         key = event.key
         {
             MODE_MAIN:          self._key_main,
             MODE_SCHEMA:        self._key_schema,
             MODE_SCHEMA_EDIT:   self._key_schema_edit,
-            MODE_ENTER:         self._key_enter,
-            MODE_ENTER_CONFIRM: self._key_enter_confirm,
+            MODE_ENTER:         self._key_data_entry,
+            MODE_ENTER_CONFIRM: self._key_data_entry_confirm,
             MODE_UPDATE:        self._key_update,
             MODE_UPDATE_DELETE: self._key_update_delete,
             MODE_UPDATE_EDIT:   self._key_update_edit,
@@ -401,7 +502,7 @@ class MailMergeScreen(Screen):
     # Data entry
     # ------------------------------------------------------------------
 
-    def _key_enter(self, key: str, event) -> None:
+    def _key_data_entry(self, key: str, event) -> None:
         fi = self._entry_field_idx
         fdef = self._db.fields[fi]
 
@@ -433,7 +534,7 @@ class MailMergeScreen(Screen):
                 self._input_buf += event.character
                 self._render_entry_form()
 
-    def _key_enter_confirm(self, key: str, event) -> None:
+    def _key_data_entry_confirm(self, key: str, event) -> None:
         k = key.lower()
         if k == "y":
             if self._db.records_free <= 0:
@@ -743,19 +844,24 @@ class MailMergeScreen(Screen):
     def _refresh_status(self) -> None:
         state = self._app_state
         bytes_free = state.bytes_free if hasattr(state, "bytes_free") else 0
-        self._set_static(
-            "#mm-status",
-            f" Bytes Free: {bytes_free:,}   Records Free: {self._db.records_free}",
-        )
+        self._status_text = f" Bytes Free: {bytes_free:,}   Records Free: {self._db.records_free}"
+        if self.is_mounted:
+            self.query_one("#mm-status", Static).update(self._status_text)
 
     def _set_message(self, msg: str) -> None:
-        self._set_static("#mm-message", f" {msg}")
+        self._message_text = f" {msg}"
+        if self.is_mounted:
+            self.query_one("#mm-message", Static).update(self._message_text)
 
     def _set_body(self, content: str) -> None:
-        self._set_static("#mm-body", content)
+        self._body_text = content
+        if self.is_mounted:
+            self.query_one("#mm-body", Static).update(self._body_text)
 
     def _set_help(self, text: str) -> None:
-        self._set_static("#mm-help", text)
+        self._help_text = text if "F1" in text else f"{text}  F1/? Help"
+        if self.is_mounted:
+            self.query_one("#mm-help", Static).update(self._help_text)
 
     def _set_static(self, selector: str, content: str) -> None:
         if self.is_mounted:
@@ -764,6 +870,9 @@ class MailMergeScreen(Screen):
     # ------------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------------
+
+    def action_show_help(self) -> None:
+        self.app.push_screen(MailMergeHelpScreen())  # type: ignore[attr-defined]
 
     def action_exit_module(self) -> None:
         self.app.pop_screen()  # type: ignore[attr-defined]

@@ -12,6 +12,7 @@ from safari_dos.screens import (
     SafariDosGarbageScreen,
     SafariDosMainMenuScreen,
 )
+from safari_dos.services import list_favorites, list_recent_documents, list_recent_locations
 from safari_dos.state import SafariDosExitRequest, SafariDosState
 
 __all__ = ["SafariDosApp"]
@@ -24,7 +25,13 @@ class SafariDosApp(App[SafariDosExitRequest | None]):
 
     def __init__(self, start_path: Path | None = None) -> None:
         super().__init__()
-        self.state = SafariDosState(current_path=(start_path or Path.cwd()).resolve())
+        current_path = (start_path or Path.cwd()).resolve()
+        self.state = SafariDosState(
+            current_path=current_path,
+            favorites=list_favorites(),
+            recent_locations=list_recent_locations(),
+            recent_documents=list_recent_documents(),
+        )
 
     def on_mount(self) -> None:
         self.push_screen(SafariDosMainMenuScreen(self.state))

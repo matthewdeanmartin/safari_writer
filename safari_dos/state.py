@@ -14,6 +14,8 @@ class SafariDosExitRequest:
 
     action: str
     document_path: Path | None = None
+    location_path: Path | None = None
+    filename: str | None = None
 
 
 @dataclass
@@ -26,4 +28,8 @@ class SafariDosState:
     ascending: bool = True
     filter_text: str = ""
     selected_names: set[str] = field(default_factory=set)
+    favorites: list[Path] = field(default_factory=list)
+    recent_locations: list[Path] = field(default_factory=list)
+    recent_documents: list[Path] = field(default_factory=list)
+    pending_filename: str = ""
 

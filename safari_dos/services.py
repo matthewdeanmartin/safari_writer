@@ -22,12 +22,19 @@ __all__ = [
     "duplicate_path",
     "format_timestamp",
     "get_entry_info",
+    "list_favorites",
     "list_directory",
     "list_garbage",
+    "list_recent_documents",
+    "list_recent_locations",
     "move_paths",
     "move_to_garbage",
+    "record_recent_document",
+    "record_recent_location",
     "rename_path",
     "restore_from_garbage",
+    "set_protected",
+    "toggle_favorite",
 ]
 
 SORT_FIELDS = ("name", "date", "size", "type")
@@ -45,6 +52,7 @@ class DirectoryEntry:
     protected: bool
     hidden: bool
     is_dir: bool
+    is_link: bool
 
 
 @dataclass(frozen=True)
@@ -87,6 +95,18 @@ def _garbage_index_path() -> Path:
     return _garbage_root() / "index.json"
 
 
+def _favorites_path() -> Path:
+    return _support_root() / "favorites.json"
+
+
+def _recent_locations_path() -> Path:
+    return _support_root() / "recent_locations.json"
+
+
+def _recent_documents_path() -> Path:
+    return _support_root() / "recent_documents.json"
+
+
 def _ensure_garbage_store() -> None:
     _garbage_items_dir().mkdir(parents=True, exist_ok=True)
     index_path = _garbage_index_path()
@@ -111,6 +131,30 @@ def _save_garbage_index(items: list[dict[str, Any]]) -> None:
     )
 
 
+def _load_path_list(path: Path) -> list[Path]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        return []
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, list):
+        raise ValueError(f"Path list is invalid: {path}")
+    result: list[Path] = []
+    seen: set[Path] = set()
+    for item in payload:
+        candidate = Path(str(item)).resolve()
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        result.append(candidate)
+    return result
+
+
+def _save_path_list(path: Path, values: list[Path]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = [str(value.resolve()) for value in values]
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
 def _is_hidden(path: Path) -> bool:
     if path.name.startswith("."):
         return True
@@ -124,7 +168,44 @@ def _is_hidden(path: Path) -> bool:
 
 
 def _is_protected(path: Path) -> bool:
-    return not os.access(path, os.W_OK)
+    path_stat = path.stat()
+    file_attributes = getattr(path_stat, "st_file_attributes", 0)
+    readonly_attribute = getattr(stat, "FILE_ATTRIBUTE_READONLY", 0)
+    if readonly_attribute and file_attributes & readonly_attribute:
+        return True
+    writable_bits = stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH
+    return not bool(path_stat.st_mode & writable_bits)
+
+
+def set_protected(path: Path, protected: bool) -> None:
+    """Apply or clear Safari DOS protect semantics on a path."""
+
+    if not path.exists():
+        raise FileNotFoundError(f"Path not found: {path}")
+    if os.name == "nt":
+        readonly_attribute = getattr(stat, "FILE_ATTRIBUTE_READONLY", 0)
+        if readonly_attribute:
+            import ctypes
+
+            current_attributes = getattr(path.stat(), "st_file_attributes", 0)
+            new_attributes = (
+                current_attributes | readonly_attribute
+                if protected
+                else current_attributes & ~readonly_attribute
+            )
+            result = ctypes.windll.kernel32.SetFileAttributesW(  # type: ignore[attr-defined]
+                str(path),
+                int(new_attributes),
+            )
+            if result == 0:
+                error_code = ctypes.get_last_error()
+                raise OSError(error_code, f"Unable to update protection for {path}")
+            return
+
+    current_mode = path.stat().st_mode
+    writable_bits = stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH
+    new_mode = current_mode & ~writable_bits if protected else current_mode | stat.S_IWUSR
+    path.chmod(new_mode)
 
 
 def format_timestamp(value: datetime) -> str:
@@ -192,6 +273,7 @@ def list_directory(
                 protected=_is_protected(item),
                 hidden=hidden,
                 is_dir=is_dir,
+                is_link=item.is_symlink(),
             )
         )
 
@@ -203,6 +285,60 @@ def list_directory(
         files.reverse()
         entries = dirs + files
     return entries
+
+
+def list_favorites() -> list[Path]:
+    """Return configured favorite locations."""
+
+    return [path for path in _load_path_list(_favorites_path()) if path.exists()]
+
+
+def toggle_favorite(path: Path) -> bool:
+    """Add or remove a favorite location. Returns True when added."""
+
+    target = path.resolve()
+    favorites = list_favorites()
+    if target in favorites:
+        favorites = [favorite for favorite in favorites if favorite != target]
+        _save_path_list(_favorites_path(), favorites)
+        return False
+    favorites.append(target)
+    favorites.sort(key=lambda value: value.as_posix().lower())
+    _save_path_list(_favorites_path(), favorites)
+    return True
+
+
+def _record_recent(path: Path, storage_path: Path, *, limit: int = 10) -> list[Path]:
+    target = path.resolve()
+    values = [target]
+    values.extend(existing for existing in _load_path_list(storage_path) if existing != target)
+    trimmed = values[:limit]
+    _save_path_list(storage_path, trimmed)
+    return [value for value in trimmed if value.exists()]
+
+
+def list_recent_locations() -> list[Path]:
+    """Return recent folders used in Safari DOS or Writer handoffs."""
+
+    return [path for path in _load_path_list(_recent_locations_path()) if path.exists()]
+
+
+def record_recent_location(path: Path, *, limit: int = 10) -> list[Path]:
+    """Record a location for later quick access."""
+
+    return _record_recent(path, _recent_locations_path(), limit=limit)
+
+
+def list_recent_documents() -> list[Path]:
+    """Return recent writer documents shared with Safari DOS."""
+
+    return [path for path in _load_path_list(_recent_documents_path()) if path.exists()]
+
+
+def record_recent_document(path: Path, *, limit: int = 10) -> list[Path]:
+    """Record a writer document for Safari DOS handoff screens."""
+
+    return _record_recent(path, _recent_documents_path(), limit=limit)
 
 
 def create_folder(parent: Path, name: str) -> Path:
@@ -396,6 +532,9 @@ def discover_locations(current_path: Path | None = None) -> list[DeviceLocation]
     for label, path in standard:
         if path.exists():
             locations.append((label, path))
+    for favorite in list_favorites():
+        if favorite.exists():
+            locations.append((f"Favorite: {favorite.name or favorite.drive}", favorite))
 
     if os.name == "nt":
         try:
