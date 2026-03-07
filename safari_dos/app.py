@@ -34,6 +34,15 @@ class SafariDosApp(App[SafariDosExitRequest | None]):
         )
 
     def on_mount(self) -> None:
+        from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
+        for theme in THEMES.values():
+            self.register_theme(theme)
+        settings = load_settings()
+        saved_theme = settings.get("theme", DEFAULT_THEME)
+        if saved_theme not in THEMES:
+            saved_theme = DEFAULT_THEME
+        self.theme = saved_theme
+
         self.push_screen(SafariDosMainMenuScreen(self.state))
 
     def open_browser(self) -> None:
@@ -50,6 +59,10 @@ class SafariDosApp(App[SafariDosExitRequest | None]):
             SafariDosGarbageScreen(),
             callback=self._on_restore_from_garbage,
         )
+
+    def open_style_switcher(self) -> None:
+        from safari_writer.screens.style_switcher import StyleSwitcherScreen
+        self.push_screen(StyleSwitcherScreen(self.theme))
 
     def request_writer_launch(self, path: Path) -> None:
         self.exit(SafariDosExitRequest(action="open-in-writer", document_path=path))

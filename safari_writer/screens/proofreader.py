@@ -26,15 +26,22 @@ from safari_writer.typed import SpellChecker, WordMatch
 
 PR_CSS = """
 ProofreaderScreen {
+    align: center middle;
+    background: $background;
+}
+
+#pr-outer {
+    width: 76;
+    height: 28;
+    border: solid $accent;
     background: $surface;
-    layout: vertical;
+    padding: 0;
 }
 
 #pr-message {
-    dock: top;
     height: 1;
     background: $primary;
-    color: $text;
+    color: $foreground;
     padding: 0 1;
 }
 
@@ -42,19 +49,20 @@ ProofreaderScreen {
     height: 1;
     text-align: center;
     text-style: bold;
-    color: $primary;
+    color: $accent;
+    margin-top: 1;
 }
 
 #pr-body {
     height: 1fr;
-    padding: 0 1;
+    padding: 1 2;
+    color: $foreground;
 }
 
 #pr-help {
-    dock: bottom;
     height: 1;
-    background: $primary-darken-2;
-    color: $text-muted;
+    background: $primary;
+    color: $foreground;
     padding: 0 1;
 }
 """
@@ -63,17 +71,17 @@ ProofreaderScreen {
 # Mode constants
 # ---------------------------------------------------------------------------
 
-MODE_MENU       = "menu"       # choosing highlight / print / correct / search
-MODE_HIGHLIGHT  = "highlight"  # auto-scrolling highlight-only scan
-MODE_PRINT      = "print"      # batch scan → list errors
-MODE_CORRECT    = "correct"    # scanning for next error (between errors)
-MODE_CORRECT_MENU = "correct_menu"   # sub-menu: C/S/Enter
-MODE_CORRECT_WORD = "correct_word"   # typing replacement
-MODE_CORRECT_CONFIRM = "correct_confirm"  # "Are you sure? Y/N"
-MODE_DICT_SEARCH     = "dict_search"      # standalone dict search input
-MODE_DICT_RESULTS    = "dict_results"     # paging through results
-MODE_SAVE_PERSONAL   = "save_personal"   # prompt filename for personal dict
-MODE_LOAD_PERSONAL   = "load_personal"   # prompt filename to load personal dict
+MODE_MENU       = "menu"
+MODE_HIGHLIGHT  = "highlight"
+MODE_PRINT      = "print"
+MODE_CORRECT    = "correct"
+MODE_CORRECT_MENU = "correct_menu"
+MODE_CORRECT_WORD = "correct_word"
+MODE_CORRECT_CONFIRM = "correct_confirm"
+MODE_DICT_SEARCH     = "dict_search"
+MODE_DICT_RESULTS    = "dict_results"
+MODE_SAVE_PERSONAL   = "save_personal"
+MODE_LOAD_PERSONAL   = "load_personal"
 
 
 class ProofreaderScreen(Screen):
@@ -97,23 +105,20 @@ class ProofreaderScreen(Screen):
         self._personal_dict_paths = tuple(personal_dict_paths or ())
         self._checker: SpellChecker | None = None
         self._checker_loaded = False
-        self._personal: set[str] = set()   # loaded personal dict words
+        self._personal: set[str] = set()
         self._mode = MODE_MENU
         self._input_buf = ""
         self._message_text = ""
         self._body_text = ""
         self._help_text = ""
 
-        # Scan state
-        self._words: list[WordMatch] = []  # (row, col, word) for all words
-        self._scan_idx = 0                             # current position in _words
-        self._errors: list[WordMatch] = [] # flagged words
+        self._words: list[WordMatch] = []
+        self._scan_idx = 0
+        self._errors: list[WordMatch] = []
 
-        # Correction state
         self._current_error: WordMatch | None = None
         self._replacement: str = ""
 
-        # Dict results paging
         self._dict_results: list[str] = []
         self._dict_page = 0
         self._dict_prefix = ""
@@ -125,10 +130,12 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
-        yield Static(self._message_text, id="pr-message")
-        yield Static("*** SAFARI WRITER — PROOFREADER ***", id="pr-title")
-        yield Static(self._body_text, id="pr-body")
-        yield Static(self._help_text, id="pr-help")
+        from textual.containers import Container
+        with Container(id="pr-outer"):
+            yield Static(self._message_text, id="pr-message")
+            yield Static("*** SAFARI WRITER — PROOFREADER ***", id="pr-title")
+            yield Static(self._body_text, id="pr-body")
+            yield Static(self._help_text, id="pr-help")
 
     def on_mount(self) -> None:
         self._enter_menu()
@@ -144,7 +151,6 @@ class ProofreaderScreen(Screen):
             self._enter_dict_search(from_correct=False)
 
     def _ensure_checker(self) -> SpellChecker | None:
-        """Load the spell-check dictionary on first use only."""
         if not self._checker_loaded:
             self._checker = _make_checker()
             self._checker_loaded = True
@@ -218,7 +224,6 @@ class ProofreaderScreen(Screen):
                 self._enter_correct_menu()
                 return
             self._scan_idx += 1
-        # No more errors
         self._current_error = None
         kept_count = len(self._state.kept_spellings)
         self._set_body(
@@ -229,7 +234,7 @@ class ProofreaderScreen(Screen):
         )
         self._set_message("No more errors found.")
         self._set_help(" W Save personal dict  Esc Return to menu")
-        self._mode = MODE_MENU  # reuse menu key handler, body shows completion
+        self._mode = MODE_MENU
 
     def _enter_correct_menu(self) -> None:
         self._mode = MODE_CORRECT_MENU
@@ -257,7 +262,6 @@ class ProofreaderScreen(Screen):
         if mode == MODE_MENU:
             self._handle_menu_key(key)
         elif mode == MODE_HIGHLIGHT:
-            # Any key aborts
             self._enter_menu()
         elif mode == MODE_PRINT:
             self._enter_menu()
@@ -314,7 +318,6 @@ class ProofreaderScreen(Screen):
         elif k == "s":
             self._enter_dict_search(from_correct=True)
         elif key == "enter":
-            # Keep This Spelling
             _, _, w = self._require_current_error()
             self._state.kept_spellings.add(w.lower())
             self._set_message(f"Kept: '{w}' — will not flag again this session.")
@@ -359,12 +362,10 @@ class ProofreaderScreen(Screen):
         r, c, w = self._require_current_error()
         repl = self._replacement
         line = self._state.buffer[r]
-        # Replace first occurrence at column c
         if line[c:c + len(w)] == w:
             self._state.buffer[r] = line[:c] + repl + line[c + len(w):]
             self._state.modified = True
         self._set_message(f"Replaced '{w}' with '{repl}'.")
-        # Re-extract words since buffer changed
         self._words = _extract_words(self._state.buffer)
         self._scan_idx = 0
         self._advance_to_next_error()
@@ -406,7 +407,6 @@ class ProofreaderScreen(Screen):
             self._set_help(" Any key → new search")
             return
 
-        # Lay out in columns of 3
         cols = 3
         col_width = 26
         col_lines = [page[i::cols] for i in range(cols)]
@@ -443,7 +443,6 @@ class ProofreaderScreen(Screen):
         elif key == "escape":
             self._enter_dict_search(from_correct=self._from_correct)
         else:
-            # Any other key → back to new search
             self._enter_dict_search(from_correct=self._from_correct)
 
     def _handle_save_personal_key(self, key: str, event: events.Key) -> None:
@@ -468,7 +467,6 @@ class ProofreaderScreen(Screen):
             self._set_message("No words to save.")
             self._enter_menu()
             return
-        # Cap at 256 words as per spec
         words = words[:256]
         try:
             Path(filename).write_text(" ".join(words))
@@ -507,7 +505,6 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def _render_highlight_scan(self) -> None:
-        """Render the whole document with misspelled words in inverse video."""
         words = _extract_words(self._state.buffer)
         error_positions: set[tuple[int, int, int]] = set()
         for r, c, w in words:
@@ -516,7 +513,6 @@ class ProofreaderScreen(Screen):
 
         lines_out = []
         for row, line in enumerate(self._state.buffer):
-            # Build a per-char error mask
             mask = [False] * len(line)
             for (er, ec, ew) in error_positions:
                 if er == row:
@@ -539,10 +535,9 @@ class ProofreaderScreen(Screen):
             f"Highlight scan complete — {error_count} error(s) found. Press any key to return."
         )
         self._set_help(" Any key → return to menu")
-        self._mode = MODE_HIGHLIGHT  # wait for keypress to dismiss
+        self._mode = MODE_HIGHLIGHT
 
     def _render_document_with_highlight(self, hi_row: int, hi_col: int, hi_word: str) -> None:
-        """Render document, highlighting the current error word."""
         lines_out = []
         for row, line in enumerate(self._state.buffer):
             if row == hi_row:

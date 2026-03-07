@@ -21,18 +21,20 @@ MENU_ITEMS = [
     ("S", "ave File", "save"),
     ("D", "elete File", "delete"),
     ("F", "older (New)", "new_folder"),
+    ("X", " Style Switcher", "style_switcher"),
 ]
 
 MENU_CSS = """
 MainMenuScreen {
     align: center middle;
-    background: $surface;
+    background: $background;
 }
 
 #menu-container {
-    width: 40;
+    width: 42;
     height: auto;
-    border: solid $primary;
+    border: solid $accent;
+    background: $surface;
     padding: 1 2;
 }
 
@@ -40,11 +42,12 @@ MainMenuScreen {
     text-align: center;
     text-style: bold;
     margin-bottom: 1;
-    color: $primary;
+    color: $accent;
 }
 
 .menu-item {
     height: 1;
+    color: $foreground;
 }
 
 .menu-key {
@@ -56,7 +59,7 @@ MainMenuScreen {
     dock: bottom;
     height: 1;
     background: $primary;
-    color: $text;
+    color: $foreground;
     padding: 0 1;
 }
 """
@@ -64,7 +67,6 @@ MainMenuScreen {
 
 class MenuItem(Static):
     def __init__(self, key: str, label: str) -> None:
-        # Build a Text-like string; we'll highlight the key char via markup
         markup = f"[bold underline]{key}[/]{label}"
         super().__init__(markup, classes="menu-item")
 
@@ -87,6 +89,7 @@ class MainMenuScreen(Screen):
         Binding("s", "menu_action('save')", "Save File", show=False),
         Binding("d", "menu_action('delete')", "Delete File", show=False),
         Binding("f", "menu_action('new_folder')", "New Folder", show=False),
+        Binding("x", "menu_action('style_switcher')", "Style Switcher", show=False),
     ]
 
     def compose(self) -> ComposeResult:

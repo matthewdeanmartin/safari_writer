@@ -50,16 +50,31 @@ KEY_TO_PARAM: dict[str, Param] = {p.key: p for p in PARAMS}
 
 GF_CSS = """
 GlobalFormatScreen {
+    align: center middle;
+    background: $background;
+}
+
+#gf-outer {
+    width: 70;
+    height: auto;
+    border: solid $accent;
     background: $surface;
-    layout: vertical;
+    padding: 0;
+}
+
+#gf-message {
+    height: 1;
+    background: $primary;
+    color: $foreground;
+    padding: 0 1;
 }
 
 #gf-title {
     text-align: center;
     text-style: bold;
-    color: $primary;
+    color: $accent;
     height: 1;
-    margin-bottom: 1;
+    margin: 1 0;
 }
 
 #gf-table {
@@ -80,7 +95,7 @@ GlobalFormatScreen {
 
 .gf-label {
     width: 26;
-    color: $text;
+    color: $foreground;
 }
 
 .gf-value {
@@ -96,23 +111,15 @@ GlobalFormatScreen {
 }
 
 .gf-hint {
-    color: $text-muted;
-}
-
-#gf-message {
-    dock: top;
-    height: 1;
-    background: $primary;
-    color: $text;
-    padding: 0 1;
+    color: $foreground;
 }
 
 #gf-help {
-    dock: bottom;
     height: 1;
-    background: $primary-darken-2;
-    color: $text-muted;
+    background: $primary;
+    color: $foreground;
     padding: 0 1;
+    margin-top: 1;
 }
 """
 
@@ -131,14 +138,13 @@ class GFRow(Static):
         super().__init__(self._row_markup(), classes="gf-row")
 
     def _row_markup(self) -> str:
-        key = f"[bold underline $accent]{self._param.key}[/]"
-        # Pad label to 26 chars
+        key = f"[bold underline]{self._param.key}[/]"
         label = self._param.label.ljust(25)
         val_str = str(self._value).ljust(5)
         if self._editing:
-            val = f"[bold reverse $warning]{val_str}[/]"
+            val = f"[bold reverse]{val_str}[/]"
         else:
-            val = f"[bold $success]{val_str}[/]"
+            val = f"[bold]{val_str}[/]"
         hint = f"[dim]{self._param.hint}[/]"
         return f" {key}  {label} {val} {hint}"
 
@@ -165,8 +171,8 @@ class GlobalFormatScreen(Screen):
     def __init__(self, fmt: GlobalFormat) -> None:
         super().__init__()
         self._fmt = fmt
-        self._editing_key: str | None = None   # which param letter is active
-        self._input_buf: str = ""               # digits typed so far
+        self._editing_key: str | None = None
+        self._input_buf: str = ""
         self._rows: dict[str, GFRow] = {}
 
     # ------------------------------------------------------------------
@@ -174,17 +180,19 @@ class GlobalFormatScreen(Screen):
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
-        yield Static("", id="gf-message")
-        yield Static("*** GLOBAL FORMAT ***", id="gf-title")
-        with Static(id="gf-table"):
-            for p in PARAMS:
-                row = GFRow(p, getattr(self._fmt, p.attr))
-                self._rows[p.key] = row
-                yield row
-        yield Static(
-            " Press letter to edit value | [Tab] Reset Defaults | [Esc] Exit",
-            id="gf-help",
-        )
+        from textual.containers import Container
+        with Container(id="gf-outer"):
+            yield Static("", id="gf-message")
+            yield Static("*** GLOBAL FORMAT ***", id="gf-title")
+            with Static(id="gf-table"):
+                for p in PARAMS:
+                    row = GFRow(p, getattr(self._fmt, p.attr))
+                    self._rows[p.key] = row
+                    yield row
+            yield Static(
+                " Press letter to edit value | [Tab] Reset Defaults | [Esc] Exit",
+                id="gf-help",
+            )
 
     def on_mount(self) -> None:
         self.set_message("Press a letter key to select a parameter.")
@@ -201,14 +209,12 @@ class GlobalFormatScreen(Screen):
             event.stop()
             return
 
-        # Check for parameter letter
         upper_key = key.upper() if len(key) == 1 else key
         if upper_key in KEY_TO_PARAM:
             self._start_editing(upper_key)
             event.stop()
 
     def _start_editing(self, letter: str) -> None:
-        """Enter edit mode for the given parameter letter."""
         param = KEY_TO_PARAM[letter]
         self._editing_key = letter
         self._input_buf = ""
@@ -219,7 +225,6 @@ class GlobalFormatScreen(Screen):
         )
 
     def _handle_edit_key(self, key: str) -> None:
-        """Handle keypresses while editing a parameter value."""
         letter = self._editing_key
         if letter is None:
             return
@@ -236,15 +241,12 @@ class GlobalFormatScreen(Screen):
             if len(self._input_buf) < 5:
                 self._input_buf += key
                 self._preview_edit(param)
-        # ignore all other keys while editing
 
     def _preview_edit(self, param: Param) -> None:
-        """Show current input buffer in the row without committing."""
         display_val = int(self._input_buf) if self._input_buf else 0
         self._rows[param.key].refresh_value(display_val, editing=True)
 
     def _commit_edit(self, param: Param) -> None:
-        """Validate and save the typed value."""
         if not self._input_buf:
             self._cancel_edit(param)
             return
@@ -254,7 +256,6 @@ class GlobalFormatScreen(Screen):
             self.set_message(
                 f"Invalid value {new_val}. Range: {param.min_val}–{param.max_val}"
             )
-            # keep editing mode so user can fix it
             return
 
         setattr(self._fmt, param.attr, new_val)
@@ -264,7 +265,6 @@ class GlobalFormatScreen(Screen):
         self.set_message(f"{param.label} set to {new_val}.")
 
     def _cancel_edit(self, param: Param) -> None:
-        """Abort edit — restore original value display."""
         original = getattr(self._fmt, param.attr)
         self._editing_key = None
         self._input_buf = ""
@@ -277,7 +277,6 @@ class GlobalFormatScreen(Screen):
 
     def action_accept_and_exit(self) -> None:
         if self._editing_key is not None:
-            # Escape while editing = cancel edit, NOT exit
             param = KEY_TO_PARAM[self._editing_key]
             self._cancel_edit(param)
             return
@@ -285,7 +284,7 @@ class GlobalFormatScreen(Screen):
 
     def action_reset_defaults(self) -> None:
         if self._editing_key is not None:
-            return  # ignore Tab while editing a field
+            return
         self._fmt.reset_defaults()
         for p in PARAMS:
             self._rows[p.key].refresh_value(getattr(self._fmt, p.attr), editing=False)

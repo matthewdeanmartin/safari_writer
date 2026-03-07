@@ -14,8 +14,10 @@ from safari_writer.screens.mail_merge import MailMergeScreen
 from safari_writer.screens.file_ops import FilePromptScreen, ConfirmScreen
 from safari_writer.screens.index_screen import IndexScreen, DrivePickerScreen, _find_external_drives
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
+from safari_writer.screens.style_switcher import StyleSwitcherScreen
 from safari_writer.document_io import load_demo_document_buffer, load_document_buffer
 from safari_writer.format_codec import encode_sfw, strip_controls, has_controls, is_sfw
+from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
 from safari_dos.screens import SafariDosBrowserScreen, SafariDosMainMenuScreen
 from safari_dos.services import (
     list_favorites,
@@ -34,11 +36,8 @@ class SafariWriterApp(App):
     """Safari Writer — a UI-compatible clone of AtariWriter 80."""
 
     TITLE = "Safari Writer"
-    CSS = """
-    Screen {
-        background: #000080;
-    }
-    """
+    # Base CSS removed — all colours come from the active theme via $variables.
+    CSS = ""
 
     def __init__(
         self,
@@ -53,6 +52,17 @@ class SafariWriterApp(App):
         self._last_safari_dos_path = Path.cwd()
 
     def on_mount(self) -> None:
+        # Register all themes
+        for theme in THEMES.values():
+            self.register_theme(theme)
+
+        # Apply saved (or default) theme
+        settings = load_settings()
+        saved_theme = settings.get("theme", DEFAULT_THEME)
+        if saved_theme not in THEMES:
+            saved_theme = DEFAULT_THEME
+        self.theme = saved_theme
+
         self.push_screen(MainMenuScreen())
         self._apply_startup_request()
 
@@ -158,9 +168,10 @@ class SafariWriterApp(App):
             )
         elif action == "demo":
             self._action_demo()
+        elif action == "style_switcher":
+            self.push_screen(StyleSwitcherScreen(self.theme))
 
     def _action_print(self) -> None:
-        """Open the Print/Export dialog."""
         self.push_screen(PrintScreen(), callback=self._on_print_choice)
 
     def _on_print_choice(self, choice: str | None) -> None:
@@ -214,7 +225,6 @@ class SafariWriterApp(App):
             self.set_message(f"Export error: {e}")
 
     def _action_create(self) -> None:
-        """Start a fresh document, prompting if there are unsaved changes."""
         if self.state.modified:
             self.push_screen(
                 ConfirmScreen("Unsaved changes will be lost. Continue?"),
@@ -236,11 +246,9 @@ class SafariWriterApp(App):
         self._open_editor()
 
     def _action_edit(self) -> None:
-        """Return to the active document."""
         self._open_editor()
 
     def _action_demo(self) -> None:
-        """Load the bundled demo document, prompting if there are unsaved changes."""
         if self.state.modified:
             self.push_screen(
                 ConfirmScreen("Unsaved changes will be lost. Continue?"),
@@ -267,7 +275,6 @@ class SafariWriterApp(App):
         self._open_editor()
 
     def _open_editor(self) -> None:
-        # Replace current screen stack with editor, keeping menu beneath
         self.push_screen(EditorScreen(self.state))
 
     # ------------------------------------------------------------------
@@ -294,7 +301,6 @@ class SafariWriterApp(App):
     def _on_save_file(self, filename: str | None) -> None:
         if not filename:
             return
-        # If saving as plain text and buffer has formatting, warn first
         if not is_sfw(filename) and has_controls(self.state.buffer):
             self._pending_save_filename = filename
             self.push_screen(
@@ -308,7 +314,6 @@ class SafariWriterApp(App):
         if confirmed:
             self._do_save(self._pending_save_filename)
         else:
-            # Re-prompt with .sfw suggestion
             suggested = self._pending_save_filename
             if "." in suggested:
                 suggested = suggested.rsplit(".", 1)[0] + ".sfw"
@@ -373,7 +378,6 @@ class SafariWriterApp(App):
             self.set_message(f"Folder error: {e}")
 
     def _action_index_external(self) -> None:
-        """Show external/removable drives, or message if none found."""
         drives = _find_external_drives()
         if not drives:
             self.set_message("No external drives found")
@@ -383,7 +387,6 @@ class SafariWriterApp(App):
             self.push_screen(DrivePickerScreen(drives))
 
     def set_message(self, msg: str) -> None:
-        """Display a message in the current screen's message bar if available."""
         try:
             screen = self.screen
         except ScreenStackError:
@@ -392,7 +395,6 @@ class SafariWriterApp(App):
             screen.set_message(msg)
 
     def _action_safari_dos(self) -> None:
-        """Open the Safari DOS module from the current project location."""
         if self._last_safari_dos_path.exists():
             start_path = self._last_safari_dos_path
         elif self.state.filename:
@@ -404,7 +406,6 @@ class SafariWriterApp(App):
         )
 
     def handle_safari_dos_open(self, path: Path) -> None:
-        """Load a document selected from Safari DOS and open it in the editor."""
         self._on_load_file(str(path))
         self._open_editor()
 

@@ -16,7 +16,6 @@ def _find_external_drives() -> list[Path]:
     drives: list[Path] = []
 
     if system == "Windows":
-        # Check all drive letters for removable media
         import ctypes
         bitmask = ctypes.windll.kernel32.GetLogicalDrives()  # type: ignore[attr-defined]
         DRIVE_REMOVABLE = 2
@@ -26,7 +25,6 @@ def _find_external_drives() -> list[Path]:
                 letter = chr(65 + i)
                 drive_path = f"{letter}:\\"
                 drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)  # type: ignore[attr-defined]
-                # Include removable drives and non-C: fixed drives
                 if drive_type == DRIVE_REMOVABLE:
                     drives.append(Path(drive_path))
                 elif drive_type == DRIVE_FIXED and letter not in ("C",):
@@ -38,7 +36,6 @@ def _find_external_drives() -> list[Path]:
                 if v.name != "Macintosh HD" and v.is_dir():
                     drives.append(v)
     else:
-        # Linux: check /media and /mnt
         for base in (Path("/media"), Path("/mnt")):
             if base.exists():
                 for d in sorted(base.iterdir()):
@@ -49,7 +46,6 @@ def _find_external_drives() -> list[Path]:
 
 
 def _format_size(size: int) -> str:
-    """Format file size in human-readable form."""
     if size < 1024:
         return f"{size:>6}"
     elif size < 1024 * 1024:
@@ -61,8 +57,8 @@ def _format_size(size: int) -> str:
 
 
 INDEX_CSS = """
-IndexScreen {
-    background: #000080;
+IndexScreen, DrivePickerScreen {
+    background: $background;
 }
 
 #idx-container {
@@ -74,30 +70,30 @@ IndexScreen {
 #idx-header {
     dock: top;
     height: 3;
-    background: #000080;
-    color: #ffffff;
+    background: $primary;
+    color: $foreground;
     padding: 0 1;
 }
 
 #idx-title {
     text-align: center;
     text-style: bold;
-    color: #ffff00;
+    color: $accent;
 }
 
 #idx-path {
-    color: #00ffff;
+    color: $foreground;
 }
 
 #idx-columns {
-    color: #ffffff;
+    color: $foreground;
     text-style: bold;
 }
 
 #idx-listing {
     height: 1fr;
-    background: #000080;
-    color: #ffffff;
+    background: $background;
+    color: $foreground;
     overflow-y: auto;
     padding: 0 1;
 }
@@ -105,27 +101,23 @@ IndexScreen {
 #idx-footer {
     dock: bottom;
     height: 2;
-    background: #000080;
-    color: #00ffff;
+    background: $primary;
+    color: $foreground;
     padding: 0 1;
 }
 
 #idx-status {
-    color: #00ff00;
+    color: $success;
 }
 
 #idx-help {
-    color: #808080;
+    color: $foreground;
 }
 """
 
 
 class IndexScreen(Screen):
-    """Display directory contents in AtariWriter 80 style.
-
-    AtariWriter showed: filename, size, type in a scrollable list.
-    We replicate that with modern file info.
-    """
+    """Display directory contents in AtariWriter 80 style."""
 
     CSS = INDEX_CSS
 
@@ -133,7 +125,7 @@ class IndexScreen(Screen):
         super().__init__()
         self._directory = directory
         self._label = label
-        self._entries: list[tuple[str, str, str]] = []  # (name, size, type)
+        self._entries: list[tuple[str, str, str]] = []
         self._selected = 0
         self._page_offset = 0
 
@@ -159,7 +151,6 @@ class IndexScreen(Screen):
         self._render_listing()
 
     def _scan_directory(self) -> None:
-        """Read directory contents into _entries list."""
         self._entries = []
         try:
             items = sorted(self._directory.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
@@ -186,10 +177,8 @@ class IndexScreen(Screen):
             self._entries = [("<empty directory>", "", "")]
 
     def _render_listing(self) -> None:
-        """Render the file listing with the selected item highlighted."""
         lines: list[str] = []
         for i, (name, size, ftype) in enumerate(self._entries):
-            # Truncate long names
             display_name = name[:28] if len(name) > 28 else name
             line = f"  {display_name:<30} {size:>7}  {ftype:<10}"
             if i == self._selected:
@@ -198,14 +187,12 @@ class IndexScreen(Screen):
 
         self.query_one("#idx-listing", Static).update("\n".join(lines))
 
-        # Update status
         total = len(self._entries)
         free = self._get_free_space()
         status = f" {total} items  |  {free} free  |  [{self._selected + 1}/{total}]"
         self.query_one("#idx-status", Static).update(status)
 
     def _get_free_space(self) -> str:
-        """Get free space on the directory's volume."""
         try:
             import shutil
             usage = shutil.disk_usage(self._directory)
@@ -249,7 +236,6 @@ class IndexScreen(Screen):
         event.stop()
 
     def _action_select(self) -> None:
-        """Select the current item — open dir or load file."""
         if not self._entries or self._entries[0][0].startswith("<"):
             return
 
@@ -257,19 +243,16 @@ class IndexScreen(Screen):
         full_path = self._directory / name
 
         if full_path.is_dir():
-            # Navigate into subdirectory
             self._directory = full_path
             self._selected = 0
             self.query_one("#idx-path", Static).update(f"Path: {self._directory}")
             self._scan_directory()
             self._render_listing()
         else:
-            # Load this file into editor
             self.app.pop_screen()
             self.app._on_load_file(str(full_path))  # type: ignore[attr-defined]
 
     def _action_delete(self) -> None:
-        """Delete the selected file after confirmation."""
         if not self._entries or self._entries[0][0].startswith("<"):
             return
 
@@ -282,7 +265,6 @@ class IndexScreen(Screen):
             )
             return
 
-        # Push confirmation screen
         from safari_writer.screens.file_ops import ConfirmScreen
         self.app.push_screen(
             ConfirmScreen(f"Delete {name}?"),
@@ -303,7 +285,6 @@ class IndexScreen(Screen):
             self.query_one("#idx-status", Static).update(f" Error: {e}")
 
     def _action_new_folder(self) -> None:
-        """Create a new folder in the current directory."""
         from safari_writer.screens.file_ops import FilePromptScreen
         self.app.push_screen(
             FilePromptScreen("New Folder Name"),

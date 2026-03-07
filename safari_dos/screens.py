@@ -51,13 +51,13 @@ __all__ = [
 
 DOS_CSS = """
 Screen {
-    background: $surface;
-    color: $text;
+    background: $background;
+    color: $foreground;
 }
 
 SafariDosMainMenuScreen {
     align: center middle;
-    background: $surface;
+    background: $background;
 }
 
 #dos-container {
@@ -66,9 +66,10 @@ SafariDosMainMenuScreen {
 }
 
 #dos-menu-container {
-    width: 40;
+    width: 42;
     height: auto;
-    border: solid $primary;
+    border: solid $accent;
+    background: $surface;
     padding: 1 2;
 }
 
@@ -76,89 +77,93 @@ SafariDosMainMenuScreen {
     text-align: center;
     text-style: bold;
     margin-bottom: 1;
-    color: $primary;
+    color: $accent;
 }
 
 .menu-item {
     height: 1;
+    color: $foreground;
 }
 
 #dos-status-bar {
     dock: bottom;
     height: 1;
     background: $primary;
-    color: $text;
+    color: $foreground;
     padding: 0 1;
 }
 
 #dos-header {
     dock: top;
     height: 4;
-    background: $surface;
+    background: $primary;
+    color: $foreground;
     padding: 0 1;
 }
 
 #dos-title {
-    color: $primary;
+    color: $accent;
     text-style: bold;
     text-align: center;
 }
 
 #dos-path {
-    color: $accent;
+    color: $foreground;
 }
 
 #dos-columns {
-    color: $text;
+    color: $foreground;
     text-style: bold;
 }
 
 #dos-body {
     height: 1fr;
     padding: 0 1;
+    color: $foreground;
 }
 
 #dos-footer {
     dock: bottom;
     height: 2;
     background: $primary;
-    color: $text;
+    color: $foreground;
     padding: 0 1;
 }
 
 #dos-status {
-    color: $text;
+    color: $success;
 }
 
 #dos-help {
-    color: $text;
+    color: $foreground;
 }
 
 InputScreen, ConfirmScreen, MessageScreen {
     align: center middle;
-    background: $surface 60%;
+    background: $background 60%;
 }
 
 #dos-dialog {
     width: 72;
     height: auto;
-    border: solid $primary;
+    border: solid $accent;
     background: $surface;
     padding: 1 2;
 }
 
 #dos-dialog-title {
-    color: $primary;
+    color: $accent;
     text-style: bold;
     text-align: center;
 }
 
 #dos-dialog-body {
     margin-top: 1;
+    color: $foreground;
 }
 
 #dos-dialog-hint {
-    color: $text-muted;
+    color: $foreground;
     margin-top: 1;
 }
 """
@@ -262,6 +267,7 @@ class SafariDosMainMenuScreen(Screen):
         ("D", "evices", "devices"),
         ("G", "arbage", "garbage"),
         ("H", "elp", "help"),
+        ("Y", " Style Switcher", "style_switcher"),
         ("Q", "uit", "quit"),
     ]
 
@@ -270,6 +276,7 @@ class SafariDosMainMenuScreen(Screen):
         Binding("d", "menu_action('devices')", "Devices", show=False),
         Binding("g", "menu_action('garbage')", "Garbage", show=False),
         Binding("h", "menu_action('help')", "Help", show=False),
+        Binding("y", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("q,escape", "menu_action('quit')", "Quit", show=False),
     ]
 
@@ -294,6 +301,8 @@ class SafariDosMainMenuScreen(Screen):
             app.open_garbage()
         elif action == "help":
             self.app.push_screen(SafariDosHelpScreen())
+        elif action == "style_switcher":
+            app.open_style_switcher()
         elif action == "quit":
             self.app.exit()
 
@@ -1025,4 +1034,7 @@ class SafariDosAppProtocol:
         raise NotImplementedError
 
     def open_garbage(self) -> None:
+        raise NotImplementedError
+
+    def open_style_switcher(self) -> None:
         raise NotImplementedError
