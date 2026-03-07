@@ -1,8 +1,3 @@
-# AUTHORS
-
-Machine-parseable contributor metadata in YAML format.
-
-```yaml
 authors:
   - name: Matthew Dean Martin
     type: human
@@ -17,4 +12,5 @@ authors:
       - introduced mypy configuration and Makefile target
       - added shared typing helpers and typed package metadata
       - integrated the startup splash screen and CLI --no-splash support
-```
+---
+# AUTHORS

@@ -9,6 +9,7 @@ from textual.widgets import Static
 MENU_ITEMS = [
     ("C", "reate File", "create"),
     ("E", "dit File", "edit"),
+    ("T", "ry Demo Mode", "demo"),
     ("V", "erify Spelling", "verify"),
     ("P", "rint File", "print"),
     ("G", "lobal Format", "global_format"),
@@ -73,6 +74,7 @@ class MainMenuScreen(Screen):
     BINDINGS = [
         Binding("c", "menu_action('create')", "Create File", show=False),
         Binding("e", "menu_action('edit')", "Edit File", show=False),
+        Binding("t", "menu_action('demo')", "Try Demo Mode", show=False),
         Binding("v", "menu_action('verify')", "Verify Spelling", show=False),
         Binding("p", "menu_action('print')", "Print File", show=False),
         Binding("g", "menu_action('global_format')", "Global Format", show=False),

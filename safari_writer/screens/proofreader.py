@@ -118,6 +118,7 @@ class ProofreaderScreen(Screen):
         self._dict_page = 0
         self._dict_prefix = ""
         self._from_correct = False
+        self._enter_menu()
 
     # ------------------------------------------------------------------
     # Compose

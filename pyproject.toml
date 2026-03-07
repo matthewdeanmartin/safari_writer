@@ -17,6 +17,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["safari_writer"]
+include = ["safari_writer/*.sfw"]
 
 [dependency-groups]
 dev = [

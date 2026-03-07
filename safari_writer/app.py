@@ -14,7 +14,8 @@ from safari_writer.screens.mail_merge import MailMergeScreen
 from safari_writer.screens.file_ops import FilePromptScreen, ConfirmScreen
 from safari_writer.screens.index_screen import IndexScreen, DrivePickerScreen, _find_external_drives
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
-from safari_writer.format_codec import encode_sfw, decode_sfw, strip_controls, has_controls, is_sfw
+from safari_writer.document_io import load_demo_document_buffer, load_document_buffer
+from safari_writer.format_codec import encode_sfw, strip_controls, has_controls, is_sfw
 
 __all__ = ["SafariWriterApp"]
 
@@ -141,6 +142,8 @@ class SafariWriterApp(App):
                 FilePromptScreen("New Folder Name"),
                 callback=self._on_new_folder,
             )
+        elif action == "demo":
+            self._action_demo()
 
     def _action_print(self) -> None:
         """Open the Print/Export dialog."""
@@ -222,6 +225,33 @@ class SafariWriterApp(App):
         """Return to the active document."""
         self._open_editor()
 
+    def _action_demo(self) -> None:
+        """Load the bundled demo document, prompting if there are unsaved changes."""
+        if self.state.modified:
+            self.push_screen(
+                ConfirmScreen("Unsaved changes will be lost. Continue?"),
+                callback=self._on_demo_confirm,
+            )
+        else:
+            self._do_demo()
+
+    def _on_demo_confirm(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self._do_demo()
+
+    def _do_demo(self) -> None:
+        try:
+            self.state.buffer = load_demo_document_buffer()
+        except (FileNotFoundError, OSError) as e:
+            self.set_message(f"Demo load error: {e}")
+            return
+        self.state.cursor_row = 0
+        self.state.cursor_col = 0
+        self.state.filename = ""
+        self.state.modified = False
+        self.set_message("Loaded demo document")
+        self._open_editor()
+
     def _open_editor(self) -> None:
         # Replace current screen stack with editor, keeping menu beneath
         self.push_screen(EditorScreen(self.state))
@@ -234,11 +264,7 @@ class SafariWriterApp(App):
         if not filename:
             return
         try:
-            text = Path(filename).read_text(encoding="utf-8", errors="replace")
-            if is_sfw(filename):
-                self.state.buffer = decode_sfw(text)
-            else:
-                self.state.buffer = text.split("\n") if text else [""]
+            self.state.buffer = load_document_buffer(Path(filename))
             self.state.cursor_row = 0
             self.state.cursor_col = 0
             self.state.filename = filename

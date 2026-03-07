@@ -189,6 +189,12 @@ class TestModeTransitions:
 
 
 class TestMountBehavior:
+    def test_menu_is_seeded_before_mount(self):
+        screen = ProofreaderScreen(AppState())
+        assert "Highlight Errors" in screen._body_text
+        assert "Select a proofing mode." in screen._message_text
+        assert "Highlight" in screen._help_text
+
     def test_menu_is_visible_after_mount(self):
         async def run():
             app = SafariWriterApp()

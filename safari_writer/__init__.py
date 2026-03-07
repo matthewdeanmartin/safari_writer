@@ -4,6 +4,8 @@ from safari_writer.ansi_preview import count_ansi_pages, extract_ansi_page, rend
 from safari_writer.app import SafariWriterApp
 from safari_writer.cli_types import StartupRequest
 from safari_writer.document_io import (
+    DEMO_DOCUMENT_RESOURCE,
+    load_demo_document_buffer,
     load_document_buffer,
     load_document_state,
     serialize_document_buffer,
@@ -38,6 +40,7 @@ from safari_writer.state import AppState, GlobalFormat
 
 __all__ = [
     "AppState",
+    "DEMO_DOCUMENT_RESOURCE",
     "DEFAULT_FIELDS",
     "FieldDef",
     "GlobalFormat",
@@ -63,6 +66,7 @@ __all__ = [
     "has_controls",
     "inspect_mail_merge_db",
     "is_sfw",
+    "load_demo_document_buffer",
     "load_document_buffer",
     "load_document_state",
     "load_mail_merge_db",

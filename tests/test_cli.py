@@ -50,6 +50,7 @@ def test_parse_args_supports_no_splash_flag():
 def test_public_package_exports_are_explicit():
     expected = {
         "AppState",
+        "DEMO_DOCUMENT_RESOURCE",
         "GlobalFormat",
         "SafariWriterApp",
         "StartupRequest",
@@ -59,6 +60,7 @@ def test_public_package_exports_are_explicit():
         "count_ansi_pages",
         "extract_ansi_page",
         "load_document_buffer",
+        "load_demo_document_buffer",
         "load_mail_merge_db",
         "parse_args",
         "render_ansi_preview",
@@ -71,6 +73,8 @@ def test_public_package_exports_are_explicit():
 def test_public_submodule_exports_are_explicit():
     assert cli_types.__all__ == ["StartupRequest"]
     assert document_io.__all__ == [
+        "DEMO_DOCUMENT_RESOURCE",
+        "load_demo_document_buffer",
         "load_document_buffer",
         "load_document_state",
         "serialize_document_buffer",
