@@ -1,0 +1,25 @@
+[project]
+name = "safari-writer"
+version = "0.1.0"
+description = "A UI-compatible clone of AtariWriter 80, built with Textual"
+requires-python = ">=3.12"
+dependencies = [
+    "textual>=1.0.0",
+    "pyenchant>=3.2.0",
+]
+
+[project.scripts]
+safari-writer = "safari_writer.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["safari_writer"]
+
+[dependency-groups]
+dev = [
+    "textual-dev>=1.0.0",
+    "pytest>=8.0.0",
+]

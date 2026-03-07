@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/github/safari_writer/**)",
+      "Bash(uv python list)",
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)",
+      "Bash(mkdir:*)",
+      "Bash(python:*)",
+      "Bash(.venv/Scripts/python:*)"
+    ]
+  }
+}
