@@ -108,9 +108,9 @@ class TestMailMergeMountBehavior:
     def test_menu_is_seeded_before_mount(self):
         screen = MailMergeScreen(AppState())
         assert "*** MAIL MERGE ***" in screen._body_text
-        assert "Select an option." in screen._message_text
+        assert "SELECT ITEM" in screen._message_text
         assert "F1/? Help" in screen._help_text
-        assert "Records Free" in screen._status_text
+        assert "RECORDS FREE" in screen._status_text
 
     def test_menu_is_visible_after_mount(self):
         async def run():
@@ -120,9 +120,9 @@ class TestMailMergeMountBehavior:
                 await pilot.pause()
                 screen = app.screen
                 assert "*** MAIL MERGE ***" in screen._body_text
-                assert "Select an option." in screen._message_text
+                assert "SELECT ITEM" in screen._message_text
                 assert "F1/? Help" in screen._help_text
-                assert "Records Free" in screen._status_text
+                assert "RECORDS FREE" in screen._status_text
 
         asyncio.run(run())
 
@@ -685,20 +685,21 @@ class TestFileOperations:
 # ---------------------------------------------------------------------------
 
 class TestKeyRouting:
-    def test_main_e_enters_data_entry(self):
-        screen = make_screen()
-        screen._mode = MODE_MAIN
-        screen._enter_data_entry = MagicMock()
-        screen._key_main("e", make_key("e"))
-        screen._enter_data_entry.assert_called_once()
-
-    def test_main_u_enters_update(self):
+    def test_main_e_enters_update(self):
+        # E = Edit File (browse/update records) in the classic AtariWriter layout
         db = make_db(1)
         screen = make_screen(db)
         screen._mode = MODE_MAIN
         screen._enter_update = MagicMock()
-        screen._key_main("u", make_key("u"))
+        screen._key_main("e", make_key("e"))
         screen._enter_update.assert_called_once()
+
+    def test_main_c_enters_schema(self):
+        # C = Create File — resets DB and enters schema mode
+        screen = make_screen()
+        screen._mode = MODE_MAIN
+        screen._key_main("c", make_key("c"))
+        assert screen._mode == MODE_SCHEMA
 
     def test_main_f_enters_schema(self):
         screen = make_screen()

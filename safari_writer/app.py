@@ -18,7 +18,12 @@ from safari_writer.screens.style_switcher import StyleSwitcherScreen
 from safari_writer.document_io import load_demo_document_buffer, load_document_buffer
 from safari_writer.format_codec import encode_sfw, strip_controls, has_controls, is_sfw
 from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
-from safari_dos.screens import SafariDosBrowserScreen, SafariDosMainMenuScreen
+from safari_dos.screens import (
+    SafariDosBrowserScreen,
+    SafariDosDevicesScreen,
+    SafariDosGarbageScreen,
+    SafariDosMainMenuScreen,
+)
 from safari_dos.services import (
     list_favorites,
     list_recent_documents,
@@ -50,6 +55,7 @@ class SafariWriterApp(App):
         self._pending_delete_path: Path | None = None
         self._pending_save_filename = ""
         self._last_safari_dos_path = Path.cwd()
+        self.dos_state: SafariDosState | None = None
 
     def on_mount(self) -> None:
         # Register all themes
@@ -117,9 +123,8 @@ class SafariWriterApp(App):
         if destination == "safari_dos":
             start_path = request.safari_dos_path or Path.cwd()
             self._last_safari_dos_path = start_path.resolve()
-            self.push_screen(
-                SafariDosMainMenuScreen(self._build_safari_dos_state(start_path.resolve()))
-            )
+            self.dos_state = self._build_safari_dos_state(start_path.resolve())
+            self.push_screen(SafariDosMainMenuScreen(self.dos_state))
             return
 
     def _set_initial_cursor(self, line: int | None, column: int | None) -> None:
@@ -401,9 +406,43 @@ class SafariWriterApp(App):
             start_path = Path(self.state.filename).resolve().parent
         else:
             start_path = Path.cwd()
+        self.dos_state = self._build_safari_dos_state(start_path.resolve())
+        self.push_screen(SafariDosMainMenuScreen(self.dos_state))
+
+    def open_browser(self) -> None:
+        if self.dos_state:
+            self.push_screen(SafariDosBrowserScreen(self.dos_state))
+
+    def open_devices(self) -> None:
+        if self.dos_state:
+            self.push_screen(
+                SafariDosDevicesScreen(self.dos_state),
+                callback=self._on_choose_device,
+            )
+
+    def open_garbage(self) -> None:
         self.push_screen(
-            SafariDosMainMenuScreen(self._build_safari_dos_state(start_path.resolve()))
+            SafariDosGarbageScreen(),
+            callback=self._on_restore_from_garbage,
         )
+
+    def open_style_switcher(self) -> None:
+        self.push_screen(StyleSwitcherScreen(self.theme))
+
+    def quit_dos(self) -> None:
+        self.pop_screen()
+
+    def _on_choose_device(self, path: Path | None) -> None:
+        if path is None or self.dos_state is None:
+            return
+        self.dos_state.current_path = path
+        self.open_browser()
+
+    def _on_restore_from_garbage(self, restored: Path | None) -> None:
+        if restored is None or self.dos_state is None:
+            return
+        self.dos_state.current_path = restored.parent
+        self.open_browser()
 
     def handle_safari_dos_open(self, path: Path) -> None:
         self._on_load_file(str(path))

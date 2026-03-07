@@ -304,7 +304,7 @@ class SafariDosMainMenuScreen(Screen):
         elif action == "style_switcher":
             app.open_style_switcher()
         elif action == "quit":
-            self.app.exit()
+            app.quit_dos()
 
 
 class SafariDosBrowserScreen(Screen):
@@ -1037,4 +1037,7 @@ class SafariDosAppProtocol:
         raise NotImplementedError
 
     def open_style_switcher(self) -> None:
+        raise NotImplementedError
+
+    def quit_dos(self) -> None:
         raise NotImplementedError

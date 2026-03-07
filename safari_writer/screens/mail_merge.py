@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import shutil
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -30,25 +32,32 @@ MAX_RECORDS = _MAX_RECORDS
 # Mode constants
 # ---------------------------------------------------------------------------
 
-MODE_MAIN         = "main"          # top-level menu
-MODE_SCHEMA       = "schema"        # edit field definitions
-MODE_SCHEMA_EDIT  = "schema_edit"   # editing one field inline
-MODE_ENTER        = "enter"         # entering data into a new record
-MODE_ENTER_CONFIRM= "enter_confirm" # "Definitions Complete Y/N?"
-MODE_UPDATE       = "update"        # browsing existing records
-MODE_UPDATE_DELETE= "update_delete" # "Are You Sure? Y/N"
-MODE_UPDATE_EDIT  = "update_edit"   # editing a field of an existing record
-MODE_SUBSET       = "subset"        # build subset / filter
-MODE_SUBSET_FIELD = "subset_field"  # entering low/high for a specific field
-MODE_SAVE         = "save"          # prompt for filename to save
-MODE_LOAD         = "load"          # prompt for filename to load
-MODE_APPEND       = "append"        # prompt for filename to append
+MODE_MAIN          = "main"
+MODE_SCHEMA        = "schema"        # edit field definitions (Format Record)
+MODE_SCHEMA_EDIT   = "schema_edit"   # editing one field inline
+MODE_CREATE        = "create"        # entering records into a freshly-created DB
+MODE_ENTER         = "enter"         # entering a new record field-by-field
+MODE_ENTER_CONFIRM = "enter_confirm" # "Definitions Complete Y/N?"
+MODE_UPDATE        = "update"        # browsing existing records
+MODE_UPDATE_DELETE = "update_delete" # "Are You Sure? Y/N"
+MODE_UPDATE_EDIT   = "update_edit"   # editing a field of an existing record
+MODE_SUBSET        = "subset"        # build subset: choose field number
+MODE_SUBSET_FIELD  = "subset_field"  # entering low/high values
+MODE_SAVE          = "save"
+MODE_LOAD          = "load"
+MODE_APPEND        = "append"
+MODE_INDEX         = "index"         # inline directory listing
+MODE_PRINT         = "print"         # print/merge prompt
 
 # Schema sub-actions
 SCHEMA_ACTION_RENAME = "rename"
 SCHEMA_ACTION_MAXLEN = "maxlen"
 SCHEMA_ACTION_INSERT = "insert"
 SCHEMA_ACTION_DELETE = "delete"
+
+# Index sub-modes
+INDEX_DRIVE_1 = "drive1"
+INDEX_DRIVE_2 = "drive2"
 
 
 # ---------------------------------------------------------------------------
@@ -118,53 +127,57 @@ MailMergeHelpScreen {
 """
 
 HELP_CONTENT = """\
-MAIL MERGE OVERVIEW
-  E  Enter / Edit Records      Add a new record one field at a time
-  U  Update Records            Browse, edit, or delete existing records
-  F  Format Record             Change field names and field lengths
-  B  Build Subset              Filter records by a field range
-  S  Save Database             Write the current database to disk
-  L  Load Database             Load a database file from disk
-  A  Append Database           Merge another file with the same schema
+MAIL MERGE MENU
+  C  Create File         Start a fresh database (clears current)
+  E  Edit File           Browse and edit existing records
+  B  Build Subset        Filter records by a field range
+  A  Append File         Merge another file with the same schema
+  P  Print File          Run the mail merge and print
+  1  Index Drive 1       List files in the current folder
+  2  Index Drive 2       List files in a second folder / drive
+  L  Load File           Load a database file from disk
+  S  Save File           Save the current database to disk
+  F  Format Record       Change field names and field lengths (extra)
+  R  Return              Go back to the Main Menu
 
-RECOMMENDED FLOW
-  1. Start with F to review the record format.
-  2. Use E to enter records.
-  3. Use U to browse or correct records later.
-  4. Use B before printing if you only want some records.
-  5. Save with S when the database looks right.
+EDIT FILE — RECORD NAVIGATION
+  PgDn / N      Next record
+  PgUp / P      Previous record
+  E             Edit all fields of current record
+  ↑ / ↓         Select individual field (then Enter to edit just that field)
+  Ctrl+D        Delete current record (with confirmation)
+  Esc           Return to Mail Merge menu
 
 FORMAT RECORD
-  Up / Down    Select a field
-  R            Rename the selected field
-  M            Change the field max length (1-20)
-  I            Insert a new field after the current one
-  D            Delete the selected field
+  Up / Down     Select a field
+  R             Rename the selected field
+  M             Change the field max length (1-20)
+  I             Insert a new field after the current one
+  D             Delete the selected field
 
-ENTER / UPDATE RECORDS
+ENTERING RECORDS
   Type text and press Enter to move to the next field.
   Empty fields are allowed.
-  On the last field, Y saves the record and N keeps editing.
-  In Update mode, Page Up / Page Down browse records.
-  Ctrl+D deletes the current record after confirmation.
+  On the last field, Y saves the record; N returns to last field.
+  Records are auto-saved to disk whenever you save the database.
 
 BUILD SUBSET
   Choose the field number to filter.
-  Enter Low Value, then High Value.
-  Matching records stay active until you clear the subset with Esc.
+  Enter Low Value, then High Value (alphabetic range).
+  Subset stays active until you press Esc from the main menu.
 
 USING MERGE FIELDS IN A DOCUMENT
-  In the editor, insert the merge marker (@) and type the field number
-  after it, such as @1 for the first field or @3 for the third field.
+  In the editor, insert the merge marker (@) followed by the field
+  number, e.g. @1 for the first field, @3 for the third field.
 
 OTHER
-  F1 / ?       Show this help screen
-  Esc          Return to the previous Mail Merge menu\
+  F1 / ?        Show this help screen
+  Esc           Return to the previous Mail Merge menu\
 """
 
 
 # ---------------------------------------------------------------------------
-# Screen
+# Help modal
 # ---------------------------------------------------------------------------
 
 
@@ -173,7 +186,6 @@ class MailMergeHelpScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
-
         with Container(id="help-dialog"):
             yield Static("=== MAIL MERGE HELP ===", id="help-title")
             yield Static(HELP_CONTENT, id="help-content")
@@ -183,20 +195,22 @@ class MailMergeHelpScreen(ModalScreen[None]):
         self.dismiss(None)
 
 
+# ---------------------------------------------------------------------------
+# Main screen
+# ---------------------------------------------------------------------------
+
+
 class MailMergeScreen(Screen):
     """Mail Merge database module."""
 
     CSS = MM_CSS
 
-    BINDINGS = [
-        Binding("escape", "exit_module", "Exit", show=False),
-    ]
+    BINDINGS: list[Binding] = []
 
     def __init__(self, app_state: AppState, initial_mode: str = MODE_MAIN) -> None:
         super().__init__()
         self._app_state = app_state
         self._initial_mode = initial_mode
-        # Each app gets one shared DB instance stored on app state
         if app_state.mail_merge_db is None:
             app_state.mail_merge_db = MailMergeDB()
         self._db = app_state.mail_merge_db
@@ -205,24 +219,33 @@ class MailMergeScreen(Screen):
         self._input_buf = ""
 
         # Schema editing
-        self._schema_field_idx = 0       # which field is selected in schema view
-        self._schema_action = ""         # what we're editing (rename/maxlen/insert/delete)
+        self._schema_field_idx = 0
+        self._schema_action = ""
+        self._from_create = False
 
-        # Data entry
+        # Data entry (new record)
         self._entry_record: list[str] = []
         self._entry_field_idx = 0
 
         # Update (browse) mode
         self._update_record_idx = 0
-        self._update_field_idx = 0       # which field is being edited (if any)
-        self._update_editing = False
+        self._update_field_idx = 0       # which field is highlighted
+        self._update_editing = False     # True when actually editing a field
 
         # Subset
         self._subset_field_idx = 0
         self._subset_low = ""
         self._subset_high = ""
-        self._subset_entering = "field"  # "field" | "low" | "high"
-        self._active_subset: list[int] | None = None  # None = all records
+        self._subset_entering = "field"
+        self._active_subset: list[int] | None = None
+
+        # Index
+        self._index_entries: list[tuple[str, str, str]] = []  # (name, size, type)
+        self._index_selected = 0
+        self._index_directory = Path.cwd()
+        self._index_purpose = ""  # "load" | "append" | "browse"
+
+        # Misc
         self._message_text = ""
         self._status_text = ""
         self._body_text = ""
@@ -230,7 +253,7 @@ class MailMergeScreen(Screen):
         self._enter_main()
 
     # ------------------------------------------------------------------
-    # Compose
+    # Compose / mount
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
@@ -251,32 +274,44 @@ class MailMergeScreen(Screen):
             self._enter_subset()
 
     # ------------------------------------------------------------------
-    # Mode entry
+    # Mode entry helpers
     # ------------------------------------------------------------------
 
-    def _enter_main(self) -> None:
+    def _enter_main(self, preserve_message: bool = False) -> None:
         self._mode = MODE_MAIN
         self._refresh_status()
+        subset_note = ""
+        if self._active_subset is not None:
+            subset_note = f"  [bold yellow]SUBSET ACTIVE: {len(self._active_subset)} records[/]"
+        filename_note = f"  [dim]File: {self._db.filename or '(unsaved)'}[/]"
         self._set_body(
-            "[bold]*** MAIL MERGE ***[/]\n\n"
-            "[bold]E[/]  Enter / Edit Records\n"
-            "[bold]U[/]  Update Records (browse existing)\n"
-            "[bold]F[/]  Format Record (edit schema)\n"
-            "[bold]B[/]  Build Subset (filter)\n"
-            "[bold]S[/]  Save Database to file\n"
-            "[bold]L[/]  Load Database from file\n"
-            "[bold]A[/]  Append database file\n"
+            "[bold]*** MAIL MERGE ***[/]\n"
+            f"{filename_note}{subset_note}\n\n"
+            "[bold]C[/]  Create File\n"
+            "[bold]N[/]  New Record\n"
+            "[bold]E[/]  Edit File\n"
+            "[bold]B[/]  Build Subset\n"
+            "[bold]A[/]  Append File\n"
+            "[bold]P[/]  Print File\n"
             "\n"
-            "[dim]F1/?  Help    Esc  Return to Main Menu[/]"
+            "[bold]1[/]  Index Drive 1\n"
+            "[bold]2[/]  Index Drive 2\n"
+            "[bold]L[/]  Load File\n"
+            "[bold]S[/]  Save File\n"
+            "\n"
+            "[bold]R[/]  Return to Safari Writer\n"
+            "\n"
+            "[dim]F  Format Record (extra)    F1/?  Help[/]"
         )
-        self._set_message("Select an option. F1 or ? for help.")
-        self._set_help(" E Enter  U Update  F Format  B Subset  S Save  L Load  A Append  Esc Exit")
+        if not preserve_message:
+            self._set_message("SELECT ITEM")
+        self._set_help(" C Create  N New  E Edit  B Subset  A Append  P Print  1/2 Index  L Load  S Save  R Return")
 
     def _enter_schema(self) -> None:
         self._mode = MODE_SCHEMA
-        self._schema_field_idx = min(self._schema_field_idx, len(self._db.fields) - 1)
+        self._schema_field_idx = min(self._schema_field_idx, max(0, len(self._db.fields) - 1))
         self._render_schema()
-        self._set_message("Schema editor: Up/Down select field, R Rename, M Max-len, I Insert, D Delete, Esc done")
+        self._set_message("Format Record: Up/Down select  R Rename  M Max-len  I Insert  D Delete  Esc done")
         self._set_help(" ↑↓ Select  R Rename  M MaxLen  I Insert  D Delete  Esc Back")
 
     def _enter_data_entry(self) -> None:
@@ -290,18 +325,19 @@ class MailMergeScreen(Screen):
         self._input_buf = ""
         self._render_entry_form()
         self._set_message(f"Field 1/{len(self._db.fields)}: {self._db.fields[0].name} — type value, Enter to advance")
-        self._set_help(" Enter Next field  Esc Abort")
+        self._set_help(" Enter  Next field    Esc  Abort")
 
     def _enter_update(self) -> None:
         self._mode = MODE_UPDATE
         if not self._db.records:
-            self._set_message("No records yet. Use E to enter data first.")
+            self._set_message("No records yet — use C to create and enter records first.")
             self._enter_main()
             return
-        self._update_record_idx = 0
+        # Clamp index
+        self._update_record_idx = min(self._update_record_idx, len(self._db.records) - 1)
+        self._update_field_idx = 0
         self._update_editing = False
         self._render_update_record()
-        self._set_help(" PgUp/PgDn Browse  Ctrl+D Delete  E Edit field  Esc Back")
 
     def _enter_subset(self) -> None:
         self._mode = MODE_SUBSET
@@ -309,12 +345,38 @@ class MailMergeScreen(Screen):
         self._subset_high = ""
         self._subset_field_idx = 0
         self._subset_entering = "field"
+        self._input_buf = ""
         self._render_subset()
-        self._set_message("Subset: enter field number (1–{}) to filter on".format(len(self._db.fields)))
+        self._set_message("Build Subset: enter field number (1–{}) to filter on".format(len(self._db.fields)))
         self._set_help(" Enter Confirm  Esc Cancel")
 
+    def _enter_index(self, directory: Path, purpose: str) -> None:
+        """Show an inline directory listing. purpose = 'load' | 'append' | 'browse'."""
+        self._mode = MODE_INDEX
+        self._index_directory = directory
+        self._index_purpose = purpose
+        self._index_selected = 0
+        self._scan_index()
+        self._render_index()
+
+    def _enter_print(self) -> None:
+        self._mode = MODE_PRINT
+        count = len(self._active_subset) if self._active_subset is not None else len(self._db.records)
+        self._input_buf = ""
+        body = (
+            "[bold]Print File / Mail Merge[/]\n\n"
+            f"  Records to merge: {count}\n"
+            f"  Database: {self._db.filename or '(unsaved)'}\n\n"
+            "  This will print one copy of the current document\n"
+            "  for each record, substituting @N merge fields.\n\n"
+            "  Press Y to begin, N or Esc to cancel.\n"
+        )
+        self._set_body(body)
+        self._set_message(f"Print {count} merged document(s)?  Y / N")
+        self._set_help(" Y Begin print  N/Esc Cancel")
+
     # ------------------------------------------------------------------
-    # Key handling dispatcher
+    # Key dispatcher
     # ------------------------------------------------------------------
 
     def on_key(self, event: events.Key) -> None:
@@ -322,11 +384,13 @@ class MailMergeScreen(Screen):
             self.action_show_help()
             event.stop()
             return
-        key = event.key
+        # Normalize key to lowercase for consistent matching
+        key = event.key.lower()
         {
             MODE_MAIN:          self._key_main,
             MODE_SCHEMA:        self._key_schema,
             MODE_SCHEMA_EDIT:   self._key_schema_edit,
+            MODE_CREATE:        self._key_data_entry,   # same handler as ENTER
             MODE_ENTER:         self._key_data_entry,
             MODE_ENTER_CONFIRM: self._key_data_entry_confirm,
             MODE_UPDATE:        self._key_update,
@@ -337,43 +401,102 @@ class MailMergeScreen(Screen):
             MODE_SAVE:          self._key_filename,
             MODE_LOAD:          self._key_filename,
             MODE_APPEND:        self._key_filename,
+            MODE_INDEX:         self._key_index,
+            MODE_PRINT:         self._key_print,
         }.get(self._mode, lambda k, e: None)(key, event)
         event.stop()
 
     # ------------------------------------------------------------------
-    # Main menu keys
+    # Main menu
     # ------------------------------------------------------------------
 
     def _key_main(self, key: str, event) -> None:
+        if getattr(self, "_print_preview_shown", False):
+            self._print_preview_shown = False
+            self._enter_main()
+            return
+
         k = key.lower()
-        if k == "e":
+        if k == "c":
+            self._do_create_file()
+        elif k == "n":
             self._enter_data_entry()
-        elif k == "u":
+        elif k == "e":
             self._enter_update()
-        elif k == "f":
-            self._enter_schema()
         elif k == "b":
             self._enter_subset()
+        elif k == "a":
+            self._mode = MODE_APPEND
+            self._input_buf = ""
+            self._set_body("Append database file:\n\n> ")
+            self._set_message("Enter filename to append, or press 1/2 to browse, Esc to cancel")
+            self._set_help(" Enter Append  Esc Cancel")
+        elif k == "p":
+            self._enter_print()
+        elif key == "1":
+            self._enter_index(Path.cwd(), "browse")
+        elif key == "2":
+            self._enter_index_drive2()
+        elif k == "l":
+            self._mode = MODE_LOAD
+            self._input_buf = ""
+            self._set_body("Load database from file:\n\n> ")
+            self._set_message("Enter filename to load, or press 1 to browse, Esc to cancel")
+            self._set_help(" Enter Load  1 Browse  Esc Cancel")
         elif k == "s":
             self._mode = MODE_SAVE
             self._input_buf = self._db.filename
             self._set_body(f"Save database to file:\n\n> {self._input_buf}")
             self._set_message("Enter filename, Enter to confirm")
             self._set_help(" Enter Save  Esc Cancel")
-        elif k == "l":
-            self._mode = MODE_LOAD
-            self._input_buf = ""
-            self._set_body("Load database from file:\n\n> ")
-            self._set_message("Enter filename, Enter to confirm")
-            self._set_help(" Enter Load  Esc Cancel")
-        elif k == "a":
-            self._mode = MODE_APPEND
-            self._input_buf = ""
-            self._set_body("Append database file:\n\n> ")
-            self._set_message("Enter filename, Enter to confirm")
-            self._set_help(" Enter Append  Esc Cancel")
-        elif key == "escape":
+        elif k == "f":
+            self._enter_schema()
+        elif k == "r" or key == "escape":
             self.action_exit_module()
+
+    def _do_create_file(self) -> None:
+        """C — Create File: reset DB to defaults and go straight into schema edit."""
+        self._db = MailMergeDB()
+        self._app_state.mail_merge_db = self._db
+        self._active_subset = None
+        self._update_record_idx = 0
+        self._refresh_status()
+        self._from_create = True
+        # Enter schema first so user can adjust field definitions
+        self._schema_field_idx = 0
+        self._mode = MODE_SCHEMA
+        self._render_schema()
+        self._set_message("New file — review/edit field layout, then Esc to start entering records")
+        self._set_help(" ↑↓ Select  R Rename  M MaxLen  I Insert  D Delete  Esc → Enter Records")
+
+    def _enter_index_drive2(self) -> None:
+        """Index Drive 2 — try to find a second drive/volume."""
+        import platform
+        system = platform.system()
+        drives: list[Path] = []
+        if system == "Windows":
+            import ctypes
+            bitmask = ctypes.windll.kernel32.GetLogicalDrives()  # type: ignore[attr-defined]
+            for i in range(26):
+                if bitmask & (1 << i):
+                    letter = chr(65 + i)
+                    drive_path = f"{letter}:\\"
+                    drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)  # type: ignore[attr-defined]
+                    if drive_type in (2, 3) and Path(drive_path) != Path.cwd().anchor:
+                        drives.append(Path(drive_path))
+        elif system == "Darwin":
+            volumes = Path("/Volumes")
+            if volumes.exists():
+                drives = [v for v in sorted(volumes.iterdir()) if v.is_dir()]
+        else:
+            for base in (Path("/media"), Path("/mnt")):
+                if base.exists():
+                    drives += [d for d in sorted(base.iterdir()) if d.is_dir()]
+
+        if drives:
+            self._enter_index(drives[0], "browse")
+        else:
+            self._enter_index(Path.home(), "browse")
 
     # ------------------------------------------------------------------
     # Schema editing
@@ -418,7 +541,12 @@ class MailMergeScreen(Screen):
             self._set_message(f"Delete field '{fname}'? Y/N")
             self._set_help(" Y Confirm  N Cancel")
         elif key == "escape":
-            self._enter_main()
+            # If we came from Create, go to data entry next
+            if hasattr(self, '_from_create') and self._from_create:
+                self._from_create = False
+                self._enter_data_entry()
+            else:
+                self._enter_main()
 
     def _key_schema_edit(self, key: str, event) -> None:
         action = self._schema_action
@@ -426,7 +554,6 @@ class MailMergeScreen(Screen):
 
         if action == SCHEMA_ACTION_DELETE:
             if key.lower() == "y":
-                # Wipe that field from all records first
                 for rec in self._db.records:
                     if idx < len(rec):
                         rec.pop(idx)
@@ -460,7 +587,6 @@ class MailMergeScreen(Screen):
                     return
                 new_len = int(val)
                 self._db.fields[idx].max_len = new_len
-                # Truncate existing data to new limit
                 for rec in self._db.records:
                     if idx < len(rec):
                         rec[idx] = rec[idx][:new_len]
@@ -485,21 +611,25 @@ class MailMergeScreen(Screen):
             max_len = MAX_FIELD_NAME_LEN if action in (SCHEMA_ACTION_RENAME, SCHEMA_ACTION_INSERT) else 3
             if len(self._input_buf) < max_len:
                 self._input_buf += event.character
-        self._set_message(
-            f"{'Rename' if action == SCHEMA_ACTION_RENAME else ('Max len' if action == SCHEMA_ACTION_MAXLEN else 'Insert name')}: {self._input_buf}"
-        )
+        label = {
+            SCHEMA_ACTION_RENAME: "Rename",
+            SCHEMA_ACTION_MAXLEN: "Max len",
+            SCHEMA_ACTION_INSERT: "Insert name",
+        }.get(action, action)
+        self._set_message(f"{label}: {self._input_buf}")
 
     def _render_schema(self) -> None:
-        lines = ["[bold]Record Format (Schema)[/]\n", f"{'#':<4}{'Field Name':<14}{'Max Len':>8}\n"]
+        lines = ["[bold]Format Record (Schema)[/]\n", f"{'#':<4}{'Field Name':<14}{'Max Len':>8}\n"]
         for i, f in enumerate(self._db.fields):
-            marker = "[reverse]" if i == self._schema_field_idx else ""
-            end = "[/reverse]" if i == self._schema_field_idx else ""
-            lines.append(f"{marker}{i + 1:<4}{f.name:<14}{f.max_len:>8}{end}")
+            if i == self._schema_field_idx:
+                lines.append(f"[reverse]{i + 1:<4}{f.name:<14}{f.max_len:>8}[/reverse]")
+            else:
+                lines.append(f"{i + 1:<4}{f.name:<14}{f.max_len:>8}")
         lines.append(f"\n[dim]{len(self._db.fields)}/{MAX_FIELDS} fields defined[/]")
         self._set_body("\n".join(lines))
 
     # ------------------------------------------------------------------
-    # Data entry
+    # Data entry (new record)
     # ------------------------------------------------------------------
 
     def _key_data_entry(self, key: str, event) -> None:
@@ -511,12 +641,18 @@ class MailMergeScreen(Screen):
             self._enter_main()
             return
 
+        # Early save
+        if key in ("f10", "ctrl+s"):
+            self._entry_record[fi] = self._input_buf
+            self._mode = MODE_ENTER_CONFIRM
+            self._set_message("Definitions complete? Y/N")
+            self._set_help(" Y Save record  N Continue editing")
+            return
+
         if key == "enter":
-            # Commit current field value
             self._entry_record[fi] = self._input_buf
             next_fi = fi + 1
             if next_fi >= len(self._db.fields):
-                # Last field — confirm
                 self._mode = MODE_ENTER_CONFIRM
                 self._set_message("Definitions complete? Y/N")
                 self._set_help(" Y Save record  N Continue editing")
@@ -541,19 +677,27 @@ class MailMergeScreen(Screen):
                 self._set_message("Database full.")
                 self._enter_main()
                 return
-            self._db.records.append(list(self._entry_record))
-            self._refresh_status()
-            self._set_message(f"Record {len(self._db.records)} saved. Enter another? E or Esc")
-            self._mode = MODE_MAIN
-            self._enter_main()
+            if self._entry_record:
+                self._db.records.append(list(self._entry_record))
+                self._refresh_status()
+                self._autosave()
+                rec_num = len(self._db.records)
+                self._set_message(f"Record {rec_num} saved. Enter another? Y/N")
+                # Clear current entry to signify we are waiting for a loop choice
+                self._entry_record = []
+            else:
+                # This is the second Y in the loop logic (after "Enter another?")
+                self._enter_data_entry()
         elif k == "n":
-            # Go back to editing last field
-            last = len(self._db.fields) - 1
-            self._entry_field_idx = last
-            self._input_buf = self._entry_record[last]
-            self._mode = MODE_ENTER
-            self._render_entry_form()
-            self._set_message(f"Field {last + 1}/{len(self._db.fields)}: {self._db.fields[last].name}")
+            if self._entry_record: # If they were confirming a record, N goes back to editing it
+                 last = len(self._db.fields) - 1
+                 self._entry_field_idx = last
+                 self._input_buf = self._entry_record[last]
+                 self._mode = MODE_ENTER
+                 self._render_entry_form()
+                 self._set_message(f"Field {last + 1}/{len(self._db.fields)}: {self._db.fields[last].name}")
+            else: # If they just saved and N means "don't enter another"
+                 self._enter_main(preserve_message=True)
 
     def _render_entry_form(self) -> None:
         lines = [f"[bold]Enter Record {len(self._db.records) + 1}[/]\n"]
@@ -576,25 +720,56 @@ class MailMergeScreen(Screen):
             self._enter_main()
             return
 
-        if key == "pagedown":
-            self._update_record_idx = min(len(records) - 1, self._update_record_idx + 1)
+        total = len(records)
+        idx = self._update_record_idx
+
+        if key in ("pagedown", "n"):
+            if idx < total - 1:
+                self._update_record_idx += 1
+                self._update_field_idx = 0
+                self._render_update_record()
+            else:
+                self._set_message(f"Already on last record ({total} of {total}).  PgUp/P=previous  E=edit  Ctrl+D=delete  Esc=back")
+        elif key in ("pageup", "p"):
+            if idx > 0:
+                self._update_record_idx -= 1
+                self._update_field_idx = 0
+                self._render_update_record()
+            else:
+                self._set_message(f"Already on first record.  PgDn/N=next  E=edit  Ctrl+D=delete  Esc=back")
+        elif key == "up":
+            self._update_field_idx = max(0, self._update_field_idx - 1)
             self._render_update_record()
-        elif key == "pageup":
-            self._update_record_idx = max(0, self._update_record_idx - 1)
+        elif key == "down":
+            self._update_field_idx = min(len(self._db.fields) - 1, self._update_field_idx + 1)
             self._render_update_record()
-        elif key == "ctrl+d":
-            self._mode = MODE_UPDATE_DELETE
-            rec_num = self._update_record_idx + 1
-            self._set_message(f"Delete record {rec_num}? Are you sure? Y/N")
-            self._set_help(" Y Delete  N Cancel")
+        elif key == "enter":
+            # Edit just the highlighted field
+            rec = records[self._update_record_idx]
+            fi = self._update_field_idx
+            self._mode = MODE_UPDATE_EDIT
+            self._update_editing = True
+            self._input_buf = rec[fi] if fi < len(rec) else ""
+            self._render_update_edit()
+            self._set_message(f"Edit field {fi + 1}: {self._db.fields[fi].name}  — Enter save, Esc cancel")
+            self._set_help(" Enter Save field  Esc Cancel")
         elif key.lower() == "e":
+            # Edit ALL fields sequentially starting from field 0
             self._mode = MODE_UPDATE_EDIT
             self._update_field_idx = 0
             self._update_editing = True
-            self._input_buf = records[self._update_record_idx][0]
+            rec = records[self._update_record_idx]
+            self._input_buf = rec[0] if rec else ""
             self._render_update_edit()
-            self._set_message(f"Edit field 1: {self._db.fields[0].name}")
+            self._set_message(f"Edit field 1: {self._db.fields[0].name}  — Enter advance, Esc done")
             self._set_help(" Enter Next field  Esc Done")
+        elif key == "ctrl+d":
+            self._mode = MODE_UPDATE_DELETE
+            self._set_message(f"Delete record {idx + 1}? Are you sure? Y/N")
+            self._set_help(" Y Delete  N/Esc Cancel")
+        elif key.lower() == "c":
+            # Allow entering a new record from update mode
+            self._enter_data_entry()
         elif key == "escape":
             self._enter_main()
 
@@ -604,11 +779,13 @@ class MailMergeScreen(Screen):
             idx = self._update_record_idx
             self._db.records.pop(idx)
             self._refresh_status()
+            self._autosave()
             if not self._db.records:
                 self._set_message("All records deleted.")
                 self._enter_main()
                 return
             self._update_record_idx = min(idx, len(self._db.records) - 1)
+            self._update_field_idx = 0
             self._mode = MODE_UPDATE
             self._render_update_record()
             self._set_message("Record deleted.")
@@ -624,6 +801,7 @@ class MailMergeScreen(Screen):
 
         if key == "escape":
             self._mode = MODE_UPDATE
+            self._update_editing = False
             self._render_update_record()
             self._set_message("Edit cancelled.")
             return
@@ -633,11 +811,13 @@ class MailMergeScreen(Screen):
             next_fi = fi + 1
             if next_fi >= len(self._db.fields):
                 self._mode = MODE_UPDATE
+                self._update_editing = False
+                self._autosave()
                 self._render_update_record()
-                self._set_message("Record updated.")
+                self._set_message("Record updated and saved.")
             else:
                 self._update_field_idx = next_fi
-                self._input_buf = rec[next_fi]
+                self._input_buf = rec[next_fi] if next_fi < len(rec) else ""
                 self._render_update_edit()
                 self._set_message(f"Edit field {next_fi + 1}: {self._db.fields[next_fi].name}")
         elif key == "backspace":
@@ -652,18 +832,45 @@ class MailMergeScreen(Screen):
         records = self._db.records
         idx = self._update_record_idx
         rec = records[idx]
-        lines = [f"[bold]Record {idx + 1} of {len(records)}[/]\n"]
+        total = len(records)
+
+        # Navigation hint at the top
+        prev_hint = "[dim]PgUp/P=prev[/]" if idx > 0 else "[dim](first)[/]"
+        next_hint = "[dim]PgDn/N=next[/]" if idx < total - 1 else "[dim](last)[/]"
+        header = (
+            f"[bold]Record {idx + 1} of {total}[/]   "
+            f"{prev_hint}  ◄  [bold]#{idx + 1}[/]  ►  {next_hint}\n"
+        )
+
+        lines = [header]
         for i, fdef in enumerate(self._db.fields):
             val = rec[i] if i < len(rec) else ""
             name = fdef.name.ljust(MAX_FIELD_NAME_LEN)
-            lines.append(f"  {i + 1:>2}. {name}  {val or '[dim](empty)[/dim]'}")
+            if i == self._update_field_idx:
+                val_display = f"[reverse] {val or '(empty)'} [/reverse]"
+            else:
+                val_display = val or "[dim](empty)[/dim]"
+            lines.append(f"  {i + 1:>2}. {name}  {val_display}")
+
+        lines.append("\n[dim]↑↓=select field  Enter=edit field  E=edit all  C=new record  Ctrl+D=delete  Esc=back[/]")
         self._set_body("\n".join(lines))
-        self._set_message(f"Record {idx + 1}/{len(records)}  PgUp/PgDn browse  E edit  Ctrl+D delete  Esc back")
+        self._set_message(
+            f"Record {idx + 1}/{total}  "
+            + ("PgDn/N next  " if idx < total - 1 else "")
+            + ("PgUp/P prev  " if idx > 0 else "")
+            + "E=edit  Ctrl+D=delete  Esc=back"
+        )
+        self._set_help(
+            f" {'PgDn/N Next' if idx < total-1 else '(last record)'}  "
+            f"{'  PgUp/P Prev' if idx > 0 else '  (first record)'}  "
+            f"  ↑↓ Field  Enter Edit  E Edit-all  C New  Ctrl+D Delete  Esc Back"
+        )
 
     def _render_update_edit(self) -> None:
         rec = self._db.records[self._update_record_idx]
         idx = self._update_record_idx
-        lines = [f"[bold]Edit Record {idx + 1}[/]\n"]
+        total = len(self._db.records)
+        lines = [f"[bold]Edit Record {idx + 1} of {total}[/]\n"]
         for i, fdef in enumerate(self._db.fields):
             if i == self._update_field_idx:
                 val_display = f"[reverse]{self._input_buf}█[/reverse]"
@@ -717,14 +924,14 @@ class MailMergeScreen(Screen):
                 self._set_message(f"Field: {fname}  Low='{self._subset_low}' — enter High Value")
             elif self._subset_entering == "high":
                 self._subset_high = self._input_buf
-                # Apply filter
                 results = self._db.apply_subset(
                     self._subset_field_idx, self._subset_low, self._subset_high
                 )
                 self._active_subset = results
                 self._render_subset_results(results)
-                self._set_message(f"Subset active: {len(results)} record(s) match. Esc to clear.")
+                self._set_message(f"Subset active: {len(results)} record(s) match. Esc to return to menu.")
                 self._mode = MODE_MAIN
+                self._enter_main()
                 return
         elif key == "backspace":
             self._input_buf = self._input_buf[:-1]
@@ -767,13 +974,115 @@ class MailMergeScreen(Screen):
         self._set_body("\n".join(lines))
 
     # ------------------------------------------------------------------
-    # File operations (Save / Load / Append)
+    # Index (inline directory listing)
+    # ------------------------------------------------------------------
+
+    def _scan_index(self) -> None:
+        self._index_entries = []
+        try:
+            items = sorted(
+                self._index_directory.iterdir(),
+                key=lambda p: (not p.is_dir(), p.name.lower()),
+            )
+        except OSError:
+            self._index_entries = [("<error reading directory>", "", "")]
+            return
+        for item in items:
+            try:
+                name = item.name
+                if item.is_dir():
+                    self._index_entries.append((name, "---", "<DIR>"))
+                else:
+                    size = item.stat().st_size
+                    sz = f"{size:,}"
+                    suffix = item.suffix.upper()
+                    self._index_entries.append((name, sz, suffix or "FILE"))
+            except OSError:
+                self._index_entries.append((item.name, "???", "???"))
+        if not self._index_entries:
+            self._index_entries = [("<empty>", "", "")]
+
+    def _render_index(self) -> None:
+        try:
+            free = shutil.disk_usage(self._index_directory).free
+            free_str = f"{free:,} bytes free"
+        except OSError:
+            free_str = "? bytes free"
+
+        purpose_labels = {
+            "load":   "Select file to LOAD (Enter=load, Esc=cancel)",
+            "append": "Select file to APPEND (Enter=append, Esc=cancel)",
+            "browse": "INDEX  (Enter=load, Esc=back)",
+        }
+        header = (
+            f"[bold]INDEX: {self._index_directory}[/]\n"
+            f"[dim]{free_str}[/]\n"
+            f"{'NAME':<32} {'SIZE':>14}  {'TYPE'}\n"
+        )
+        lines = [header]
+        for i, (name, size, ftype) in enumerate(self._index_entries):
+            display = name[:30]
+            line = f"  {display:<32} {size:>14}  {ftype}"
+            if i == self._index_selected:
+                line = f"[reverse]{line}[/reverse]"
+            lines.append(line)
+
+        self._set_body("\n".join(lines))
+        self._set_message(purpose_labels.get(self._index_purpose, "Index"))
+        self._set_help(" ↑↓ Select  Enter Load  Esc Back")
+
+    def _key_index(self, key: str, event) -> None:
+        entries = self._index_entries
+        if key == "escape":
+            self._enter_main()
+            return
+        if key == "up":
+            if self._index_selected > 0:
+                self._index_selected -= 1
+                self._render_index()
+        elif key == "down":
+            if self._index_selected < len(entries) - 1:
+                self._index_selected += 1
+                self._render_index()
+        elif key == "pageup":
+            self._index_selected = max(0, self._index_selected - 10)
+            self._render_index()
+        elif key == "pagedown":
+            self._index_selected = min(len(entries) - 1, self._index_selected + 10)
+            self._render_index()
+        elif key == "enter":
+            if not entries or entries[0][0].startswith("<"):
+                return
+            name, _, ftype = entries[self._index_selected]
+            full_path = self._index_directory / name
+            if full_path.is_dir():
+                self._index_directory = full_path
+                self._index_selected = 0
+                self._scan_index()
+                self._render_index()
+            else:
+                filename = str(full_path)
+                purpose = self._index_purpose
+                if purpose == "load":
+                    self._load_db(filename)
+                elif purpose == "append":
+                    self._append_db(filename)
+                else:
+                    self._load_db(filename)
+
+    # ------------------------------------------------------------------
+    # File operations
     # ------------------------------------------------------------------
 
     def _key_filename(self, key: str, event) -> None:
         mode = self._mode
         if key == "escape":
             self._enter_main()
+            return
+        if key == "1" and mode in (MODE_LOAD, MODE_APPEND):
+            # Browse for file
+            purpose = "load" if mode == MODE_LOAD else "append"
+            self._enter_index(Path.cwd(), purpose)
             return
         if key == "enter":
             filename = self._input_buf.strip()
@@ -794,9 +1103,6 @@ class MailMergeScreen(Screen):
             self._update_filename_prompt()
 
     def _update_filename_prompt(self) -> None:
-        verb = {"save": "Save to", "load": "Load from", "append": "Append from"}
-        label = verb.get(self._mode.split("_")[0], "File")  # "save"/"load"/"append"
-        # Actually mode strings are "save", "load", "append" directly
         labels = {MODE_SAVE: "Save to", MODE_LOAD: "Load from", MODE_APPEND: "Append from"}
         label = labels.get(self._mode, "File")
         self._set_body(f"{label} file:\n\n> {self._input_buf}")
@@ -816,6 +1122,8 @@ class MailMergeScreen(Screen):
             self._db.filename = filename
             self._app_state.mail_merge_db = self._db
             self._refresh_status()
+            self._active_subset = None
+            self._update_record_idx = 0
             self._set_message(f"Loaded {len(self._db.records)} records from '{filename}'.")
         except (OSError, ValueError) as e:
             self._set_message(f"Load error: {e}")
@@ -832,19 +1140,110 @@ class MailMergeScreen(Screen):
             to_add = other.records[:space]
             self._db.records.extend(to_add)
             self._refresh_status()
+            self._autosave()
             self._set_message(f"Appended {len(to_add)} records (of {len(other.records)}).")
         except (OSError, ValueError) as e:
             self._set_message(f"Append error: {e}")
         self._enter_main()
 
     # ------------------------------------------------------------------
-    # Helpers
+    # Print / Mail Merge
+    # ------------------------------------------------------------------
+
+    def _key_print(self, key: str, event) -> None:
+        k = key.lower()
+        if k == "y":
+            self._do_print_merge()
+        elif k == "n" or key == "escape":
+            self._enter_main()
+
+    def _do_print_merge(self) -> None:
+        """Execute the mail merge: substitute @N fields and display result."""
+        records = self._db.records
+        if self._active_subset is not None:
+            records = [records[i] for i in self._active_subset if i < len(records)]
+
+        if not records:
+            self._set_message("No records to merge. Load a database or clear the subset.")
+            self._enter_main()
+            return
+
+        buf = self._app_state.buffer
+        results: list[str] = []
+        for rec in records:
+            merged_buf = self._merge_record(buf, rec)
+            results.append("\n".join(merged_buf))
+
+        # Show a summary / preview in the body
+        count = len(results)
+        preview_lines = results[0].splitlines()[:8] if results else []
+        preview = "\n".join(f"  {ln}" for ln in preview_lines)
+        if len(results[0].splitlines()) > 8:
+            preview += "\n  …"
+
+        body = (
+            f"[bold]Mail Merge Complete — {count} document(s)[/]\n\n"
+            f"[dim]Preview of record 1:[/]\n"
+            f"{preview}\n\n"
+            f"[dim](Full print output would go to printer — not yet wired to print driver)[/]\n\n"
+            "Press any key to return to menu."
+        )
+        self._set_body(body)
+        self._set_message(f"Merged {count} records. Press any key.")
+        self._set_help(" Any key  Return to menu")
+        self._mode = MODE_MAIN  # next key press falls through to main handler then re-renders
+
+        # Set a one-shot: next key returns to main
+        self._print_preview_shown = True
+
+    def _merge_record(self, buf: list[str], rec: list[str]) -> list[str]:
+        out: list[str] = []
+        for line in buf:
+            result: list[str] = []
+            i = 0
+            while i < len(line):
+                ch = line[i]
+                if ch == "\x11":  # merge marker
+                    i += 1
+                    digits: list[str] = []
+                    while i < len(line) and line[i].isdigit():
+                        digits.append(line[i])
+                        i += 1
+                    if digits:
+                        fn = int("".join(digits))
+                        if 1 <= fn <= len(rec):
+                            result.append(rec[fn - 1])
+                        else:
+                            result.append(f"@{fn}")
+                    continue
+                result.append(ch)
+                i += 1
+            out.append("".join(result))
+        return out
+
+    # ------------------------------------------------------------------
+    # Auto-save helper
+    # ------------------------------------------------------------------
+
+    def _autosave(self) -> None:
+        """Save to disk automatically if a filename is already set."""
+        if self._db.filename:
+            try:
+                save_mail_merge_db(self._db, Path(self._db.filename))
+            except OSError:
+                pass  # silently fail; user can manually save
+
+    # ------------------------------------------------------------------
+    # Status / helpers
     # ------------------------------------------------------------------
 
     def _refresh_status(self) -> None:
-        state = self._app_state
-        bytes_free = state.bytes_free if hasattr(state, "bytes_free") else 0
-        self._status_text = f" Bytes Free: {bytes_free:,}   Records Free: {self._db.records_free}"
+        try:
+            bytes_free = shutil.disk_usage(os.getcwd()).free
+        except OSError:
+            bytes_free = 0
+        records_free = self._db.records_free
+        self._status_text = f" {bytes_free:,} BYTES FREE   {records_free} RECORDS FREE"
         if self.is_mounted:
             self.query_one("#mm-status", Static).update(self._status_text)
 
@@ -863,10 +1262,6 @@ class MailMergeScreen(Screen):
         if self.is_mounted:
             self.query_one("#mm-help", Static).update(self._help_text)
 
-    def _set_static(self, selector: str, content: str) -> None:
-        if self.is_mounted:
-            self.query_one(selector, Static).update(content)
-
     # ------------------------------------------------------------------
     # Actions
     # ------------------------------------------------------------------
@@ -875,4 +1270,7 @@ class MailMergeScreen(Screen):
         self.app.push_screen(MailMergeHelpScreen())  # type: ignore[attr-defined]
 
     def action_exit_module(self) -> None:
-        self.app.pop_screen()  # type: ignore[attr-defined]
+        if self._mode != MODE_MAIN:
+            self._enter_main()
+        else:
+            self.app.pop_screen()  # type: ignore[attr-defined]

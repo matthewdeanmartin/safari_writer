@@ -64,6 +64,9 @@ class SafariDosApp(App[SafariDosExitRequest | None]):
         from safari_writer.screens.style_switcher import StyleSwitcherScreen
         self.push_screen(StyleSwitcherScreen(self.theme))
 
+    def quit_dos(self) -> None:
+        self.exit()
+
     def request_writer_launch(self, path: Path) -> None:
         self.exit(SafariDosExitRequest(action="open-in-writer", document_path=path))
 

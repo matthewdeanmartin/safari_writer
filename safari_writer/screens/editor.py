@@ -61,27 +61,34 @@ EditorScreen {
     background: $surface;
 }
 
-#message-bar {
-    dock: top;
-    height: 1;
-    background: $primary;
-    color: $text;
-    padding: 0 1;
-}
-
-#status-bar {
-    dock: top;
-    height: 1;
-    background: $secondary;
-    color: $text;
-    padding: 0 1;
-}
-
 #tab-bar {
     dock: top;
     height: 1;
     background: $surface;
     color: $accent;
+    padding: 0 1;
+}
+
+EditorArea {
+    height: 1fr;
+    background: $surface;
+    overflow-y: auto;
+}
+
+#message-bar {
+    dock: bottom;
+    height: 1;
+    background: $accent;
+    color: $text;
+    text-style: bold;
+    padding: 0 1;
+}
+
+#status-bar {
+    dock: bottom;
+    height: 1;
+    background: $secondary;
+    color: $text;
     padding: 0 1;
 }
 
@@ -91,12 +98,6 @@ EditorScreen {
     background: $primary;
     color: $text;
     padding: 0 1;
-}
-
-EditorArea {
-    height: 1fr;
-    background: $surface;
-    overflow-y: auto;
 }
 
 HelpScreen {
@@ -476,7 +477,7 @@ class EditorArea(Widget, can_focus=True):
             return
 
         s = self.state
-        key = event.key
+        key = event.key.lower()
         handled = True
 
         # Help
@@ -661,7 +662,10 @@ class EditorArea(Widget, can_focus=True):
         elif event.character and event.character.isprintable():
             if self._has_selection():
                 self._delete_selection()
-            self._type_char(event.character)
+            if event.character == "@":
+                self._insert_control(CTRL_MERGE)
+            else:
+                self._type_char(event.character)
 
         else:
             handled = False
@@ -696,7 +700,7 @@ class EditorArea(Widget, can_focus=True):
         self.screen.set_message("Replace with: ")  # type: ignore[attr-defined]
 
     def _handle_prompt_key(self, event: events.Key) -> None:
-        key = event.key
+        key = event.key.lower()
 
         if key == "escape":
             self._search_active = False
@@ -704,7 +708,7 @@ class EditorArea(Widget, can_focus=True):
             self._heading_active = False
             self._chain_active = False
             self._input_buffer = ""
-            self.screen.set_message("")  # type: ignore[attr-defined]
+            self.screen.set_message("Cancelled")  # type: ignore[attr-defined]
             event.stop()
             self.refresh()
             return
@@ -713,14 +717,14 @@ class EditorArea(Widget, can_focus=True):
             if self._search_active:
                 self.state.search_string = self._input_buffer
                 self._search_active = False
-                self.screen.set_message(f"Find: {self._input_buffer!r}  — press F3 to find")  # type: ignore[attr-defined]
                 self.state.last_search_row = 0
                 self.state.last_search_col = 0
-                self._find_next()
+                if self._find_next():
+                    self.screen.set_message(f"Find: {self.state.search_string!r} — F3=next, Ctrl+H=replace")  # type: ignore[attr-defined]
             elif self._replace_active:
                 self.state.replace_string = self._input_buffer
                 self._replace_active = False
-                self.screen.set_message(f"Replace: {self._input_buffer!r}  — Alt+F3 replace, Alt+R global")  # type: ignore[attr-defined]
+                self.screen.set_message(f"Replace: {self.state.replace_string!r} — Alt+F3=one, Alt+R=all")  # type: ignore[attr-defined]
             elif self._heading_active:
                 self._heading_active = False
                 level = self._input_buffer.strip()
@@ -739,7 +743,6 @@ class EditorArea(Widget, can_focus=True):
                 filename = self._input_buffer.strip()
                 if filename:
                     s = self.state
-                    # Chain marker goes at end of document on its own line
                     s.buffer.append(CTRL_CHAIN + filename)
                     s.cursor_row = len(s.buffer) - 1
                     s.cursor_col = len(s.buffer[s.cursor_row])
@@ -747,14 +750,14 @@ class EditorArea(Widget, can_focus=True):
                     self.screen.set_message(f"Chain: {filename}")  # type: ignore[attr-defined]
                 else:
                     self.screen.set_message("Cancelled")  # type: ignore[attr-defined]
-        elif key == "backspace":
+        elif key in ("backspace", "ctrl+h"):
             self._input_buffer = self._input_buffer[:-1]
-            self.screen.set_message(self._current_prompt() + self._input_buffer)  # type: ignore[attr-defined]
+            self.screen.set_message(self._current_prompt() + self._input_buffer + "█")  # type: ignore[attr-defined]
         elif event.character and event.character.isprintable():
             max_len = 1 if self._heading_active else 37
             if len(self._input_buffer) < max_len:
                 self._input_buffer += event.character
-                self.screen.set_message(self._current_prompt() + self._input_buffer)  # type: ignore[attr-defined]
+                self.screen.set_message(self._current_prompt() + self._input_buffer + "█")  # type: ignore[attr-defined]
 
         event.stop()
         self.refresh()
@@ -774,33 +777,51 @@ class EditorArea(Widget, can_focus=True):
     # Search & replace logic
     # ------------------------------------------------------------------
 
-    def _find_next(self) -> bool:
+    def _find_next(self, wrap: bool = True) -> bool:
+        """Find next occurrence of search string, starting after current cursor."""
         s = self.state
         needle = s.search_string
         if not needle:
             self.screen.set_message("No search string set — press Ctrl+F")  # type: ignore[attr-defined]
             return False
 
-        start_row = s.last_search_row
-        start_col = s.last_search_col
+        # Start search AFTER current cursor position
+        curr_row, curr_col = s.cursor_row, s.cursor_col
+        start_row, start_col = curr_row, curr_col + 1
 
-        rows = list(range(start_row, len(s.buffer))) + list(range(0, start_row))
-        for i, row in enumerate(rows):
+        # Search from current line (after cursor) to end
+        for row in range(start_row, len(s.buffer)):
             line = s.buffer[row]
-            col_start = start_col if (i == 0 and row == start_row) else 0
+            col_start = start_col if row == start_row else 0
             idx = self._find_in_line(line, needle, col_start)
             if idx != -1:
                 s.cursor_row = row
                 s.cursor_col = idx
                 s.last_search_row = row
-                s.last_search_col = idx + len(needle)
+                s.last_search_col = idx
                 self.screen.set_message(f"Found: {needle!r}")  # type: ignore[attr-defined]
                 return True
+
+        # Wrap to top if enabled
+        if wrap:
+            for row in range(0, start_row + 1):
+                line = s.buffer[row]
+                # Stop if we hit original cursor pos
+                col_end = start_col if row == start_row else len(line)
+                idx = self._find_in_line(line, needle, 0)
+                if idx != -1 and (row < start_row or idx < curr_col):
+                    s.cursor_row = row
+                    s.cursor_col = idx
+                    s.last_search_row = row
+                    s.last_search_col = idx
+                    self.screen.set_message(f"Found (wrapped): {needle!r}")  # type: ignore[attr-defined]
+                    return True
 
         self.screen.set_message(f"Not found: {needle!r}")  # type: ignore[attr-defined]
         return False
 
     def _find_in_line(self, line: str, needle: str, start: int = 0) -> int:
+        """Find needle in line starting from 'start', supports '?' as wildcard."""
         if "?" not in needle:
             return line.find(needle, start)
         nl, nn = len(line), len(needle)
@@ -810,51 +831,73 @@ class EditorArea(Widget, can_focus=True):
         return -1
 
     def _replace_current_and_find_next(self) -> None:
+        """Replace needle at current cursor (if it matches) then find next."""
         s = self.state
         needle = s.search_string
         repl = s.replace_string
         if not needle:
             self.screen.set_message("No search string — press Ctrl+F first")  # type: ignore[attr-defined]
             return
+
         row, col = s.cursor_row, s.cursor_col
         line = s.buffer[row]
+        # Check if needle is actually at the cursor
         idx = self._find_in_line(line, needle, col)
         if idx == col:
             s.buffer[row] = line[:idx] + repl + line[idx + len(needle):]
             s.cursor_col = idx + len(repl)
-            s.last_search_row = row
-            s.last_search_col = idx + len(repl)
             s.modified = True
-            self._find_next()
+            # Find NEXT occurrence after this replacement
+            self._find_next(wrap=True)
         else:
-            self._find_next()
+            # Not at cursor? Just find next.
+            self._find_next(wrap=True)
 
     def _global_replace(self) -> None:
+        """Global replace from current cursor to end of file."""
         s = self.state
         needle = s.search_string
         repl = s.replace_string
         if not needle:
             self.screen.set_message("No search string — press Ctrl+F first")  # type: ignore[attr-defined]
             return
+
         count = 0
-        for row in range(s.cursor_row, len(s.buffer)):
+        # Start at current cursor
+        start_row, start_col = s.cursor_row, s.cursor_col
+
+        for row in range(start_row, len(s.buffer)):
             line = s.buffer[row]
-            new_line, n = self._replace_all_in_line(line, needle, repl)
-            if n:
-                s.buffer[row] = new_line
-                count += n
+            col_start = start_col if row == start_row else 0
+
+            if "?" not in needle:
+                # Optimized for non-wildcard
+                n = line.count(needle, col_start)
+                if n > 0:
+                    # We only replace from col_start onwards
+                    head = line[:col_start]
+                    tail = line[col_start:].replace(needle, repl)
+                    s.buffer[row] = head + tail
+                    count += n
+            else:
+                # Wildcard replacement
+                new_line, n = self._replace_all_in_line_from(line, needle, repl, col_start)
+                if n:
+                    s.buffer[row] = new_line
+                    count += n
+
         if count:
             s.modified = True
-        self.screen.set_message(f"Replaced {count} occurrence(s)")  # type: ignore[attr-defined]
+            self.screen.set_message(f"Replaced {count} occurrence(s)")  # type: ignore[attr-defined]
+        else:
+            self.screen.set_message(f"Not found: {needle!r}")  # type: ignore[attr-defined]
 
-    def _replace_all_in_line(self, line: str, needle: str, repl: str) -> tuple[str, int]:
-        if "?" not in needle:
-            count = line.count(needle)
-            return line.replace(needle, repl), count
-        result = ""
-        count = 0
-        i = 0
+    def _replace_all_in_line_from(self, line: str, needle: str, repl: str, start: int) -> tuple[str, int]:
+        """Replace all occurrences in a line starting from 'start', handling wildcards."""
         nn = len(needle)
+        result = line[:start]
+        count = 0
+        i = start
         while i <= len(line) - nn:
             if all(needle[j] == "?" or line[i + j] == needle[j] for j in range(nn)):
                 result += repl
@@ -1227,11 +1270,12 @@ class EditorScreen(Screen):
         self._message = ""
 
     def compose(self) -> ComposeResult:
-        yield Static(self._message or "", id="message-bar")
-        yield Static(self._status_text(), id="status-bar")
         yield Static(self._tab_bar_text(), id="tab-bar")
         yield EditorArea(self.state)
+        # Yield these in order of docking from bottom-up
         yield Static(HELP_TEXT, id="help-bar")
+        yield Static(self._status_text(), id="status-bar")
+        yield Static(self._message or "Welcome to Safari Writer", id="message-bar")
 
     def on_mount(self) -> None:
         self.query_one(EditorArea).focus()
