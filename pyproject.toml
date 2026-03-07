@@ -10,13 +10,14 @@ dependencies = [
 
 [project.scripts]
 safari-writer = "safari_writer.main:main"
+safari-dos = "safari_dos.main:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["safari_writer"]
+packages = ["safari_writer", "safari_dos"]
 include = ["safari_writer/*.sfw"]
 
 [dependency-groups]

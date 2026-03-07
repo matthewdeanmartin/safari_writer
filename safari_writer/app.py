@@ -16,6 +16,8 @@ from safari_writer.screens.index_screen import IndexScreen, DrivePickerScreen, _
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
 from safari_writer.document_io import load_demo_document_buffer, load_document_buffer
 from safari_writer.format_codec import encode_sfw, strip_controls, has_controls, is_sfw
+from safari_dos.screens import SafariDosMainMenuScreen
+from safari_dos.state import SafariDosState
 
 __all__ = ["SafariWriterApp"]
 
@@ -90,6 +92,13 @@ class SafariWriterApp(App):
             return
         if destination == "index_external":
             self._action_index_external()
+            return
+        if destination == "safari_dos":
+            start_path = request.safari_dos_path or Path.cwd()
+            self.push_screen(
+                SafariDosMainMenuScreen(SafariDosState(current_path=start_path.resolve()))
+            )
+            return
 
     def _set_initial_cursor(self, line: int | None, column: int | None) -> None:
         if not self.state.buffer:
@@ -122,6 +131,8 @@ class SafariWriterApp(App):
             self.push_screen(IndexScreen(Path.cwd(), label="Current Folder"))
         elif action == "index2":
             self._action_index_external()
+        elif action == "safari_dos":
+            self._action_safari_dos()
         elif action == "load":
             self.push_screen(
                 FilePromptScreen("Load File", self.state.filename),
@@ -363,3 +374,15 @@ class SafariWriterApp(App):
         screen = self.screen
         if hasattr(screen, "set_message"):
             screen.set_message(msg)
+
+    def _action_safari_dos(self) -> None:
+        """Open the Safari DOS module from the current project location."""
+        start_path = Path(self.state.filename).resolve().parent if self.state.filename else Path.cwd()
+        self.push_screen(
+            SafariDosMainMenuScreen(SafariDosState(current_path=start_path.resolve()))
+        )
+
+    def handle_safari_dos_open(self, path: Path) -> None:
+        """Load a document selected from Safari DOS and open it in the editor."""
+        self._on_load_file(str(path))
+        self._open_editor()

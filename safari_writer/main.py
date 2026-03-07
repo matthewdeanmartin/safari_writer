@@ -130,6 +130,10 @@ def build_parser() -> argparse.ArgumentParser:
     tui_index_external = tui_subparsers.add_parser("index-external", help="Open the external-drive index.")
     tui_index_external.set_defaults(handler=_handle_tui_command)
 
+    tui_safari_dos = tui_subparsers.add_parser("safari-dos", help="Open Safari DOS inside Safari Writer.")
+    tui_safari_dos.add_argument("--path", help="Directory to browse.")
+    tui_safari_dos.set_defaults(handler=_handle_tui_command)
+
     export_parser = subparsers.add_parser("export", help="Run headless export commands.")
     export_subparsers = export_parser.add_subparsers(dest="export_command", required=True)
 
@@ -376,6 +380,11 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
         )
     if command == "index-external":
         return StartupRequest(destination="index_external")
+    if command == "safari-dos":
+        return StartupRequest(
+            destination="safari_dos",
+            safari_dos_path=Path(args.path).resolve() if args.path else Path.cwd(),
+        )
     raise ValueError(f"Unsupported TUI destination: {command}")
 
 
@@ -392,6 +401,8 @@ def _handle_tui_command(args: argparse.Namespace) -> int:
         )
     if request.destination == "index_current" and request.index_path and not request.index_path.is_dir():
         raise NotADirectoryError(f"Index path is not a directory: {request.index_path}")
+    if request.destination == "safari_dos" and request.safari_dos_path and not request.safari_dos_path.is_dir():
+        raise NotADirectoryError(f"Safari DOS path is not a directory: {request.safari_dos_path}")
     for path in request.personal_dict_paths:
         if not path.exists():
             raise FileNotFoundError(f"Personal dictionary not found: {path}")

@@ -139,6 +139,17 @@ def test_build_startup_request_for_proofreader():
     )
 
 
+def test_build_startup_request_for_safari_dos():
+    args = parse_args(["tui", "safari-dos", "--path", "docs"])
+
+    request = build_startup_request(args)
+
+    assert request == StartupRequest(
+        destination="safari_dos",
+        safari_dos_path=Path("docs").resolve(),
+    )
+
+
 def test_main_default_invocation_launches_menu(monkeypatch):
     captured: dict[str, object] = {}
     splash_calls: list[bool] = []

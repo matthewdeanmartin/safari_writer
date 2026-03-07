@@ -29,8 +29,13 @@ from safari_writer.state import AppState
 
 def test_main_menu_exposes_demo_mode():
     assert ("T", "ry Demo Mode", "demo") in MENU_ITEMS
+    assert ("O", "pen Safari DOS", "safari_dos") in MENU_ITEMS
     assert any(
         binding.key == "t" and binding.action == "menu_action('demo')"
+        for binding in MainMenuScreen.BINDINGS
+    )
+    assert any(
+        binding.key == "o" and binding.action == "menu_action('safari_dos')"
         for binding in MainMenuScreen.BINDINGS
     )
 
@@ -39,10 +44,12 @@ def test_handle_menu_action_routes_to_demo(monkeypatch):
     app = SafariWriterApp()
     called: list[str] = []
     monkeypatch.setattr(app, "_action_demo", lambda: called.append("demo"))
+    monkeypatch.setattr(app, "_action_safari_dos", lambda: called.append("safari_dos"))
 
     app.handle_menu_action("demo")
+    app.handle_menu_action("safari_dos")
 
-    assert called == ["demo"]
+    assert called == ["demo", "safari_dos"]
 
 
 def test_do_demo_loads_bundled_document(monkeypatch):
