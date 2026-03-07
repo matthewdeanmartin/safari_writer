@@ -66,10 +66,10 @@ This mapping replaces the proprietary Atari keys (`[Option]`, `[Select]`, `[Star
  | **Ctrl + F** | Prompts for a search string and finds the first occurrence. |
 | <br>`[Start] [R]` 
 
- | **Ctrl + H** | Prompts for a replacement string. |
+ | **Alt + H** | Prompts for a replacement string. `Ctrl+H` is avoided because many terminals send it as Backspace. |
 | <br>`[Select] [S]` / `[Select] [R]` 
 
- | **F3 / Alt+F3** | Finds the next occurrence / Replaces the current occurrence and finds next. Note: `Shift+F3` is reserved for case-toggle (see Deletion table). |
+ | **F3 / Alt+N** | Finds the next occurrence / Replaces the current occurrence and finds next. |
 | <br>`[Option] [G]` 
 
  | **Alt + R** | Performs a global search and replace to the end of the file. |

@@ -8,6 +8,7 @@ from textual.screen import Screen, ModalScreen
 from textual.widgets import Static
 from textual.widget import Widget
 from textual import events
+from textual.containers import Container
 
 from safari_writer.state import AppState
 
@@ -76,7 +77,6 @@ EditorArea {
 }
 
 #message-bar {
-    dock: bottom;
     height: 1;
     background: $accent;
     color: $text;
@@ -85,7 +85,6 @@ EditorArea {
 }
 
 #status-bar {
-    dock: bottom;
     height: 1;
     background: $secondary;
     color: $text;
@@ -93,11 +92,16 @@ EditorArea {
 }
 
 #help-bar {
-    dock: bottom;
     height: 1;
     background: $primary;
     color: $text;
     padding: 0 1;
+}
+
+#editor-footer {
+    dock: bottom;
+    height: 3;
+    layout: vertical;
 }
 
 HelpScreen {
@@ -135,6 +139,7 @@ HELP_TEXT = (
     "^X Cut  ^C Copy  ^V Paste  ^F Find  ^B Bold  ^U Underline  "
     "^E Center  ^G Elongate  F1 Help  Esc Menu"
 )
+EDITOR_RESERVED_LINES = 4
 
 HELP_CONTENT = """\
 NAVIGATION
@@ -174,8 +179,8 @@ BLOCK OPERATIONS
 SEARCH & REPLACE
   Ctrl+F                  Find (prompt for search string)
   F3                      Find next occurrence
-  Ctrl+H                  Set replacement string
-  Alt+F3                  Replace current occurrence, find next
+  Alt+H                   Set replacement string
+  Alt+N                   Replace current occurrence, find next
   Alt+R                   Global replace to end of file
 
 INLINE FORMATTING (markers visible in editor, invisible when printed)
@@ -608,9 +613,9 @@ class EditorArea(Widget, can_focus=True):
             self._prompt_search()
         elif key == "f3":
             self._find_next()
-        elif key == "ctrl+h":
+        elif key == "alt+h":
             self._prompt_replace()
-        elif key == "alt+f3":
+        elif key == "alt+n":
             self._replace_current_and_find_next()
         elif key == "alt+r":
             self._global_replace()
@@ -720,11 +725,11 @@ class EditorArea(Widget, can_focus=True):
                 self.state.last_search_row = 0
                 self.state.last_search_col = 0
                 if self._find_next():
-                    self.screen.set_message(f"Find: {self.state.search_string!r} — F3=next, Ctrl+H=replace")  # type: ignore[attr-defined]
+                    self.screen.set_message(f"Find: {self.state.search_string!r} — F3=next, Alt+H=replace")  # type: ignore[attr-defined]
             elif self._replace_active:
                 self.state.replace_string = self._input_buffer
                 self._replace_active = False
-                self.screen.set_message(f"Replace: {self.state.replace_string!r} — Alt+F3=one, Alt+R=all")  # type: ignore[attr-defined]
+                self.screen.set_message(f"Replace: {self.state.replace_string!r} — Alt+N=one, Alt+R=all")  # type: ignore[attr-defined]
             elif self._heading_active:
                 self._heading_active = False
                 level = self._input_buffer.strip()
@@ -750,7 +755,7 @@ class EditorArea(Widget, can_focus=True):
                     self.screen.set_message(f"Chain: {filename}")  # type: ignore[attr-defined]
                 else:
                     self.screen.set_message("Cancelled")  # type: ignore[attr-defined]
-        elif key in ("backspace", "ctrl+h"):
+        elif key == "backspace":
             self._input_buffer = self._input_buffer[:-1]
             self.screen.set_message(self._current_prompt() + self._input_buffer + "█")  # type: ignore[attr-defined]
         elif event.character and event.character.isprintable():
@@ -965,7 +970,7 @@ class EditorArea(Widget, can_focus=True):
 
     def _page_scroll(self, direction: int) -> None:
         s = self.state
-        page_lines = max(1, self.size.height - 4)
+        page_lines = max(1, self.size.height - EDITOR_RESERVED_LINES)
         s.cursor_row = max(0, min(len(s.buffer) - 1, s.cursor_row + direction * page_lines))
         s.cursor_col = min(s.cursor_col, len(s.buffer[s.cursor_row]))
 
@@ -1272,13 +1277,14 @@ class EditorScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Static(self._tab_bar_text(), id="tab-bar")
         yield EditorArea(self.state)
-        # Yield these in order of docking from bottom-up
-        yield Static(HELP_TEXT, id="help-bar")
-        yield Static(self._status_text(), id="status-bar")
-        yield Static(self._message or "Welcome to Safari Writer", id="message-bar")
+        with Container(id="editor-footer"):
+            yield Static(self._message or "Welcome to Safari Writer", id="message-bar")
+            yield Static(self._status_text(), id="status-bar")
+            yield Static(HELP_TEXT, id="help-bar")
 
     def on_mount(self) -> None:
         self.query_one(EditorArea).focus()
+        self.update_status()
 
     def _status_text(self) -> str:
         s = self.state

@@ -5,10 +5,10 @@ the Widget.__init__ so Textual's app context isn't required.
 """
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from safari_writer.state import AppState, GlobalFormat
-from safari_writer.screens.editor import EditorArea, CTRL_BOLD, CTRL_CENTER
+from safari_writer.screens.editor import EditorArea, EditorScreen, CTRL_BOLD, CTRL_CENTER
 
 
 # ---------------------------------------------------------------------------
@@ -332,3 +332,77 @@ class TestCaseToggle:
         ed.state.cursor_col = 2
         ed._toggle_case_at_cursor()
         assert ed.state.buffer[0] == "hi"
+
+
+# ---------------------------------------------------------------------------
+# Editor footer
+# ---------------------------------------------------------------------------
+
+class TestEditorFooter:
+    def test_status_bar_shows_full_editor_status(self):
+        state = AppState(filename="draft.sfw", insert_mode=False, caps_mode=True)
+        screen = EditorScreen(state)
+
+        with patch.object(AppState, "bytes_free", new_callable=PropertyMock, return_value=43210):
+            text = screen._status_text()
+
+        assert "Bytes Free: 43,210" in text
+        assert "[Type-over]" in text
+        assert "[Uppercase]" in text
+        assert "[SFW]" in text
+
+    def test_status_bar_defaults_to_txt_and_insert_mode(self):
+        screen = EditorScreen(AppState())
+        text = screen._status_text()
+
+        assert "[Insert]" in text
+        assert "[Lowercase]" in text
+        assert "[TXT]" in text
+
+
+class TestReplacePromptShortcut:
+    def test_alt_h_opens_replace_prompt(self):
+        ed = make_editor("hello")
+        ed.refresh = MagicMock()
+        mock_screen = MagicMock()
+        event = MagicMock()
+        event.key = "alt+h"
+        event.character = None
+
+        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+            ed.on_key(event)
+
+        assert ed._replace_active is True
+        mock_screen.set_message.assert_called_with("Replace with: ")
+
+    def test_backspace_deletes_prompt_input(self):
+        ed = make_editor("hello")
+        ed.refresh = MagicMock()
+        mock_screen = MagicMock()
+        ed._replace_active = True
+        ed._input_buffer = "pear"
+
+        event = MagicMock()
+        event.key = "backspace"
+        event.character = None
+
+        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+            ed._handle_prompt_key(event)
+
+        assert ed._input_buffer == "pea"
+        mock_screen.set_message.assert_called_with("Replace with: pea█")
+
+    def test_alt_n_replaces_current_and_finds_next(self):
+        ed = make_editor("hello hello")
+        ed.refresh = MagicMock()
+        mock_screen = MagicMock()
+        ed.state.search_string = "hello"
+        ed.state.replace_string = "hi"
+        event = MagicMock()
+        event.key = "alt+n"
+        event.character = "n"
+
+        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+            ed.on_key(event)
+
+        assert ed.state.buffer[0].startswith("hi ")
