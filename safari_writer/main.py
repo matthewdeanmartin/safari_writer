@@ -28,6 +28,7 @@ from safari_writer.proofing import (
     make_checker,
     suggest_words,
 )
+from safari_writer.splash import maybe_show_splash
 from safari_writer.state import AppState, GlobalFormat
 
 __all__ = ["build_parser", "build_startup_request", "main", "parse_args"]
@@ -60,6 +61,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--encoding",
         default="utf-8",
         help="Default text encoding for headless file I/O.",
+    )
+    parser.add_argument(
+        "--no-splash",
+        action="store_true",
+        help="Skip the startup splash screen for TUI launches.",
     )
     verbosity = parser.add_mutually_exclusive_group()
     verbosity.add_argument("-q", "--quiet", action="store_true", help="Suppress status output.")
@@ -312,6 +318,7 @@ def _apply_cwd(args: argparse.Namespace) -> None:
 def _run_default_tui(args: argparse.Namespace) -> int:
     state = AppState()
     request = StartupRequest(destination="menu")
+    _show_tui_splash(args)
     return _launch_tui(state, request, args)
 
 
@@ -389,7 +396,12 @@ def _handle_tui_command(args: argparse.Namespace) -> int:
         if not path.exists():
             raise FileNotFoundError(f"Personal dictionary not found: {path}")
 
+    _show_tui_splash(args)
     return _launch_tui(state, request, args)
+
+
+def _show_tui_splash(args: argparse.Namespace) -> None:
+    maybe_show_splash(no_splash=getattr(args, "no_splash", False))
 
 
 def _launch_tui(state: AppState, request: StartupRequest, args: argparse.Namespace) -> int:

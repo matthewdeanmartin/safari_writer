@@ -18,7 +18,8 @@ Python + Textual TUI. `uv` manages env + deps.
 - `make lint-ruff` -> `uv run ruff check safari_writer/`
 - `make pylint` -> `uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612`
 - `make format` -> `uv run ruff format safari_writer/ tests/`
-- `make check` -> `make test` + `make lint`
+- `make mypy` -> `uv run mypy safari_writer`
+- `make check` -> `make test` + `make lint` + `make mypy`
 
 ## Repo notes
 

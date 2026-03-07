@@ -16,4 +16,5 @@ authors:
       - implemented Python type annotations
       - introduced mypy configuration and Makefile target
       - added shared typing helpers and typed package metadata
+      - integrated the startup splash screen and CLI --no-splash support
 ```

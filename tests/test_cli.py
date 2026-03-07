@@ -41,6 +41,12 @@ def test_parse_args_supports_bare_file_shorthand():
     assert args.file == "draft.sfw"
 
 
+def test_parse_args_supports_no_splash_flag():
+    args = parse_args(["--no-splash"])
+
+    assert args.no_splash is True
+
+
 def test_public_package_exports_are_explicit():
     expected = {
         "AppState",
@@ -131,18 +137,33 @@ def test_build_startup_request_for_proofreader():
 
 def test_main_default_invocation_launches_menu(monkeypatch):
     captured: dict[str, object] = {}
+    splash_calls: list[bool] = []
 
     def fake_launch(state, request, args):
         captured["state"] = state
         captured["request"] = request
         return 0
 
+    monkeypatch.setattr("safari_writer.main.maybe_show_splash", lambda *, no_splash: splash_calls.append(no_splash))
     monkeypatch.setattr("safari_writer.main._launch_tui", fake_launch)
 
     exit_code = main([])
 
     assert exit_code == 0
+    assert splash_calls == [False]
     assert captured["request"] == StartupRequest(destination="menu")
+
+
+def test_main_passes_no_splash_flag_to_tui_launch(monkeypatch):
+    splash_calls: list[bool] = []
+
+    monkeypatch.setattr("safari_writer.main.maybe_show_splash", lambda *, no_splash: splash_calls.append(no_splash))
+    monkeypatch.setattr("safari_writer.main._launch_tui", lambda state, request, args: 0)
+
+    exit_code = main(["--no-splash"])
+
+    assert exit_code == 0
+    assert splash_calls == [True]
 
 
 def test_main_tui_edit_loads_file_and_request(monkeypatch, tmp_path):
