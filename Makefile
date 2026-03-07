@@ -1,4 +1,4 @@
-.PHONY: install run dev test check lint lint-ruff pylint format
+.PHONY: install run dev test check lint lint-ruff pylint format mypy
 
 install:
 	uv sync
@@ -12,7 +12,7 @@ dev:
 test:
 	uv run pytest tests/ -v
 
-check: test lint
+check: test lint mypy
 
 lint:
 	uv run ruff check safari_writer/
@@ -23,6 +23,9 @@ lint-ruff:
 
 pylint:
 	uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612
+
+mypy:
+	uv run mypy safari_writer
 
 format:
 	uv run ruff format safari_writer/ tests/

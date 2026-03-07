@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
+
+from safari_writer.typed import MailMergeData, MailMergeFieldInfo, MailMergeInspectInfo
 
 __all__ = [
     "DEFAULT_FIELDS",
@@ -68,20 +71,24 @@ class MailMergeDB:
     def new_record(self) -> list[str]:
         return [""] * len(self.fields)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> MailMergeData:
         return {
             "fields": [{"name": field.name, "max_len": field.max_len} for field in self.fields],
             "records": self.records,
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "MailMergeDB":
+    def from_dict(cls, data: object) -> "MailMergeDB":
         errors = validate_mail_merge_data(data)
         if errors:
             raise ValueError("; ".join(errors))
+        validated_data = cast(MailMergeData, data)
         db = cls.__new__(cls)
-        db.fields = [FieldDef(item["name"], item["max_len"]) for item in data["fields"]]
-        db.records = [list(record) for record in data["records"]]
+        db.fields = [
+            FieldDef(item["name"], item["max_len"])
+            for item in validated_data["fields"]
+        ]
+        db.records = [list(record) for record in validated_data["records"]]
         db.filename = ""
         return db
 
@@ -118,6 +125,8 @@ def validate_mail_merge_data(data: object) -> list[str]:
         errors.append("'records' must be a list")
     if errors:
         return errors
+    assert isinstance(fields, list)
+    assert isinstance(records, list)
 
     if not 1 <= len(fields) <= MAX_FIELDS:
         errors.append(f"field count must be between 1 and {MAX_FIELDS}")
@@ -180,18 +189,19 @@ def save_mail_merge_db(db: MailMergeDB, path: Path, encoding: str = "utf-8") -> 
     path.write_text(json.dumps(db.to_dict(), indent=2), encoding=encoding)
 
 
-def inspect_mail_merge_db(db: MailMergeDB) -> dict[str, object]:
+def inspect_mail_merge_db(db: MailMergeDB) -> MailMergeInspectInfo:
     """Build a structured description of a database."""
 
+    field_info: list[MailMergeFieldInfo] = [
+        {"index": index, "name": field.name, "max_len": field.max_len}
+        for index, field in enumerate(db.fields, start=1)
+    ]
     return {
         "filename": db.filename,
         "record_count": len(db.records),
         "records_free": db.records_free,
         "field_count": len(db.fields),
-        "fields": [
-            {"index": index, "name": field.name, "max_len": field.max_len}
-            for index, field in enumerate(db.fields, start=1)
-        ],
+        "fields": field_info,
     }
 
 

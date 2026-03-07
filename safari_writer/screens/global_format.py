@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual import events
 from textual.screen import Screen
 from textual.widgets import Static
 
@@ -192,7 +193,7 @@ class GlobalFormatScreen(Screen):
     # Key handling
     # ------------------------------------------------------------------
 
-    def on_key(self, event) -> None:
+    def on_key(self, event: events.Key) -> None:
         key = event.key
 
         if self._editing_key is not None:
@@ -220,6 +221,8 @@ class GlobalFormatScreen(Screen):
     def _handle_edit_key(self, key: str) -> None:
         """Handle keypresses while editing a parameter value."""
         letter = self._editing_key
+        if letter is None:
+            return
         param = KEY_TO_PARAM[letter]
 
         if key == "enter":

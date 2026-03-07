@@ -9,6 +9,8 @@ from textual.widgets import Static
 from textual.widget import Widget
 from textual import events
 
+from safari_writer.state import AppState
+
 _log = logging.getLogger("safari_writer.editor")
 _log.setLevel(logging.DEBUG)
 _fh = logging.FileHandler(Path(__file__).resolve().parent.parent / "debug.log", mode="a")
@@ -269,7 +271,7 @@ class EditorArea(Widget, can_focus=True):
         Binding("ctrl+x", "editor_cut", "Cut", show=False, priority=True),
     ]
 
-    def __init__(self, state) -> None:
+    def __init__(self, state: AppState) -> None:
         super().__init__(id="editor-area")
         self.state = state
         self.tab_stops: set[int] = set(DEFAULT_TAB_STOPS)
@@ -304,8 +306,11 @@ class EditorArea(Widget, can_focus=True):
         s = self.state
         if not self._has_selection():
             return ""
+        anchor = s.selection_anchor
+        if anchor is None:
+            return ""
         start, end = _selection_range(
-            s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
+            s.buffer, anchor, (s.cursor_row, s.cursor_col)
         )
         sr, sc = start
         er, ec = end
@@ -322,8 +327,11 @@ class EditorArea(Widget, can_focus=True):
         s = self.state
         if not self._has_selection():
             return
+        anchor = s.selection_anchor
+        if anchor is None:
+            return
         start, end = _selection_range(
-            s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
+            s.buffer, anchor, (s.cursor_row, s.cursor_col)
         )
         sr, sc = start
         er, ec = end
@@ -345,10 +353,16 @@ class EditorArea(Widget, can_focus=True):
 
     def render(self) -> str:
         s = self.state
+        start: tuple[int, int] | None
+        end: tuple[int, int] | None
         if self._has_selection():
-            start, end = _selection_range(
-                s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
-            )
+            anchor = s.selection_anchor
+            if anchor is None:
+                start = end = None
+            else:
+                start, end = _selection_range(
+                    s.buffer, anchor, (s.cursor_row, s.cursor_col)
+                )
         else:
             start = end = None
 
@@ -1178,8 +1192,11 @@ class EditorArea(Widget, can_focus=True):
     def _alphabetize(self) -> None:
         s = self.state
         if self._has_selection():
+            anchor = s.selection_anchor
+            if anchor is None:
+                return
             start, end = _selection_range(
-                s.buffer, s.selection_anchor, (s.cursor_row, s.cursor_col)
+                s.buffer, anchor, (s.cursor_row, s.cursor_col)
             )
             sr, _ = start
             er, _ = end
@@ -1204,7 +1221,7 @@ class EditorArea(Widget, can_focus=True):
 class EditorScreen(Screen):
     CSS = EDITOR_CSS
 
-    def __init__(self, state) -> None:
+    def __init__(self, state: AppState) -> None:
         super().__init__()
         self.state = state
         self._message = ""

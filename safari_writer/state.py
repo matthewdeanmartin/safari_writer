@@ -1,8 +1,14 @@
 """Application-level state shared across screens."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field, fields
+from typing import TYPE_CHECKING
 
 __all__ = ["AppState", "GlobalFormat"]
+
+if TYPE_CHECKING:
+    from safari_writer.mail_merge_db import MailMergeDB
 
 
 @dataclass
@@ -59,6 +65,7 @@ class AppState:
     replace_string: str = ""
     last_search_row: int = 0
     last_search_col: int = 0
+    mail_merge_db: MailMergeDB | None = None
 
     @property
     def bytes_free(self) -> int:

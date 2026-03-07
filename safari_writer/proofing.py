@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import cast
+
+from safari_writer.typed import SpellChecker, WordMatch
 
 _CTRL_CHARS = re.compile(r"[\x01-\x1f]")
 
@@ -17,18 +20,23 @@ __all__ = [
 ]
 
 
-def make_checker():
+def make_checker() -> SpellChecker | None:
     """Return an enchant dictionary, or None if unavailable."""
 
     try:
         import enchant
 
-        return enchant.Dict("en_US")
+        return cast(SpellChecker, enchant.Dict("en_US"))
     except Exception:
         return None
 
 
-def check_word(word: str, checker, kept: set[str], personal: set[str]) -> bool:
+def check_word(
+    word: str,
+    checker: SpellChecker | None,
+    kept: set[str],
+    personal: set[str],
+) -> bool:
     """Return True if word is correctly spelled."""
 
     stripped = word.strip(".,;:!?\"'()-")
@@ -42,7 +50,7 @@ def check_word(word: str, checker, kept: set[str], personal: set[str]) -> bool:
     return checker.check(stripped)
 
 
-def suggest_words(word: str, checker) -> list[str]:
+def suggest_words(word: str, checker: SpellChecker | None) -> list[str]:
     """Return candidate spellings for a word."""
 
     if checker is None:
@@ -53,7 +61,7 @@ def suggest_words(word: str, checker) -> list[str]:
         return []
 
 
-def dict_lookup(prefix: str, checker) -> list[str]:
+def dict_lookup(prefix: str, checker: SpellChecker | None) -> list[str]:
     """Return dictionary words starting with a prefix."""
 
     if checker is None or len(prefix) < 2:
@@ -66,11 +74,11 @@ def dict_lookup(prefix: str, checker) -> list[str]:
     return matches[:126]
 
 
-def extract_words(buffer: list[str]) -> list[tuple[int, int, str]]:
+def extract_words(buffer: list[str]) -> list[WordMatch]:
     """Yield (row, col, word) for every word token in the buffer."""
 
     word_re = re.compile(r"[A-Za-z']+")
-    results: list[tuple[int, int, str]] = []
+    results: list[WordMatch] = []
     for row, line in enumerate(buffer):
         clean = _CTRL_CHARS.sub(" ", line)
         for match in word_re.finditer(clean):

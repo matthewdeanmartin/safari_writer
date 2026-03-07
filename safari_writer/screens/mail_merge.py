@@ -8,6 +8,7 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
 from textual import events
+
 from safari_writer.mail_merge_db import (
     DEFAULT_FIELDS as _DEFAULT_FIELDS,
     MAX_FIELD_DATA_LEN,
@@ -19,6 +20,7 @@ from safari_writer.mail_merge_db import (
     load_mail_merge_db,
     save_mail_merge_db,
 )
+from safari_writer.state import AppState
 
 DEFAULT_FIELDS = _DEFAULT_FIELDS
 MAX_RECORDS = _MAX_RECORDS
@@ -98,14 +100,14 @@ class MailMergeScreen(Screen):
         Binding("escape", "exit_module", "Exit", show=False),
     ]
 
-    def __init__(self, app_state, initial_mode: str = MODE_MAIN) -> None:
+    def __init__(self, app_state: AppState, initial_mode: str = MODE_MAIN) -> None:
         super().__init__()
         self._app_state = app_state
         self._initial_mode = initial_mode
         # Each app gets one shared DB instance stored on app state
-        if not hasattr(app_state, "mail_merge_db"):
+        if app_state.mail_merge_db is None:
             app_state.mail_merge_db = MailMergeDB()
-        self._db: MailMergeDB = app_state.mail_merge_db
+        self._db = app_state.mail_merge_db
 
         self._mode = MODE_MAIN
         self._input_buf = ""

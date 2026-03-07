@@ -16,6 +16,8 @@ from safari_writer.proofing import (
     load_personal_dictionary,
     make_checker as _make_checker,
 )
+from safari_writer.state import AppState
+from safari_writer.typed import SpellChecker, WordMatch
 
 
 # ---------------------------------------------------------------------------
@@ -85,7 +87,7 @@ class ProofreaderScreen(Screen):
 
     def __init__(
         self,
-        state,
+        state: AppState,
         initial_mode: str | None = None,
         personal_dict_paths: list[Path] | tuple[Path, ...] | None = None,
     ) -> None:
@@ -93,7 +95,7 @@ class ProofreaderScreen(Screen):
         self._state = state
         self._initial_mode = initial_mode
         self._personal_dict_paths = tuple(personal_dict_paths or ())
-        self._checker = None
+        self._checker: SpellChecker | None = None
         self._checker_loaded = False
         self._personal: set[str] = set()   # loaded personal dict words
         self._mode = MODE_MENU
@@ -103,18 +105,19 @@ class ProofreaderScreen(Screen):
         self._help_text = ""
 
         # Scan state
-        self._words: list[tuple[int, int, str]] = []  # (row, col, word) for all words
+        self._words: list[WordMatch] = []  # (row, col, word) for all words
         self._scan_idx = 0                             # current position in _words
-        self._errors: list[tuple[int, int, str]] = [] # flagged words
+        self._errors: list[WordMatch] = [] # flagged words
 
         # Correction state
-        self._current_error: tuple[int, int, str] | None = None
+        self._current_error: WordMatch | None = None
         self._replacement: str = ""
 
         # Dict results paging
         self._dict_results: list[str] = []
         self._dict_page = 0
         self._dict_prefix = ""
+        self._from_correct = False
 
     # ------------------------------------------------------------------
     # Compose
@@ -139,12 +142,17 @@ class ProofreaderScreen(Screen):
         elif self._initial_mode == "search":
             self._enter_dict_search(from_correct=False)
 
-    def _ensure_checker(self):
+    def _ensure_checker(self) -> SpellChecker | None:
         """Load the spell-check dictionary on first use only."""
         if not self._checker_loaded:
             self._checker = _make_checker()
             self._checker_loaded = True
         return self._checker
+
+    def _require_current_error(self) -> WordMatch:
+        if self._current_error is None:
+            raise RuntimeError("Proofreader correction state is unavailable.")
+        return self._current_error
 
     # ------------------------------------------------------------------
     # Mode entry helpers
@@ -224,7 +232,7 @@ class ProofreaderScreen(Screen):
 
     def _enter_correct_menu(self) -> None:
         self._mode = MODE_CORRECT_MENU
-        r, c, w = self._current_error
+        r, c, w = self._require_current_error()
         self._render_document_with_highlight(r, c, w)
         self._set_message(f'Unrecognized: [reverse]{w}[/]  — C Correct  S Search dict  Enter Keep')
         self._set_help(" C Correct Word  S Search Dictionary  Enter Keep This Spelling  Esc Abort")
@@ -299,14 +307,14 @@ class ProofreaderScreen(Screen):
         if k == "c":
             self._mode = MODE_CORRECT_WORD
             self._input_buf = ""
-            _, _, w = self._current_error
+            _, _, w = self._require_current_error()
             self._set_message(f"Correct [{w}]: type replacement word, Enter to confirm")
             self._set_help(" Enter Confirm  Esc Cancel")
         elif k == "s":
             self._enter_dict_search(from_correct=True)
         elif key == "enter":
             # Keep This Spelling
-            _, _, w = self._current_error
+            _, _, w = self._require_current_error()
             self._state.kept_spellings.add(w.lower())
             self._set_message(f"Kept: '{w}' — will not flag again this session.")
             self._scan_idx += 1
@@ -321,7 +329,7 @@ class ProofreaderScreen(Screen):
             if self._input_buf:
                 self._replacement = self._input_buf
                 self._mode = MODE_CORRECT_CONFIRM
-                _, _, w = self._current_error
+                _, _, w = self._require_current_error()
                 self._set_message(
                     f"Replace '{w}' with '{self._replacement}' — Are you sure? Y/N"
                 )
@@ -334,7 +342,7 @@ class ProofreaderScreen(Screen):
             self._update_word_input()
 
     def _update_word_input(self) -> None:
-        _, _, w = self._current_error
+        _, _, w = self._require_current_error()
         self._set_message(
             f"Correct [{w}]: {self._input_buf}█  (Enter confirm, Esc cancel)"
         )
@@ -347,7 +355,7 @@ class ProofreaderScreen(Screen):
             self._enter_correct_menu()
 
     def _apply_correction(self) -> None:
-        r, c, w = self._current_error
+        r, c, w = self._require_current_error()
         repl = self._replacement
         line = self._state.buffer[r]
         # Replace first occurrence at column c

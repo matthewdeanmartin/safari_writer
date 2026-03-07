@@ -55,7 +55,7 @@ def make_screen(db: MailMergeDB | None = None) -> MailMergeScreen:
     with patch("textual.screen.Screen.__init__", return_value=None):
         screen = MailMergeScreen.__new__(MailMergeScreen)
         screen._app_state = state
-        if not hasattr(state, "mail_merge_db"):
+        if state.mail_merge_db is None:
             state.mail_merge_db = MailMergeDB()
         screen._db = state.mail_merge_db
         screen._mode = MODE_MAIN
