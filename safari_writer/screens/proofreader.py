@@ -120,7 +120,7 @@ ProofreaderScreen {
 MODE_MENU       = "menu"       # choosing highlight / print / correct / search
 MODE_HIGHLIGHT  = "highlight"  # auto-scrolling highlight-only scan
 MODE_PRINT      = "print"      # batch scan → list errors
-MODE_CORRECT    = "correct"    # interactive correction
+MODE_CORRECT    = "correct"    # scanning for next error (between errors)
 MODE_CORRECT_MENU = "correct_menu"   # sub-menu: C/S/Enter
 MODE_CORRECT_WORD = "correct_word"   # typing replacement
 MODE_CORRECT_CONFIRM = "correct_confirm"  # "Are you sure? Y/N"
