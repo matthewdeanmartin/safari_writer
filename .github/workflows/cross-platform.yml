@@ -37,36 +37,36 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        shell_type: [bash, pwsh]
         include:
-          # GitHub-hosted runners do not expose multiple GUI terminal emulators,
-          # so we proxy terminal coverage with the shells available on each OS.
           - os: ubuntu-latest
-            shell: bash
+            shell_type: bash
             terminal_name: bash
             term: xterm-256color
             msystem: ""
           - os: ubuntu-latest
-            shell: pwsh
+            shell_type: pwsh
             terminal_name: pwsh
             term: xterm-256color
             msystem: ""
           - os: windows-latest
-            shell: pwsh
+            shell_type: pwsh
             terminal_name: windows-powershell
             term: xterm-256color
             msystem: ""
           - os: windows-latest
-            shell: bash
+            shell_type: bash
             terminal_name: git-bash
             term: xterm-256color
             msystem: MINGW64
           - os: macos-latest
-            shell: bash
+            shell_type: bash
             terminal_name: bash
             term: xterm-256color
             msystem: ""
           - os: macos-latest
-            shell: pwsh
+            shell_type: pwsh
             terminal_name: pwsh
             term: xterm-256color
             msystem: ""
@@ -92,10 +92,22 @@ jobs:
       - name: Set up uv
         uses: hynek/setup-cached-uv@757bedc3f972eb7227a1aa657651f15a8527c817 # v2.3.0
 
-      - name: Sync dependencies
-        shell: ${{ matrix.shell }}
+      - name: Sync dependencies (bash)
+        if: matrix.shell_type == 'bash'
+        shell: bash
         run: uv sync --quiet --no-progress
 
-      - name: Run pytest
-        shell: ${{ matrix.shell }}
+      - name: Sync dependencies (pwsh)
+        if: matrix.shell_type == 'pwsh'
+        shell: pwsh
+        run: uv sync --quiet --no-progress
+
+      - name: Run pytest (bash)
+        if: matrix.shell_type == 'bash'
+        shell: bash
+        run: uv run pytest tests/ -q --disable-warnings
+
+      - name: Run pytest (pwsh)
+        if: matrix.shell_type == 'pwsh'
+        shell: pwsh
         run: uv run pytest tests/ -q --disable-warnings

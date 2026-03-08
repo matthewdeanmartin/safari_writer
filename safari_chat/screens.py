@@ -194,7 +194,7 @@ class SafariChatMainScreen(Screen):
             self._handle_slash_command(text)
             return
 
-        _mode, response, _chunk_ids = plan_response(text, self.state)
+        _mode, _, _chunk_ids = plan_response(text, self.state)
         self._refresh_transcript()
         self._refresh_distress_bar()
 

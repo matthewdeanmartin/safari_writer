@@ -377,7 +377,7 @@ def parse_document(text: str) -> list[TopicChunk]:
     """Split a Markdown document on ``---`` delimiters into topic chunks."""
     raw_chunks = re.split(r"^\s*---\s*$", text, flags=re.MULTILINE)
     result: list[TopicChunk] = []
-    for idx, raw in enumerate(raw_chunks):
+    for _idx, raw in enumerate(raw_chunks):
         body = raw.strip()
         if not body:
             continue
