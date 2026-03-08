@@ -3,6 +3,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Protocol, cast
 
 from textual.app import ComposeResult
 from textual.screen import Screen, ModalScreen
@@ -279,6 +280,10 @@ class HelpScreen(ModalScreen):
 # ---------------------------------------------------------------------------
 
 
+class _MessageScreen(Protocol):
+    def set_message(self, msg: str) -> None: ...
+
+
 class EditorArea(Widget, can_focus=True):
     """The main text editing widget."""
 
@@ -307,6 +312,9 @@ class EditorArea(Widget, can_focus=True):
         self._highlighter = create_highlighter(self.state.file_profile)
         self._highlighter.invalidate()
 
+    def _set_screen_message(self, msg: str) -> None:
+        cast(_MessageScreen, self.screen).set_message(msg)
+
     def _push_undo(self, action: str) -> None:
         """Push an undo snapshot if the action type changed (coalesces typing)."""
         if action != self._last_undo_action:
@@ -316,9 +324,9 @@ class EditorArea(Widget, can_focus=True):
     def _undo(self) -> None:
         if self.state.pop_undo():
             self._last_undo_action = ""
-            self.screen.set_message("Undo")  # type: ignore[attr-defined]
+            self._set_screen_message("Undo")
         else:
-            self.screen.set_message("Nothing to undo")  # type: ignore[attr-defined]
+            self._set_screen_message("Nothing to undo")
 
     # ------------------------------------------------------------------
     # Selection helpers
@@ -788,7 +796,7 @@ class EditorArea(Widget, can_focus=True):
 
         # Print / Export — delegate to app-level handler
         elif key == "ctrl+p":
-            self.app._action_print()  # type: ignore[attr-defined]
+            self.app._action_print()
 
         # Exit to main menu
         elif key == "escape":
@@ -834,12 +842,12 @@ class EditorArea(Widget, can_focus=True):
     def _prompt_search(self) -> None:
         self._search_active = True
         self._input_buffer = ""
-        self.screen.set_message("Find: ")  # type: ignore[attr-defined]
+        self._set_screen_message("Find: ")
 
     def _prompt_replace(self) -> None:
         self._replace_active = True
         self._input_buffer = ""
-        self.screen.set_message("Replace with: ")  # type: ignore[attr-defined]
+        self._set_screen_message("Replace with: ")
 
     def _handle_prompt_key(self, event: events.Key) -> None:
         key = event.key.lower()
@@ -850,7 +858,7 @@ class EditorArea(Widget, can_focus=True):
             self._heading_active = False
             self._chain_active = False
             self._input_buffer = ""
-            self.screen.set_message("Cancelled")  # type: ignore[attr-defined]
+            self._set_screen_message("Cancelled")
             event.stop()
             self.refresh()
             return
@@ -862,15 +870,15 @@ class EditorArea(Widget, can_focus=True):
                 self.state.last_search_row = 0
                 self.state.last_search_col = 0
                 if self._find_next():
-                    self.screen.set_message(
+                    self._set_screen_message(
                         f"Find: {self.state.search_string!r} — F3=next, Alt+H=replace"
-                    )  # type: ignore[attr-defined]
+                    )
             elif self._replace_active:
                 self.state.replace_string = self._input_buffer
                 self._replace_active = False
-                self.screen.set_message(
+                self._set_screen_message(
                     f"Replace: {self.state.replace_string!r} — Alt+N=one, Alt+R=all"
-                )  # type: ignore[attr-defined]
+                )
             elif self._heading_active:
                 self._heading_active = False
                 level = self._input_buffer.strip()
@@ -881,9 +889,9 @@ class EditorArea(Widget, can_focus=True):
                     s.cursor_row = row + 1
                     s.cursor_col = 0
                     s.modified = True
-                    self.screen.set_message(f"Heading level {level} inserted")  # type: ignore[attr-defined]
+                    self._set_screen_message(f"Heading level {level} inserted")
                 else:
-                    self.screen.set_message("Cancelled — level must be 1-9")  # type: ignore[attr-defined]
+                    self._set_screen_message("Cancelled — level must be 1-9")
             elif self._chain_active:
                 self._chain_active = False
                 filename = self._input_buffer.strip()
@@ -893,19 +901,19 @@ class EditorArea(Widget, can_focus=True):
                     s.cursor_row = len(s.buffer) - 1
                     s.cursor_col = len(s.buffer[s.cursor_row])
                     s.modified = True
-                    self.screen.set_message(f"Chain: {filename}")  # type: ignore[attr-defined]
+                    self._set_screen_message(f"Chain: {filename}")
                 else:
-                    self.screen.set_message("Cancelled")  # type: ignore[attr-defined]
+                    self._set_screen_message("Cancelled")
         elif key == "backspace":
             self._input_buffer = self._input_buffer[:-1]
-            self.screen.set_message(self._current_prompt() + self._input_buffer + "█")  # type: ignore[attr-defined]
+            self._set_screen_message(self._current_prompt() + self._input_buffer + "█")
         elif event.character and event.character.isprintable():
             max_len = 1 if self._heading_active else 37
             if len(self._input_buffer) < max_len:
                 self._input_buffer += event.character
-                self.screen.set_message(
+                self._set_screen_message(
                     self._current_prompt() + self._input_buffer + "█"
-                )  # type: ignore[attr-defined]
+                )
 
         event.stop()
         self.refresh()
@@ -930,7 +938,7 @@ class EditorArea(Widget, can_focus=True):
         s = self.state
         needle = s.search_string
         if not needle:
-            self.screen.set_message("No search string set — press Ctrl+F")  # type: ignore[attr-defined]
+            self._set_screen_message("No search string set — press Ctrl+F")
             return False
 
         # Start search AFTER current cursor position
@@ -947,7 +955,7 @@ class EditorArea(Widget, can_focus=True):
                 s.cursor_col = idx
                 s.last_search_row = row
                 s.last_search_col = idx
-                self.screen.set_message(f"Found: {needle!r}")  # type: ignore[attr-defined]
+                self._set_screen_message(f"Found: {needle!r}")
                 return True
 
         # Wrap to top if enabled
@@ -962,10 +970,10 @@ class EditorArea(Widget, can_focus=True):
                     s.cursor_col = idx
                     s.last_search_row = row
                     s.last_search_col = idx
-                    self.screen.set_message(f"Found (wrapped): {needle!r}")  # type: ignore[attr-defined]
+                    self._set_screen_message(f"Found (wrapped): {needle!r}")
                     return True
 
-        self.screen.set_message(f"Not found: {needle!r}")  # type: ignore[attr-defined]
+        self._set_screen_message(f"Not found: {needle!r}")
         return False
 
     def _find_in_line(self, line: str, needle: str, start: int = 0) -> int:
@@ -985,7 +993,7 @@ class EditorArea(Widget, can_focus=True):
         needle = s.search_string
         repl = s.replace_string
         if not needle:
-            self.screen.set_message("No search string — press Ctrl+F first")  # type: ignore[attr-defined]
+            self._set_screen_message("No search string — press Ctrl+F first")
             return
 
         row, col = s.cursor_row, s.cursor_col
@@ -1009,7 +1017,7 @@ class EditorArea(Widget, can_focus=True):
         needle = s.search_string
         repl = s.replace_string
         if not needle:
-            self.screen.set_message("No search string — press Ctrl+F first")  # type: ignore[attr-defined]
+            self._set_screen_message("No search string — press Ctrl+F first")
             return
 
         count = 0
@@ -1040,9 +1048,9 @@ class EditorArea(Widget, can_focus=True):
 
         if count:
             s.modified = True
-            self.screen.set_message(f"Replaced {count} occurrence(s)")  # type: ignore[attr-defined]
+            self._set_screen_message(f"Replaced {count} occurrence(s)")
         else:
-            self.screen.set_message(f"Not found: {needle!r}")  # type: ignore[attr-defined]
+            self._set_screen_message(f"Not found: {needle!r}")
 
     def _replace_all_in_line_from(
         self, line: str, needle: str, repl: str, start: int
@@ -1142,21 +1150,21 @@ class EditorArea(Widget, can_focus=True):
         col = self.state.cursor_col
         if col in self.tab_stops:
             self.tab_stops.discard(col)
-            self.screen.set_message(f"Tab stop cleared at column {col}")  # type: ignore[attr-defined]
+            self._set_screen_message(f"Tab stop cleared at column {col}")
         else:
             self.tab_stops.add(col)
-            self.screen.set_message(f"Tab stop set at column {col}")  # type: ignore[attr-defined]
+            self._set_screen_message(f"Tab stop set at column {col}")
         self._update_tab_bar()
 
     def _tab_clear_all(self) -> None:
         """Clear all tab stops."""
         self.tab_stops.clear()
-        self.screen.set_message("All tab stops cleared")  # type: ignore[attr-defined]
+        self._set_screen_message("All tab stops cleared")
         self._update_tab_bar()
 
     def _update_tab_bar(self) -> None:
         try:
-            self.screen.update_tab_bar()  # type: ignore[attr-defined]
+            self.screen.update_tab_bar()
         except Exception:
             pass
 
@@ -1216,7 +1224,7 @@ class EditorArea(Widget, can_focus=True):
     def _insert_control(self, ctrl: str) -> None:
         s = self.state
         if not s.allows_formatting:
-            self.screen.set_message("Formatting is only available in .sfw files")  # type: ignore[attr-defined]
+            self._set_screen_message("Formatting is only available in .sfw files")
             return
         row, col = s.cursor_row, s.cursor_col
         line = s.buffer[row]
@@ -1228,7 +1236,7 @@ class EditorArea(Widget, can_focus=True):
         """Insert a structure marker on its own line at the cursor position."""
         s = self.state
         if not s.allows_formatting:
-            self.screen.set_message("Formatting is only available in .sfw files")  # type: ignore[attr-defined]
+            self._set_screen_message("Formatting is only available in .sfw files")
             return
         row = s.cursor_row
         # Insert a new line above cursor containing just the marker
@@ -1239,7 +1247,7 @@ class EditorArea(Widget, can_focus=True):
 
     def _prompt_heading(self) -> None:
         """Prompt for heading level and insert CTRL_HEADING + digit."""
-        self.screen.set_message("Heading level (1-9): ")  # type: ignore[attr-defined]
+        self._set_screen_message("Heading level (1-9): ")
         self._search_active = False
         self._replace_active = False
         self._heading_active = True
@@ -1247,7 +1255,7 @@ class EditorArea(Widget, can_focus=True):
 
     def _prompt_chain(self) -> None:
         """Prompt for chain filename."""
-        self.screen.set_message("Chain to file: ")  # type: ignore[attr-defined]
+        self._set_screen_message("Chain to file: ")
         self._chain_active = True
         self._input_buffer = ""
 
@@ -1412,7 +1420,7 @@ class EditorArea(Widget, can_focus=True):
             text = "\n".join(self.state.buffer)
             label = "Document"
         count = len(text.split())
-        self.screen.set_message(f"Word count ({label}): {count}")  # type: ignore[attr-defined]
+        self._set_screen_message(f"Word count ({label}): {count}")
 
     def _alphabetize(self) -> None:
         s = self.state
@@ -1438,7 +1446,7 @@ class EditorArea(Widget, can_focus=True):
 
     def _update_status(self) -> None:
         try:
-            self.screen.update_status()  # type: ignore[attr-defined]
+            self.screen.update_status()
         except Exception:
             pass
 
@@ -1493,3 +1501,5 @@ class EditorScreen(Screen):
     def update_tab_bar(self) -> None:
         if self.is_mounted:
             self.query_one("#tab-bar", Static).update(self._tab_bar_text())
+
+

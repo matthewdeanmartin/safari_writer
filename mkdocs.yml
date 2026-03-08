@@ -1,0 +1,54 @@
+site_name: "Safari Writer"
+site_url: "https://safari-writer.readthedocs.io/"
+site_author: "Matthew Dean Martin <matthewdeanmartin@gmail.com>"
+site_description: "Retro text editor."
+
+repo_url: "https://github.com/matthewdeanmartin/safari-writer"
+
+theme:
+  name: readthedocs
+  features:
+    - navigation.footer
+
+edit_uri: edit/main/docs/
+
+markdown_extensions:
+  - attr_list
+  - codehilite
+  - toc:
+      permalink: true
+
+nav:
+  - "Home": "index.md"
+  - "Overview":
+      - "Introduction": "overview/README.md"
+      - "Who is this for?": "overview/who_is_this_for.md"
+  - "Installation": "installation.md"
+  - "Usage":
+      - "Quick Start": "usage/usage.md"
+      - "Keyboard Commands": "usage/commands.md"
+      - "Configuration": "usage/config.md"
+      - "Workflows": "usage/workflows.md"
+  - "Modules":
+      - "Safari DOS": "modules/safari_dos.md"
+      - "Safari Chat": "modules/safari_chat.md"
+      - "Safari Basic": "modules/safari_basic.md"
+  - "Reference":
+      - "File Types": "reference/file_types.md"
+      - "CLI Usage": "reference/cli.md"
+      - "Troubleshooting": "reference/troubleshooting.md"
+  - "Change Log": "CHANGELOG.md"
+  - "Contributing": "CONTRIBUTING.md"
+
+validation:
+  nav:
+    omitted_files: warn
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+plugins:
+  - search
+  - mkdocstrings
+  - print-site

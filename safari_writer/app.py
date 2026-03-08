@@ -485,7 +485,7 @@ class SafariWriterApp(App):
         if hasattr(screen, "set_message"):
             screen.set_message(msg)
 
-    def action_quit(self) -> None:
+    async def action_quit(self) -> None:
         """Override Textual's default ctrl+q quit.
 
         If the active screen is a sub-app screen (Chat, DOS), return to the

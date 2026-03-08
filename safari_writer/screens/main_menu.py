@@ -5,6 +5,7 @@ from datetime import datetime
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
+from textual.timer import Timer
 from textual.widgets import Static
 
 from safari_writer.path_utils import leaf_name
@@ -159,7 +160,7 @@ class MainMenuScreen(Screen):
     def __init__(self) -> None:
         super().__init__()
         self._message = ""
-        self._clock_timer = None
+        self._clock_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container, Horizontal

@@ -387,11 +387,11 @@ def _ps_escape(text: str) -> str:
 class _PSWriter:
     """Minimal PostScript DSC document builder."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._buf: list[str] = []
         self._page_count = 0
 
-    def header(self, reg_font: str, bold_font: str, size: float):
+    def header(self, reg_font: str, bold_font: str, size: float) -> None:
         self._buf.append("%!PS-Adobe-3.0")
         self._buf.append(f"%%BoundingBox: 0 0 {_PAGE_W} {_PAGE_H}")
         self._buf.append("%%Pages: (atend)")
@@ -403,30 +403,30 @@ class _PSWriter:
         self._buf.append("/S { moveto show } bind def")
         self._buf.append("")
 
-    def begin_page(self, page_num: int):
+    def begin_page(self, page_num: int) -> None:
         self._page_count += 1
         self._buf.append(f"%%Page: {page_num} {self._page_count}")
 
-    def end_page(self):
+    def end_page(self) -> None:
         self._buf.append("showpage")
         self._buf.append("")
 
-    def set_font(self, name: str, size: float):
+    def set_font(self, name: str, size: float) -> None:
         self._buf.append(f"{size} /{name} SF")
 
-    def show_text(self, x: float, y: float, text: str):
+    def show_text(self, x: float, y: float, text: str) -> None:
         self._buf.append(f"({text}) {x:.1f} {y:.1f} S")
 
-    def underline_on(self):
+    def underline_on(self) -> None:
         pass  # state tracked externally
 
-    def underline_draw(self, x: float, y: float, width: float):
+    def underline_draw(self, x: float, y: float, width: float) -> None:
         self._buf.append(
             f"newpath {x:.1f} {y - 1:.1f} moveto "
             f"{width:.1f} 0 rlineto 0.5 setlinewidth stroke"
         )
 
-    def trailer(self):
+    def trailer(self) -> None:
         self._buf.append(f"%%Pages: {self._page_count}")
         self._buf.append("%%EOF")
 
