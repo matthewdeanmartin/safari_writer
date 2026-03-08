@@ -18,11 +18,13 @@ tox:
 check: test lint mypy
 
 lint:
-	uv run ruff check safari_writer/
+	uv run ruff check safari_writer/ --fix
+	uv run ruff check safari_dos --fix
 	uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612
 
 lint-ruff:
-	uv run ruff check safari_writer/
+	uv run ruff check safari_writer/ --fix
+	uv run ruff check safari_dos --fix
 
 pylint:
 	uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612

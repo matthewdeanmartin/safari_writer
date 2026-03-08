@@ -812,7 +812,7 @@ class EditorArea(Widget, can_focus=True):
             for row in range(0, start_row + 1):
                 line = s.buffer[row]
                 # Stop if we hit original cursor pos
-                col_end = start_col if row == start_row else len(line)
+                # col_end = start_col if row == start_row else len(line)
                 idx = self._find_in_line(line, needle, 0)
                 if idx != -1 and (row < start_row or idx < curr_col):
                     s.cursor_row = row

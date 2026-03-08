@@ -8,7 +8,7 @@ from textual.widgets import Static
 from textual import events
 
 from safari_writer.heading_numbering import next_heading_number
-from safari_writer.mail_merge_db import MailMergeDB, apply_mail_merge_to_buffer
+from safari_writer.mail_merge_db import MailMergeDB
 from safari_writer.state import AppState, GlobalFormat
 from safari_writer.screens.editor import (
     CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,

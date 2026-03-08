@@ -53,7 +53,6 @@ def export_markdown(
         parts: list[str] = []
         for rec_idx in range(len(db.records)):
             # Temporarily set the first record for apply_mail_merge_to_buffer
-            single_db_records = db.records
             original_records = db.records
             db.records = [db.records[rec_idx]]
             merged_buf = apply_mail_merge_to_buffer(buffer, db)
