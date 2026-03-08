@@ -6,7 +6,6 @@ import os
 import shutil
 from pathlib import Path
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
@@ -66,29 +65,48 @@ INDEX_DRIVE_2 = "drive2"
 
 MM_CSS = """
 MailMergeScreen {
+    align: center middle;
+    background: $background;
+}
+
+#mm-outer {
+    width: 78;
+    height: 30;
+    border: solid $accent;
     background: $surface;
     layout: vertical;
 }
-#mm-status {
-    dock: top;
-    height: 1;
-    background: $secondary;
-    color: $text;
-    padding: 0 1;
-}
+
 #mm-message {
-    dock: top;
     height: 1;
     background: $primary;
     color: $text;
     padding: 0 1;
 }
-#mm-body {
-    height: 1fr;
+
+#mm-title {
+    height: 1;
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-top: 1;
+}
+
+#mm-status {
+    height: 1;
+    background: $secondary;
+    color: $text;
     padding: 0 1;
 }
+
+#mm-body {
+    height: 1fr;
+    padding: 1 2;
+    color: $text;
+    overflow-y: auto;
+}
+
 #mm-help {
-    dock: bottom;
     height: 1;
     background: $primary-darken-2;
     color: $text-muted;
@@ -205,7 +223,7 @@ class MailMergeScreen(Screen):
 
     CSS = MM_CSS
 
-    BINDINGS: list[Binding] = []
+    BINDINGS = []
 
     def __init__(self, app_state: AppState, initial_mode: str = MODE_MAIN) -> None:
         super().__init__()
@@ -257,10 +275,14 @@ class MailMergeScreen(Screen):
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
-        yield Static(self._message_text, id="mm-message")
-        yield Static(self._status_text, id="mm-status")
-        yield Static(self._body_text, id="mm-body")
-        yield Static(self._help_text, id="mm-help")
+        from textual.containers import Container
+
+        with Container(id="mm-outer"):
+            yield Static(self._message_text, id="mm-message")
+            yield Static("*** MAIL MERGE ***", id="mm-title")
+            yield Static(self._status_text, id="mm-status")
+            yield Static(self._body_text, id="mm-body")
+            yield Static(self._help_text, id="mm-help")
 
     def on_mount(self) -> None:
         self._enter_main()
@@ -285,7 +307,6 @@ class MailMergeScreen(Screen):
             subset_note = f"  [bold yellow]SUBSET ACTIVE: {len(self._active_subset)} records[/]"
         filename_note = f"  [dim]File: {self._db.filename or '(unsaved)'}[/]"
         self._set_body(
-            "[bold]*** MAIL MERGE ***[/]\n"
             f"{filename_note}{subset_note}\n\n"
             "[bold]C[/]  Create File\n"
             "[bold]N[/]  New Record\n"
@@ -736,7 +757,7 @@ class MailMergeScreen(Screen):
                 self._update_field_idx = 0
                 self._render_update_record()
             else:
-                self._set_message(f"Already on first record.  PgDn/N=next  E=edit  Ctrl+D=delete  Esc=back")
+                self._set_message("Already on first record.  PgDn/N=next  E=edit  Ctrl+D=delete  Esc=back")
         elif key == "up":
             self._update_field_idx = max(0, self._update_field_idx - 1)
             self._render_update_record()

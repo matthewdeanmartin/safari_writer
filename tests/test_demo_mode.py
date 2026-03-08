@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+import asyncio
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from safari_writer.app import SafariWriterApp
 from safari_writer.document_io import load_demo_document_buffer
+from safari_writer.mail_merge_db import MailMergeDB
 from safari_writer.screens.editor import (
     CTRL_BOLD,
     CTRL_CENTER,
@@ -25,6 +27,7 @@ from safari_writer.screens.editor import (
 )
 from safari_writer.screens.main_menu import MENU_ITEMS, MainMenuScreen
 from safari_writer.state import AppState
+from textual.widgets import Static
 
 
 def test_main_menu_exposes_demo_mode():
@@ -38,6 +41,34 @@ def test_main_menu_exposes_demo_mode():
         binding.key == "o" and binding.action == "menu_action('safari_dos')"
         for binding in MainMenuScreen.BINDINGS
     )
+
+
+def test_main_menu_context_text_includes_edit_and_merge_files():
+    screen = MainMenuScreen()
+    state = AppState(filename=r"C:\docs\draft.sfw")
+    state.mail_merge_db = MailMergeDB(filename=r"C:\data\contacts.mm")
+    app = MagicMock()
+    app.state = state
+
+    with patch.object(MainMenuScreen, "app", new_callable=PropertyMock) as app_prop:
+        app_prop.return_value = app
+        assert screen._context_text() == " Edit: draft.sfw   Merge: contacts.mm"
+
+
+def test_main_menu_mount_shows_context_and_status_bars():
+    async def run():
+        state = AppState(filename=r"C:\docs\draft.sfw")
+        state.mail_merge_db = MailMergeDB(filename=r"C:\data\contacts.mm")
+        app = SafariWriterApp(state=state)
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            screen = app.screen
+            assert isinstance(screen, MainMenuScreen)
+            assert "Edit: draft.sfw" in screen.query_one("#context-bar", Static).content
+            assert "Merge: contacts.mm" in screen.query_one("#context-bar", Static).content
+            assert "Bytes Free:" in screen.query_one("#status-bar", Static).content
+
+    asyncio.run(run())
 
 
 def test_handle_menu_action_routes_to_demo(monkeypatch):

@@ -4,6 +4,7 @@ import asyncio
 import json
 from unittest.mock import MagicMock, patch, PropertyMock
 
+from textual.widgets import Static
 from safari_writer.app import SafariWriterApp
 from safari_writer.state import AppState
 from safari_writer.screens.mail_merge import (
@@ -107,7 +108,7 @@ def make_key(key: str, character: str | None = None):
 class TestMailMergeMountBehavior:
     def test_menu_is_seeded_before_mount(self):
         screen = MailMergeScreen(AppState())
-        assert "*** MAIL MERGE ***" in screen._body_text
+        assert "Create File" in screen._body_text
         assert "SELECT ITEM" in screen._message_text
         assert "F1/? Help" in screen._help_text
         assert "RECORDS FREE" in screen._status_text
@@ -119,7 +120,8 @@ class TestMailMergeMountBehavior:
                 app.push_screen(MailMergeScreen(app.state))
                 await pilot.pause()
                 screen = app.screen
-                assert "*** MAIL MERGE ***" in screen._body_text
+                assert screen.query_one("#mm-title", Static).content == "*** MAIL MERGE ***"
+                assert "Create File" in screen._body_text
                 assert "SELECT ITEM" in screen._message_text
                 assert "F1/? Help" in screen._help_text
                 assert "RECORDS FREE" in screen._status_text
@@ -152,7 +154,9 @@ class TestMailMergeHelp:
         event.stop.assert_called_once()
 
     def test_status_bar_is_docked(self):
-        assert "#mm-status {\n    dock: top;" in MM_CSS
+        assert "#mm-outer {" in MM_CSS
+        assert "border: solid $accent;" in MM_CSS
+        assert "#mm-title {" in MM_CSS
 
 
 # ---------------------------------------------------------------------------
