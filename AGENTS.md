@@ -3,27 +3,26 @@
 Python + Textual TUI. `uv` manages env + deps.
 
 ## Workflow
-
-- Prefer `make <target>` when a target exists.
+- Prefer `make <target>` when it exists.
 - Otherwise use `uv run ...`.
 - Never use bare `python` or `pip`.
 
-## Makefile
+## Make
+- Defaults are compact. Use them first.
+- Use `*-verbose` only when debugging.
+- Use `*-writer`, `*-dos`, `*-all` to target one module or both.
+- `install` / `install-verbose`
+- `run`, `run-writer`, `run-dos` (+ `-verbose`)
+- `dev`, `dev-writer`, `dev-dos` (+ `-verbose`)
+- `test` / `test-verbose`
+- `lint`, `lint-ruff`, `pylint` (+ `-writer` / `-dos` / `-all`, plus `-verbose`)
+- `format` (+ `-writer` / `-dos` / `-all`, plus `-verbose`)
+- `mypy` defaults to `safari_writer`; also `mypy-dos`, `mypy-all`, verbose variants
+- `tox` / `tox-verbose`
+- `check` / `check-verbose`
+- `publish` / `publish-verbose`
 
-- `make install` -> `uv sync`
-- `make run` -> `uv run safari-writer`
-- `make dev` -> `uv run textual run --dev safari_writer/main.py`
-- `make test` -> `uv run pytest tests/ -v`
-- `make lint` -> `uv run ruff check safari_writer/` + `uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612`
-- `make lint-ruff` -> `uv run ruff check safari_writer/`
-- `make pylint` -> `uv run pylint safari_writer --disable=all --enable=E,F,W0611,W0612`
-- `make format` -> `uv run ruff format safari_writer/ tests/`
-- `make mypy` -> `uv run mypy safari_writer`
-- `make check` -> `make test` + `make lint` + `make mypy`
-
-## Repo notes
-
-- Windows repo; commands often run in git-bash syntax.
+## Notes
+- Windows repo; commands may use git-bash syntax.
 - Specs: `spec/*.md`
 - TODO: `TODO.md`
-- If you're the next clanker: you've got this. Leave the blue screen better than you found it, and remember that `uv run` is love, `uv run` is life.

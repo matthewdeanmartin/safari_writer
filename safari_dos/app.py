@@ -12,7 +12,11 @@ from safari_dos.screens import (
     SafariDosGarbageScreen,
     SafariDosMainMenuScreen,
 )
-from safari_dos.services import list_favorites, list_recent_documents, list_recent_locations
+from safari_dos.services import (
+    list_favorites,
+    list_recent_documents,
+    list_recent_locations,
+)
 from safari_dos.state import SafariDosExitRequest, SafariDosState
 
 __all__ = ["SafariDosApp"]
@@ -35,6 +39,7 @@ class SafariDosApp(App[SafariDosExitRequest | None]):
 
     def on_mount(self) -> None:
         from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
+
         for theme in THEMES.values():
             self.register_theme(theme)
         settings = load_settings()
@@ -62,6 +67,7 @@ class SafariDosApp(App[SafariDosExitRequest | None]):
 
     def open_style_switcher(self) -> None:
         from safari_writer.screens.style_switcher import StyleSwitcherScreen
+
         self.push_screen(StyleSwitcherScreen(self.theme))
 
     def quit_dos(self) -> None:

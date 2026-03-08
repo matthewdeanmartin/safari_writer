@@ -13,10 +13,15 @@ from safari_writer.screens.global_format import GlobalFormatScreen
 from safari_writer.screens.proofreader import ProofreaderScreen
 from safari_writer.screens.mail_merge import MailMergeScreen
 from safari_writer.screens.file_ops import FilePromptScreen, ConfirmScreen
-from safari_writer.screens.index_screen import IndexScreen, DrivePickerScreen, _find_external_drives
+from safari_writer.screens.index_screen import (
+    IndexScreen,
+    DrivePickerScreen,
+    _find_external_drives,
+)
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
 from safari_writer.screens.style_switcher import StyleSwitcherScreen
 from safari_writer.document_io import load_demo_document_buffer, load_document_buffer
+from safari_writer.file_types import StorageMode, resolve_file_profile
 from safari_writer.format_codec import encode_sfw, strip_controls, has_controls, is_sfw
 from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
 from safari_dos.screens import (
@@ -165,6 +170,8 @@ class SafariWriterApp(App):
             self._action_load_via_safari_dos()
         elif action == "save":
             self._action_save_via_safari_dos()
+        elif action == "save_as":
+            self._action_save_as()
         elif action == "delete":
             self._action_delete_via_safari_dos()
         elif action == "new_folder":
@@ -176,6 +183,8 @@ class SafariWriterApp(App):
             self._action_demo()
         elif action == "style_switcher":
             self.push_screen(StyleSwitcherScreen(self.theme))
+        elif action == "quit":
+            self._action_quit()
 
     def _action_print(self) -> None:
         self.push_screen(PrintScreen(), callback=self._on_print_choice)
@@ -213,7 +222,10 @@ class SafariWriterApp(App):
             return
         try:
             from safari_writer.export_md import export_markdown
-            text = export_markdown(self.state.buffer, self.state.fmt, self.state.mail_merge_db)
+
+            text = export_markdown(
+                self.state.buffer, self.state.fmt, self.state.mail_merge_db
+            )
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported Markdown: {filename}")
         except OSError as e:
@@ -224,20 +236,36 @@ class SafariWriterApp(App):
             return
         try:
             from safari_writer.export_ps import export_postscript
-            text = export_postscript(self.state.buffer, self.state.fmt, self.state.mail_merge_db)
+
+            text = export_postscript(
+                self.state.buffer, self.state.fmt, self.state.mail_merge_db
+            )
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported PostScript: {filename}")
         except OSError as e:
             self.set_message(f"Export error: {e}")
 
     def _action_create(self) -> None:
+        has_content = self.state.buffer != [""] or self.state.filename
+        if not has_content:
+            # Empty buffer with no file — just open editor
+            self._do_create()
+            return
         if self.state.modified:
+            name = leaf_name(self.state.filename) if self.state.filename else "untitled"
             self.push_screen(
-                ConfirmScreen("Unsaved changes will be lost. Continue?"),
+                ConfirmScreen(
+                    f"'{name}' has unsaved changes.\n"
+                    "Discard and create new file?"
+                ),
                 callback=self._on_create_confirm,
             )
         else:
-            self._do_create()
+            name = leaf_name(self.state.filename) if self.state.filename else "document"
+            self.push_screen(
+                ConfirmScreen(f"Close '{name}' and create new file?"),
+                callback=self._on_create_confirm,
+            )
 
     def _on_create_confirm(self, confirmed: bool | None) -> None:
         if confirmed:
@@ -249,7 +277,21 @@ class SafariWriterApp(App):
         self.state.cursor_col = 0
         self.state.filename = ""
         self.state.modified = False
+        self.state.clear_undo()
         self._open_editor()
+
+    def _action_quit(self) -> None:
+        if self.state.modified:
+            self.push_screen(
+                ConfirmScreen("Unsaved changes will be lost. Quit?"),
+                callback=self._on_quit_confirm,
+            )
+        else:
+            self.exit()
+
+    def _on_quit_confirm(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self.exit()
 
     def _action_edit(self) -> None:
         self._open_editor()
@@ -277,6 +319,7 @@ class SafariWriterApp(App):
         self.state.cursor_col = 0
         self.state.filename = ""
         self.state.modified = False
+        self.state.file_profile = resolve_file_profile("demo_document.sfw")
         self.set_message("Loaded demo document")
         self._open_editor()
 
@@ -297,10 +340,21 @@ class SafariWriterApp(App):
             self.state.cursor_col = 0
             self.state.filename = str(document_path)
             self.state.modified = False
-            fmt_label = "SFW" if is_sfw(filename) else "TXT"
+            # Resolve file profile and sanitize if needed
+            self.state.file_profile = resolve_file_profile(document_path.name)
+            if self.state.storage_mode == StorageMode.PLAIN and has_controls(
+                self.state.buffer
+            ):
+                self.state.buffer = strip_controls(self.state.buffer)
+            profile = self.state.file_profile
+            storage = (
+                "SFW" if profile.storage_mode == StorageMode.FORMATTED else "PLAIN"
+            )
             self._remember_safari_dos_path(document_path.parent)
             record_recent_document(document_path)
-            self.set_message(f"Loaded [{fmt_label}]: {document_path}")
+            self.set_message(
+                f"Loaded [{storage}: {profile.display_name}]: {document_path}"
+            )
         except OSError as e:
             self.set_message(f"Load error: {e}")
 
@@ -310,7 +364,10 @@ class SafariWriterApp(App):
         if not is_sfw(filename) and has_controls(self.state.buffer):
             self._pending_save_filename = filename
             self.push_screen(
-                ConfirmScreen("Formatting codes will be stripped (plain text). Continue?"),
+                ConfirmScreen(
+                    "Safari Writer formatting is only preserved in .sfw files.\n"
+                    "Saving as plain text will remove formatting codes. Continue?"
+                ),
                 callback=self._on_plain_save_confirm,
             )
             return
@@ -340,10 +397,30 @@ class SafariWriterApp(App):
             target_path.write_text(text, encoding="utf-8")
             self.state.filename = str(target_path)
             self.state.modified = False
-            fmt_label = "SFW" if is_sfw(filename) else "TXT"
+            # Update file profile for the new filename
+            old_profile = self.state.file_profile
+            self.state.file_profile = resolve_file_profile(target_path.name)
+            new_profile = self.state.file_profile
+            # Mode transition: if we went from formatted to plain, normalize the buffer
+            if (
+                old_profile.storage_mode == StorageMode.FORMATTED
+                and new_profile.storage_mode == StorageMode.PLAIN
+            ):
+                self.state.buffer = strip_controls(self.state.buffer)
+                self.set_message(
+                    f"Converted document to plain text mode: {target_path}"
+                )
+            else:
+                storage = (
+                    "SFW"
+                    if new_profile.storage_mode == StorageMode.FORMATTED
+                    else "PLAIN"
+                )
+                self.set_message(f"Saved [{storage}]: {target_path}")
             self._remember_safari_dos_path(target_path.parent)
             record_recent_document(target_path)
-            self.set_message(f"Saved [{fmt_label}]: {target_path}")
+            # Update editor highlighter if the editor screen is active
+            self._update_editor_highlighter()
         except OSError as e:
             self.set_message(f"Save error: {e}")
 
@@ -458,6 +535,18 @@ class SafariWriterApp(App):
             recent_documents=list_recent_documents(),
         )
 
+    def _update_editor_highlighter(self) -> None:
+        """Tell the active editor to rebuild its highlighter after a profile change."""
+        try:
+            from safari_writer.screens.editor import EditorArea
+
+            screen = self.screen
+            if hasattr(screen, "query_one"):
+                editor_area = screen.query_one(EditorArea)
+                editor_area.update_highlighter()
+        except Exception:
+            pass
+
     def _remember_safari_dos_path(self, path: Path) -> None:
         resolved = path.resolve()
         self._last_safari_dos_path = resolved
@@ -466,7 +555,7 @@ class SafariWriterApp(App):
     def _default_save_name(self) -> str:
         if self.state.filename:
             return leaf_name(self.state.filename)
-        return "document.sfw" if has_controls(self.state.buffer) else "document.txt"
+        return ""
 
     def _picker_start_path(self) -> Path:
         if self.state.filename:
@@ -492,6 +581,16 @@ class SafariWriterApp(App):
         self._open_editor()
 
     def _action_save_via_safari_dos(self) -> None:
+        # If file already has a name, save directly without prompting
+        if self.state.filename:
+            target = Path(self.state.filename)
+            if target.exists():
+                self._on_save_file(self.state.filename)
+                return
+        # No existing file — fall through to Save As flow
+        self._action_save_as()
+
+    def _action_save_as(self) -> None:
         self.push_screen(
             FilePromptScreen("Save File Name", self._default_save_name()),
             callback=self._on_choose_save_name,
@@ -501,9 +600,30 @@ class SafariWriterApp(App):
         if not filename:
             self.set_message("Save cancelled")
             return
+        # Default to .sfw extension if none provided
+        if "." not in Path(filename).name:
+            filename += ".sfw"
+        # Check if file already exists and warn
+        test_path = self._picker_start_path() / filename
+        if test_path.exists():
+            self._pending_save_filename = filename
+            self.push_screen(
+                ConfirmScreen(f"'{filename}' already exists. Overwrite?"),
+                callback=self._on_overwrite_confirm,
+            )
+            return
         self._pending_save_filename = filename
+        self._choose_save_location()
+
+    def _on_overwrite_confirm(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self._choose_save_location()
+        else:
+            self._action_save_as()
+
+    def _choose_save_location(self) -> None:
         picker_state = self._build_safari_dos_state(self._picker_start_path())
-        picker_state.pending_filename = filename
+        picker_state.pending_filename = self._pending_save_filename
         self.push_screen(
             SafariDosBrowserScreen(picker_state, picker_mode="directory"),
             callback=self._on_choose_save_location,

@@ -13,21 +13,21 @@ __all__ = ["decode_sfw", "encode_sfw", "has_controls", "is_sfw", "strip_controls
 
 # Internal control bytes → .sfw tag (without the leading backslash)
 _ENCODE_MAP: dict[str, str] = {
-    "\x01": "B",   # bold toggle
-    "\x02": "U",   # underline toggle
-    "\x03": "C",   # center line
-    "\x04": "R",   # flush right
-    "\x05": "G",   # elongated toggle
-    "\x06": "^",   # superscript toggle
-    "\x07": "v",   # subscript toggle
-    "\x10": "P",   # paragraph indent mark
-    "\x11": "@",   # mail merge field
+    "\x01": "B",  # bold toggle
+    "\x02": "U",  # underline toggle
+    "\x03": "C",  # center line
+    "\x04": "R",  # flush right
+    "\x05": "G",  # elongated toggle
+    "\x06": "^",  # superscript toggle
+    "\x07": "v",  # subscript toggle
+    "\x10": "P",  # paragraph indent mark
+    "\x11": "@",  # mail merge field
     "\x12": "H:",  # header line marker
     "\x13": "F:",  # footer line marker
-    "\x14": "S",   # section heading
-    "\x15": "E",   # hard page break
-    "\x16": ">",   # chain print file
-    "\x17": "_",   # form printing blank
+    "\x14": "S",  # section heading
+    "\x15": "E",  # hard page break
+    "\x16": ">",  # chain print file
+    "\x17": "_",  # form printing blank
 }
 
 # Reverse: tag suffix → internal byte
@@ -100,10 +100,7 @@ def decode_sfw(text: str) -> list[str]:
 
 def strip_controls(buffer: list[str]) -> list[str]:
     """Return a copy of the buffer with all control characters removed."""
-    return [
-        "".join(ch for ch in line if ch not in _CONTROL_CHARS)
-        for line in buffer
-    ]
+    return ["".join(ch for ch in line if ch not in _CONTROL_CHARS) for line in buffer]
 
 
 def has_controls(buffer: list[str]) -> bool:

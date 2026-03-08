@@ -11,10 +11,22 @@ if TYPE_CHECKING:
     from safari_writer.mail_merge_db import MailMergeDB
 
 from safari_writer.screens.editor import (
-    CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,
-    CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB, CTRL_PARA,
-    CTRL_MERGE, CTRL_HEADER, CTRL_FOOTER, CTRL_HEADING,
-    CTRL_EJECT, CTRL_CHAIN, CTRL_FORM, TOGGLE_MARKERS,
+    CTRL_BOLD,
+    CTRL_UNDERLINE,
+    CTRL_CENTER,
+    CTRL_RIGHT,
+    CTRL_ELONGATE,
+    CTRL_SUPER,
+    CTRL_SUB,
+    CTRL_PARA,
+    CTRL_MERGE,
+    CTRL_HEADER,
+    CTRL_FOOTER,
+    CTRL_HEADING,
+    CTRL_EJECT,
+    CTRL_CHAIN,
+    CTRL_FORM,
+    TOGGLE_MARKERS,
 )
 
 __all__ = ["export_markdown"]
@@ -50,6 +62,7 @@ def export_markdown(
     has_merge = any(CTRL_MERGE in line for line in buffer)
     if has_merge and db is not None and db.records:
         from safari_writer.mail_merge_db import apply_mail_merge_to_buffer
+
         parts: list[str] = []
         for rec_idx in range(len(db.records)):
             # Temporarily set the first record for apply_mail_merge_to_buffer
@@ -100,7 +113,9 @@ def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
 
         # Section heading
         if first == CTRL_HEADING:
-            level_ch = raw_line[1] if len(raw_line) > 1 and raw_line[1].isdigit() else "1"
+            level_ch = (
+                raw_line[1] if len(raw_line) > 1 and raw_line[1].isdigit() else "1"
+            )
             level = int(level_ch)
             text = raw_line[2:] if len(raw_line) > 2 else ""
             clean = _strip_controls(text)
@@ -163,11 +178,11 @@ def _convert_inline(text: str) -> str:
 
     # Tag pairs: (control, open, close)
     _TAGS = {
-        CTRL_BOLD:      ("**", "**"),
+        CTRL_BOLD: ("**", "**"),
         CTRL_UNDERLINE: ("<u>", "</u>"),
-        CTRL_ELONGATE:  ("**", "**"),
-        CTRL_SUPER:     ("<sup>", "</sup>"),
-        CTRL_SUB:       ("<sub>", "</sub>"),
+        CTRL_ELONGATE: ("**", "**"),
+        CTRL_SUPER: ("<sup>", "</sup>"),
+        CTRL_SUB: ("<sub>", "</sub>"),
     }
 
     i = 0

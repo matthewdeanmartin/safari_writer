@@ -22,9 +22,9 @@ __all__ = [
 # Theme 1: Classic Blue (AtariWriter 80 default — blue screen, white text)
 _classic_blue = Theme(
     name="classic-blue",
-    primary="#0000aa",       # dark blue — used for backgrounds, bars
+    primary="#0000aa",  # dark blue — used for backgrounds, bars
     secondary="#0000cc",
-    accent="#ffff00",        # yellow key letters
+    accent="#ffff00",  # yellow key letters
     foreground="#ffffff",
     background="#0000aa",
     surface="#0000aa",
@@ -88,10 +88,10 @@ THEMES: dict[str, Theme] = {
 }
 
 THEME_LABELS: dict[str, str] = {
-    "classic-blue":   "Classic Blue  (AtariWriter 80 default)",
+    "classic-blue": "Classic Blue  (AtariWriter 80 default)",
     "green-phosphor": "Green Phosphor (vintage CRT monitor)",
-    "amber":          "Amber         (warm phosphor CRT)",
-    "high-contrast":  "High Contrast  (accessibility)",
+    "amber": "Amber         (warm phosphor CRT)",
+    "high-contrast": "High Contrast  (accessibility)",
 }
 
 DEFAULT_THEME = "classic-blue"
@@ -99,6 +99,7 @@ DEFAULT_THEME = "classic-blue"
 # ---------------------------------------------------------------------------
 # Settings persistence
 # ---------------------------------------------------------------------------
+
 
 def _settings_path() -> Path:
     cfg = Path.home() / ".config" / "safari_writer"

@@ -11,10 +11,22 @@ from safari_writer.heading_numbering import next_heading_number
 from safari_writer.mail_merge_db import MailMergeDB
 from safari_writer.state import AppState, GlobalFormat
 from safari_writer.screens.editor import (
-    CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,
-    CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB, CTRL_PARA,
-    CTRL_MERGE, CTRL_HEADER, CTRL_FOOTER, CTRL_HEADING,
-    CTRL_EJECT, CTRL_CHAIN, CTRL_FORM, TOGGLE_MARKERS,
+    CTRL_BOLD,
+    CTRL_UNDERLINE,
+    CTRL_CENTER,
+    CTRL_RIGHT,
+    CTRL_ELONGATE,
+    CTRL_SUPER,
+    CTRL_SUB,
+    CTRL_PARA,
+    CTRL_MERGE,
+    CTRL_HEADER,
+    CTRL_FOOTER,
+    CTRL_HEADING,
+    CTRL_EJECT,
+    CTRL_CHAIN,
+    CTRL_FORM,
+    TOGGLE_MARKERS,
 )
 
 
@@ -64,12 +76,18 @@ class PrintScreen(ModalScreen[str | None]):
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
+
         with Container(id="print-dialog"):
             yield Static("*** PRINT / EXPORT ***", id="print-title")
             yield Static("[bold underline]A[/]  ANSI Preview", classes="print-option")
-            yield Static("[bold underline]M[/]  Export to Markdown (.md)", classes="print-option")
-            yield Static("[bold underline]P[/]  Export to PostScript (.ps)", classes="print-option")
-            yield Static("Esc  Cancel", id="print-hint")
+            yield Static(
+                "[bold underline]M[/]  Export to Markdown (.md)", classes="print-option"
+            )
+            yield Static(
+                "[bold underline]P[/]  Export to PostScript (.ps)",
+                classes="print-option",
+            )
+            yield Static("R=Return  Esc=Cancel", id="print-hint")
 
     def on_key(self, event: events.Key) -> None:
         if event.key == "a":
@@ -78,7 +96,7 @@ class PrintScreen(ModalScreen[str | None]):
             self.dismiss("markdown")
         elif event.key == "p":
             self.dismiss("postscript")
-        elif event.key == "escape":
+        elif event.key in ("escape", "r"):
             self.dismiss(None)
         event.stop()
 
@@ -144,7 +162,9 @@ class PrintPreviewScreen(Screen):
 
     def _update_view(self) -> None:
         height = max(1, self.size.height - 2)  # minus header + footer
-        visible = self._rendered_lines[self._scroll_offset : self._scroll_offset + height]
+        visible = self._rendered_lines[
+            self._scroll_offset : self._scroll_offset + height
+        ]
         body_text = "\n".join(visible)
         self.query_one("#preview-body", Static).update(body_text)
 
@@ -158,7 +178,7 @@ class PrintPreviewScreen(Screen):
         height = max(1, self.size.height - 2)
         max_offset = max(0, len(self._rendered_lines) - height)
 
-        if event.key == "escape":
+        if event.key in ("escape", "r"):
             self.app.pop_screen()
         elif event.key == "up":
             self._scroll_offset = max(0, self._scroll_offset - 1)
@@ -377,6 +397,7 @@ def _visible_length(styled: str) -> int:
     visible characters.  Not 100% precise but good enough for alignment.
     """
     import re
+
     clean = re.sub(r"\[/?[^\]]*\]", "", styled)
     clean = clean.replace("\\[", "[")
     return len(clean)
@@ -503,7 +524,9 @@ def _render_with_mail_merge(
         rendered = _render_document(merged_buf, fmt)
         if rec_idx > 0:
             rule_width = max(fmt.right_margin, 40)
-            all_lines.append(f"[bold cyan]{'═' * rule_width}  Record {rec_idx + 1}[/bold cyan]")
+            all_lines.append(
+                f"[bold cyan]{'═' * rule_width}  Record {rec_idx + 1}[/bold cyan]"
+            )
         all_lines.extend(rendered)
     return all_lines
 

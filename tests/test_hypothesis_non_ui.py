@@ -10,7 +10,12 @@ from pathlib import Path
 from hypothesis import given
 from hypothesis import strategies as st
 
-from safari_writer.format_codec import decode_sfw, encode_sfw, has_controls, strip_controls
+from safari_writer.format_codec import (
+    decode_sfw,
+    encode_sfw,
+    has_controls,
+    strip_controls,
+)
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.mail_merge_db import (
     MAX_FIELD_DATA_LEN,
@@ -23,7 +28,9 @@ from safari_writer.mail_merge_db import (
 )
 from safari_writer.proofing import check_word, extract_words, load_personal_dictionary
 
-CONTROL_CHARS = "".join(chr(code) for code in (1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23))
+CONTROL_CHARS = "".join(
+    chr(code) for code in (1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23)
+)
 PUNCTUATION = ".,;:!?\"'()-"
 SAFE_CHARS = st.characters(blacklist_characters="\n\r", blacklist_categories=("Cs",))
 LINE_TEXT = st.text(alphabet=SAFE_CHARS, max_size=40)
@@ -72,7 +79,12 @@ def valid_mail_merge_data(draw: st.DrawFn) -> dict[str, object]:
     record_count = draw(st.integers(min_value=0, max_value=12))
     records: list[list[str]] = []
     for _ in range(record_count):
-        records.append([draw(st.text(alphabet=SAFE_CHARS, max_size=max_len)) for max_len in max_lens])
+        records.append(
+            [
+                draw(st.text(alphabet=SAFE_CHARS, max_size=max_len))
+                for max_len in max_lens
+            ]
+        )
 
     return {"fields": fields, "records": records}
 
@@ -85,7 +97,14 @@ def merge_case(draw: st.DrawFn) -> tuple[list[str], MailMergeDB, list[str]]:
     for index in range(field_count):
         max_len = draw(st.integers(min_value=1, max_value=MAX_FIELD_DATA_LEN))
         fields.append(FieldDef(f"Field{index + 1}", max_len))
-        record.append(draw(st.text(alphabet=SAFE_CHARS.filter(lambda ch: ch != "\x11"), max_size=max_len)))
+        record.append(
+            draw(
+                st.text(
+                    alphabet=SAFE_CHARS.filter(lambda ch: ch != "\x11"),
+                    max_size=max_len,
+                )
+            )
+        )
 
     line_count = draw(st.integers(min_value=1, max_value=5))
     buffer: list[str] = []
@@ -134,7 +153,9 @@ def test_strip_controls_is_idempotent_and_clears_known_controls(buffer: list[str
 
     assert strip_controls(stripped) == stripped
     assert has_controls(stripped) is False
-    assert has_controls(buffer) is any(ch in CONTROL_CHARS for line in buffer for ch in line)
+    assert has_controls(buffer) is any(
+        ch in CONTROL_CHARS for line in buffer for ch in line
+    )
 
 
 @given(st.lists(st.integers(min_value=-5, max_value=20), min_size=1, max_size=30))
@@ -149,8 +170,13 @@ def test_heading_numbering_is_deterministic(levels: list[int]):
     assert counters_a == counters_b
 
 
-@given(st.lists(st.integers(min_value=0, max_value=10), max_size=12), st.integers(min_value=-5, max_value=20))
-def test_heading_numbering_matches_mutated_counter_shape(initial: list[int], level: int):
+@given(
+    st.lists(st.integers(min_value=0, max_value=10), max_size=12),
+    st.integers(min_value=-5, max_value=20),
+)
+def test_heading_numbering_matches_mutated_counter_shape(
+    initial: list[int], level: int
+):
     counters = initial.copy()
     result = next_heading_number(counters, level)
     effective_level = max(1, min(level, 9))
@@ -174,15 +200,26 @@ def test_valid_mail_merge_data_round_trips_through_db(data: dict[str, object]):
 
 
 @given(st.lists(VALUE_TEXT, max_size=20), VALUE_TEXT, VALUE_TEXT)
-def test_apply_subset_matches_case_insensitive_range(values: list[str], low: str, high: str):
-    db = MailMergeDB(fields=[FieldDef("State", MAX_FIELD_DATA_LEN)], records=[[value] for value in values])
+def test_apply_subset_matches_case_insensitive_range(
+    values: list[str], low: str, high: str
+):
+    db = MailMergeDB(
+        fields=[FieldDef("State", MAX_FIELD_DATA_LEN)],
+        records=[[value] for value in values],
+    )
 
-    expected = [index for index, value in enumerate(values) if low.lower() <= value.lower() <= high.lower()]
+    expected = [
+        index
+        for index, value in enumerate(values)
+        if low.lower() <= value.lower() <= high.lower()
+    ]
     assert db.apply_subset(0, low, high) == expected
 
 
 @given(merge_case())
-def test_apply_mail_merge_replaces_markers_and_is_idempotent(case: tuple[list[str], MailMergeDB, list[str]]):
+def test_apply_mail_merge_replaces_markers_and_is_idempotent(
+    case: tuple[list[str], MailMergeDB, list[str]],
+):
     buffer, db, expected = case
 
     merged = apply_mail_merge_to_buffer(buffer, db)
@@ -201,7 +238,9 @@ def test_extract_words_only_returns_clean_ascii_word_spans(buffer: list[str]):
 
 
 @given(punctuated_word(), st.booleans())
-def test_check_word_short_circuits_known_word_sets(case: tuple[str, str], use_kept: bool):
+def test_check_word_short_circuits_known_word_sets(
+    case: tuple[str, str], use_kept: bool
+):
     word, core = case
     checker = RecordingChecker(result=False)
     kept = {core.lower()} if use_kept else set()
@@ -220,7 +259,13 @@ def test_check_word_passes_stripped_word_to_checker(case: tuple[str, str]):
     assert checker.calls == [core]
 
 
-@given(st.lists(st.text(alphabet=string.ascii_letters, min_size=1, max_size=20), min_size=1, max_size=20))
+@given(
+    st.lists(
+        st.text(alphabet=string.ascii_letters, min_size=1, max_size=20),
+        min_size=1,
+        max_size=20,
+    )
+)
 def test_load_personal_dictionary_normalizes_words(words: list[str]):
     with tempfile.TemporaryDirectory() as temp_dir:
         path = Path(temp_dir) / "personal.txt"

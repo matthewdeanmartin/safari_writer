@@ -4,7 +4,12 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 from safari_writer.state import AppState
-from safari_writer.screens.editor import EditorArea, _to_flat, _from_flat, _selection_range
+from safari_writer.screens.editor import (
+    EditorArea,
+    _to_flat,
+    _from_flat,
+    _selection_range,
+)
 
 
 def make_editor(text: str = "") -> EditorArea:
@@ -22,6 +27,7 @@ def make_editor(text: str = "") -> EditorArea:
         ed._heading_active = False
         ed._chain_active = False
         ed._input_buffer = ""
+        ed._last_undo_action = ""
 
     mock_screen = MagicMock()
     type(ed).screen = property(lambda self: mock_screen)
@@ -32,6 +38,7 @@ def make_editor(text: str = "") -> EditorArea:
 # ---------------------------------------------------------------------------
 # Flat-position helpers
 # ---------------------------------------------------------------------------
+
 
 class TestFlatHelpers:
     def test_to_flat_first_line(self):
@@ -86,6 +93,7 @@ class TestSelectionRange:
 # _has_selection / _begin_selection / _clear_selection
 # ---------------------------------------------------------------------------
 
+
 class TestSelectionState:
     def test_no_selection_by_default(self):
         ed = make_editor("hello")
@@ -130,6 +138,7 @@ class TestSelectionState:
 # _selected_text
 # ---------------------------------------------------------------------------
 
+
 class TestSelectedText:
     def test_single_line_selection(self):
         ed = make_editor("hello world")
@@ -152,9 +161,9 @@ class TestSelectedText:
 
     def test_partial_multiline(self):
         ed = make_editor("abcde\nfghij")
-        ed.state.selection_anchor = (0, 2)   # "cde"
+        ed.state.selection_anchor = (0, 2)  # "cde"
         ed.state.cursor_row = 1
-        ed.state.cursor_col = 3              # "fgh"
+        ed.state.cursor_col = 3  # "fgh"
         text = ed._selected_text()
         assert text == "cde\nfgh"
 
@@ -166,6 +175,7 @@ class TestSelectedText:
 # ---------------------------------------------------------------------------
 # _delete_selection
 # ---------------------------------------------------------------------------
+
 
 class TestDeleteSelection:
     def test_delete_within_line(self):
@@ -186,9 +196,9 @@ class TestDeleteSelection:
 
     def test_delete_across_lines(self):
         ed = make_editor("hello\nworld")
-        ed.state.selection_anchor = (0, 3)   # from "lo"
+        ed.state.selection_anchor = (0, 3)  # from "lo"
         ed.state.cursor_row = 1
-        ed.state.cursor_col = 3              # up to "wor"
+        ed.state.cursor_col = 3  # up to "wor"
         ed._delete_selection()
         assert ed.state.buffer == ["helld"]
         assert ed.state.cursor_row == 0
@@ -216,6 +226,7 @@ class TestDeleteSelection:
 # Cut with selection
 # ---------------------------------------------------------------------------
 
+
 class TestCutWithSelection:
     def test_cut_selection(self):
         ed = make_editor("hello world")
@@ -237,6 +248,7 @@ class TestCutWithSelection:
 # Copy with selection
 # ---------------------------------------------------------------------------
 
+
 class TestCopyWithSelection:
     def test_copy_selection(self):
         ed = make_editor("hello world")
@@ -256,6 +268,7 @@ class TestCopyWithSelection:
 # ---------------------------------------------------------------------------
 # Paste (inline, and replacing selection)
 # ---------------------------------------------------------------------------
+
 
 class TestPaste:
     def test_paste_single_line_inline(self):
@@ -301,6 +314,7 @@ class TestPaste:
 # Word count with selection
 # ---------------------------------------------------------------------------
 
+
 class TestWordCountWithSelection:
     def test_word_count_selection(self):
         ed = make_editor("one two three four")
@@ -323,6 +337,7 @@ class TestWordCountWithSelection:
 # ---------------------------------------------------------------------------
 # Alphabetize with selection
 # ---------------------------------------------------------------------------
+
 
 class TestAlphabetizeWithSelection:
     def test_alphabetize_selected_lines(self):

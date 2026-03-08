@@ -14,31 +14,34 @@ from safari_writer.state import GlobalFormat
 # Parameter definitions
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Param:
-    key: str          # single letter key
-    attr: str         # attribute name on GlobalFormat
-    label: str        # full description
+    key: str  # single letter key
+    attr: str  # attribute name on GlobalFormat
+    label: str  # full description
     min_val: int
     max_val: int
-    hint: str = ""    # optional hint shown on right
+    hint: str = ""  # optional hint shown on right
 
 
 PARAMS: list[Param] = [
-    Param("T", "top_margin",       "Top Margin",             0,   999, "half-lines (12=1\")"),
-    Param("B", "bottom_margin",    "Bottom Margin",          0,   999, "half-lines (12=1\")"),
-    Param("L", "left_margin",      "Left Margin",            1,   130, "character spaces"),
-    Param("R", "right_margin",     "Right Margin",           2,   132, "character spaces"),
-    Param("S", "line_spacing",     "Line Spacing",           1,   99,  "2=single 4=double 6=triple"),
-    Param("D", "para_spacing",     "Paragraph Spacing",      0,   99,  "half-lines"),
-    Param("M", "col2_left",        "2nd Left Margin",        1,   130, "2nd column left"),
-    Param("N", "col2_right",       "2nd Right Margin",        2,   132, "2nd column right"),
-    Param("G", "type_font",        "Type Font",              1,   9,   "1=pica 2=cond 3=prop 6=elite"),
-    Param("I", "para_indent",      "Paragraph Indentation",  0,   99,  "spaces (0=block style)"),
-    Param("J", "justification",    "Justification",          0,   1,   "0=ragged 1=justified"),
-    Param("Q", "page_number_start","Page Number Start",      1,   999, "starting page number"),
-    Param("Y", "page_length",      "Page Length",            1,   999, "half-lines (132=8.5x11\")"),
-    Param("W", "page_wait",        "Page Wait",              0,   1,   "0=off 1=pause each page"),
+    Param("T", "top_margin", "Top Margin", 0, 999, 'half-lines (12=1")'),
+    Param("B", "bottom_margin", "Bottom Margin", 0, 999, 'half-lines (12=1")'),
+    Param("L", "left_margin", "Left Margin", 1, 130, "character spaces"),
+    Param("R", "right_margin", "Right Margin", 2, 132, "character spaces"),
+    Param("S", "line_spacing", "Line Spacing", 1, 99, "2=single 4=double 6=triple"),
+    Param("D", "para_spacing", "Paragraph Spacing", 0, 99, "half-lines"),
+    Param("M", "col2_left", "2nd Left Margin", 1, 130, "2nd column left"),
+    Param("N", "col2_right", "2nd Right Margin", 2, 132, "2nd column right"),
+    Param("G", "type_font", "Type Font", 1, 9, "1=pica 2=cond 3=prop 6=elite"),
+    Param("I", "para_indent", "Paragraph Indentation", 0, 99, "spaces (0=block style)"),
+    Param("J", "justification", "Justification", 0, 1, "0=ragged 1=justified"),
+    Param(
+        "Q", "page_number_start", "Page Number Start", 1, 999, "starting page number"
+    ),
+    Param("Y", "page_length", "Page Length", 1, 999, 'half-lines (132=8.5x11")'),
+    Param("W", "page_wait", "Page Wait", 0, 1, "0=off 1=pause each page"),
 ]
 
 KEY_TO_PARAM: dict[str, Param] = {p.key: p for p in PARAMS}
@@ -128,6 +131,7 @@ GlobalFormatScreen {
 # Row widget
 # ---------------------------------------------------------------------------
 
+
 class GFRow(Static):
     """One parameter row — key, label, value, hint."""
 
@@ -158,6 +162,7 @@ class GFRow(Static):
 # Screen
 # ---------------------------------------------------------------------------
 
+
 class GlobalFormatScreen(Screen):
     """Global Format parameter editor screen."""
 
@@ -181,6 +186,7 @@ class GlobalFormatScreen(Screen):
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
+
         with Container(id="gf-outer"):
             yield Static("", id="gf-message")
             yield Static("*** GLOBAL FORMAT ***", id="gf-title")

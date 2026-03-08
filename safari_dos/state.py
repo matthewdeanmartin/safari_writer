@@ -32,4 +32,3 @@ class SafariDosState:
     recent_locations: list[Path] = field(default_factory=list)
     recent_documents: list[Path] = field(default_factory=list)
     pending_filename: str = ""
-

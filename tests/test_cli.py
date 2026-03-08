@@ -22,7 +22,11 @@ from safari_writer.screens.editor import CTRL_BOLD, CTRL_MERGE
 
 
 class FakeChecker:
-    def __init__(self, bad_words: set[str] | None = None, suggestions: dict[str, list[str]] | None = None):
+    def __init__(
+        self,
+        bad_words: set[str] | None = None,
+        suggestions: dict[str, list[str]] | None = None,
+    ):
         self.bad_words = bad_words or set()
         self.suggestions = suggestions or {}
 
@@ -77,6 +81,7 @@ def test_public_submodule_exports_are_explicit():
         "load_demo_document_buffer",
         "load_document_buffer",
         "load_document_state",
+        "sanitize_plain_buffer",
         "serialize_document_buffer",
     ]
     assert ansi_preview.__all__ == [
@@ -159,7 +164,10 @@ def test_main_default_invocation_launches_menu(monkeypatch):
         captured["request"] = request
         return 0
 
-    monkeypatch.setattr("safari_writer.main.maybe_show_splash", lambda *, no_splash: splash_calls.append(no_splash))
+    monkeypatch.setattr(
+        "safari_writer.main.maybe_show_splash",
+        lambda *, no_splash: splash_calls.append(no_splash),
+    )
     monkeypatch.setattr("safari_writer.main._launch_tui", fake_launch)
 
     exit_code = main([])
@@ -172,8 +180,13 @@ def test_main_default_invocation_launches_menu(monkeypatch):
 def test_main_passes_no_splash_flag_to_tui_launch(monkeypatch):
     splash_calls: list[bool] = []
 
-    monkeypatch.setattr("safari_writer.main.maybe_show_splash", lambda *, no_splash: splash_calls.append(no_splash))
-    monkeypatch.setattr("safari_writer.main._launch_tui", lambda state, request, args: 0)
+    monkeypatch.setattr(
+        "safari_writer.main.maybe_show_splash",
+        lambda *, no_splash: splash_calls.append(no_splash),
+    )
+    monkeypatch.setattr(
+        "safari_writer.main._launch_tui", lambda state, request, args: 0
+    )
 
     exit_code = main(["--no-splash"])
 
@@ -193,7 +206,18 @@ def test_main_tui_edit_loads_file_and_request(monkeypatch, tmp_path):
 
     monkeypatch.setattr("safari_writer.main._launch_tui", fake_launch)
 
-    exit_code = main(["tui", "edit", "--file", str(document), "--cursor-line", "2", "--cursor-column", "3"])
+    exit_code = main(
+        [
+            "tui",
+            "edit",
+            "--file",
+            str(document),
+            "--cursor-line",
+            "2",
+            "--cursor-column",
+            "3",
+        ]
+    )
 
     assert exit_code == 0
     assert captured["request"].destination == "edit"
@@ -245,7 +269,9 @@ def test_export_markdown_applies_mail_merge_database(capsys, tmp_path):
         )
     )
 
-    exit_code = main(["export", "markdown", str(document), "--merge-db", str(database), "--stdout"])
+    exit_code = main(
+        ["export", "markdown", str(document), "--merge-db", str(database), "--stdout"]
+    )
 
     captured = capsys.readouterr()
     assert exit_code == 0
@@ -307,7 +333,9 @@ def test_format_commands_round_trip(tmp_path):
     decoded = tmp_path / "draft.decoded.txt"
     stripped = tmp_path / "draft.stripped.txt"
 
-    assert main(["--quiet", "format", "encode", str(text_file), "-o", str(encoded)]) == 0
+    assert (
+        main(["--quiet", "format", "encode", str(text_file), "-o", str(encoded)]) == 0
+    )
     assert encoded.read_text() == "Hello"
     assert main(["--quiet", "format", "decode", str(encoded), "-o", str(decoded)]) == 0
     assert decoded.read_text() == "Hello"
@@ -334,7 +362,18 @@ def test_mail_merge_inspect_and_subset_json(capsys, tmp_path):
     inspect_code = main(["mail-merge", "inspect", str(database), "--json"])
     inspect_payload = json.loads(capsys.readouterr().out)
     subset_code = main(
-        ["mail-merge", "subset", str(database), "--field", "1", "--low", "A", "--high", "B", "--json"]
+        [
+            "mail-merge",
+            "subset",
+            str(database),
+            "--field",
+            "1",
+            "--low",
+            "A",
+            "--high",
+            "B",
+            "--json",
+        ]
     )
     subset_payload = json.loads(capsys.readouterr().out)
 
@@ -357,7 +396,20 @@ def test_mail_merge_append_and_validate(tmp_path):
     other.write_text(json.dumps({"fields": payload["fields"], "records": [["Bob"]]}))
     invalid.write_text(json.dumps({"fields": [], "records": []}))
 
-    assert main(["--quiet", "mail-merge", "append", str(base), str(other), "-o", str(merged)]) == 0
+    assert (
+        main(
+            [
+                "--quiet",
+                "mail-merge",
+                "append",
+                str(base),
+                str(other),
+                "-o",
+                str(merged),
+            ]
+        )
+        == 0
+    )
     merged_payload = json.loads(merged.read_text())
     assert merged_payload["records"] == [["Ann"], ["Bob"]]
     assert main(["--quiet", "mail-merge", "validate", str(merged)]) == 0

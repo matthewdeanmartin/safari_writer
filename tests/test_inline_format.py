@@ -6,9 +6,21 @@ from unittest.mock import MagicMock, patch
 from safari_writer.state import AppState
 from safari_writer.screens.editor import (
     EditorArea,
-    CTRL_BOLD, CTRL_UNDERLINE, CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB,
-    CTRL_CENTER, CTRL_RIGHT, CTRL_PARA, CTRL_MERGE,
-    CTRL_HEADER, CTRL_FOOTER, CTRL_HEADING, CTRL_EJECT, CTRL_CHAIN, CTRL_FORM,
+    CTRL_BOLD,
+    CTRL_UNDERLINE,
+    CTRL_ELONGATE,
+    CTRL_SUPER,
+    CTRL_SUB,
+    CTRL_CENTER,
+    CTRL_RIGHT,
+    CTRL_PARA,
+    CTRL_MERGE,
+    CTRL_HEADER,
+    CTRL_FOOTER,
+    CTRL_HEADING,
+    CTRL_EJECT,
+    CTRL_CHAIN,
+    CTRL_FORM,
     TOGGLE_MARKERS,
     _selection_range,
 )
@@ -29,6 +41,7 @@ def make_editor(text: str = "") -> EditorArea:
         ed._heading_active = False
         ed._chain_active = False
         ed._input_buffer = ""
+        ed._last_undo_action = ""
 
     mock_screen = MagicMock()
     type(ed).screen = property(lambda self: mock_screen)
@@ -39,6 +52,7 @@ def make_editor(text: str = "") -> EditorArea:
 # ---------------------------------------------------------------------------
 # Toggle markers set
 # ---------------------------------------------------------------------------
+
 
 class TestToggleMarkers:
     def test_bold_is_toggle(self):
@@ -66,6 +80,7 @@ class TestToggleMarkers:
 # ---------------------------------------------------------------------------
 # _insert_control for all formatting chars
 # ---------------------------------------------------------------------------
+
 
 class TestInsertFormatControls:
     def test_insert_bold(self):
@@ -121,6 +136,7 @@ class TestInsertFormatControls:
 # _insert_structure_marker
 # ---------------------------------------------------------------------------
 
+
 class TestInsertStructureMarker:
     def test_header_inserted_as_own_line(self):
         ed = make_editor("text")
@@ -153,6 +169,7 @@ class TestInsertStructureMarker:
 # ---------------------------------------------------------------------------
 # Heading prompt flow
 # ---------------------------------------------------------------------------
+
 
 def _make_event(key: str, char: str | None = None) -> MagicMock:
     ev = MagicMock()
@@ -203,6 +220,7 @@ class TestHeadingPrompt:
 # Chain prompt flow
 # ---------------------------------------------------------------------------
 
+
 class TestChainPrompt:
     def test_chain_inserts_marker_at_end(self):
         ed = make_editor("document text")
@@ -230,11 +248,15 @@ class TestChainPrompt:
 # _format_markup
 # ---------------------------------------------------------------------------
 
+
 class TestFormatMarkup:
     def _fmt(self, **kwargs) -> dict:
         base = {
-            CTRL_BOLD: False, CTRL_UNDERLINE: False,
-            CTRL_ELONGATE: False, CTRL_SUPER: False, CTRL_SUB: False,
+            CTRL_BOLD: False,
+            CTRL_UNDERLINE: False,
+            CTRL_ELONGATE: False,
+            CTRL_SUPER: False,
+            CTRL_SUB: False,
         }
         base.update(kwargs)
         return base
@@ -290,6 +312,7 @@ class TestFormatMarkup:
 # ---------------------------------------------------------------------------
 # render / _render_line — format state tracking
 # ---------------------------------------------------------------------------
+
 
 class TestRenderFormatState:
     def _render(self, ed: EditorArea) -> str:

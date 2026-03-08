@@ -17,6 +17,7 @@ def _find_external_drives() -> list[Path]:
 
     if system == "Windows":
         import ctypes
+
         bitmask = ctypes.windll.kernel32.GetLogicalDrives()  # type: ignore[attr-defined]
         DRIVE_REMOVABLE = 2
         DRIVE_FIXED = 3
@@ -142,7 +143,7 @@ class IndexScreen(Screen):
             with Container(id="idx-footer"):
                 yield Static("", id="idx-status")
                 yield Static(
-                    "Up/Down=scroll  Enter=load  Esc=back  D=delete  F=new folder",
+                    "Up/Down=scroll  PgUp/PgDn=skip 5  Enter=load  R=return  D=delete  F=new folder",
                     id="idx-help",
                 )
 
@@ -153,7 +154,10 @@ class IndexScreen(Screen):
     def _scan_directory(self) -> None:
         self._entries = []
         try:
-            items = sorted(self._directory.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
+            items = sorted(
+                self._directory.iterdir(),
+                key=lambda p: (not p.is_dir(), p.name.lower()),
+            )
         except OSError:
             self._entries = [("<error reading directory>", "", "")]
             return
@@ -195,13 +199,14 @@ class IndexScreen(Screen):
     def _get_free_space(self) -> str:
         try:
             import shutil
+
             usage = shutil.disk_usage(self._directory)
             return _format_size(usage.free)
         except OSError:
             return "???"
 
     def on_key(self, event: events.Key) -> None:
-        if event.key == "escape":
+        if event.key in ("escape", "r"):
             self.app.pop_screen()
             event.stop()
             return
@@ -215,10 +220,10 @@ class IndexScreen(Screen):
                 self._selected += 1
                 self._render_listing()
         elif event.key == "pageup":
-            self._selected = max(0, self._selected - 20)
+            self._selected = max(0, self._selected - 5)
             self._render_listing()
         elif event.key == "pagedown":
-            self._selected = min(len(self._entries) - 1, self._selected + 20)
+            self._selected = min(len(self._entries) - 1, self._selected + 5)
             self._render_listing()
         elif event.key == "home":
             self._selected = 0
@@ -266,6 +271,7 @@ class IndexScreen(Screen):
             return
 
         from safari_writer.screens.file_ops import ConfirmScreen
+
         self.app.push_screen(
             ConfirmScreen(f"Delete {name}?"),
             callback=lambda confirmed: self._do_delete(full_path, confirmed),
@@ -286,6 +292,7 @@ class IndexScreen(Screen):
 
     def _action_new_folder(self) -> None:
         from safari_writer.screens.file_ops import FilePromptScreen
+
         self.app.push_screen(
             FilePromptScreen("New Folder Name"),
             callback=self._do_new_folder,
@@ -332,6 +339,7 @@ class DrivePickerScreen(Screen):
 
     def _render_listing(self) -> None:
         import shutil
+
         lines: list[str] = []
         for i, drive in enumerate(self._drives):
             try:

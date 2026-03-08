@@ -1,6 +1,10 @@
 """Public library interface for Safari Writer."""
 
-from safari_writer.ansi_preview import count_ansi_pages, extract_ansi_page, render_ansi_preview
+from safari_writer.ansi_preview import (
+    count_ansi_pages,
+    extract_ansi_page,
+    render_ansi_preview,
+)
 from safari_writer.app import SafariWriterApp
 from safari_writer.cli_types import StartupRequest
 from safari_writer.document_io import (
@@ -12,7 +16,19 @@ from safari_writer.document_io import (
 )
 from safari_writer.export_md import export_markdown
 from safari_writer.export_ps import export_postscript
-from safari_writer.format_codec import decode_sfw, encode_sfw, has_controls, is_sfw, strip_controls
+from safari_writer.file_types import (
+    FileProfile,
+    HighlightProfile,
+    StorageMode,
+    resolve_file_profile,
+)
+from safari_writer.format_codec import (
+    decode_sfw,
+    encode_sfw,
+    has_controls,
+    is_sfw,
+    strip_controls,
+)
 from safari_writer.mail_merge_db import (
     DEFAULT_FIELDS,
     MAX_FIELD_DATA_LEN,
@@ -27,7 +43,12 @@ from safari_writer.mail_merge_db import (
     save_mail_merge_db,
     validate_mail_merge_data,
 )
-from safari_writer.main import build_parser, build_startup_request, main as run_cli, parse_args
+from safari_writer.main import (
+    build_parser,
+    build_startup_request,
+    main as run_cli,
+    parse_args,
+)
 from safari_writer.proofing import (
     check_word,
     dict_lookup,
@@ -41,6 +62,8 @@ from safari_writer.state import AppState, GlobalFormat
 __all__ = [
     "AppState",
     "DEMO_DOCUMENT_RESOURCE",
+    "FileProfile",
+    "HighlightProfile",
     "DEFAULT_FIELDS",
     "FieldDef",
     "GlobalFormat",
@@ -49,6 +72,7 @@ __all__ = [
     "MAX_FIELDS",
     "MAX_RECORDS",
     "MailMergeDB",
+    "StorageMode",
     "SafariWriterApp",
     "StartupRequest",
     "apply_mail_merge_to_buffer",
@@ -74,6 +98,7 @@ __all__ = [
     "make_checker",
     "parse_args",
     "render_ansi_preview",
+    "resolve_file_profile",
     "run_cli",
     "save_mail_merge_db",
     "serialize_document_buffer",

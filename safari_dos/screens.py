@@ -289,7 +289,10 @@ class SafariDosMainMenuScreen(Screen):
             yield Static("*** SAFARI DOS ***", id="dos-menu-title")
             for key, label, _ in self.MENU_ITEMS:
                 yield MenuItem(key, label)
-        yield Static(f" Ready | Current Location: {self._state.current_path}", id="dos-status-bar")
+        yield Static(
+            f" Ready | Current Location: {self._state.current_path}",
+            id="dos-status-bar",
+        )
 
     def action_menu_action(self, action: str) -> None:
         app = cast("SafariDosAppProtocol", self.app)
@@ -337,10 +340,14 @@ class SafariDosBrowserScreen(Screen):
         Binding("d", "devices", "Devices", show=False),
         Binding("g", "garbage_list", "Garbage List", show=False),
         Binding("h", "home", "Home", show=False),
+        Binding("pageup", "page_up", "Page Up", show=False),
+        Binding("pagedown", "page_down", "Page Down", show=False),
         Binding("escape", "back_to_menu", "Menu", show=False),
     ]
 
-    def __init__(self, state: SafariDosState, *, picker_mode: str | None = None) -> None:
+    def __init__(
+        self, state: SafariDosState, *, picker_mode: str | None = None
+    ) -> None:
         super().__init__()
         self._state = state
         self._picker_mode = picker_mode
@@ -353,7 +360,10 @@ class SafariDosBrowserScreen(Screen):
             with Container(id="dos-header"):
                 yield Static("*** SAFARI DOS FILE LIST ***", id="dos-title")
                 yield Static("", id="dos-path")
-                yield Static("SEL NAME                         SIZE     TYPE   MODIFIED         F", id="dos-columns")
+                yield Static(
+                    "SEL NAME                         SIZE     TYPE   MODIFIED         F",
+                    id="dos-columns",
+                )
             yield Static("", id="dos-body")
             with Container(id="dos-footer"):
                 yield Static("", id="dos-status")
@@ -387,7 +397,9 @@ class SafariDosBrowserScreen(Screen):
                 sort_field=self._state.sort_field,
                 ascending=self._state.ascending,
             )
-            self._selected_index = min(self._selected_index, max(len(self._entries) - 1, 0))
+            self._selected_index = min(
+                self._selected_index, max(len(self._entries) - 1, 0)
+            )
         except (FileNotFoundError, NotADirectoryError, OSError, ValueError) as exc:
             self.set_message(str(exc))
             self._entries = []
@@ -455,6 +467,17 @@ class SafariDosBrowserScreen(Screen):
             self._selected_index = len(self._entries) - 1
             self._refresh_view()
 
+    def action_page_up(self) -> None:
+        self._selected_index = max(0, self._selected_index - 5)
+        self._refresh_view()
+
+    def action_page_down(self) -> None:
+        if self._entries:
+            self._selected_index = min(
+                len(self._entries) - 1, self._selected_index + 5
+            )
+            self._refresh_view()
+
     def action_parent(self) -> None:
         parent = self._state.current_path.parent
         if parent == self._state.current_path:
@@ -494,7 +517,9 @@ class SafariDosBrowserScreen(Screen):
 
     def action_toggle_hidden(self) -> None:
         self._state.show_hidden = not self._state.show_hidden
-        self.set_message("Hidden items shown" if self._state.show_hidden else "Hidden items hidden")
+        self.set_message(
+            "Hidden items shown" if self._state.show_hidden else "Hidden items hidden"
+        )
         self.refresh_listing()
 
     def action_filter(self) -> None:
@@ -558,7 +583,9 @@ class SafariDosBrowserScreen(Screen):
     def action_new_folder(self) -> None:
         if self._picker_mode is not None:
             return
-        self.app.push_screen(InputScreen("New Folder Name"), callback=self._on_new_folder)
+        self.app.push_screen(
+            InputScreen("New Folder Name"), callback=self._on_new_folder
+        )
 
     def _on_new_folder(self, name: str | None) -> None:
         if not name:
@@ -633,7 +660,9 @@ class SafariDosBrowserScreen(Screen):
             callback=lambda value: self._on_copy_or_move("move", sources, value),
         )
 
-    def _on_copy_or_move(self, operation: str, sources: list[Path], value: str | None) -> None:
+    def _on_copy_or_move(
+        self, operation: str, sources: list[Path], value: str | None
+    ) -> None:
         if not value:
             self.set_message("Operation cancelled")
             return
@@ -644,7 +673,9 @@ class SafariDosBrowserScreen(Screen):
         summary = f"{operation.title()} {len(sources)} item(s) to {destination}?"
         self.app.push_screen(
             ConfirmScreen(summary),
-            callback=lambda confirmed: self._perform_copy_or_move(operation, sources, destination, confirmed),
+            callback=lambda confirmed: self._perform_copy_or_move(
+                operation, sources, destination, confirmed
+            ),
         )
 
     def _perform_copy_or_move(
@@ -712,7 +743,9 @@ class SafariDosBrowserScreen(Screen):
         self.app.push_screen(MessageScreen("Item Info", body))
 
     def action_devices(self) -> None:
-        self.app.push_screen(SafariDosDevicesScreen(self._state), callback=self._on_choose_device)
+        self.app.push_screen(
+            SafariDosDevicesScreen(self._state), callback=self._on_choose_device
+        )
 
     def _on_choose_device(self, path: Path | None) -> None:
         if path is None:
@@ -725,7 +758,9 @@ class SafariDosBrowserScreen(Screen):
         self.refresh_listing()
 
     def action_garbage_list(self) -> None:
-        self.app.push_screen(SafariDosGarbageScreen(), callback=self._on_restore_from_garbage)
+        self.app.push_screen(
+            SafariDosGarbageScreen(), callback=self._on_restore_from_garbage
+        )
 
     def _on_restore_from_garbage(self, restored: Path | None) -> None:
         if restored is None:
@@ -772,7 +807,14 @@ class SafariDosBrowserScreen(Screen):
         sources = self._selected_paths()
         if not sources:
             return
-        protected_now = all(path.exists() and next((entry.protected for entry in self._entries if entry.path == path), False) for path in sources)
+        protected_now = all(
+            path.exists()
+            and next(
+                (entry.protected for entry in self._entries if entry.path == path),
+                False,
+            )
+            for path in sources
+        )
         changed = 0
         try:
             for path in sources:
@@ -815,11 +857,15 @@ class SafariDosFavoritesScreen(ModalScreen[Path | None]):
             with Container(id="dos-header"):
                 yield Static("*** FAVORITES / RECENT ***", id="dos-title")
                 yield Static("Shared locations and documents", id="dos-path")
-                yield Static("TYPE     NAME                         PATH", id="dos-columns")
+                yield Static(
+                    "TYPE     NAME                         PATH", id="dos-columns"
+                )
             yield Static("", id="dos-body")
             with Container(id="dos-footer"):
                 yield Static("Ready", id="dos-status")
-                yield Static("Enter=choose  T=toggle current folder  Esc=cancel", id="dos-help")
+                yield Static(
+                    "Enter=choose  T=toggle current folder  Esc=cancel", id="dos-help"
+                )
 
     def on_mount(self) -> None:
         self._refresh()
@@ -830,7 +876,9 @@ class SafariDosFavoritesScreen(ModalScreen[Path | None]):
         recent_documents = self._state.recent_documents or list_recent_documents()
         entries: list[tuple[str, Path]] = []
         entries.extend(("FAVORITE", path) for path in favorites)
-        entries.extend(("RECENT", path) for path in recent_locations if path not in favorites)
+        entries.extend(
+            ("RECENT", path) for path in recent_locations if path not in favorites
+        )
         entries.extend(("DOC", path) for path in recent_documents)
         self._entries = entries
         self._selected = min(self._selected, max(len(self._entries) - 1, 0))
@@ -840,7 +888,9 @@ class SafariDosFavoritesScreen(ModalScreen[Path | None]):
             if index == self._selected:
                 line = f"[reverse]{line}[/reverse]"
             lines.append(line)
-        self.query_one("#dos-body", Static).update("\n".join(lines) if lines else "<empty>")
+        self.query_one("#dos-body", Static).update(
+            "\n".join(lines) if lines else "<empty>"
+        )
 
     def on_key(self, event: events.Key) -> None:
         if event.key == "escape":
@@ -925,11 +975,16 @@ class SafariDosGarbageScreen(ModalScreen[Path | None]):
             with Container(id="dos-header"):
                 yield Static("*** GARBAGE ***", id="dos-title")
                 yield Static("Restore discarded items", id="dos-path")
-                yield Static("NAME                         DELETED            ORIGINAL", id="dos-columns")
+                yield Static(
+                    "NAME                         DELETED            ORIGINAL",
+                    id="dos-columns",
+                )
             yield Static("", id="dos-body")
             with Container(id="dos-footer"):
                 yield Static("", id="dos-status")
-                yield Static("Enter=restore  A=alternate restore  Esc=cancel", id="dos-help")
+                yield Static(
+                    "Enter=restore  A=alternate restore  Esc=cancel", id="dos-help"
+                )
 
     def on_mount(self) -> None:
         self._refresh()
@@ -945,7 +1000,9 @@ class SafariDosGarbageScreen(ModalScreen[Path | None]):
             if index == self._selected:
                 line = f"[reverse]{line}[/reverse]"
             lines.append(line)
-        self.query_one("#dos-body", Static).update("\n".join(lines) if lines else "<empty>")
+        self.query_one("#dos-body", Static).update(
+            "\n".join(lines) if lines else "<empty>"
+        )
         self.query_one("#dos-status", Static).update(self._message)
 
     def on_key(self, event: events.Key) -> None:

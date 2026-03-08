@@ -27,6 +27,7 @@ from safari_writer.screens.proofreader import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_screen(buffer: list[str] | None = None) -> ProofreaderScreen:
     state = AppState()
     if buffer is not None:
@@ -62,7 +63,9 @@ def make_key(key: str, character: str | None = None):
     """Create a minimal fake key event."""
     ev = MagicMock()
     ev.key = key
-    ev.character = character if character is not None else (key if len(key) == 1 else None)
+    ev.character = (
+        character if character is not None else (key if len(key) == 1 else None)
+    )
     ev.stop = MagicMock()
     return ev
 
@@ -70,6 +73,7 @@ def make_key(key: str, character: str | None = None):
 # ---------------------------------------------------------------------------
 # _extract_words
 # ---------------------------------------------------------------------------
+
 
 class TestExtractWords:
     def test_simple_line(self):
@@ -114,6 +118,7 @@ class TestExtractWords:
 # _check_word
 # ---------------------------------------------------------------------------
 
+
 class TestCheckWord:
     def test_no_checker_always_ok(self):
         assert _check_word("anythng", None, set(), set()) is True
@@ -147,6 +152,7 @@ class TestCheckWord:
 # ---------------------------------------------------------------------------
 # Mode transitions
 # ---------------------------------------------------------------------------
+
 
 class TestModeTransitions:
     def test_highlight_mode_entered(self):
@@ -212,6 +218,7 @@ class TestMountBehavior:
 # ---------------------------------------------------------------------------
 # Correction workflow
 # ---------------------------------------------------------------------------
+
 
 class TestCorrectionWorkflow:
     def _screen_with_error(self) -> ProofreaderScreen:
@@ -293,6 +300,7 @@ class TestCorrectionWorkflow:
 # Apply correction to buffer
 # ---------------------------------------------------------------------------
 
+
 class TestApplyCorrection:
     def test_replaces_word_in_buffer(self):
         screen = make_screen(["teh quick brown fox"])
@@ -323,6 +331,7 @@ class TestApplyCorrection:
 # Dictionary search
 # ---------------------------------------------------------------------------
 
+
 class TestDictSearch:
     def test_enter_dict_search_mode(self):
         screen = make_screen()
@@ -343,7 +352,10 @@ class TestDictSearch:
         screen._mode = MODE_DICT_SEARCH
         screen._input_buf = "he"
         screen._show_dict_results_page = MagicMock()
-        with patch("safari_writer.screens.proofreader._dict_lookup", return_value=["hello", "help"]):
+        with patch(
+            "safari_writer.screens.proofreader._dict_lookup",
+            return_value=["hello", "help"],
+        ):
             ev = make_key("enter")
             screen._handle_dict_search_key("enter", ev)
         screen._show_dict_results_page.assert_called_once()
@@ -400,6 +412,7 @@ class TestDictSearch:
 # Personal dictionary
 # ---------------------------------------------------------------------------
 
+
 class TestPersonalDictionary:
     def test_save_kept_words(self, tmp_path):
         screen = make_screen()
@@ -430,6 +443,7 @@ class TestPersonalDictionary:
         filename = str(tmp_path / "personal.txt")
         screen._save_personal_dict(filename)
         import os
+
         assert not os.path.exists(filename)
 
     def test_load_personal_dict(self, tmp_path):
@@ -463,7 +477,7 @@ class TestPersonalDictionary:
         screen._state.kept_spellings = {"teh"}
         # All instances of "teh" should pass because it's kept
         words = _extract_words(screen._state.buffer)
-        for (r, c, w) in words:
+        for r, c, w in words:
             assert _check_word(w, None, screen._state.kept_spellings, set()) is True
 
 
@@ -471,11 +485,14 @@ class TestPersonalDictionary:
 # Exit
 # ---------------------------------------------------------------------------
 
+
 class TestExit:
     def test_exit_pops_screen(self):
         screen = make_screen()
         mock_app = MagicMock()
         object.__setattr__(screen, "_app", mock_app)
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda self: mock_app)):
+        with patch.object(
+            type(screen), "app", new_callable=lambda: property(lambda self: mock_app)
+        ):
             screen.action_exit_proofreader()
         mock_app.pop_screen.assert_called_once()

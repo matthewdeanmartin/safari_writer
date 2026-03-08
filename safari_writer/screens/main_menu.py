@@ -7,8 +7,8 @@ from textual.widgets import Static
 
 from safari_writer.path_utils import leaf_name
 
-
-MENU_ITEMS = [
+# Left column: document operations
+LEFT_ITEMS = [
     ("C", "reate File", "create"),
     ("E", "dit File", "edit"),
     ("T", "ry Demo Mode", "demo"),
@@ -16,15 +16,24 @@ MENU_ITEMS = [
     ("P", "rint File", "print"),
     ("G", "lobal Format", "global_format"),
     ("M", "ail Merge", "mail_merge"),
+]
+
+# Right column: file/system operations (Index starts the column)
+RIGHT_ITEMS = [
     ("1", " Index Current Folder", "index1"),
     ("2", " Index External Drive", "index2"),
     ("O", "pen Safari DOS", "safari_dos"),
     ("L", "oad File", "load"),
     ("S", "ave File", "save"),
+    ("A", " Save As...", "save_as"),
     ("D", "elete File", "delete"),
     ("F", "older (New)", "new_folder"),
     ("X", " Style Switcher", "style_switcher"),
+    ("Q", "uit", "quit"),
 ]
+
+# Combined for binding generation
+MENU_ITEMS = LEFT_ITEMS + RIGHT_ITEMS
 
 MENU_CSS = """
 MainMenuScreen {
@@ -38,7 +47,7 @@ MainMenuScreen {
 }
 
 #menu-container {
-    width: 42;
+    width: 72;
     height: auto;
     border: solid $accent;
     background: $surface;
@@ -50,6 +59,16 @@ MainMenuScreen {
     text-style: bold;
     margin-bottom: 1;
     color: $accent;
+}
+
+#menu-columns {
+    layout: horizontal;
+    height: auto;
+}
+
+#menu-col-left, #menu-col-right {
+    width: 1fr;
+    height: auto;
 }
 
 .menu-item {
@@ -106,9 +125,11 @@ class MainMenuScreen(Screen):
         Binding("o", "menu_action('safari_dos')", "Open Safari DOS", show=False),
         Binding("l", "menu_action('load')", "Load File", show=False),
         Binding("s", "menu_action('save')", "Save File", show=False),
+        Binding("a", "menu_action('save_as')", "Save As", show=False),
         Binding("d", "menu_action('delete')", "Delete File", show=False),
         Binding("f", "menu_action('new_folder')", "New Folder", show=False),
         Binding("x", "menu_action('style_switcher')", "Style Switcher", show=False),
+        Binding("q", "menu_action('quit')", "Quit", show=False),
     ]
 
     def __init__(self) -> None:
@@ -116,13 +137,18 @@ class MainMenuScreen(Screen):
         self._message = ""
 
     def compose(self) -> ComposeResult:
-        from textual.containers import Container
+        from textual.containers import Container, Horizontal
 
         with Container(id="menu-body"):
             with Container(id="menu-container"):
                 yield Static("*** SAFARI WRITER ***", id="title")
-                for key, label, _ in MENU_ITEMS:
-                    yield MenuItem(key, label)
+                with Horizontal(id="menu-columns"):
+                    with Container(id="menu-col-left"):
+                        for key, label, _ in LEFT_ITEMS:
+                            yield MenuItem(key, label)
+                    with Container(id="menu-col-right"):
+                        for key, label, _ in RIGHT_ITEMS:
+                            yield MenuItem(key, label)
 
         with Container(id="menu-footer"):
             yield Static(self._context_text(), id="context-bar")
@@ -138,7 +164,9 @@ class MainMenuScreen(Screen):
     def _context_text(self) -> str:
         state = self.app.state  # type: ignore[attr-defined]
         edit_file = self._display_name(state.filename, "(new document)")
-        merge_filename = state.mail_merge_db.filename if state.mail_merge_db is not None else ""
+        merge_filename = (
+            state.mail_merge_db.filename if state.mail_merge_db is not None else ""
+        )
         merge_file = self._display_name(merge_filename, "(no merge data)")
         return f" Edit: {edit_file}   Merge: {merge_file}"
 

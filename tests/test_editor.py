@@ -8,12 +8,18 @@ import pytest
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from safari_writer.state import AppState, GlobalFormat
-from safari_writer.screens.editor import EditorArea, EditorScreen, CTRL_BOLD, CTRL_CENTER
+from safari_writer.screens.editor import (
+    EditorArea,
+    EditorScreen,
+    CTRL_BOLD,
+    CTRL_CENTER,
+)
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_editor(text: str = "") -> EditorArea:
     """Return an EditorArea with a fresh state, bypassing Textual Widget init."""
@@ -31,12 +37,14 @@ def make_editor(text: str = "") -> EditorArea:
         ed._heading_active = False
         ed._chain_active = False
         ed._input_buffer = ""
+        ed._last_undo_action = ""
     return ed
 
 
 # ---------------------------------------------------------------------------
 # Typing
 # ---------------------------------------------------------------------------
+
 
 class TestTypeChar:
     def test_basic_insert(self):
@@ -73,6 +81,7 @@ class TestTypeChar:
 # ---------------------------------------------------------------------------
 # Word wrap
 # ---------------------------------------------------------------------------
+
 
 class TestWordWrap:
     def _editor_with_margin(self, text: str, margin: int) -> EditorArea:
@@ -129,6 +138,7 @@ class TestWordWrap:
 # Newline insertion
 # ---------------------------------------------------------------------------
 
+
 class TestInsertNewline:
     def test_splits_line(self):
         ed = make_editor("hello world")
@@ -154,6 +164,7 @@ class TestInsertNewline:
 # ---------------------------------------------------------------------------
 # Backspace
 # ---------------------------------------------------------------------------
+
 
 class TestBackspace:
     def test_delete_char_before_cursor(self):
@@ -184,6 +195,7 @@ class TestBackspace:
 # Delete
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteChar:
     def test_delete_at_cursor(self):
         ed = make_editor("abc")
@@ -207,6 +219,7 @@ class TestDeleteChar:
 # ---------------------------------------------------------------------------
 # Cut / Copy / Paste
 # ---------------------------------------------------------------------------
+
 
 class TestClipboard:
     def test_cut_removes_line(self):
@@ -242,6 +255,7 @@ class TestClipboard:
 # Delete to EOL / undelete
 # ---------------------------------------------------------------------------
 
+
 class TestDeleteToEol:
     def test_deletes_rest_of_line(self):
         ed = make_editor("hello world")
@@ -262,6 +276,7 @@ class TestDeleteToEol:
 # Control character insertion
 # ---------------------------------------------------------------------------
 
+
 class TestControlChars:
     def test_insert_bold_marker(self):
         ed = make_editor("hi")
@@ -281,18 +296,23 @@ class TestControlChars:
 # Word count
 # ---------------------------------------------------------------------------
 
+
 class TestWordCount:
     def test_word_count_message(self):
         ed = make_editor("one two three")
         mock_screen = MagicMock()
-        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+        with patch.object(
+            type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)
+        ):
             ed._word_count()
         mock_screen.set_message.assert_called_once_with("Word count (Document): 3")
 
     def test_word_count_multiline(self):
         ed = make_editor("one two\nthree four")
         mock_screen = MagicMock()
-        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+        with patch.object(
+            type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)
+        ):
             ed._word_count()
         mock_screen.set_message.assert_called_once_with("Word count (Document): 4")
 
@@ -300,6 +320,7 @@ class TestWordCount:
 # ---------------------------------------------------------------------------
 # Alphabetize
 # ---------------------------------------------------------------------------
+
 
 class TestAlphabetize:
     def test_sorts_lines(self):
@@ -313,6 +334,7 @@ class TestAlphabetize:
 # ---------------------------------------------------------------------------
 # Case toggle
 # ---------------------------------------------------------------------------
+
 
 class TestCaseToggle:
     def test_lower_to_upper(self):
@@ -338,12 +360,15 @@ class TestCaseToggle:
 # Editor footer
 # ---------------------------------------------------------------------------
 
+
 class TestEditorFooter:
     def test_status_bar_shows_full_editor_status(self):
         state = AppState(filename="draft.sfw", insert_mode=False, caps_mode=True)
         screen = EditorScreen(state)
 
-        with patch.object(AppState, "bytes_free", new_callable=PropertyMock, return_value=43210):
+        with patch.object(
+            AppState, "bytes_free", new_callable=PropertyMock, return_value=43210
+        ):
             text = screen._status_text()
 
         assert "Bytes Free: 43,210" in text
@@ -351,13 +376,26 @@ class TestEditorFooter:
         assert "[Uppercase]" in text
         assert "[SFW]" in text
 
-    def test_status_bar_defaults_to_txt_and_insert_mode(self):
+    def test_status_bar_defaults_to_sfw_and_insert_mode(self):
         screen = EditorScreen(AppState())
         text = screen._status_text()
 
         assert "[Insert]" in text
         assert "[Lowercase]" in text
-        assert "[TXT]" in text
+        assert "[SFW]" in text
+        assert "[Safari Writer]" in text
+
+    def test_status_bar_shows_plain_for_txt(self):
+        from safari_writer.file_types import resolve_file_profile
+
+        state = AppState()
+        state.filename = "notes.txt"
+        state.file_profile = resolve_file_profile("notes.txt")
+        screen = EditorScreen(state)
+        text = screen._status_text()
+
+        assert "[PLAIN]" in text
+        assert "[Plain Text]" in text
 
 
 class TestReplacePromptShortcut:
@@ -369,7 +407,9 @@ class TestReplacePromptShortcut:
         event.key = "alt+h"
         event.character = None
 
-        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+        with patch.object(
+            type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)
+        ):
             ed.on_key(event)
 
         assert ed._replace_active is True
@@ -386,7 +426,9 @@ class TestReplacePromptShortcut:
         event.key = "backspace"
         event.character = None
 
-        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+        with patch.object(
+            type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)
+        ):
             ed._handle_prompt_key(event)
 
         assert ed._input_buffer == "pea"
@@ -402,7 +444,9 @@ class TestReplacePromptShortcut:
         event.key = "alt+n"
         event.character = "n"
 
-        with patch.object(type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)):
+        with patch.object(
+            type(ed), "screen", new_callable=lambda: property(lambda self: mock_screen)
+        ):
             ed.on_key(event)
 
         assert ed.state.buffer[0].startswith("hi ")

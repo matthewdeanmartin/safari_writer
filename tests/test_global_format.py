@@ -16,6 +16,7 @@ from safari_writer.screens.global_format import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_screen() -> GlobalFormatScreen:
     """Return a GlobalFormatScreen with a fresh GlobalFormat, bypassing Textual."""
     fmt = GlobalFormat()
@@ -42,6 +43,7 @@ def make_screen() -> GlobalFormatScreen:
 # PARAMS table sanity
 # ---------------------------------------------------------------------------
 
+
 class TestParamTable:
     def test_all_14_params_present(self):
         assert len(PARAMS) == 14
@@ -66,6 +68,7 @@ class TestParamTable:
 # ---------------------------------------------------------------------------
 # GlobalFormat dataclass
 # ---------------------------------------------------------------------------
+
 
 class TestGlobalFormatDefaults:
     def test_default_values(self):
@@ -97,6 +100,7 @@ class TestGlobalFormatDefaults:
 # ---------------------------------------------------------------------------
 # Editing workflow
 # ---------------------------------------------------------------------------
+
 
 class TestEditing:
     def test_start_editing_sets_state(self):
@@ -134,7 +138,7 @@ class TestEditing:
         screen._commit_edit(param)
         # Value should NOT be saved; editing key stays set
         assert screen._fmt.left_margin == 10  # default unchanged
-        assert screen._editing_key == "L"     # still editing
+        assert screen._editing_key == "L"  # still editing
 
     def test_commit_above_max_rejected(self):
         screen = make_screen()
@@ -189,6 +193,7 @@ class TestEditing:
 # Reset defaults
 # ---------------------------------------------------------------------------
 
+
 class TestResetDefaults:
     def test_reset_restores_all(self):
         screen = make_screen()
@@ -219,13 +224,16 @@ class TestResetDefaults:
 # Escape / exit behaviour
 # ---------------------------------------------------------------------------
 
+
 class TestEscapeBehavior:
     def test_esc_while_editing_cancels_not_exits(self):
         screen = make_screen()
         mock_app = MagicMock()
         screen._editing_key = "T"
         screen._input_buf = "50"
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda self: mock_app)):
+        with patch.object(
+            type(screen), "app", new_callable=lambda: property(lambda self: mock_app)
+        ):
             screen.action_accept_and_exit()
         mock_app.pop_screen.assert_not_called()
         assert screen._editing_key is None
@@ -234,6 +242,8 @@ class TestEscapeBehavior:
         screen = make_screen()
         mock_app = MagicMock()
         screen._editing_key = None
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda self: mock_app)):
+        with patch.object(
+            type(screen), "app", new_callable=lambda: property(lambda self: mock_app)
+        ):
             screen.action_accept_and_exit()
         mock_app.pop_screen.assert_called_once()

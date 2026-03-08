@@ -59,7 +59,9 @@ class MailMergeDB:
     """In-memory mail merge database."""
 
     fields: list[FieldDef] = field(
-        default_factory=lambda: [FieldDef(name, width) for name, width in DEFAULT_FIELDS]
+        default_factory=lambda: [
+            FieldDef(name, width) for name, width in DEFAULT_FIELDS
+        ]
     )
     records: list[list[str]] = field(default_factory=list)
     filename: str = ""
@@ -73,7 +75,9 @@ class MailMergeDB:
 
     def to_dict(self) -> MailMergeData:
         return {
-            "fields": [{"name": field.name, "max_len": field.max_len} for field in self.fields],
+            "fields": [
+                {"name": field.name, "max_len": field.max_len} for field in self.fields
+            ],
             "records": self.records,
         }
 
@@ -85,8 +89,7 @@ class MailMergeDB:
         validated_data = cast(MailMergeData, data)
         db = cls.__new__(cls)
         db.fields = [
-            FieldDef(item["name"], item["max_len"])
-            for item in validated_data["fields"]
+            FieldDef(item["name"], item["max_len"]) for item in validated_data["fields"]
         ]
         db.records = [list(record) for record in validated_data["records"]]
         db.filename = ""
@@ -145,7 +148,9 @@ def validate_mail_merge_data(data: object) -> list[str]:
         if not isinstance(max_len, int):
             errors.append(f"field {index} max_len must be an integer")
         elif not 1 <= max_len <= MAX_FIELD_DATA_LEN:
-            errors.append(f"field {index} max_len must be between 1 and {MAX_FIELD_DATA_LEN}")
+            errors.append(
+                f"field {index} max_len must be between 1 and {MAX_FIELD_DATA_LEN}"
+            )
         if isinstance(name, str) and isinstance(max_len, int):
             normalized_fields.append((name, max_len))
 
@@ -162,7 +167,9 @@ def validate_mail_merge_data(data: object) -> list[str]:
             continue
         for value_index, value in enumerate(record, start=1):
             if not isinstance(value, str):
-                errors.append(f"record {record_index} field {value_index} must be a string")
+                errors.append(
+                    f"record {record_index} field {value_index} must be a string"
+                )
                 continue
             if value_index <= len(normalized_fields):
                 _, max_len = normalized_fields[value_index - 1]

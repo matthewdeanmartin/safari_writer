@@ -71,17 +71,17 @@ ProofreaderScreen {
 # Mode constants
 # ---------------------------------------------------------------------------
 
-MODE_MENU       = "menu"
-MODE_HIGHLIGHT  = "highlight"
-MODE_PRINT      = "print"
-MODE_CORRECT    = "correct"
+MODE_MENU = "menu"
+MODE_HIGHLIGHT = "highlight"
+MODE_PRINT = "print"
+MODE_CORRECT = "correct"
 MODE_CORRECT_MENU = "correct_menu"
 MODE_CORRECT_WORD = "correct_word"
 MODE_CORRECT_CONFIRM = "correct_confirm"
-MODE_DICT_SEARCH     = "dict_search"
-MODE_DICT_RESULTS    = "dict_results"
-MODE_SAVE_PERSONAL   = "save_personal"
-MODE_LOAD_PERSONAL   = "load_personal"
+MODE_DICT_SEARCH = "dict_search"
+MODE_DICT_RESULTS = "dict_results"
+MODE_SAVE_PERSONAL = "save_personal"
+MODE_LOAD_PERSONAL = "load_personal"
 
 
 class ProofreaderScreen(Screen):
@@ -131,6 +131,7 @@ class ProofreaderScreen(Screen):
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
+
         with Container(id="pr-outer"):
             yield Static(self._message_text, id="pr-message")
             yield Static("*** SAFARI WRITER — PROOFREADER ***", id="pr-title")
@@ -178,7 +179,9 @@ class ProofreaderScreen(Screen):
             "[dim]Esc  Return to Main Menu[/]"
         )
         self._set_message("Select a proofing mode.")
-        self._set_help(" H Highlight  P Print  C Correct  S Search  L Load  W Write  Esc Exit")
+        self._set_help(
+            " H Highlight  P Print  C Correct  S Search  L Load  W Write  Esc Exit"
+        )
 
     def _enter_highlight(self) -> None:
         self._mode = MODE_HIGHLIGHT
@@ -194,7 +197,8 @@ class ProofreaderScreen(Screen):
         checker = self._ensure_checker()
         self._words = _extract_words(self._state.buffer)
         self._errors = [
-            (r, c, w) for r, c, w in self._words
+            (r, c, w)
+            for r, c, w in self._words
             if not _check_word(w, checker, self._state.kept_spellings, self._personal)
         ]
         if not self._errors:
@@ -240,14 +244,20 @@ class ProofreaderScreen(Screen):
         self._mode = MODE_CORRECT_MENU
         r, c, w = self._require_current_error()
         self._render_document_with_highlight(r, c, w)
-        self._set_message(f'Unrecognized: [reverse]{w}[/]  — C Correct  S Search dict  Enter Keep')
-        self._set_help(" C Correct Word  S Search Dictionary  Enter Keep This Spelling  Esc Abort")
+        self._set_message(
+            f"Unrecognized: [reverse]{w}[/]  — C Correct  S Search dict  Enter Keep"
+        )
+        self._set_help(
+            " C Correct Word  S Search Dictionary  Enter Keep This Spelling  Esc Abort"
+        )
 
     def _enter_dict_search(self, from_correct: bool = False) -> None:
         self._mode = MODE_DICT_SEARCH
         self._input_buf = ""
         self._from_correct = from_correct
-        self._set_message("Dictionary Search: type 2+ letters, Enter to search, Esc to cancel")
+        self._set_message(
+            "Dictionary Search: type 2+ letters, Enter to search, Esc to cancel"
+        )
         self._set_body("Enter search prefix (at least 2 letters):\n\n> ")
         self._set_help(" Enter Search  Esc Cancel")
 
@@ -295,13 +305,17 @@ class ProofreaderScreen(Screen):
         elif k == "l":
             self._mode = MODE_LOAD_PERSONAL
             self._input_buf = ""
-            self._set_message("Load Personal Dictionary: enter filename, Enter to confirm")
+            self._set_message(
+                "Load Personal Dictionary: enter filename, Enter to confirm"
+            )
             self._set_body("Load personal dictionary file:\n\n> ")
             self._set_help(" Enter Load  Esc Cancel")
         elif k == "w":
             self._mode = MODE_SAVE_PERSONAL
             self._input_buf = ""
-            self._set_message("Save Personal Dictionary: enter filename, Enter to confirm")
+            self._set_message(
+                "Save Personal Dictionary: enter filename, Enter to confirm"
+            )
             self._set_body("Save personal dictionary to file:\n\n> ")
             self._set_help(" Enter Save  Esc Cancel")
         elif key == "escape":
@@ -362,8 +376,8 @@ class ProofreaderScreen(Screen):
         r, c, w = self._require_current_error()
         repl = self._replacement
         line = self._state.buffer[r]
-        if line[c:c + len(w)] == w:
-            self._state.buffer[r] = line[:c] + repl + line[c + len(w):]
+        if line[c : c + len(w)] == w:
+            self._state.buffer[r] = line[:c] + repl + line[c + len(w) :]
             self._state.modified = True
         self._set_message(f"Replaced '{w}' with '{repl}'.")
         self._words = _extract_words(self._state.buffer)
@@ -388,17 +402,21 @@ class ProofreaderScreen(Screen):
             self._show_dict_results_page()
         elif key == "backspace":
             self._input_buf = self._input_buf[:-1]
-            self._set_body(f"Enter search prefix (at least 2 letters):\n\n> {self._input_buf}")
+            self._set_body(
+                f"Enter search prefix (at least 2 letters):\n\n> {self._input_buf}"
+            )
         elif event.character and event.character.isprintable():
             self._input_buf += event.character
-            self._set_body(f"Enter search prefix (at least 2 letters):\n\n> {self._input_buf}")
+            self._set_body(
+                f"Enter search prefix (at least 2 letters):\n\n> {self._input_buf}"
+            )
 
     def _show_dict_results_page(self) -> None:
         self._mode = MODE_DICT_RESULTS
         page_size = 126
         results = self._dict_results
         start = self._dict_page * page_size
-        page = results[start:start + page_size]
+        page = results[start : start + page_size]
         total = len(results)
 
         if not page:
@@ -429,12 +447,16 @@ class ProofreaderScreen(Screen):
         nav.append("Esc New search")
 
         self._set_body("\n".join(lines))
-        self._set_message(f"Page {self._dict_page + 1} of {(total - 1) // page_size + 1}")
+        self._set_message(
+            f"Page {self._dict_page + 1} of {(total - 1) // page_size + 1}"
+        )
         self._set_help("  ".join(nav))
 
     def _handle_dict_results_key(self, key: str) -> None:
         page_size = 126
-        if key == "pagedown" and (self._dict_page + 1) * page_size < len(self._dict_results):
+        if key == "pagedown" and (self._dict_page + 1) * page_size < len(
+            self._dict_results
+        ):
             self._dict_page += 1
             self._show_dict_results_page()
         elif key == "pageup" and self._dict_page > 0:
@@ -508,13 +530,15 @@ class ProofreaderScreen(Screen):
         words = _extract_words(self._state.buffer)
         error_positions: set[tuple[int, int, int]] = set()
         for r, c, w in words:
-            if not _check_word(w, self._ensure_checker(), self._state.kept_spellings, self._personal):
+            if not _check_word(
+                w, self._ensure_checker(), self._state.kept_spellings, self._personal
+            ):
                 error_positions.add((r, c, len(w)))
 
         lines_out = []
         for row, line in enumerate(self._state.buffer):
             mask = [False] * len(line)
-            for (er, ec, ew) in error_positions:
+            for er, ec, ew in error_positions:
                 if er == row:
                     for i in range(ec, min(ec + ew, len(line))):
                         mask[i] = True
@@ -537,13 +561,15 @@ class ProofreaderScreen(Screen):
         self._set_help(" Any key → return to menu")
         self._mode = MODE_HIGHLIGHT
 
-    def _render_document_with_highlight(self, hi_row: int, hi_col: int, hi_word: str) -> None:
+    def _render_document_with_highlight(
+        self, hi_row: int, hi_col: int, hi_word: str
+    ) -> None:
         lines_out = []
         for row, line in enumerate(self._state.buffer):
             if row == hi_row:
                 before = line[:hi_col]
-                word = line[hi_col:hi_col + len(hi_word)]
-                after = line[hi_col + len(hi_word):]
+                word = line[hi_col : hi_col + len(hi_word)]
+                after = line[hi_col + len(hi_word) :]
                 out = f"{before}[reverse]{word}[/reverse]{after}"
             else:
                 out = line

@@ -22,6 +22,7 @@ classifiers = [
 dependencies = [
     "textual>=1.0.0",
     "pyenchant>=3.2.0",
+    "pygments>=2.17.0",
 ]
 
 [project.scripts]
@@ -57,7 +58,8 @@ dev = [
     "pytest>=8.0.0",
     "hypothesis>=6.151.9",
     "tox>=4.0.0",
-    "hatch"
+    "hatch",
+    "types-pygments>=2.19.0.20251121",
 ]
 
 [tool.mypy]

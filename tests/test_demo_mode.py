@@ -65,7 +65,9 @@ def test_main_menu_mount_shows_context_and_status_bars():
             screen = app.screen
             assert isinstance(screen, MainMenuScreen)
             assert "Edit: draft.sfw" in screen.query_one("#context-bar", Static).content
-            assert "Merge: contacts.mm" in screen.query_one("#context-bar", Static).content
+            assert (
+                "Merge: contacts.mm" in screen.query_one("#context-bar", Static).content
+            )
             assert "Bytes Free:" in screen.query_one("#status-bar", Static).content
 
     asyncio.run(run())
@@ -99,7 +101,9 @@ def test_do_demo_loads_bundled_document(monkeypatch):
     messages: list[str] = []
     opened: list[AppState] = []
 
-    monkeypatch.setattr("safari_writer.app.load_demo_document_buffer", lambda: ["demo", "text"])
+    monkeypatch.setattr(
+        "safari_writer.app.load_demo_document_buffer", lambda: ["demo", "text"]
+    )
     monkeypatch.setattr(app, "set_message", lambda msg: messages.append(msg))
     monkeypatch.setattr(app, "_open_editor", lambda: opened.append(app.state))
 
@@ -123,7 +127,11 @@ def test_do_demo_reports_resource_errors(monkeypatch):
         MagicMock(side_effect=FileNotFoundError("missing demo")),
     )
     monkeypatch.setattr(app, "set_message", lambda msg: messages.append(msg))
-    monkeypatch.setattr(app, "_open_editor", lambda: (_ for _ in ()).throw(AssertionError("should not open")))
+    monkeypatch.setattr(
+        app,
+        "_open_editor",
+        lambda: (_ for _ in ()).throw(AssertionError("should not open")),
+    )
 
     app._do_demo()
 

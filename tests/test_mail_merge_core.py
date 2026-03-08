@@ -156,11 +156,14 @@ class TestApplySubset:
         assert set(result) == {0, 1}
 
     def test_second_field(self):
-        db = _simple_db([("First", 10), ("Last", 10)], [
-            ["Alice", "Smith"],
-            ["Bob", "Jones"],
-            ["Carol", "Adams"],
-        ])
+        db = _simple_db(
+            [("First", 10), ("Last", 10)],
+            [
+                ["Alice", "Smith"],
+                ["Bob", "Jones"],
+                ["Carol", "Adams"],
+            ],
+        )
         result = db.apply_subset(1, "A", "K")
         vals = [db.records[i][1] for i in result]
         assert "Jones" in vals
@@ -257,11 +260,15 @@ class TestValidation:
         assert any("must be an object" in e for e in errors)
 
     def test_field_name_empty(self):
-        errors = validate_mail_merge_data({"fields": [{"name": "", "max_len": 5}], "records": []})
+        errors = validate_mail_merge_data(
+            {"fields": [{"name": "", "max_len": 5}], "records": []}
+        )
         assert any("name must be a non-empty" in e for e in errors)
 
     def test_field_name_whitespace_only(self):
-        errors = validate_mail_merge_data({"fields": [{"name": "   ", "max_len": 5}], "records": []})
+        errors = validate_mail_merge_data(
+            {"fields": [{"name": "   ", "max_len": 5}], "records": []}
+        )
         assert any("name must be a non-empty" in e for e in errors)
 
     def test_field_name_too_long(self):
@@ -289,7 +296,10 @@ class TestValidation:
 
     def test_field_max_len_too_large(self):
         errors = validate_mail_merge_data(
-            {"fields": [{"name": "A", "max_len": MAX_FIELD_DATA_LEN + 1}], "records": []}
+            {
+                "fields": [{"name": "A", "max_len": MAX_FIELD_DATA_LEN + 1}],
+                "records": [],
+            }
         )
         assert any("max_len must be between" in e for e in errors)
 

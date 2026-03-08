@@ -22,6 +22,7 @@ def make_editor(text: str = "") -> EditorArea:
         ed._heading_active = False
         ed._chain_active = False
         ed._input_buffer = ""
+        ed._last_undo_action = ""
 
     # Mock screen so set_message / update_status don't fail
     mock_screen = MagicMock()
@@ -33,6 +34,7 @@ def make_editor(text: str = "") -> EditorArea:
 # ---------------------------------------------------------------------------
 # _find_in_line
 # ---------------------------------------------------------------------------
+
 
 class TestFindInLine:
     def test_basic_find(self):
@@ -70,6 +72,7 @@ class TestFindInLine:
 # _find_next
 # ---------------------------------------------------------------------------
 
+
 class TestFindNext:
     def test_finds_on_same_line(self):
         ed = make_editor("hello world")
@@ -104,7 +107,7 @@ class TestFindNext:
         ed = make_editor("aaa")
         ed.state.search_string = "a"
         ed.state.cursor_row = 0
-        ed.state.cursor_col = -1 # Start before first 'a'
+        ed.state.cursor_col = -1  # Start before first 'a'
         ed._find_next()
         assert ed.state.cursor_col == 0
         ed._find_next()
@@ -141,10 +144,13 @@ class TestFindNext:
 # _replace_all_in_line
 # ---------------------------------------------------------------------------
 
+
 class TestReplaceAllInLine:
     def test_simple_replace(self):
         ed = make_editor()
-        line, count = ed._replace_all_in_line_from("hello world hello", "hello", "hi", 0)
+        line, count = ed._replace_all_in_line_from(
+            "hello world hello", "hello", "hi", 0
+        )
         assert line == "hi world hi"
         assert count == 2
 
@@ -170,6 +176,7 @@ class TestReplaceAllInLine:
 # ---------------------------------------------------------------------------
 # _global_replace
 # ---------------------------------------------------------------------------
+
 
 class TestGlobalReplace:
     def test_replaces_from_cursor_to_eof(self):
@@ -213,6 +220,7 @@ class TestGlobalReplace:
 # _replace_current_and_find_next
 # ---------------------------------------------------------------------------
 
+
 class TestReplaceCurrentAndFindNext:
     def test_replaces_at_cursor(self):
         ed = make_editor("hello world hello")
@@ -239,6 +247,7 @@ class TestReplaceCurrentAndFindNext:
 # ---------------------------------------------------------------------------
 # Tab forward
 # ---------------------------------------------------------------------------
+
 
 class TestTabForward:
     def test_moves_to_next_tab_stop(self):

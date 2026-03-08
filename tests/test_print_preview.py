@@ -11,10 +11,22 @@ from safari_writer.screens.print_screen import (
     _strip_inline,
 )
 from safari_writer.screens.editor import (
-    CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,
-    CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB, CTRL_PARA,
-    CTRL_MERGE, CTRL_HEADER, CTRL_FOOTER, CTRL_HEADING,
-    CTRL_EJECT, CTRL_CHAIN, CTRL_FORM, TOGGLE_MARKERS,
+    CTRL_BOLD,
+    CTRL_UNDERLINE,
+    CTRL_CENTER,
+    CTRL_RIGHT,
+    CTRL_ELONGATE,
+    CTRL_SUPER,
+    CTRL_SUB,
+    CTRL_PARA,
+    CTRL_MERGE,
+    CTRL_HEADER,
+    CTRL_FOOTER,
+    CTRL_HEADING,
+    CTRL_EJECT,
+    CTRL_CHAIN,
+    CTRL_FORM,
+    TOGGLE_MARKERS,
 )
 
 

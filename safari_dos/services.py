@@ -204,7 +204,9 @@ def set_protected(path: Path, protected: bool) -> None:
 
     current_mode = path.stat().st_mode
     writable_bits = stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH
-    new_mode = current_mode & ~writable_bits if protected else current_mode | stat.S_IWUSR
+    new_mode = (
+        current_mode & ~writable_bits if protected else current_mode | stat.S_IWUSR
+    )
     path.chmod(new_mode)
 
 
@@ -262,7 +264,9 @@ def list_directory(
             continue
         item_stat = item.stat()
         is_dir = item.is_dir()
-        kind = "<DIR>" if is_dir else (item.suffix[1:].upper() if item.suffix else "FILE")
+        kind = (
+            "<DIR>" if is_dir else (item.suffix[1:].upper() if item.suffix else "FILE")
+        )
         entries.append(
             DirectoryEntry(
                 path=item,
@@ -311,7 +315,9 @@ def toggle_favorite(path: Path) -> bool:
 def _record_recent(path: Path, storage_path: Path, *, limit: int = 10) -> list[Path]:
     target = path.resolve()
     values = [target]
-    values.extend(existing for existing in _load_path_list(storage_path) if existing != target)
+    values.extend(
+        existing for existing in _load_path_list(storage_path) if existing != target
+    )
     trimmed = values[:limit]
     _save_path_list(storage_path, trimmed)
     return [value for value in trimmed if value.exists()]
@@ -479,7 +485,11 @@ def restore_from_garbage(item_id: str, destination: Path | None = None) -> Path:
         if item["id"] != item_id:
             continue
         stored_path = Path(str(item["stored_path"]))
-        target = Path(destination) if destination is not None else Path(str(item["original_path"]))
+        target = (
+            Path(destination)
+            if destination is not None
+            else Path(str(item["original_path"]))
+        )
         if target.exists():
             raise FileExistsError(f"Name already exists: {target}")
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -551,7 +561,12 @@ def discover_locations(current_path: Path | None = None) -> list[DeviceLocation]
             if drive.exists():
                 locations.append((f"Drive {letter}", drive))
     else:
-        for label, base in [("Root", Path("/")), ("Volumes", Path("/Volumes")), ("Media", Path("/media")), ("Mounts", Path("/mnt"))]:
+        for label, base in [
+            ("Root", Path("/")),
+            ("Volumes", Path("/Volumes")),
+            ("Media", Path("/media")),
+            ("Mounts", Path("/mnt")),
+        ]:
             if base.exists():
                 if base == Path("/"):
                     locations.append((label, base))

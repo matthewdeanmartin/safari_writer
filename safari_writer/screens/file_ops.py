@@ -49,6 +49,7 @@ class FilePromptScreen(ModalScreen[str | None]):
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
+
         with Container(id="fp-dialog"):
             yield Static(self._title, id="fp-title")
             yield Static(self._render_input(), id="fp-input")
@@ -86,6 +87,7 @@ class ConfirmScreen(ModalScreen[bool | None]):
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
+
         with Container(id="confirm-dialog"):
             yield Static(self._prompt, id="confirm-title")
             yield Static("Y/N?", id="confirm-hint")

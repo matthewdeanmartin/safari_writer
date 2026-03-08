@@ -8,7 +8,13 @@ from textual.screen import Screen
 from textual import events
 from textual.widgets import Static
 
-from safari_writer.themes import THEMES, THEME_LABELS, DEFAULT_THEME, save_settings, load_settings
+from safari_writer.themes import (
+    THEMES,
+    THEME_LABELS,
+    DEFAULT_THEME,
+    save_settings,
+    load_settings,
+)
 
 
 SS_CSS = """
@@ -63,6 +69,7 @@ class StyleSwitcherScreen(Screen):
 
     BINDINGS = [
         Binding("escape", "exit_switcher", "Back", show=False),
+        Binding("r", "exit_switcher", "Return", show=False),
         Binding("enter", "apply_theme", "Apply", show=False),
     ]
 
@@ -76,13 +83,14 @@ class StyleSwitcherScreen(Screen):
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
+
         with Container(id="ss-container"):
             yield Static("*** STYLE SWITCHER ***", id="ss-title")
             for name in THEME_NAMES:
                 label = THEME_LABELS.get(name, name)
                 yield Static(label, classes="ss-item", id=f"ss-{name}")
         yield Static(
-            " Up/Down choose  Enter apply  Esc back  (theme previews live)",
+            " Up/Down choose  Enter apply  R=return  Esc=back  (theme previews live)",
             id="ss-hint",
         )
 

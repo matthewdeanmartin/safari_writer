@@ -57,7 +57,9 @@ def build_parser() -> argparse.ArgumentParser:
         action="version",
         version=f"%(prog)s {_version_string()}",
     )
-    parser.add_argument("--cwd", help="Resolve relative paths as if launched from PATH.")
+    parser.add_argument(
+        "--cwd", help="Resolve relative paths as if launched from PATH."
+    )
     parser.add_argument(
         "--encoding",
         default="utf-8",
@@ -69,12 +71,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Skip the startup splash screen for TUI launches.",
     )
     verbosity = parser.add_mutually_exclusive_group()
-    verbosity.add_argument("-q", "--quiet", action="store_true", help="Suppress status output.")
-    verbosity.add_argument("-v", "--verbose", action="store_true", help="Emit extra status output.")
+    verbosity.add_argument(
+        "-q", "--quiet", action="store_true", help="Suppress status output."
+    )
+    verbosity.add_argument(
+        "-v", "--verbose", action="store_true", help="Emit extra status output."
+    )
 
     subparsers = parser.add_subparsers(dest="command")
 
-    tui_parser = subparsers.add_parser("tui", help="Launch the Textual interface at a specific destination.")
+    tui_parser = subparsers.add_parser(
+        "tui", help="Launch the Textual interface at a specific destination."
+    )
     tui_subparsers = tui_parser.add_subparsers(dest="tui_command", required=True)
 
     tui_menu = tui_subparsers.add_parser("menu", help="Open the main menu.")
@@ -84,17 +92,29 @@ def build_parser() -> argparse.ArgumentParser:
 
     tui_edit = tui_subparsers.add_parser("edit", help="Open directly in the editor.")
     edit_source = tui_edit.add_mutually_exclusive_group()
-    edit_source.add_argument("--file", help="Load a document before entering the editor.")
-    edit_source.add_argument("--new", action="store_true", help="Open a blank document.")
+    edit_source.add_argument(
+        "--file", help="Load a document before entering the editor."
+    )
+    edit_source.add_argument(
+        "--new", action="store_true", help="Open a blank document."
+    )
     _add_tui_read_only_option(tui_edit)
-    tui_edit.add_argument("--cursor-line", type=int, help="Initial 1-based cursor line.")
-    tui_edit.add_argument("--cursor-column", type=int, help="Initial 1-based cursor column.")
+    tui_edit.add_argument(
+        "--cursor-line", type=int, help="Initial 1-based cursor line."
+    )
+    tui_edit.add_argument(
+        "--cursor-column", type=int, help="Initial 1-based cursor column."
+    )
     tui_edit.set_defaults(handler=_handle_tui_command)
 
-    tui_proof = tui_subparsers.add_parser("proofreader", help="Open directly in the proofreader.")
+    tui_proof = tui_subparsers.add_parser(
+        "proofreader", help="Open directly in the proofreader."
+    )
     _add_tui_file_option(tui_proof)
     _add_tui_read_only_option(tui_proof)
-    tui_proof.add_argument("--mode", choices=["highlight", "print", "correct", "search"])
+    tui_proof.add_argument(
+        "--mode", choices=["highlight", "print", "correct", "search"]
+    )
     tui_proof.add_argument(
         "--personal-dict",
         action="append",
@@ -103,14 +123,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     tui_proof.set_defaults(handler=_handle_tui_command)
 
-    tui_global = tui_subparsers.add_parser("global-format", help="Open directly in Global Format.")
+    tui_global = tui_subparsers.add_parser(
+        "global-format", help="Open directly in Global Format."
+    )
     _add_tui_file_option(tui_global)
     _add_tui_read_only_option(tui_global)
     tui_global.set_defaults(handler=_handle_tui_command)
 
-    tui_mail_merge = tui_subparsers.add_parser("mail-merge", help="Open directly in Mail Merge.")
+    tui_mail_merge = tui_subparsers.add_parser(
+        "mail-merge", help="Open directly in Mail Merge."
+    )
     _add_tui_read_only_option(tui_mail_merge)
-    tui_mail_merge.add_argument("--database", help="Load a mail-merge database before startup.")
+    tui_mail_merge.add_argument(
+        "--database", help="Load a mail-merge database before startup."
+    )
     tui_mail_merge.add_argument(
         "--mode",
         choices=["menu", "enter", "update", "format", "subset"],
@@ -118,48 +144,76 @@ def build_parser() -> argparse.ArgumentParser:
     )
     tui_mail_merge.set_defaults(handler=_handle_tui_command)
 
-    tui_print = tui_subparsers.add_parser("print", help="Open directly in print/export flow.")
+    tui_print = tui_subparsers.add_parser(
+        "print", help="Open directly in print/export flow."
+    )
     _add_tui_file_option(tui_print)
     _add_tui_read_only_option(tui_print)
     tui_print.add_argument("--target", choices=["ansi", "markdown", "postscript"])
     tui_print.set_defaults(handler=_handle_tui_command)
 
-    tui_index_current = tui_subparsers.add_parser("index-current", help="Open the current-folder index.")
+    tui_index_current = tui_subparsers.add_parser(
+        "index-current", help="Open the current-folder index."
+    )
     tui_index_current.add_argument("--path", help="Directory to browse.")
     tui_index_current.set_defaults(handler=_handle_tui_command)
 
-    tui_index_external = tui_subparsers.add_parser("index-external", help="Open the external-drive index.")
+    tui_index_external = tui_subparsers.add_parser(
+        "index-external", help="Open the external-drive index."
+    )
     tui_index_external.set_defaults(handler=_handle_tui_command)
 
-    tui_safari_dos = tui_subparsers.add_parser("safari-dos", help="Open Safari DOS inside Safari Writer.")
+    tui_safari_dos = tui_subparsers.add_parser(
+        "safari-dos", help="Open Safari DOS inside Safari Writer."
+    )
     tui_safari_dos.add_argument("--path", help="Directory to browse.")
     tui_safari_dos.set_defaults(handler=_handle_tui_command)
 
-    export_parser = subparsers.add_parser("export", help="Run headless export commands.")
-    export_subparsers = export_parser.add_subparsers(dest="export_command", required=True)
+    export_parser = subparsers.add_parser(
+        "export", help="Run headless export commands."
+    )
+    export_subparsers = export_parser.add_subparsers(
+        dest="export_command", required=True
+    )
 
-    export_markdown = export_subparsers.add_parser("markdown", help="Export a document to Markdown.")
+    export_markdown = export_subparsers.add_parser(
+        "markdown", help="Export a document to Markdown."
+    )
     _add_export_input(export_markdown)
     _add_output_flags(export_markdown, "Markdown")
-    export_markdown.add_argument("--merge-db", help="Optional mail-merge database to apply.")
+    export_markdown.add_argument(
+        "--merge-db", help="Optional mail-merge database to apply."
+    )
     export_markdown.set_defaults(handler=_handle_export_markdown)
 
-    export_postscript = export_subparsers.add_parser("postscript", help="Export a document to PostScript.")
+    export_postscript = export_subparsers.add_parser(
+        "postscript", help="Export a document to PostScript."
+    )
     _add_export_input(export_postscript)
     export_postscript.add_argument("-o", "--output", help="Destination .ps file.")
-    export_postscript.add_argument("--merge-db", help="Optional mail-merge database to apply.")
+    export_postscript.add_argument(
+        "--merge-db", help="Optional mail-merge database to apply."
+    )
     export_postscript.set_defaults(handler=_handle_export_postscript)
 
-    export_ansi = export_subparsers.add_parser("ansi", help="Render ANSI preview output headlessly.")
+    export_ansi = export_subparsers.add_parser(
+        "ansi", help="Render ANSI preview output headlessly."
+    )
     _add_export_input(export_ansi)
     export_ansi.add_argument("--page", type=int, help="Render a single 1-based page.")
-    export_ansi.add_argument("--stdout", action="store_true", help="Write rendered ANSI to stdout.")
+    export_ansi.add_argument(
+        "--stdout", action="store_true", help="Write rendered ANSI to stdout."
+    )
     export_ansi.set_defaults(handler=_handle_export_ansi)
 
-    proof_parser = subparsers.add_parser("proof", help="Run headless proofing commands.")
+    proof_parser = subparsers.add_parser(
+        "proof", help="Run headless proofing commands."
+    )
     proof_subparsers = proof_parser.add_subparsers(dest="proof_command", required=True)
 
-    proof_check = proof_subparsers.add_parser("check", help="Return whether a document contains spelling errors.")
+    proof_check = proof_subparsers.add_parser(
+        "check", help="Return whether a document contains spelling errors."
+    )
     proof_check.add_argument("input", help="Source document.")
     proof_check.add_argument("--personal-dict", action="append", default=[])
     proof_check.set_defaults(handler=_handle_proof_check)
@@ -170,37 +224,57 @@ def build_parser() -> argparse.ArgumentParser:
     proof_list.add_argument("--json", action="store_true", dest="as_json")
     proof_list.set_defaults(handler=_handle_proof_list)
 
-    proof_suggest = proof_subparsers.add_parser("suggest", help="Suggest spellings for a word.")
+    proof_suggest = proof_subparsers.add_parser(
+        "suggest", help="Suggest spellings for a word."
+    )
     proof_suggest.add_argument("word")
     proof_suggest.set_defaults(handler=_handle_proof_suggest)
 
-    format_parser = subparsers.add_parser("format", help="Use the .sfw format codec directly.")
-    format_subparsers = format_parser.add_subparsers(dest="format_command", required=True)
+    format_parser = subparsers.add_parser(
+        "format", help="Use the .sfw format codec directly."
+    )
+    format_subparsers = format_parser.add_subparsers(
+        dest="format_command", required=True
+    )
 
-    format_encode = format_subparsers.add_parser("encode", help="Encode plain text as .sfw.")
+    format_encode = format_subparsers.add_parser(
+        "encode", help="Encode plain text as .sfw."
+    )
     format_encode.add_argument("input")
     format_encode.add_argument("-o", "--output")
     format_encode.set_defaults(handler=_handle_format_encode)
 
-    format_decode = format_subparsers.add_parser("decode", help="Decode .sfw to control-character text.")
+    format_decode = format_subparsers.add_parser(
+        "decode", help="Decode .sfw to control-character text."
+    )
     format_decode.add_argument("input")
     format_decode.add_argument("-o", "--output")
     format_decode.set_defaults(handler=_handle_format_decode)
 
-    format_strip = format_subparsers.add_parser("strip", help="Strip inline formatting control codes.")
+    format_strip = format_subparsers.add_parser(
+        "strip", help="Strip inline formatting control codes."
+    )
     format_strip.add_argument("input")
     format_strip.add_argument("-o", "--output")
     format_strip.set_defaults(handler=_handle_format_strip)
 
-    mail_merge_parser = subparsers.add_parser("mail-merge", help="Run headless mail-merge commands.")
-    mail_merge_subparsers = mail_merge_parser.add_subparsers(dest="mail_merge_command", required=True)
+    mail_merge_parser = subparsers.add_parser(
+        "mail-merge", help="Run headless mail-merge commands."
+    )
+    mail_merge_subparsers = mail_merge_parser.add_subparsers(
+        dest="mail_merge_command", required=True
+    )
 
-    mail_merge_inspect = mail_merge_subparsers.add_parser("inspect", help="Inspect a mail-merge database.")
+    mail_merge_inspect = mail_merge_subparsers.add_parser(
+        "inspect", help="Inspect a mail-merge database."
+    )
     mail_merge_inspect.add_argument("database")
     mail_merge_inspect.add_argument("--json", action="store_true", dest="as_json")
     mail_merge_inspect.set_defaults(handler=_handle_mail_merge_inspect)
 
-    mail_merge_subset = mail_merge_subparsers.add_parser("subset", help="Apply a subset filter to a database.")
+    mail_merge_subset = mail_merge_subparsers.add_parser(
+        "subset", help="Apply a subset filter to a database."
+    )
     mail_merge_subset.add_argument("database")
     mail_merge_subset.add_argument("--field", type=int, required=True)
     mail_merge_subset.add_argument("--low", required=True)
@@ -208,13 +282,17 @@ def build_parser() -> argparse.ArgumentParser:
     mail_merge_subset.add_argument("--json", action="store_true", dest="as_json")
     mail_merge_subset.set_defaults(handler=_handle_mail_merge_subset)
 
-    mail_merge_append = mail_merge_subparsers.add_parser("append", help="Append one database to another.")
+    mail_merge_append = mail_merge_subparsers.add_parser(
+        "append", help="Append one database to another."
+    )
     mail_merge_append.add_argument("base_db")
     mail_merge_append.add_argument("other_db")
     mail_merge_append.add_argument("-o", "--output")
     mail_merge_append.set_defaults(handler=_handle_mail_merge_append)
 
-    mail_merge_validate = mail_merge_subparsers.add_parser("validate", help="Validate mail-merge JSON.")
+    mail_merge_validate = mail_merge_subparsers.add_parser(
+        "validate", help="Validate mail-merge JSON."
+    )
     mail_merge_validate.add_argument("database")
     mail_merge_validate.set_defaults(handler=_handle_mail_merge_validate)
 
@@ -262,11 +340,17 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _add_tui_file_option(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--file", help="Load a document before entering the TUI destination.")
+    parser.add_argument(
+        "--file", help="Load a document before entering the TUI destination."
+    )
 
 
 def _add_tui_read_only_option(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--read-only", action="store_true", help="Open in read-only mode when supported.")
+    parser.add_argument(
+        "--read-only",
+        action="store_true",
+        help="Open in read-only mode when supported.",
+    )
 
 
 def _add_export_input(parser: argparse.ArgumentParser) -> None:
@@ -276,7 +360,9 @@ def _add_export_input(parser: argparse.ArgumentParser) -> None:
 def _add_output_flags(parser: argparse.ArgumentParser, label: str) -> None:
     output_group = parser.add_mutually_exclusive_group()
     output_group.add_argument("-o", "--output", help=f"Destination {label} file.")
-    output_group.add_argument("--stdout", action="store_true", help=f"Write {label} to stdout.")
+    output_group.add_argument(
+        "--stdout", action="store_true", help=f"Write {label} to stdout."
+    )
 
 
 def _normalize_argv(argv: list[str]) -> list[str]:
@@ -305,7 +391,12 @@ def _normalize_argv(argv: list[str]) -> list[str]:
     if first_non_option.startswith("-"):
         return argv
     if len(remaining) == 1:
-        return argv[:first_non_option_index] + ["tui", "edit", "--file", first_non_option]
+        return argv[:first_non_option_index] + [
+            "tui",
+            "edit",
+            "--file",
+            first_non_option,
+        ]
     return argv
 
 
@@ -338,7 +429,9 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
             read_only=getattr(args, "read_only", False),
         )
     if command == "edit":
-        document_path = Path(args.file).resolve() if getattr(args, "file", None) else None
+        document_path = (
+            Path(args.file).resolve() if getattr(args, "file", None) else None
+        )
         return StartupRequest(
             destination="edit",
             document_path=document_path,
@@ -352,7 +445,9 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
             document_path=Path(args.file).resolve() if args.file else None,
             proofreader_mode=args.mode,
             read_only=args.read_only,
-            personal_dict_paths=tuple(Path(path).resolve() for path in args.personal_dict),
+            personal_dict_paths=tuple(
+                Path(path).resolve() for path in args.personal_dict
+            ),
         )
     if command == "global-format":
         return StartupRequest(
@@ -363,7 +458,9 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
     if command == "mail-merge":
         return StartupRequest(
             destination="mail_merge",
-            mail_merge_database_path=Path(args.database).resolve() if args.database else None,
+            mail_merge_database_path=Path(args.database).resolve()
+            if args.database
+            else None,
             mail_merge_mode=args.mode,
             read_only=args.read_only,
         )
@@ -400,10 +497,20 @@ def _handle_tui_command(args: argparse.Namespace) -> int:
             request.mail_merge_database_path,
             encoding=args.encoding,
         )
-    if request.destination == "index_current" and request.index_path and not request.index_path.is_dir():
+    if (
+        request.destination == "index_current"
+        and request.index_path
+        and not request.index_path.is_dir()
+    ):
         raise NotADirectoryError(f"Index path is not a directory: {request.index_path}")
-    if request.destination == "safari_dos" and request.safari_dos_path and not request.safari_dos_path.is_dir():
-        raise NotADirectoryError(f"Safari DOS path is not a directory: {request.safari_dos_path}")
+    if (
+        request.destination == "safari_dos"
+        and request.safari_dos_path
+        and not request.safari_dos_path.is_dir()
+    ):
+        raise NotADirectoryError(
+            f"Safari DOS path is not a directory: {request.safari_dos_path}"
+        )
     for path in request.personal_dict_paths:
         if not path.exists():
             raise FileNotFoundError(f"Personal dictionary not found: {path}")
@@ -416,10 +523,16 @@ def _show_tui_splash(args: argparse.Namespace) -> None:
     maybe_show_splash(no_splash=getattr(args, "no_splash", False))
 
 
-def _launch_tui(state: AppState, request: StartupRequest, args: argparse.Namespace) -> int:
+def _launch_tui(
+    state: AppState, request: StartupRequest, args: argparse.Namespace
+) -> int:
     from safari_writer.app import SafariWriterApp
 
-    if request.destination == "edit" and not request.document_path and not getattr(args, "new", False):
+    if (
+        request.destination == "edit"
+        and not request.document_path
+        and not getattr(args, "new", False)
+    ):
         request = StartupRequest(
             destination="edit",
             cursor_line=request.cursor_line,
@@ -435,7 +548,9 @@ def _handle_export_markdown(args: argparse.Namespace) -> int:
     from safari_writer.export_md import export_markdown
 
     input_path = Path(args.input).resolve()
-    output_path = Path(args.output).resolve() if args.output else input_path.with_suffix(".md")
+    output_path = (
+        Path(args.output).resolve() if args.output else input_path.with_suffix(".md")
+    )
     buffer = load_document_buffer(input_path, encoding=args.encoding)
     buffer = _load_merge_applied_buffer(buffer, args.merge_db, args.encoding)
     rendered = export_markdown(buffer, GlobalFormat())
@@ -451,7 +566,9 @@ def _handle_export_postscript(args: argparse.Namespace) -> int:
     from safari_writer.export_ps import export_postscript
 
     input_path = Path(args.input).resolve()
-    output_path = Path(args.output).resolve() if args.output else input_path.with_suffix(".ps")
+    output_path = (
+        Path(args.output).resolve() if args.output else input_path.with_suffix(".ps")
+    )
     buffer = load_document_buffer(input_path, encoding=args.encoding)
     buffer = _load_merge_applied_buffer(buffer, args.merge_db, args.encoding)
     rendered = export_postscript(buffer, GlobalFormat())
@@ -511,7 +628,9 @@ def _handle_proof_suggest(args: argparse.Namespace) -> int:
 
 def _handle_format_encode(args: argparse.Namespace) -> int:
     input_path = Path(args.input).resolve()
-    output_path = Path(args.output).resolve() if args.output else input_path.with_suffix(".sfw")
+    output_path = (
+        Path(args.output).resolve() if args.output else input_path.with_suffix(".sfw")
+    )
     text = input_path.read_text(encoding=args.encoding, errors="replace")
     buffer = text.split("\n") if text else [""]
     output_path.write_text(encode_sfw(buffer), encoding="utf-8")
@@ -521,7 +640,11 @@ def _handle_format_encode(args: argparse.Namespace) -> int:
 
 def _handle_format_decode(args: argparse.Namespace) -> int:
     input_path = Path(args.input).resolve()
-    output_path = Path(args.output).resolve() if args.output else input_path.with_suffix(".decoded.txt")
+    output_path = (
+        Path(args.output).resolve()
+        if args.output
+        else input_path.with_suffix(".decoded.txt")
+    )
     text = input_path.read_text(encoding=args.encoding, errors="replace")
     output_path.write_text("\n".join(decode_sfw(text)), encoding="utf-8")
     _emit_status(args, f"Decoded {input_path} to {output_path}")
@@ -530,7 +653,9 @@ def _handle_format_decode(args: argparse.Namespace) -> int:
 
 def _handle_format_strip(args: argparse.Namespace) -> int:
     input_path = Path(args.input).resolve()
-    output_path = Path(args.output).resolve() if args.output else input_path.with_suffix(".txt")
+    output_path = (
+        Path(args.output).resolve() if args.output else input_path.with_suffix(".txt")
+    )
     buffer = load_document_buffer(input_path, encoding=args.encoding)
     output_path.write_text("\n".join(strip_controls(buffer)), encoding="utf-8")
     _emit_status(args, f"Stripped formatting from {input_path} to {output_path}")
@@ -577,7 +702,11 @@ def _handle_mail_merge_subset(args: argparse.Namespace) -> int:
 def _handle_mail_merge_append(args: argparse.Namespace) -> int:
     base_path = Path(args.base_db).resolve()
     other_path = Path(args.other_db).resolve()
-    output_path = Path(args.output).resolve() if args.output else base_path.with_name(f"{base_path.stem}.merged.json")
+    output_path = (
+        Path(args.output).resolve()
+        if args.output
+        else base_path.with_name(f"{base_path.stem}.merged.json")
+    )
     base_db = load_mail_merge_db(base_path, encoding=args.encoding)
     other_db = load_mail_merge_db(other_path, encoding=args.encoding)
     if not base_db.schema_matches(other_db):
@@ -619,7 +748,9 @@ def _collect_spelling_errors(
     checker = make_checker()
     personal_words: set[str] = set()
     for dictionary_path in personal_dict_paths:
-        personal_words.update(load_personal_dictionary(Path(dictionary_path).resolve(), encoding=encoding))
+        personal_words.update(
+            load_personal_dictionary(Path(dictionary_path).resolve(), encoding=encoding)
+        )
     return [
         (row, column, token)
         for row, column, token in extract_words(buffer)
@@ -627,7 +758,9 @@ def _collect_spelling_errors(
     ]
 
 
-def _load_merge_applied_buffer(buffer: list[str], merge_db_path: str | None, encoding: str) -> list[str]:
+def _load_merge_applied_buffer(
+    buffer: list[str], merge_db_path: str | None, encoding: str
+) -> list[str]:
     if not merge_db_path:
         return buffer
     db = load_mail_merge_db(Path(merge_db_path).resolve(), encoding=encoding)

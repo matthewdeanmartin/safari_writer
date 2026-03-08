@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safari Writer Investor Update</title>
+  <link rel="stylesheet" href="deck.css">
+</head>
+<body>
+  <div class="deck-shell">
+    <header class="topbar">
+      <div>
+        <span class="eyebrow">Investor update</span>
+        <h1>Safari Writer</h1>
+      </div>
+      <div class="topbar-meta">
+        <span id="slide-counter">1 / 1</span>
+        <span>Press &larr;/&rarr; to navigate</span>
+        <span>Press S for speaker notes</span>
+        <span>Press O for overview</span>
+      </div>
+    </header>
+
+    <main class="deck" id="deck">
+      <section class="slide active" data-title="Title">
+        <div class="slide-content title-slide">
+          <p class="eyebrow">Investor presentation draft &middot; repo snapshot 2026-03-08</p>
+          <h2>Safari Writer: product progress, remaining work, and go-to-market path</h2>
+          <p class="lede">
+            A retro-styled writing environment built with Python + Textual, combining editor,
+            proofreader, mail merge, print/export, and Safari DOS file management.
+          </p>
+          <div class="callout-grid">
+            <div class="callout">
+              <h3>Current state</h3>
+              <p>Core product is working. The biggest job now is polish, completion, and positioning.</p>
+            </div>
+            <div class="callout">
+              <h3>Pitch framing</h3>
+              <p>We are selling disciplined progress on a differentiated niche product, not vapor.</p>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Open by framing this as an honest operating review, not a hype deck.</li>
+            <li>Say the repo shows a real product with meaningful shipped functionality and a clear roadmap.</li>
+            <li>Set expectation that this deck distinguishes what is done, what is partly done, and what is still aspirational.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Executive summary">
+        <div class="slide-content">
+          <h2>Executive summary</h2>
+          <div class="two-col">
+            <div>
+              <ul class="big-list">
+                <li><strong>Product exists today:</strong> editor, formatting, proofreader, mail merge, print/export, and Safari DOS all have real implementation.</li>
+                <li><strong>Validation signal:</strong> current test suite passes at <strong>586 tests</strong> from a fresh <code>make test</code> run.</li>
+                <li><strong>Spec maturity:</strong> most core specs are largely implemented; the major untouched area is the AI chat spec.</li>
+              </ul>
+            </div>
+            <div>
+              <ul class="big-list">
+                <li><strong>Best near-term use of capital:</strong> finish polish and workflow gaps before expanding into ambitious AI features.</li>
+                <li><strong>Market story:</strong> retro UX + practical writing workflows + terminal-native simplicity gives us a clear niche.</li>
+                <li><strong>Recommendation:</strong> fund a focused push to turn a promising 0.1 product into a reliable v1 wedge.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Lead with credibility: we are not pre-product.</li>
+            <li>Use the 586-test point as evidence that this is a living codebase, not just a spec folder.</li>
+            <li>Frame the investment case around finishing and packaging a strong niche product before chasing every idea on the roadmap.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="What the product is">
+        <div class="slide-content">
+          <h2>What Safari Writer is building</h2>
+          <div class="two-col">
+            <div>
+              <h3>Product thesis</h3>
+              <ul>
+                <li>Modern spiritual successor to AtariWriter with a Textual terminal UI.</li>
+                <li>"What you see is what you mean" editor model: formatting is explicit and visible.</li>
+                <li>Designed for focused writing, editing, light publishing, and structured document workflows.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Target users</h3>
+              <ul>
+                <li>Retro-computing enthusiasts who want a real tool, not just an emulator.</li>
+                <li>Writers and technical users who prefer keyboard-first, low-distraction interfaces.</li>
+                <li>Developers and documentation teams who benefit from plain-text and syntax-aware workflows.</li>
+              </ul>
+            </div>
+          </div>
+          <p class="footnote">Evidence base: README, pyproject, TODOs, and spec set in <code>spec\*.md</code>.</p>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Describe Safari Writer as a product category hybrid: part editor, part retro experience, part document workflow tool.</li>
+            <li>Stress that the retro angle is the hook, but utility is the reason users stay.</li>
+            <li>Make clear we are not trying to replace every word processor; we are winning a narrower but defensible segment.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="What is done">
+        <div class="slide-content">
+          <h2>What is done now</h2>
+          <div class="card-grid three-up">
+            <article class="card">
+              <h3>Core editor</h3>
+              <ul>
+                <li>Main menu and editor flows</li>
+                <li>Search and replace</li>
+                <li>Block operations</li>
+                <li>Inline style codes</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Document workflows</h3>
+              <ul>
+                <li>Global format screen</li>
+                <li>ANSI preview</li>
+                <li>Markdown export</li>
+                <li>PostScript export</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Data + support tools</h3>
+              <ul>
+                <li>Proofreader module</li>
+                <li>Mail merge data + injection</li>
+                <li>Safari DOS standalone module</li>
+                <li>Recent file and project plumbing</li>
+              </ul>
+            </article>
+          </div>
+          <div class="highlight-row">
+            <div class="highlight-pill">Change log shows 0.1.1 work added on 2026-03-08</div>
+            <div class="highlight-pill">Pyproject package version is still 0.1.0</div>
+            <div class="highlight-pill">Latest shipped feature area: file type awareness + syntax highlighting</div>
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Walk investors through breadth first: editor, document output, support modules, file system tooling.</li>
+            <li>Note that this breadth matters because it means the product already feels like a system, not just a text box.</li>
+            <li>Mention the versioning detail carefully: changelog advances faster than package metadata, which is normal at this stage but needs release discipline.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="What is not done">
+        <div class="slide-content">
+          <h2>What is not done yet</h2>
+          <div class="two-col">
+            <div>
+              <h3>High-value completion work</h3>
+              <ul>
+                <li>Mid-document global format overrides</li>
+                <li>Manual dictionary creation in proofreader</li>
+                <li>Double-column rendering in preview and PostScript</li>
+                <li>Safari DOS conflict-resolution and progress flows</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Still-open product gaps</h3>
+              <ul>
+                <li>Undo remains an obvious UX gap called out in <code>BUGS.md</code>.</li>
+                <li>Some Safari DOS list navigation and filtering features remain open.</li>
+                <li>Cross-platform polish and edge-case handling still need concentrated effort.</li>
+                <li>The ELIZA-style AI chat spec exists, but implementation has not started.</li>
+              </ul>
+            </div>
+          </div>
+          <p class="footnote">The strongest investor story is "finish and harden the product" before "add every future concept."</p>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Be direct here; credibility goes up when we name the missing pieces ourselves.</li>
+            <li>Separate practical completion work from larger strategic bets like AI chat.</li>
+            <li>Call out undo because even if the retro original lacked it, modern users will expect it.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Spec progress">
+        <div class="slide-content">
+          <h2>How the specs are coming along</h2>
+          <table class="status-table">
+            <thead>
+              <tr>
+                <th>Spec area</th>
+                <th>Status</th>
+                <th>Investor read</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Core editor / keyboard / global format / CLI / demo mode</td>
+                <td><span class="status good">Largely done</span></td>
+                <td>Core product shape is established.</td>
+              </tr>
+              <tr>
+                <td>Inline formatting / proofreader / mail merge / print</td>
+                <td><span class="status warn">Partly done</span></td>
+                <td>Useful today, but still needs workflow polish and edge-case completion.</td>
+              </tr>
+              <tr>
+                <td>Safari DOS</td>
+                <td><span class="status warn">Functionally strong, UX incomplete</span></td>
+                <td>Good strategic differentiator if polished.</td>
+              </tr>
+              <tr>
+                <td>File type awareness</td>
+                <td><span class="status good">Done</span></td>
+                <td>Fresh signal that velocity is real.</td>
+              </tr>
+              <tr>
+                <td>AI chat / ELIZA-RAG</td>
+                <td><span class="status bad">Spec only</span></td>
+                <td>Potential upside, but should not anchor the next milestone.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="footnote">Estimated completion is repo-based inference, not a formal earned-value model.</p>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Say the spec discipline is a real asset: the project knows what it wants to build.</li>
+            <li>What remains is not lack of direction; it is the execution and polish step.</li>
+            <li>Make the distinction between "spec complete" and "product complete" explicit.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Challenges">
+        <div class="slide-content">
+          <h2>Challenges that remain</h2>
+          <div class="card-grid">
+            <article class="card">
+              <h3>Product polish</h3>
+              <p>Undo, save flows, prompts, and edge-case UX still need tightening to meet modern expectations.</p>
+            </article>
+            <article class="card">
+              <h3>Rendering complexity</h3>
+              <p>Preview, Markdown, and PostScript outputs must stay aligned as formatting features expand.</p>
+            </article>
+            <article class="card">
+              <h3>Cross-platform behavior</h3>
+              <p>Windows terminal quirks and file-system differences make QA and support more demanding.</p>
+            </article>
+            <article class="card">
+              <h3>Scope discipline</h3>
+              <p>There is a risk of spreading effort across AI, DOS polish, and editorial features all at once.</p>
+            </article>
+          </div>
+          <div class="quote-box">
+            <strong>Bottom line:</strong> the project's main risk is not vision failure; it is finishing quality-critical details fast enough.
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Investors want to hear that we know the difference between feature count and product readiness.</li>
+            <li>Emphasize that the remaining risk profile is execution-heavy, not science-fiction-heavy.</li>
+            <li>That is generally a healthier risk shape for a small product at this stage.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Why this can win">
+        <div class="slide-content">
+          <h2>Why this product can win</h2>
+          <div class="two-col">
+            <div>
+              <ul class="big-list">
+                <li><strong>Differentiated UX:</strong> retro identity is memorable and marketable.</li>
+                <li><strong>Practical utility:</strong> proofreader, mail merge, and export make it more than nostalgia.</li>
+                <li><strong>Terminal-native:</strong> fits technical and keyboard-first audiences well.</li>
+              </ul>
+            </div>
+            <div>
+              <ul class="big-list">
+                <li><strong>Focused positioning:</strong> it does not need to beat Microsoft Word at everything.</li>
+                <li><strong>Spec discipline:</strong> unusually detailed specs reduce product drift.</li>
+                <li><strong>Local-first story:</strong> offline, lightweight, and installable with simple Python tooling.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Frame the moat as taste + workflow + audience fit, not just raw technology.</li>
+            <li>Local-first and terminal-native matter more than they appear because they align with the product's ideal community.</li>
+            <li>Explain that this is a strong niche wedge that can later expand outward.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="LLM hires">
+        <div class="slide-content">
+          <h2>What sort of LLM bots we should hire next</h2>
+          <div class="card-grid three-up">
+            <article class="card">
+              <h3>1. QA triage bot</h3>
+              <ul>
+                <li>Reads specs, TODOs, and BUGS</li>
+                <li>Turns gaps into reproducible test cases</li>
+                <li>Best ROI for finishing work cleanly</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>2. Textual UX bot</h3>
+              <ul>
+                <li>Specialist in keyboard flows and TUI ergonomics</li>
+                <li>Focus on prompts, menus, layout, and affordances</li>
+                <li>Key for Safari DOS and editor polish</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>3. Print/rendering bot</h3>
+              <ul>
+                <li>Owns preview / Markdown / PostScript alignment</li>
+                <li>Reduces regressions in layout logic</li>
+                <li>Supports higher-confidence output features</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>4. Documentation / demo bot</h3>
+              <ul>
+                <li>Creates docs, scripts, walkthroughs, and release notes</li>
+                <li>Improves onboarding and investor/customer demos</li>
+                <li>Useful immediately</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>5. Growth copy bot</h3>
+              <ul>
+                <li>Writes landing pages, launch posts, and email sequences</li>
+                <li>Tunes positioning by audience segment</li>
+                <li>Supports market discovery without huge agency spend</li>
+              </ul>
+            </article>
+            <article class="card accent">
+              <h3>Wait on this one</h3>
+              <ul>
+                <li>Do <strong>not</strong> lead with an "AI chat bot builder" bot yet.</li>
+                <li>The AI chat spec is rich, but it is a second-stage investment.</li>
+                <li>Finish product readiness first, then expand intelligently.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Present these as staffing archetypes, not literal headcount commitments.</li>
+            <li>The message is that AI help should accelerate finishing and go-to-market, not distract the roadmap.</li>
+            <li>Investors will usually like the discipline of delaying the flashy AI feature until the foundation is stronger.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Market fit">
+        <div class="slide-content">
+          <h2>Market fit: where the wedge is</h2>
+          <div class="two-col">
+            <div>
+              <h3>Best initial segments</h3>
+              <ul>
+                <li>Retro-computing and digital minimalism communities</li>
+                <li>Technical writers and developer-documentation users</li>
+                <li>Writers who want a local-first, distraction-light environment</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Good reasons they may buy in</h3>
+              <ul>
+                <li>Distinctive writing experience they can feel immediately</li>
+                <li>Practical export and proofreading capabilities</li>
+                <li>No cloud dependency and a straightforward install path</li>
+              </ul>
+            </div>
+          </div>
+          <div class="quote-box">
+            <strong>Best thesis:</strong> Safari Writer is not mass-market office software; it is premium-fit software for users who care about focused writing and characterful tools.
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Do not oversell TAM here; a believable niche story is stronger than a fake giant-market claim.</li>
+            <li>Highlight that niche products can still become durable businesses when the audience is passionate and well-served.</li>
+            <li>Explain that technical writers are especially interesting because they already tolerate terminal tools.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Competition">
+        <div class="slide-content">
+          <h2>Competition and positioning</h2>
+          <table class="status-table compact">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Examples</th>
+                <th>Why Safari Writer still matters</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Mainstream word processors</td>
+                <td>Microsoft Word, Google Docs</td>
+                <td>Safari Writer competes on focus, identity, local-first use, and keyboard-first simplicity.</td>
+              </tr>
+              <tr>
+                <td>Plain-text / markdown editors</td>
+                <td>Obsidian, Typora, VS Code</td>
+                <td>Safari Writer adds retro differentiation, built-in proofing, and document-printing flavor.</td>
+              </tr>
+              <tr>
+                <td>TUI editors</td>
+                <td>Vim, Neovim, Helix, nano</td>
+                <td>Safari Writer is friendlier for non-programmer writers and has a stronger guided workflow model.</td>
+              </tr>
+              <tr>
+                <td>Retro references</td>
+                <td>AtariWriter, ST Writer, emulators</td>
+                <td>Those establish lineage; Safari Writer makes the idea usable on modern systems.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Keep the framing category-based so we do not waste time pretending we are in a direct head-to-head with giant incumbents.</li>
+            <li>Say our competition is partly habit, not just software.</li>
+            <li>The pitch is that Safari Writer offers a specific experience nobody else packages in quite this way.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Marketing">
+        <div class="slide-content">
+          <h2>How we should be marketing this</h2>
+          <div class="card-grid">
+            <article class="card">
+              <h3>Lead with the vibe, close with utility</h3>
+              <p>Use retro visuals and terminal aesthetics to earn attention, then prove the product solves real writing tasks.</p>
+            </article>
+            <article class="card">
+              <h3>Demo-first content</h3>
+              <p>Short videos and GIFs showing edit -&gt; proofread -&gt; export -&gt; mail merge will outperform feature lists.</p>
+            </article>
+            <article class="card">
+              <h3>Community channels</h3>
+              <p>Retro computing circles, Python/Textual communities, indie writing spaces, and developer-productivity audiences.</p>
+            </article>
+            <article class="card">
+              <h3>Positioning line</h3>
+              <p>"A modern retro word processor for people who want focus, keyboard speed, and character."</p>
+            </article>
+          </div>
+          <ul class="inline-list">
+            <li>Build a polished demo document pack</li>
+            <li>Collect user quotes early</li>
+            <li>Publish roadmap discipline, not endless feature promises</li>
+          </ul>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>We should market an experience, not a checklist.</li>
+            <li>Show the workflow in motion because that is where the product becomes legible to outsiders.</li>
+            <li>Stress that the right early marketing makes the niche feel intentional and premium rather than small.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Next milestone plan">
+        <div class="slide-content">
+          <h2>Recommended next milestone plan</h2>
+          <div class="milestone-grid">
+            <div class="milestone">
+              <h3>Milestone 1</h3>
+              <ul>
+                <li>Undo and save-flow fixes</li>
+                <li>Proofreader dictionary completion</li>
+                <li>Safari DOS prompt and conflict polish</li>
+              </ul>
+            </div>
+            <div class="milestone">
+              <h3>Milestone 2</h3>
+              <ul>
+                <li>Double-column rendering and print confidence</li>
+                <li>UI interaction tests for key flows</li>
+                <li>Packaging and release discipline cleanup</li>
+              </ul>
+            </div>
+            <div class="milestone">
+              <h3>Milestone 3</h3>
+              <ul>
+                <li>Public-facing docs and demo assets</li>
+                <li>Early adopter recruitment</li>
+                <li>Decision gate on AI chat investment</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>This is the operating plan slide: finish core expectations, then harden outputs, then market with confidence.</li>
+            <li>Note that AI chat only appears after a decision gate, not as an automatic next step.</li>
+            <li>The message is controlled sequencing and capital efficiency.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Investor take">
+        <div class="slide-content">
+          <h2>The investor take</h2>
+          <div class="quote-box large">
+            Safari Writer looks investable as a disciplined niche software play:
+            a differentiated product with real implementation, a clear roadmap,
+            and a sensible path to finish, package, and test market demand.
+          </div>
+          <div class="two-col">
+            <div>
+              <h3>Reasons to lean in</h3>
+              <ul>
+                <li>Real code, real tests, real shipped capability</li>
+                <li>Distinctive brand and user experience</li>
+                <li>Clear use for AI assistance in execution</li>
+              </ul>
+            </div>
+            <div>
+              <h3>What investors should watch</h3>
+              <ul>
+                <li>Can the team close polish gaps quickly?</li>
+                <li>Can the product earn love from its first niche community?</li>
+                <li>Can roadmap discipline beat feature temptation?</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>End on measured confidence.</li>
+            <li>Say this is not a winner because it is huge already; it is a winner if it becomes excellent for the right audience.</li>
+            <li>Ask for support toward completion, packaging, and proof of market pull.</li>
+          </ul>
+        </aside>
+      </section>
+
+      <section class="slide" data-title="Source basis">
+        <div class="slide-content">
+          <h2>Source basis for this deck</h2>
+          <ul class="sources">
+            <li><code>README.md</code> for product description and current feature framing</li>
+            <li><code>TODO.md</code>, <code>TODO_files.md</code>, and <code>BUGS.md</code> for completion and gap tracking</li>
+            <li><code>CHANGELOG.md</code> and <code>pyproject.toml</code> for release and packaging context</li>
+            <li><code>spec\*.md</code>, <code>spec\ROADMAP.md</code>, and <code>spec\PRIOR_ART.md</code> for scope, ambition, and competitive lineage</li>
+            <li><code>make test</code> run on 2026-03-08 confirming <strong>586 passed</strong></li>
+          </ul>
+          <p class="footnote">Competition and marketing recommendations include informed strategic judgment on top of repository evidence.</p>
+        </div>
+        <aside class="notes">
+          <h3>Speaker notes</h3>
+          <ul>
+            <li>Use this appendix slide if anyone asks how we derived the status claims.</li>
+            <li>It is also a reminder that the deck is grounded in repository evidence, not wishful thinking.</li>
+            <li>If time is short, skip this slide during the live presentation.</li>
+          </ul>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="bottombar">
+      <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+      <div class="footer-meta">
+        <span id="slide-title">Title</span>
+        <span>Reveal-style self-contained deck stored entirely in <code>slides\</code></span>
+      </div>
+    </footer>
+  </div>
+
+  <aside class="notes-panel" id="notes-panel" aria-live="polite">
+    <div class="notes-panel-header">
+      <h2>Speaker notes</h2>
+      <button type="button" id="close-notes">Close</button>
+    </div>
+    <div id="notes-content"></div>
+  </aside>
+
+  <div class="overview hidden" id="overview"></div>
+
+  <script src="deck.js"></script>
+</body>
+</html>

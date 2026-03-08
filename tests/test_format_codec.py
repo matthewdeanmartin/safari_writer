@@ -86,7 +86,9 @@ class TestDecodeSfw:
     def test_all_markers_decode(self):
         encoded = "\\B\\U\\C\\R\\G\\^\\v\\P\\@\\H:\\F:\\S\\E\\>\\_"
         result = decode_sfw(encoded)
-        assert result == ["\x01\x02\x03\x04\x05\x06\x07\x10\x11\x12\x13\x14\x15\x16\x17"]
+        assert result == [
+            "\x01\x02\x03\x04\x05\x06\x07\x10\x11\x12\x13\x14\x15\x16\x17"
+        ]
 
     def test_backslash_decoded(self):
         result = decode_sfw("path\\\\to\\\\file")

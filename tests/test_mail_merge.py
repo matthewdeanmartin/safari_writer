@@ -41,12 +41,13 @@ from safari_writer.screens.mail_merge import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_db(n_records: int = 0) -> MailMergeDB:
     db = MailMergeDB()
     for i in range(n_records):
         rec = [f"val{i}_{j}" for j in range(len(db.fields))]
         # Trim to max_len per field
-        rec = [v[:db.fields[j].max_len] for j, v in enumerate(rec)]
+        rec = [v[: db.fields[j].max_len] for j, v in enumerate(rec)]
         db.records.append(rec)
     return db
 
@@ -96,7 +97,9 @@ def make_screen(db: MailMergeDB | None = None) -> MailMergeScreen:
 def make_key(key: str, character: str | None = None):
     ev = MagicMock()
     ev.key = key
-    ev.character = character if character is not None else (key if len(key) == 1 else None)
+    ev.character = (
+        character if character is not None else (key if len(key) == 1 else None)
+    )
     ev.stop = MagicMock()
     return ev
 
@@ -104,6 +107,7 @@ def make_key(key: str, character: str | None = None):
 # ---------------------------------------------------------------------------
 # Mounting / help
 # ---------------------------------------------------------------------------
+
 
 class TestMailMergeMountBehavior:
     def test_menu_is_seeded_before_mount(self):
@@ -120,7 +124,10 @@ class TestMailMergeMountBehavior:
                 app.push_screen(MailMergeScreen(app.state))
                 await pilot.pause()
                 screen = app.screen
-                assert screen.query_one("#mm-title", Static).content == "*** MAIL MERGE ***"
+                assert (
+                    screen.query_one("#mm-title", Static).content
+                    == "*** MAIL MERGE ***"
+                )
                 assert "Create File" in screen._body_text
                 assert "SELECT ITEM" in screen._message_text
                 assert "F1/? Help" in screen._help_text
@@ -133,7 +140,9 @@ class TestMailMergeHelp:
     def test_show_help_pushes_modal(self):
         screen = make_screen()
         app = MagicMock()
-        with patch.object(MailMergeScreen, "app", new_callable=PropertyMock) as app_prop:
+        with patch.object(
+            MailMergeScreen, "app", new_callable=PropertyMock
+        ) as app_prop:
             app_prop.return_value = app
             screen.action_show_help()
 
@@ -145,7 +154,9 @@ class TestMailMergeHelp:
         event = make_key("f1", None)
         app = MagicMock()
 
-        with patch.object(MailMergeScreen, "app", new_callable=PropertyMock) as app_prop:
+        with patch.object(
+            MailMergeScreen, "app", new_callable=PropertyMock
+        ) as app_prop:
             app_prop.return_value = app
             screen.on_key(event)
 
@@ -162,6 +173,7 @@ class TestMailMergeHelp:
 # ---------------------------------------------------------------------------
 # MailMergeDB model
 # ---------------------------------------------------------------------------
+
 
 class TestMailMergeDB:
     def test_default_fields_count(self):
@@ -240,6 +252,7 @@ class TestMailMergeDB:
 # ---------------------------------------------------------------------------
 # Schema editing
 # ---------------------------------------------------------------------------
+
 
 class TestSchemaEditing:
     def test_rename_field(self):
@@ -375,6 +388,7 @@ class TestSchemaEditing:
 # Data entry
 # ---------------------------------------------------------------------------
 
+
 class TestDataEntry:
     def test_enter_advances_field(self):
         screen = make_screen()
@@ -462,6 +476,7 @@ class TestDataEntry:
 # ---------------------------------------------------------------------------
 # Update / browse
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateMode:
     def test_pagedown_advances_record(self):
@@ -563,6 +578,7 @@ class TestUpdateMode:
 # Build Subset
 # ---------------------------------------------------------------------------
 
+
 class TestBuildSubset:
     def test_apply_subset_stores_result(self):
         db = MailMergeDB()
@@ -615,6 +631,7 @@ class TestBuildSubset:
 # ---------------------------------------------------------------------------
 # File operations
 # ---------------------------------------------------------------------------
+
 
 class TestFileOperations:
     def test_save_and_load_roundtrip(self, tmp_path):
@@ -688,6 +705,7 @@ class TestFileOperations:
 # Key routing
 # ---------------------------------------------------------------------------
 
+
 class TestKeyRouting:
     def test_main_e_enters_update(self):
         # E = Edit File (browse/update records) in the classic AtariWriter layout
@@ -740,6 +758,8 @@ class TestKeyRouting:
     def test_exit_pops_screen(self):
         screen = make_screen()
         mock_app = MagicMock()
-        with patch.object(type(screen), "app", new_callable=lambda: property(lambda self: mock_app)):
+        with patch.object(
+            type(screen), "app", new_callable=lambda: property(lambda self: mock_app)
+        ):
             screen.action_exit_module()
         mock_app.pop_screen.assert_called_once()

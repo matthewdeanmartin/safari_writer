@@ -110,11 +110,15 @@ def test_set_protected_round_trip(tmp_path):
     draft.write_text("hello", encoding="utf-8")
 
     set_protected(draft, True)
-    protected_entry = next(entry for entry in list_directory(tmp_path) if entry.name == "draft.txt")
+    protected_entry = next(
+        entry for entry in list_directory(tmp_path) if entry.name == "draft.txt"
+    )
     assert protected_entry.protected is True
 
     set_protected(draft, False)
-    unprotected_entry = next(entry for entry in list_directory(tmp_path) if entry.name == "draft.txt")
+    unprotected_entry = next(
+        entry for entry in list_directory(tmp_path) if entry.name == "draft.txt"
+    )
     assert unprotected_entry.protected is False
 
 
@@ -206,7 +210,9 @@ def test_main_launches_writer_when_app_requests_handoff(monkeypatch, tmp_path):
             return SafariDosExitRequest(action="open-in-writer", document_path=document)
 
     monkeypatch.setattr(safari_dos_main_module, "SafariDosApp", FakeApp)
-    monkeypatch.setattr(safari_writer_main_module, "main", lambda argv: launched.append(argv) or 0)
+    monkeypatch.setattr(
+        safari_writer_main_module, "main", lambda argv: launched.append(argv) or 0
+    )
 
     exit_code = safari_dos_main([str(tmp_path)])
 

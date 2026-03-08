@@ -15,10 +15,21 @@ if TYPE_CHECKING:
     from safari_writer.mail_merge_db import MailMergeDB
 
 from safari_writer.screens.editor import (
-    CTRL_BOLD, CTRL_UNDERLINE, CTRL_CENTER, CTRL_RIGHT,
-    CTRL_ELONGATE, CTRL_SUPER, CTRL_SUB, CTRL_PARA,
-    CTRL_MERGE, CTRL_HEADER, CTRL_FOOTER, CTRL_HEADING,
-    CTRL_EJECT, CTRL_CHAIN, CTRL_FORM,
+    CTRL_BOLD,
+    CTRL_UNDERLINE,
+    CTRL_CENTER,
+    CTRL_RIGHT,
+    CTRL_ELONGATE,
+    CTRL_SUPER,
+    CTRL_SUB,
+    CTRL_PARA,
+    CTRL_MERGE,
+    CTRL_HEADER,
+    CTRL_FOOTER,
+    CTRL_HEADING,
+    CTRL_EJECT,
+    CTRL_CHAIN,
+    CTRL_FORM,
 )
 
 __all__ = ["export_postscript"]
@@ -32,11 +43,12 @@ _PAGE_H = int(11.0 * _PPI)  # 792
 # Font mapping from type_font setting
 _FONTS: dict[int, tuple[str, str, float]] = {
     # type_font: (regular_font, bold_font, size_pt)
-    1: ("Courier", "Courier-Bold", 10),            # pica
-    2: ("Courier", "Courier-Bold", 7),              # condensed
-    3: ("Helvetica", "Helvetica-Bold", 10),          # proportional
-    6: ("Courier", "Courier-Bold", 8.5),             # elite
+    1: ("Courier", "Courier-Bold", 10),  # pica
+    2: ("Courier", "Courier-Bold", 7),  # condensed
+    3: ("Helvetica", "Helvetica-Bold", 10),  # proportional
+    6: ("Courier", "Courier-Bold", 8.5),  # elite
 }
+
 
 # Character width approximation (monospace at given size)
 def _char_width(font_size: float) -> float:
@@ -56,6 +68,7 @@ def export_postscript(
     has_merge = any(CTRL_MERGE in line for line in buffer)
     if has_merge and db is not None and db.records:
         from safari_writer.mail_merge_db import apply_mail_merge_to_buffer
+
         parts: list[str] = []
         for rec_idx in range(len(db.records)):
             original_records = db.records
@@ -110,7 +123,9 @@ def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
             content.append(_Line("", page_break=True))
             continue
         if first == CTRL_HEADING:
-            level_ch = raw_line[1] if len(raw_line) > 1 and raw_line[1].isdigit() else "1"
+            level_ch = (
+                raw_line[1] if len(raw_line) > 1 and raw_line[1].isdigit() else "1"
+            )
             level = int(level_ch)
             text = raw_line[2:] if len(raw_line) > 2 else ""
             clean = _strip(text)
@@ -130,9 +145,14 @@ def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
             line_text = line_text[1:]
 
         spans = _parse_spans(line_text)
-        content.append(_Line(
-            "", align=align, indent=is_para, spans=spans,
-        ))
+        content.append(
+            _Line(
+                "",
+                align=align,
+                indent=is_para,
+                spans=spans,
+            )
+        )
 
     # Paginate
     pages: list[list[_Line]] = []
@@ -239,13 +259,18 @@ def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
 # Internal data types
 # -----------------------------------------------------------------------
 
+
 class _Span:
     __slots__ = ("text", "bold", "underline", "elongated", "superscript", "subscript")
 
     def __init__(
-        self, text: str = "", *,
-        bold: bool = False, underline: bool = False,
-        elongated: bool = False, superscript: bool = False,
+        self,
+        text: str = "",
+        *,
+        bold: bool = False,
+        underline: bool = False,
+        elongated: bool = False,
+        superscript: bool = False,
         subscript: bool = False,
     ):
         self.text = text
@@ -260,10 +285,15 @@ class _Line:
     __slots__ = ("text", "align", "indent", "bold", "is_blank", "page_break", "spans")
 
     def __init__(
-        self, text: str = "", *,
-        align: str = "left", indent: bool = False,
-        bold: bool = False, is_blank: bool = False,
-        page_break: bool = False, spans: list[_Span] | None = None,
+        self,
+        text: str = "",
+        *,
+        align: str = "left",
+        indent: bool = False,
+        bold: bool = False,
+        is_blank: bool = False,
+        page_break: bool = False,
+        spans: list[_Span] | None = None,
     ):
         self.text = text
         self.align = align
@@ -282,11 +312,16 @@ def _parse_spans(text: str) -> list[_Span]:
 
     def flush():
         if current_chars:
-            spans.append(_Span(
-                "".join(current_chars),
-                bold=bold, underline=underline, elongated=elongated,
-                superscript=superscript, subscript=subscript,
-            ))
+            spans.append(
+                _Span(
+                    "".join(current_chars),
+                    bold=bold,
+                    underline=underline,
+                    elongated=elongated,
+                    superscript=superscript,
+                    subscript=subscript,
+                )
+            )
             current_chars.clear()
 
     i = 0
@@ -348,6 +383,7 @@ def _ps_escape(text: str) -> str:
 # PostScript writer
 # -----------------------------------------------------------------------
 
+
 class _PSWriter:
     """Minimal PostScript DSC document builder."""
 
@@ -385,8 +421,10 @@ class _PSWriter:
         pass  # state tracked externally
 
     def underline_draw(self, x: float, y: float, width: float):
-        self._buf.append(f"newpath {x:.1f} {y - 1:.1f} moveto "
-                         f"{width:.1f} 0 rlineto 0.5 setlinewidth stroke")
+        self._buf.append(
+            f"newpath {x:.1f} {y - 1:.1f} moveto "
+            f"{width:.1f} 0 rlineto 0.5 setlinewidth stroke"
+        )
 
     def trailer(self):
         self._buf.append(f"%%Pages: {self._page_count}")

@@ -109,6 +109,7 @@ USE_EMOJI = sys.stdout.isatty()
 # Drawing
 # -----------------------------
 
+
 def terminal_size() -> tuple[int, int]:
     size = shutil.get_terminal_size(fallback=(100, 32))
     return size.columns, size.lines
@@ -216,7 +217,13 @@ def palm_line(width: int) -> str:
     fill = "▁"
 
     interior = max(0, width - len(left) - len(center) - len(right))
-    return left + (fill * (interior // 2)) + center + (fill * (interior - interior // 2)) + right
+    return (
+        left
+        + (fill * (interior // 2))
+        + center
+        + (fill * (interior - interior // 2))
+        + right
+    )
 
 
 def zebra_stripes(text: str, frame: int) -> str:
@@ -232,7 +239,9 @@ def zebra_stripes(text: str, frame: int) -> str:
     return "".join(out)
 
 
-def type_line(x: int, y: int, text: str, color: tuple[int, int, int], delay: float = 0.015) -> None:
+def type_line(
+    x: int, y: int, text: str, color: tuple[int, int, int], delay: float = 0.015
+) -> None:
     sys.stdout.write(move(x, y))
     sys.stdout.flush()
     for ch in text:
@@ -263,7 +272,9 @@ def draw_frame(frame: int) -> None:
     for i, line in enumerate(ASCII_TITLE):
         shadow_x = center_x(line, width) + shadow_offset
         shadow_y = title_y + i + 1
-        sys.stdout.write(move(shadow_x, shadow_y) + rgb(*PALETTE["shadow"]) + line + RESET)
+        sys.stdout.write(
+            move(shadow_x, shadow_y) + rgb(*PALETTE["shadow"]) + line + RESET
+        )
 
     # Main title
     for i, line in enumerate(ASCII_TITLE):
@@ -288,7 +299,9 @@ def draw_frame(frame: int) -> None:
     horizon = palm_line(min(width - 4, 120))
     horizon_x = center_x(horizon, width)
     horizon_y = tag_y + 3
-    sys.stdout.write(move(horizon_x, horizon_y) + rgb(*PALETTE["leaf"]) + horizon + RESET)
+    sys.stdout.write(
+        move(horizon_x, horizon_y) + rgb(*PALETTE["leaf"]) + horizon + RESET
+    )
 
     # Small retro badge
     badge = " [ BOOT SEQUENCE: READY ] "
@@ -323,6 +336,7 @@ def draw_frame(frame: int) -> None:
 # -----------------------------
 # Main
 # -----------------------------
+
 
 def _is_tty(stream: object) -> bool:
     isatty = getattr(stream, "isatty", None)
