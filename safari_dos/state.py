@@ -24,6 +24,8 @@ class SafariDosState:
 
     current_path: Path
     show_hidden: bool = False
+    show_preview: bool = True
+    fullscreen_preview: bool = False
     sort_field: str = "name"
     ascending: bool = True
     filter_text: str = ""

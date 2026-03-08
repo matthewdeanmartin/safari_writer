@@ -11,6 +11,7 @@ import shutil
 import stat
 from typing import Any
 from uuid import uuid4
+import zipfile
 
 __all__ = [
     "DeviceLocation",
@@ -22,6 +23,7 @@ __all__ = [
     "duplicate_path",
     "format_timestamp",
     "get_entry_info",
+    "get_preview_text",
     "list_favorites",
     "list_directory",
     "list_garbage",
@@ -35,6 +37,8 @@ __all__ = [
     "restore_from_garbage",
     "set_protected",
     "toggle_favorite",
+    "unzip_path",
+    "zip_paths",
 ]
 
 SORT_FIELDS = ("name", "date", "size", "type")
@@ -584,3 +588,59 @@ def discover_locations(current_path: Path | None = None) -> list[DeviceLocation]
         seen.add(resolved)
         result.append(DeviceLocation(token=str(position), label=label, path=resolved))
     return result
+
+
+def get_preview_text(path: Path, limit_lines: int = 25) -> str:
+    """Read the first few lines of a file for preview."""
+
+    if not path.exists() or path.is_dir():
+        return ""
+    try:
+        # Read a small chunk first to avoid loading huge files
+        with path.open("r", encoding="utf-8", errors="replace") as f:
+            lines = []
+            for _ in range(limit_lines):
+                line = f.readline()
+                if not line:
+                    break
+                lines.append(line.rstrip())
+            return "\n".join(lines)
+    except Exception as exc:
+        return f"Error reading preview: {exc}"
+
+
+def zip_paths(paths: list[Path], archive_path: Path, mode: str = "w") -> Path:
+    """Create or append to a ZIP archive."""
+
+    # Ensure archive name has .zip
+    if archive_path.suffix.lower() != ".zip":
+        archive_path = archive_path.with_suffix(".zip")
+
+    with zipfile.ZipFile(archive_path, mode, zipfile.ZIP_DEFLATED) as zf:
+        for path in paths:
+            if not path.exists():
+                continue
+            if path.is_dir():
+                # Add the directory itself and all its contents
+                for root, _, files in os.walk(path):
+                    rel_root = Path(root).relative_to(path.parent)
+                    zf.write(root, str(rel_root))
+                    for file in files:
+                        file_path = Path(root) / file
+                        arcname = file_path.relative_to(path.parent)
+                        zf.write(file_path, str(arcname))
+            else:
+                zf.write(path, path.name)
+    return archive_path
+
+
+def unzip_path(archive_path: Path, destination_dir: Path) -> None:
+    """Extract a ZIP archive to a destination directory."""
+
+    if not archive_path.exists():
+        raise FileNotFoundError(f"Archive not found: {archive_path}")
+    if not zipfile.is_zipfile(archive_path):
+        raise ValueError(f"Not a valid ZIP file: {archive_path}")
+
+    with zipfile.ZipFile(archive_path, "r") as zf:
+        zf.extractall(destination_dir)

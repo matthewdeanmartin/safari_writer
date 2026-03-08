@@ -77,6 +77,7 @@ def test_default_mount_opens_address_browse():
             assert "Table: ADDRESS" in screen.query_one("#workspace-title", Static).content
             assert "LAST" in screen.query_one("#workspace-body", Static).content
             assert ". " == screen.query_one("#prompt-line", Static).content
+            assert "Fld LAST 1/15" in screen.query_one("#status-bar", Static).content
 
     asyncio.run(run())
 
@@ -90,6 +91,7 @@ def test_arrow_key_does_not_crash_prompt_handling():
             screen = app.screen
             assert isinstance(screen, SafariBaseScreen)
             assert ". " == screen.query_one("#prompt-line", Static).content
+            assert "Fld FIRST 2/15" in screen.query_one("#status-bar", Static).content
 
     asyncio.run(run())
 
@@ -157,6 +159,20 @@ def test_prompt_supports_cursor_navigation_and_editing():
             await pilot.press("a", "b", "c", "left", "left", "delete")
             prompt = app.screen.query_one("#prompt-line", Static).content
             assert prompt == ". ac"
+
+    asyncio.run(run())
+
+
+def test_browse_tab_navigation_updates_focus():
+    async def run() -> None:
+        app = SafariBaseApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("tab")
+            status = app.screen.query_one("#status-bar", Static).content
+            body = app.screen.query_one("#workspace-body", Static).content
+            assert "Fld FIRST 2/15" in status
+            assert "[FIRST" in body
 
     asyncio.run(run())
 

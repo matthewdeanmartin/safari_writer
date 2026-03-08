@@ -102,6 +102,8 @@ class SafariBaseScreen(Screen[None]):
         self._view_mode = "browse"
         self._cursor_row = 0
         self._row_offset = 0
+        self._cursor_col = 0
+        self._col_offset = 0
         self._insert_mode = True
         self._caps_mode = False
         self._append_record: list[str] | None = None
@@ -185,6 +187,8 @@ class SafariBaseScreen(Screen[None]):
             return
         if key == "down":
             self._move_cursor(1)
+            return
+        if key in {"left", "right", "home", "end", "tab", "shift+tab"} and self._handle_browse_navigation(key):
             return
         if key == "pageup":
             self._move_cursor(-self._visible_rows())
@@ -332,6 +336,23 @@ class SafariBaseScreen(Screen[None]):
             return True
         return False
 
+    def _handle_browse_navigation(self, key: str) -> bool:
+        if self._view_mode != "browse" or self._prompt_buffer:
+            return False
+        if key in {"left", "shift+tab"}:
+            self._move_column(-1)
+            return True
+        if key in {"right", "tab"}:
+            self._move_column(1)
+            return True
+        if key == "home":
+            self._set_column(0)
+            return True
+        if key == "end":
+            self._set_column(len(self.session.current_columns()) - 1)
+            return True
+        return False
+
     def _show_assist(self) -> None:
         self._show_not_implemented("ASSIST menu")
 
@@ -415,6 +436,83 @@ class SafariBaseScreen(Screen[None]):
         width_map = {name: width for name, width in DEFAULT_ADDRESS_SCHEMA}
         return width_map.get(field_name, 20)
 
+    def _browse_columns(self) -> list[tuple[str, int]]:
+        width_map = {name: width for name, width in DEFAULT_ADDRESS_SCHEMA}
+        return [
+            (name, max(4, min(width_map.get(name, len(name) + 2), 14)))
+            for name in self.session.current_columns()
+        ]
+
+    def _visible_browse_columns(self) -> tuple[list[str], list[int], int]:
+        columns_with_widths = self._browse_columns()
+        if not columns_with_widths:
+            return [], [], 0
+
+        available = self._browse_grid_width() - 6
+        start = min(self._col_offset, len(columns_with_widths) - 1)
+        visible_names: list[str] = []
+        visible_widths: list[int] = []
+        index = start
+        while index < len(columns_with_widths):
+            name, width = columns_with_widths[index]
+            gap = 1 if visible_widths else 0
+            if visible_widths and available < width + gap:
+                break
+            if not visible_widths and available < 4:
+                break
+            available -= width + gap
+            visible_names.append(name)
+            visible_widths.append(width)
+            index += 1
+        if not visible_names:
+            name, width = columns_with_widths[start]
+            visible_names.append(name)
+            visible_widths.append(min(width, max(4, self._browse_grid_width() - 6)))
+        return visible_names, visible_widths, start
+
+    def _current_field_name(self) -> str:
+        columns = self.session.current_columns()
+        if not columns:
+            return ""
+        self._cursor_col = min(max(self._cursor_col, 0), len(columns) - 1)
+        return columns[self._cursor_col]
+
+    def _set_column(self, index: int) -> None:
+        columns = self.session.current_columns()
+        if not columns:
+            self._cursor_col = 0
+            self._col_offset = 0
+            self._refresh()
+            return
+        self._cursor_col = min(max(0, index), len(columns) - 1)
+        self._ensure_column_visible()
+        self._message = f"Field {self._current_field_name()}"
+        self._refresh()
+
+    def _move_column(self, delta: int) -> None:
+        self._set_column(self._cursor_col + delta)
+
+    def _ensure_column_visible(self) -> None:
+        columns = self.session.current_columns()
+        if not columns:
+            self._col_offset = 0
+            return
+        self._cursor_col = min(max(self._cursor_col, 0), len(columns) - 1)
+        self._col_offset = min(max(0, self._col_offset), len(columns) - 1)
+        visible_names, _visible_widths, start = self._visible_browse_columns()
+        if self._cursor_col < start:
+            self._col_offset = self._cursor_col
+        elif visible_names:
+            end = start + len(visible_names) - 1
+            if self._cursor_col > end:
+                self._col_offset = self._cursor_col
+                while True:
+                    visible_names, _visible_widths, start = self._visible_browse_columns()
+                    end = start + len(visible_names) - 1
+                    if self._cursor_col <= end or self._col_offset <= 0:
+                        break
+                    self._col_offset -= 1
+
     def _prompt_max_length(self) -> int:
         return max(20, self._shell_width() - 6)
 
@@ -460,6 +558,7 @@ class SafariBaseScreen(Screen[None]):
 
     def _show_browse(self) -> None:
         self._view_mode = "browse"
+        self._ensure_column_visible()
         self._message = f"Browsing {self.session.current_table}"
         self._refresh()
 
@@ -523,6 +622,8 @@ class SafariBaseScreen(Screen[None]):
                 return
             self._cursor_row = 0
             self._row_offset = 0
+            self._cursor_col = 0
+            self._col_offset = 0
             self._view_mode = "browse"
             self._message = f"Using {self.session.current_table}"
             return
@@ -567,24 +668,15 @@ class SafariBaseScreen(Screen[None]):
         return self._render_help()
 
     def _render_browse(self) -> str:
-        columns = self.session.current_columns()
-        width_map = {name: width for name, width in DEFAULT_ADDRESS_SCHEMA}
-        widths = [max(4, min(width_map.get(name, len(name) + 2), 14)) for name in columns]
-
-        remaining = self._browse_grid_width() - 6 - max(0, len(widths) - 1)
-        adjusted_widths: list[int] = []
-        for width in widths:
-            column_width = min(width, max(4, remaining))
-            adjusted_widths.append(column_width)
-            remaining -= column_width
-            if remaining <= 0:
-                break
-        visible_columns = columns[: len(adjusted_widths)]
+        visible_columns, adjusted_widths, start_col = self._visible_browse_columns()
 
         header_cells = ["REC#".ljust(5)]
         divider_cells = ["".ljust(5, "-")]
-        for name, width in zip(visible_columns, adjusted_widths):
-            header_cells.append(name[:width].ljust(width))
+        for column_index, (name, width) in enumerate(zip(visible_columns, adjusted_widths), start=start_col):
+            if column_index == self._cursor_col:
+                header_cells.append(self._focus_cell(name, width))
+            else:
+                header_cells.append(name[:width].ljust(width))
             divider_cells.append("".ljust(width, "-"))
 
         lines = [
@@ -598,14 +690,22 @@ class SafariBaseScreen(Screen[None]):
             absolute_index = self._row_offset + visible_index
             pointer = ">" if absolute_index == self._cursor_row else " "
             row_cells = [f"{pointer}{str(rowid).rjust(4)}"]
-            for value, width in zip(values[: len(adjusted_widths)], adjusted_widths):
-                row_cells.append(value[:width].ljust(width))
+            visible_values = values[start_col : start_col + len(adjusted_widths)]
+            for column_index, (value, width) in enumerate(zip(visible_values, adjusted_widths), start=start_col):
+                if absolute_index == self._cursor_row and column_index == self._cursor_col:
+                    row_cells.append(self._focus_cell(value, width))
+                else:
+                    row_cells.append(value[:width].ljust(width))
             lines.append(" ".join(row_cells))
 
         while len(lines) < visible_rows + 2:
             lines.append("")
 
         return "\n".join(lines)
+
+    def _focus_cell(self, value: str, width: int) -> str:
+        inner_width = max(1, width - 2)
+        return f"[{value[:inner_width].ljust(inner_width)}]"
 
     def _render_tables(self) -> str:
         tables = self.session.table_names()
@@ -675,6 +775,8 @@ class SafariBaseScreen(Screen[None]):
     def _status_text(self) -> str:
         record_count = self.session.record_count()
         current_record = self._cursor_row + 1 if record_count else 0
+        field_name = self._current_field_name()
+        field_count = len(self.session.current_columns())
         database_label = (
             str(self.session.database_path)
             if self.session.database_path is not None
@@ -683,6 +785,7 @@ class SafariBaseScreen(Screen[None]):
         return (
             f" {database_label}  {self.session.current_table}  [A]  "
             f"Rec {current_record}/{record_count}  "
+            f"Fld {field_name or '-'} {min(self._cursor_col + 1, max(1, field_count))}/{field_count or 0}  "
             f"Ins {'ON' if self._insert_mode else 'OFF'}  "
             f"Caps {'ON' if self._caps_mode else 'OFF'}  "
             f"{self._message}"

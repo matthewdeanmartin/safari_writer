@@ -21,6 +21,7 @@ from safari_dos.services import (
     duplicate_path,
     format_timestamp,
     get_entry_info,
+    get_preview_text,
     list_favorites,
     list_directory,
     list_garbage,
@@ -34,6 +35,8 @@ from safari_dos.services import (
     restore_from_garbage,
     set_protected,
     toggle_favorite,
+    unzip_path,
+    zip_paths,
 )
 from safari_dos.state import SafariDosState
 
@@ -152,6 +155,45 @@ SafariDosMainMenuScreen {
 #dos-browser-content {
     width: 1fr;
     height: 100%;
+    layout: horizontal;
+}
+
+#dos-browser-list {
+    width: 1fr;
+    height: 100%;
+}
+
+#dos-browser-list.hidden {
+    display: none;
+}
+
+#dos-preview-pane {
+    width: 40%;
+    height: 100%;
+    border-left: solid $accent;
+    background: $surface;
+    padding: 1;
+}
+
+#dos-preview-pane.hidden {
+    display: none;
+}
+
+#dos-preview-pane.fullscreen {
+    width: 100%;
+    border-left: none;
+}
+
+#dos-preview-title {
+    color: $accent;
+    text-style: bold;
+    margin-bottom: 1;
+    text-align: center;
+}
+
+#dos-preview-body {
+    color: $foreground;
+    height: 1fr;
 }
 
 #dos-footer {
@@ -354,7 +396,7 @@ class SafariDosBrowserScreen(Screen):
         Binding("end", "cursor_end", "End", show=False),
         Binding("enter", "activate", "Open", show=False),
         Binding("backspace", "parent", "Up Folder", show=False),
-        Binding("space", "toggle_select", "Select", show=False),
+        Binding("t", "toggle_select", "Select", show=False),
         Binding("a", "select_all", "All", show=False),
         Binding(".", "toggle_hidden", "Hidden", show=False),
         Binding("/", "filter", "Filter", show=False),
@@ -363,11 +405,15 @@ class SafariDosBrowserScreen(Screen):
         Binding("c", "copy", "Copy", show=False),
         Binding("m", "move", "Move", show=False),
         Binding("r", "rename", "Rename", show=False),
-        Binding("u", "duplicate", "Duplicate", show=False),
+        Binding("w", "duplicate", "Duplicate", show=False),
         Binding("n", "new_folder", "New Folder", show=False),
         Binding("x", "garbage", "Garbage", show=False),
         Binding("i", "info", "Info", show=False),
         Binding("p", "toggle_protected", "Protect", show=False),
+        Binding("v", "toggle_preview", "View Toggle", show=False),
+        Binding("space", "fullscreen_preview", "Fullscreen Preview", show=False),
+        Binding("z", "zip_archive", "Zip", show=False),
+        Binding("u", "unzip_archive", "Unzip", show=False),
         Binding("tab", "choose_current_directory", "Choose Here", show=False),
         Binding("d", "devices", "Devices", show=False),
         Binding("g", "garbage_list", "Garbage List", show=False),
@@ -394,14 +440,18 @@ class SafariDosBrowserScreen(Screen):
                     yield Static(self._menu_title(), id="dos-browser-menu-title")
                     yield Static(self._render_side_menu(), id="dos-browser-menu-items")
                 with Container(id="dos-browser-content"):
-                    with Container(id="dos-header"):
-                        yield Static("*** SAFARI DOS FILE LIST ***", id="dos-title")
-                        yield Static("", id="dos-path")
-                        yield Static(
-                            "SEL NAME                         SIZE     TYPE   MODIFIED         F",
-                            id="dos-columns",
-                        )
-                    yield Static("", id="dos-body")
+                    with Container(id="dos-browser-list"):
+                        with Container(id="dos-header"):
+                            yield Static("*** SAFARI DOS FILE LIST ***", id="dos-title")
+                            yield Static("", id="dos-path")
+                            yield Static(
+                                "SEL NAME                         SIZE     TYPE   MODIFIED         F",
+                                id="dos-columns",
+                            )
+                        yield Static("", id="dos-body")
+                    with Container(id="dos-preview-pane"):
+                        yield Static("*** PREVIEW ***", id="dos-preview-title")
+                        yield Static("", id="dos-preview-body")
             with Container(id="dos-footer"):
                 yield Static("", id="dos-status")
                 yield Static(
@@ -418,7 +468,7 @@ class SafariDosBrowserScreen(Screen):
             return "Enter=choose/open  Backspace=up  F=favorites  .=hidden  Esc=cancel"
         if self._picker_mode == "directory":
             return "Enter=open  Tab=choose folder  F=favorites  .=hidden  Esc=cancel"
-        return "Enter=open  Space=select  C/M/R/U/N/X ops  F=favorites  P=protect  /=filter  S=sort  .=hidden  Esc=menu"
+        return "Enter=open  T=select  C/M/R/W/N/X ops  Z/U zip  V=view  Space=preview  Esc=menu"
 
     def _menu_title(self) -> str:
         if self._picker_mode == "file":
@@ -451,15 +501,19 @@ class SafariDosBrowserScreen(Screen):
             ]
         return [
             ("RET.", "OPEN ITEM"),
-            ("SPC.", "SELECT ITEM"),
+            ("T.", "SELECT ITEM"),
             ("C.", "COPY FILE(S)"),
             ("M.", "MOVE FILE(S)"),
             ("R.", "RENAME FILE"),
-            ("U.", "DUPLICATE FILE"),
+            ("W.", "DUPLICATE FILE"),
             ("N.", "NEW FOLDER"),
             ("X.", "DELETE FILE(S)"),
             ("P.", "LOCK / UNLOCK"),
             ("I.", "ITEM INFO"),
+            ("Z.", "ZIP ARCHIVE"),
+            ("U.", "UNZIP ARCHIVE"),
+            ("V.", "VIEW TOGGLE"),
+            ("SPC.", "FULL PREVIEW"),
             ("", ""),
             ("BS.", "PARENT FOLDER"),
             ("F.", "FAVORITES"),
@@ -542,6 +596,45 @@ class SafariDosBrowserScreen(Screen):
         selected_count = len(self._state.selected_names)
         suffix = f" | {selected_count} selected" if selected_count else ""
         self.query_one("#dos-status", Static).update(f"{self._message}{suffix}")
+        self._update_preview()
+
+    def _update_preview(self) -> None:
+        preview_pane = self.query_one("#dos-preview-pane")
+        browser_list = self.query_one("#dos-browser-list")
+
+        if self._state.fullscreen_preview:
+            preview_pane.set_class(True, "fullscreen")
+            preview_pane.set_class(False, "hidden")
+            browser_list.set_class(True, "hidden")
+        elif self._state.show_preview:
+            preview_pane.set_class(False, "fullscreen")
+            preview_pane.set_class(False, "hidden")
+            browser_list.set_class(False, "hidden")
+        else:
+            preview_pane.set_class(False, "fullscreen")
+            preview_pane.set_class(True, "hidden")
+            browser_list.set_class(False, "hidden")
+
+        if self._state.show_preview or self._state.fullscreen_preview:
+            entry = self._selected_entry()
+            if entry:
+                if entry.is_dir:
+                    title = f"FOLDER: {entry.name}"
+                    content = get_entry_info(entry.path)
+                else:
+                    title = f"FILE: {entry.name}"
+                    # Try text preview for common extensions
+                    ext = entry.path.suffix.lower()
+                    if ext in {".txt", ".sfw", ".md", ".py", ".json", ".ini"}:
+                        content = get_preview_text(entry.path)
+                    elif ext in {".png", ".jpg", ".jpeg", ".bmp", ".gif"}:
+                        # For now, just show metadata for images
+                        content = f"[Image File]\n\n{get_entry_info(entry.path)}"
+                    else:
+                        content = get_entry_info(entry.path)
+
+                self.query_one("#dos-preview-title", Static).update(title)
+                self.query_one("#dos-preview-body", Static).update(content)
 
     def action_cursor_up(self) -> None:
         if self._selected_index > 0:
@@ -836,6 +929,90 @@ class SafariDosBrowserScreen(Screen):
             self.set_message(str(exc))
             return
         self.app.push_screen(MessageScreen("Item Info", body))
+
+    def action_toggle_preview(self) -> None:
+        if self._picker_mode is not None:
+            return
+        self._state.show_preview = not self._state.show_preview
+        if not self._state.show_preview:
+            self._state.fullscreen_preview = False
+        self._refresh_view()
+
+    def action_fullscreen_preview(self) -> None:
+        if self._picker_mode is not None:
+            return
+        self._state.fullscreen_preview = not self._state.fullscreen_preview
+        if self._state.fullscreen_preview:
+            self._state.show_preview = True
+        self._refresh_view()
+
+    def action_zip_archive(self) -> None:
+        if self._picker_mode is not None:
+            return
+        sources = self._selected_paths()
+        if not sources:
+            return
+        default = "archive.zip"
+        if len(sources) == 1:
+            default = f"{sources[0].stem}.zip"
+        self.app.push_screen(
+            InputScreen("Archive Name", default),
+            callback=lambda value: self._on_zip(sources, value),
+        )
+
+    def _on_zip(self, sources: list[Path], name: str | None) -> None:
+        if not name:
+            self.set_message("Operation cancelled")
+            return
+        archive_path = self._state.current_path / name
+        if archive_path.suffix.lower() != ".zip":
+            archive_path = archive_path.with_suffix(".zip")
+
+        if archive_path.exists():
+            self.app.push_screen(
+                ConfirmScreen(f"Overwrite existing {archive_path.name}?"),
+                callback=lambda confirmed: self._perform_zip(
+                    sources, archive_path, confirmed
+                ),
+            )
+        else:
+            self._perform_zip(sources, archive_path, True)
+
+    def _perform_zip(
+        self, sources: list[Path], archive_path: Path, confirmed: bool | None
+    ) -> None:
+        if not confirmed:
+            self.set_message("Operation cancelled")
+            return
+        try:
+            zip_paths(sources, archive_path)
+            self.set_message(f"Created archive: {archive_path.name}")
+        except Exception as exc:
+            self.set_message(f"Zip error: {exc}")
+        self.refresh_listing()
+
+    def action_unzip_archive(self) -> None:
+        if self._picker_mode is not None:
+            return
+        entry = self._selected_entry()
+        if entry is None or entry.path.suffix.lower() != ".zip":
+            self.set_message("Select a .zip file to unzip")
+            return
+        self.app.push_screen(
+            ConfirmScreen(f"Unzip {entry.name} here?"),
+            callback=lambda confirmed: self._perform_unzip(entry.path, confirmed),
+        )
+
+    def _perform_unzip(self, archive_path: Path, confirmed: bool | None) -> None:
+        if not confirmed:
+            self.set_message("Operation cancelled")
+            return
+        try:
+            unzip_path(archive_path, self._state.current_path)
+            self.set_message(f"Extracted archive: {archive_path.name}")
+        except Exception as exc:
+            self.set_message(f"Unzip error: {exc}")
+        self.refresh_listing()
 
     def action_devices(self) -> None:
         self.app.push_screen(
@@ -1148,9 +1325,11 @@ class SafariDosHelpScreen(Screen):
                 "",
                 "File List:",
                 "  Enter open folder/file",
-                "  Space mark items",
-                "  C copy  M move  R rename  U duplicate",
+                "  T mark items (Tag)",
+                "  C copy  M move  R rename  W duplicate",
                 "  N new folder  X send to Garbage",
+                "  Z zip archive  U unzip archive",
+                "  V toggle preview  Space fullscreen preview",
                 "  F favorites/recent  P protect toggle",
                 "  / filter  S sort  . hidden toggle",
                 "",
