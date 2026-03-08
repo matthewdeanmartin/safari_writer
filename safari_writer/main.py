@@ -8,6 +8,7 @@ import os
 import sys
 from importlib import metadata
 from pathlib import Path
+from typing import Callable
 
 from safari_writer.cli_types import StartupRequest
 from safari_writer.ansi_preview import extract_ansi_page, render_ansi_preview
@@ -240,10 +241,10 @@ def main(argv: list[str] | None = None) -> int:
     original_cwd = Path.cwd()
     try:
         _apply_cwd(args)
-        handler = getattr(args, "handler", None)
+        handler: Callable | None = getattr(args, "handler", None)
         if handler is None:
             return _run_default_tui(args)
-        return int(handler(args))
+        return int(handler(args))  # pylint: disable=not-callable
     except FileNotFoundError as exc:
         _emit_error(str(exc))
         return 2

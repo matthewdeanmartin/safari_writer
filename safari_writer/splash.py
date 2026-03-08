@@ -25,9 +25,6 @@ import sys
 import time
 from typing import Any
 
-if os.name == "nt":
-    import msvcrt
-
 __all__ = [
     "SPLASH_DURATION_SECONDS",
     "main",
@@ -354,13 +351,15 @@ def should_show_splash(
 @contextmanager
 def _keypress_listener() -> Iterator[Callable[[], bool]]:
     if os.name == "nt":
-        def key_pressed() -> bool:
-            if not msvcrt.kbhit():
+        windows_msvcrt: Any = __import__("msvcrt")
+
+        def windows_key_pressed() -> bool:
+            if not windows_msvcrt.kbhit():
                 return False
-            msvcrt.getwch()
+            windows_msvcrt.getwch()
             return True
 
-        yield key_pressed
+        yield windows_key_pressed
         return
 
     if not _is_tty(sys.stdin):
@@ -380,14 +379,14 @@ def _keypress_listener() -> Iterator[Callable[[], bool]]:
     try:
         posix_tty.setcbreak(fd)
 
-        def key_pressed() -> bool:
+        def posix_key_pressed() -> bool:
             ready, _, _ = select_module.select([sys.stdin], [], [], 0)
             if not ready:
                 return False
             sys.stdin.read(1)
             return True
 
-        yield key_pressed
+        yield posix_key_pressed
     finally:
         posix_termios.tcsetattr(fd, posix_termios.TCSADRAIN, original_mode)
 

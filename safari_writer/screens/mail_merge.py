@@ -1074,7 +1074,7 @@ class MailMergeScreen(Screen):
         elif key == "enter":
             if not entries or entries[0][0].startswith("<"):
                 return
-            name, _, ftype = entries[self._index_selected]
+            name = entries[self._index_selected][0]
             full_path = self._index_directory / name
             if full_path.is_dir():
                 self._index_directory = full_path
