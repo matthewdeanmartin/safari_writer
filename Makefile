@@ -233,9 +233,9 @@ format-chat-verbose:
 	@uv run ruff format $(RUFF_FORMAT_VERBOSE_FLAGS) $(CHAT_MODULE)
 
 publish: test
-	@if exist dist rmdir /s /q dist
+	@uv run python -c "from pathlib import Path; import shutil; shutil.rmtree(Path('dist'), ignore_errors=True)"
 	@uv run hatch -q build
 
 publish-verbose: test-verbose
-	@if exist dist rmdir /s /q dist
+	@uv run python -c "from pathlib import Path; import shutil; shutil.rmtree(Path('dist'), ignore_errors=True)"
 	@uv run hatch -v build
