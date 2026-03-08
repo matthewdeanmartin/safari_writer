@@ -284,6 +284,16 @@ class _MessageScreen(Protocol):
     def set_message(self, msg: str) -> None: ...
 
 
+class _EditorScreenHost(_MessageScreen, Protocol):
+    def update_status(self) -> None: ...
+
+    def update_tab_bar(self) -> None: ...
+
+
+class _EditorApp(Protocol):
+    def _action_print(self) -> None: ...
+
+
 class EditorArea(Widget, can_focus=True):
     """The main text editing widget."""
 
@@ -313,7 +323,13 @@ class EditorArea(Widget, can_focus=True):
         self._highlighter.invalidate()
 
     def _set_screen_message(self, msg: str) -> None:
-        cast(_MessageScreen, self.screen).set_message(msg)
+        self._screen_host().set_message(msg)
+
+    def _screen_host(self) -> _EditorScreenHost:
+        return cast(_EditorScreenHost, self.screen)
+
+    def _app_host(self) -> _EditorApp:
+        return cast(_EditorApp, self.app)
 
     def _push_undo(self, action: str) -> None:
         """Push an undo snapshot if the action type changed (coalesces typing)."""
@@ -796,7 +812,7 @@ class EditorArea(Widget, can_focus=True):
 
         # Print / Export — delegate to app-level handler
         elif key == "ctrl+p":
-            self.app._action_print()
+            self._app_host()._action_print()
 
         # Exit to main menu
         elif key == "escape":
@@ -1163,10 +1179,7 @@ class EditorArea(Widget, can_focus=True):
         self._update_tab_bar()
 
     def _update_tab_bar(self) -> None:
-        try:
-            self.screen.update_tab_bar()
-        except Exception:
-            pass
+        self._screen_host().update_tab_bar()
 
     # ------------------------------------------------------------------
     # Editing
@@ -1445,10 +1458,7 @@ class EditorArea(Widget, can_focus=True):
         s.modified = True
 
     def _update_status(self) -> None:
-        try:
-            self.screen.update_status()
-        except Exception:
-            pass
+        self._screen_host().update_status()
 
 
 class EditorScreen(Screen):
