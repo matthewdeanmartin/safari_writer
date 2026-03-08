@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 from textual import events
@@ -16,11 +17,16 @@ from safari_base.database import BaseSession, DEFAULT_ADDRESS_SCHEMA
 __all__ = ["SCREEN_CSS", "SafariBaseScreen", "clamp_shell_dimension"]
 
 _log = logging.getLogger("safari_base.screen")
-_log.setLevel(logging.DEBUG)
-if not _log.handlers:
-    _handler = logging.FileHandler(Path(__file__).resolve().parent / "debug.log", mode="a")
-    _handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-    _log.addHandler(_handler)
+if os.environ.get("SAFARI_LOG"):
+    _log.setLevel(logging.DEBUG)
+    if not _log.handlers:
+        _handler = logging.FileHandler(
+            Path(__file__).resolve().parent / "debug.log", mode="a"
+        )
+        _handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+        _log.addHandler(_handler)
+else:
+    _log.addHandler(logging.NullHandler())
 
 TARGET_WIDTH = 100
 TARGET_HEIGHT = 34
@@ -109,6 +115,8 @@ class SafariBaseScreen(Screen[None]):
         self._append_record: list[str] | None = None
         self._append_field_idx = 0
         self._append_field_cursor = 0
+        self._report_title = "COMMAND OUTPUT"
+        self._report_lines: list[str] = []
 
     def compose(self) -> ComposeResult:
         with Container(id="base-root"):
@@ -152,7 +160,7 @@ class SafariBaseScreen(Screen[None]):
         if key == "insert":
             self._toggle_insert_mode()
             return
-        if key in {"caps_lock", "ctrl+l"}:
+        if self._is_caps_toggle_key(key):
             self._toggle_caps_mode()
             return
         if key in {"f2", "f10", "alt"}:
@@ -252,7 +260,7 @@ class SafariBaseScreen(Screen[None]):
         if key == "insert":
             self._toggle_insert_mode()
             return True
-        if key in {"caps_lock", "ctrl+l"}:
+        if self._is_caps_toggle_key(key):
             self._toggle_caps_mode()
             return True
         if key in {"shift+tab", "up"}:
@@ -355,6 +363,9 @@ class SafariBaseScreen(Screen[None]):
 
     def _show_assist(self) -> None:
         self._show_not_implemented("ASSIST menu")
+
+    def _is_caps_toggle_key(self, key: str) -> bool:
+        return key in {"caps_lock", "capslock", "ctrl+l", "f9"}
 
     def _current_append_field_length(self) -> int:
         if self._append_record is None:
@@ -541,6 +552,13 @@ class SafariBaseScreen(Screen[None]):
         self._message = "Showing startup help"
         self._refresh()
 
+    def _show_report(self, title: str, lines: list[str], message: str) -> None:
+        self._report_title = title
+        self._report_lines = lines
+        self._view_mode = "report"
+        self._message = message
+        self._refresh()
+
     def _show_not_implemented(self, feature: str) -> None:
         self._message = f"{feature} not implemented yet"
         _log.debug("not-implemented feature=%s", feature)
@@ -585,36 +603,56 @@ class SafariBaseScreen(Screen[None]):
             self._message = "Ready"
             return
 
-        upper = command.upper()
-        if upper in {"BROWSE", "BRO"}:
+        verb, args = self._parse_command(command)
+        if verb == "BROWSE":
             self._show_browse()
             return
-        if upper in {"HELP", "?"}:
+        if verb == "HELP":
             self._show_help()
             return
-        if upper in {"TABLES", "DIR"}:
+        if verb == "TABLES":
             self._show_tables()
             return
-        if upper in {"STRUCT", "STRUCTURE", "DISPLAY STRUCTURE"}:
+        if verb == "STRUCTURE":
             self._show_structure()
             return
-        if upper == "APPEND":
+        if verb == "APPEND":
             self._start_append()
             return
-        if upper in {"EDIT", "MODIFY"}:
+        if verb == "EDIT":
             self._show_not_implemented("Edit form")
             return
-        if upper in {"DELETE", "DEL"}:
+        if verb == "DELETE":
             self._show_not_implemented("Delete record")
             return
-        if upper in {"ASSIST", "MENU"}:
+        if verb == "ASSIST":
             self._show_assist()
             return
-        if upper in {"QUIT", "EXIT"}:
+        if verb == "LIST":
+            self._show_report("LIST", self._list_report_lines(), f"Listed {self.session.current_table}")
+            return
+        if verb == "DISPLAY":
+            self._show_report(
+                "DISPLAY",
+                self._display_report_lines(),
+                f"Displayed {self.session.current_table}",
+            )
+            return
+        if verb == "COMMANDS":
+            self._show_report(
+                "COMMANDS",
+                self._command_summary_lines(),
+                "Showing supported commands",
+            )
+            return
+        if verb == "QUIT":
             self.app.exit()
             return
-        if upper.startswith("USE "):
-            table_name = command[4:].strip()
+        if verb == "USE":
+            table_name = args
+            if not table_name:
+                self._message = "USE requires a table name"
+                return
             try:
                 self.session.set_current_table(table_name)
             except ValueError:
@@ -629,6 +667,94 @@ class SafariBaseScreen(Screen[None]):
             return
 
         self._message = f"Unknown command: {command}"
+
+    def _parse_command(self, command: str) -> tuple[str, str]:
+        text = command.strip()
+        if not text:
+            return "", ""
+        if text == "?":
+            return "HELP", ""
+
+        parts = text.split(None, 1)
+        raw_verb = parts[0].upper()
+        args = parts[1].strip() if len(parts) > 1 else ""
+
+        if raw_verb == "DISPLAY" and args.upper() in {"STRUCT", "STRUCTURE"}:
+            return "STRUCTURE", ""
+
+        verb_map = {
+            "APP": "APPEND",
+            "APPE": "APPEND",
+            "APPEND": "APPEND",
+            "ASSI": "ASSIST",
+            "ASSIST": "ASSIST",
+            "BRO": "BROWSE",
+            "BROW": "BROWSE",
+            "BROWSE": "BROWSE",
+            "CMDS": "COMMANDS",
+            "COMM": "COMMANDS",
+            "COMMANDS": "COMMANDS",
+            "DEL": "DELETE",
+            "DELE": "DELETE",
+            "DELETE": "DELETE",
+            "DIR": "TABLES",
+            "DISP": "DISPLAY",
+            "DISPLAY": "DISPLAY",
+            "EDIT": "EDIT",
+            "EXIT": "QUIT",
+            "HELP": "HELP",
+            "LIST": "LIST",
+            "MENU": "ASSIST",
+            "MODI": "EDIT",
+            "MODIFY": "EDIT",
+            "QUIT": "QUIT",
+            "STRU": "STRUCTURE",
+            "STRUCT": "STRUCTURE",
+            "STRUCTURE": "STRUCTURE",
+            "TABL": "TABLES",
+            "TABLE": "TABLES",
+            "TABLES": "TABLES",
+            "USE": "USE",
+        }
+        return verb_map.get(raw_verb, raw_verb), args
+
+    def _command_summary_lines(self) -> list[str]:
+        return [
+            " Supported commands",
+            "",
+            "  HELP, ?, COMMANDS",
+            "  BROWSE, LIST, DISPLAY",
+            "  TABLES, USE <table>, STRUCT",
+            "  APPEND, EDIT, DELETE, ASSIST",
+            "  QUIT",
+        ]
+
+    def _list_report_lines(self) -> list[str]:
+        columns = self.session.current_columns()
+        rows = self.session.browse_rows(limit=max(1, self._visible_rows() - 3), offset=0)
+        lines = [f" LIST {self.session.current_table}", ""]
+        if not rows:
+            lines.append(" <no records>")
+            return lines
+        lines.append(" | ".join(columns))
+        lines.append("-" * min(self._browse_grid_width(), 88))
+        for rowid, values in rows:
+            lines.append(f"{rowid:>4} | " + " | ".join(values))
+        return lines
+
+    def _display_report_lines(self) -> list[str]:
+        columns = self.session.current_columns()
+        rows = self.session.browse_rows(limit=max(1, self._visible_rows() // 2), offset=0)
+        lines = [f" DISPLAY {self.session.current_table}", ""]
+        if not rows:
+            lines.append(" <no records>")
+            return lines
+        for rowid, values in rows:
+            lines.append(f" Record {rowid}")
+            for name, value in zip(columns, values):
+                lines.append(f"   {name:<10} {value}")
+            lines.append("")
+        return lines[:-1] if lines and lines[-1] == "" else lines
 
     def _refresh(self) -> None:
         self.query_one("#scoreboard", Static).update(self._scoreboard_text())
@@ -654,6 +780,8 @@ class SafariBaseScreen(Screen[None]):
             if self.session.database_path is not None
             else "(memory)"
         )
+        if self._view_mode == "report":
+            return f" SAFARI BASE  {self._report_title}  Table: {self.session.current_table} "
         return f" SAFARI BASE  Database: {database_name}  Table: {self.session.current_table} "
 
     def _workspace_text(self) -> str:
@@ -665,6 +793,8 @@ class SafariBaseScreen(Screen[None]):
             return self._render_tables()
         if self._view_mode == "structure":
             return self._render_structure()
+        if self._view_mode == "report":
+            return self._render_report()
         return self._render_help()
 
     def _render_browse(self) -> str:
@@ -726,6 +856,8 @@ class SafariBaseScreen(Screen[None]):
                 "",
                 "  BROWSE          Return to the boxed table view",
                 "  ASSIST          Show the menu placeholder",
+                "  LIST            Show a record listing",
+                "  DISPLAY         Show records in report form",
                 "  TABLES          Show available tables",
                 "  USE <table>     Switch to another table",
                 "  STRUCT          Show current table structure",
@@ -741,11 +873,14 @@ class SafariBaseScreen(Screen[None]):
                 "  F10 Assist (F2 legacy alias), F3 Append, F4 Edit",
                 "  Ctrl+D delete placeholder (F5 legacy alias)",
                 "  Insert toggles Insert mode",
-                "  CapsLock toggles Caps mode (Ctrl+L legacy alias)",
+                "  CapsLock/F9 toggle Caps mode (Ctrl+L legacy alias)",
                 "  Ctrl+S/Ctrl+W/F2 save append, Esc/F3 cancel",
                 "  Ctrl+A opens append, Ctrl+Q quits",
             ]
         )
+
+    def _render_report(self) -> str:
+        return "\n".join(self._report_lines)
 
     def _render_append(self) -> str:
         if self._append_record is None:

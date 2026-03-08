@@ -76,10 +76,17 @@ class BaseSession:
     def table_names(self) -> list[str]:
         return list_tables(self.connection)
 
+    def resolve_table_name(self, table_name: str) -> str:
+        """Resolve a table name case-insensitively against the open database."""
+
+        normalized = table_name.strip()
+        for existing_name in self.table_names():
+            if existing_name.casefold() == normalized.casefold():
+                return existing_name
+        raise ValueError(f"Unknown table: {table_name}")
+
     def set_current_table(self, table_name: str) -> None:
-        if table_name not in self.table_names():
-            raise ValueError(f"Unknown table: {table_name}")
-        self.current_table = table_name
+        self.current_table = self.resolve_table_name(table_name)
 
     def current_columns(self) -> list[str]:
         rows = self.connection.execute(

@@ -82,6 +82,14 @@ def test_default_mount_opens_address_browse():
     asyncio.run(run())
 
 
+def test_set_current_table_is_case_insensitive(tmp_path):
+    session = ensure_database(tmp_path / "contacts.sqlite")
+
+    session.set_current_table("address")
+
+    assert session.current_table == "ADDRESS"
+
+
 def test_arrow_key_does_not_crash_prompt_handling():
     async def run() -> None:
         app = SafariBaseApp()
@@ -182,10 +190,12 @@ def test_insert_and_caps_toggles_update_scoreboard():
         app = SafariBaseApp()
         async with app.run_test() as pilot:
             await pilot.pause()
-            await pilot.press("insert", "ctrl+l")
+            await pilot.press("insert", "f9", "x")
             scoreboard = app.screen.query_one("#scoreboard", Static).content
+            prompt = app.screen.query_one("#prompt-line", Static).content
             assert "Ins OFF" in scoreboard
             assert "Caps ON" in scoreboard
+            assert prompt == ". X"
 
     asyncio.run(run())
 
@@ -215,5 +225,25 @@ def test_ctrl_d_uses_delete_placeholder_message():
                 "#status-bar",
                 Static,
             ).content
+
+    asyncio.run(run())
+
+
+def test_command_abbreviations_and_reports_work():
+    async def run() -> None:
+        app = SafariBaseApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("l", "i", "s", "t", "enter")
+            title = app.screen.query_one("#workspace-title", Static).content
+            body = app.screen.query_one("#workspace-body", Static).content
+            assert "LIST" in title
+            assert "LIST ADDRESS" in body
+
+            await pilot.press("c", "o", "m", "m", "enter")
+            assert "Supported commands" in app.screen.query_one("#workspace-body", Static).content
+
+            await pilot.press("b", "r", "o", "w", "enter")
+            assert "LAST" in app.screen.query_one("#workspace-body", Static).content
 
     asyncio.run(run())

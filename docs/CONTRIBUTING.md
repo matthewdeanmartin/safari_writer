@@ -22,6 +22,16 @@ make run
 
 All commands use `uv` — **never use bare `python` or `pip`**.
 
+### Logging
+
+By default, the application does not write to any log files. For development and debugging, you can enable file logging by setting the `SAFARI_LOG` environment variable.
+
+- **PowerShell**: `$env:SAFARI_LOG=1; uv run safari-writer`
+- **Bash/Zsh**: `SAFARI_LOG=1 uv run safari-writer`
+- **CMD**: `set SAFARI_LOG=1 && uv run safari-writer`
+
+When enabled, a `debug.log` file will be created in the root of the respective module (e.g., `safari_writer/debug.log` or `safari_base/debug.log`).
+
 ## Code Style
 
 ### Docstrings: Google Style

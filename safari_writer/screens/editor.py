@@ -1,6 +1,7 @@
 """Editor screen — the main text editing workspace."""
 
 import logging
+import os
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -15,12 +16,16 @@ from safari_writer.state import AppState
 from safari_writer.syntax_highlight import create_highlighter
 
 _log = logging.getLogger("safari_writer.editor")
-_log.setLevel(logging.DEBUG)
-_fh = logging.FileHandler(
-    Path(__file__).resolve().parent.parent / "debug.log", mode="a"
-)
-_fh.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-_log.addHandler(_fh)
+if os.environ.get("SAFARI_LOG"):
+    _log.setLevel(logging.DEBUG)
+    if not _log.handlers:
+        _fh = logging.FileHandler(
+            Path(__file__).resolve().parent.parent / "debug.log", mode="a"
+        )
+        _fh.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+        _log.addHandler(_fh)
+else:
+    _log.addHandler(logging.NullHandler())
 
 # Control character display symbols embedded in the buffer
 CTRL_BOLD = "\x01"  # bold toggle marker
