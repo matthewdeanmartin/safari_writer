@@ -1,4 +1,4 @@
-"""Main boxed Safari Base screen."""
+"""Main Safari Base shell screen."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from textual.widgets import Static
 
 from safari_base.database import BaseSession, DEFAULT_ADDRESS_SCHEMA
 
-__all__ = ["SafariBaseScreen"]
+__all__ = ["SCREEN_CSS", "SafariBaseScreen", "clamp_shell_dimension"]
 
 _log = logging.getLogger("safari_base.screen")
 _log.setLevel(logging.DEBUG)
@@ -22,8 +22,8 @@ if not _log.handlers:
     _handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
     _log.addHandler(_handler)
 
-TARGET_WIDTH = 80
-TARGET_HEIGHT = 60
+TARGET_WIDTH = 100
+TARGET_HEIGHT = 34
 
 
 def clamp_shell_dimension(available: int, target: int) -> int:
@@ -39,8 +39,8 @@ SafariBaseScreen {
 }
 
 #base-root {
-    width: 80;
-    height: 60;
+    width: 100;
+    height: 34;
     background: $surface;
     layout: vertical;
 }
@@ -72,22 +72,9 @@ SafariBaseScreen {
     padding: 0 1;
 }
 
-#prompt-box {
-    height: 4;
-    border: solid $accent;
-    background: $panel;
-    layout: vertical;
-}
-
-#prompt-label {
-    height: 1;
-    background: $secondary;
-    color: $foreground;
-    padding: 0 1;
-}
-
 #prompt-line {
     height: 1;
+    background: $panel;
     color: $foreground;
     padding: 0 1;
 }
@@ -98,28 +85,11 @@ SafariBaseScreen {
     color: $foreground;
     padding: 0 1;
 }
-
-#button-bar {
-    height: 1;
-    background: $secondary;
-    color: $accent;
-    padding: 0 1;
-}
-
-#help-bar {
-    height: 1;
-    background: $panel;
-    color: $foreground;
-    padding: 0 1;
-}
 """
-
-VISIBLE_ROWS = 48
-GRID_WIDTH = 74
 
 
 class SafariBaseScreen(Screen[None]):
-    """Minimal dBASE-style shell with boxed browse and dot prompt."""
+    """Roomier dBASE-style shell with a single-line prompt and status bar."""
 
     CSS = SCREEN_CSS
 
@@ -127,6 +97,7 @@ class SafariBaseScreen(Screen[None]):
         super().__init__()
         self.session = session
         self._prompt_buffer = ""
+        self._prompt_cursor = 0
         self._message = "Safari Base ready"
         self._view_mode = "browse"
         self._cursor_row = 0
@@ -135,6 +106,7 @@ class SafariBaseScreen(Screen[None]):
         self._caps_mode = False
         self._append_record: list[str] | None = None
         self._append_field_idx = 0
+        self._append_field_cursor = 0
 
     def compose(self) -> ComposeResult:
         with Container(id="base-root"):
@@ -142,12 +114,8 @@ class SafariBaseScreen(Screen[None]):
             with Container(id="workspace-box"):
                 yield Static("", id="workspace-title")
                 yield Static("", id="workspace-body")
-            with Container(id="prompt-box"):
-                yield Static("Dot Prompt", id="prompt-label")
-                yield Static("", id="prompt-line")
+            yield Static("", id="prompt-line")
             yield Static("", id="status-bar")
-            yield Static("", id="button-bar")
-            yield Static("", id="help-bar")
 
     def on_mount(self) -> None:
         _log.debug("mounted table=%s", self.session.current_table)
@@ -162,11 +130,12 @@ class SafariBaseScreen(Screen[None]):
     def on_key(self, event) -> None:  # type: ignore[override]
         key = event.key
         _log.debug(
-            "key=%s character=%r mode=%s prompt=%r row=%s offset=%s",
+            "key=%s character=%r mode=%s prompt=%r cursor=%s row=%s offset=%s",
             key,
             event.character,
             self._view_mode,
             self._prompt_buffer,
+            self._prompt_cursor,
             self._cursor_row,
             self._row_offset,
         )
@@ -184,8 +153,8 @@ class SafariBaseScreen(Screen[None]):
         if key in {"caps_lock", "ctrl+l"}:
             self._toggle_caps_mode()
             return
-        if key == "f2":
-            self._show_not_implemented("ASSIST menu")
+        if key in {"f2", "f10", "alt"}:
+            self._show_assist()
             return
         if key in {"f3", "ctrl+a"}:
             self._start_append()
@@ -193,8 +162,8 @@ class SafariBaseScreen(Screen[None]):
         if key == "f4":
             self._show_not_implemented("Edit form")
             return
-        if key == "f5":
-            self._show_not_implemented("Delete record")
+        if key in {"f5", "ctrl+d"}:
+            self._show_not_implemented("Delete mark")
             return
         if key == "f6":
             self._show_structure()
@@ -205,11 +174,9 @@ class SafariBaseScreen(Screen[None]):
         if key == "f8":
             self._show_browse()
             return
-        if key == "f10":
-            self.app.exit()
-            return
         if key == "escape":
             self._prompt_buffer = ""
+            self._prompt_cursor = 0
             self._message = "Prompt cleared"
             self._refresh()
             return
@@ -228,24 +195,51 @@ class SafariBaseScreen(Screen[None]):
         if key == "enter":
             self._run_command(self._prompt_buffer.strip())
             self._prompt_buffer = ""
+            self._prompt_cursor = 0
             self._refresh()
             return
+        if key == "left":
+            self._prompt_cursor = max(0, self._prompt_cursor - 1)
+            self._refresh_prompt()
+            return
+        if key == "right":
+            self._prompt_cursor = min(len(self._prompt_buffer), self._prompt_cursor + 1)
+            self._refresh_prompt()
+            return
+        if key == "home":
+            self._prompt_cursor = 0
+            self._refresh_prompt()
+            return
+        if key == "end":
+            self._prompt_cursor = len(self._prompt_buffer)
+            self._refresh_prompt()
+            return
         if key == "backspace":
-            self._prompt_buffer = self._prompt_buffer[:-1]
+            self._prompt_buffer, self._prompt_cursor = self._delete_backward(
+                self._prompt_buffer,
+                self._prompt_cursor,
+            )
+            self._refresh_prompt()
+            return
+        if key == "delete":
+            self._prompt_buffer, self._prompt_cursor = self._delete_forward(
+                self._prompt_buffer,
+                self._prompt_cursor,
+            )
             self._refresh_prompt()
             return
         character = event.character
         if character and len(character) == 1 and character.isprintable():
-            self._prompt_buffer = self._accept_text(
+            self._prompt_buffer, self._prompt_cursor = self._accept_text(
                 self._prompt_buffer,
                 character,
-                max_len=70,
+                self._prompt_cursor,
+                max_len=self._prompt_max_length(),
             )
             self._refresh_prompt()
-            return
 
     def _handle_append_key(self, key: str, character: str | None) -> bool:
-        if key == "f2":
+        if key in {"f2", "ctrl+s", "ctrl+w"}:
             self._save_append()
             return True
         if key in {"escape", "f3"}:
@@ -257,15 +251,17 @@ class SafariBaseScreen(Screen[None]):
         if key in {"caps_lock", "ctrl+l"}:
             self._toggle_caps_mode()
             return True
-        if key == "up":
+        if key in {"shift+tab", "up"}:
             self._append_field_idx = max(0, self._append_field_idx - 1)
+            self._append_field_cursor = self._current_append_field_length()
             self._refresh()
             return True
-        if key == "down":
+        if key in {"tab", "down"}:
             self._append_field_idx = min(
                 len(self.session.current_columns()) - 1,
                 self._append_field_idx + 1,
             )
+            self._append_field_cursor = self._current_append_field_length()
             self._refresh()
             return True
         if key == "enter":
@@ -273,13 +269,50 @@ class SafariBaseScreen(Screen[None]):
                 self._save_append()
             else:
                 self._append_field_idx += 1
+                self._append_field_cursor = self._current_append_field_length()
                 self._refresh()
+            return True
+        if key == "left":
+            self._append_field_cursor = max(0, self._append_field_cursor - 1)
+            self._refresh()
+            return True
+        if key == "right":
+            self._append_field_cursor = min(
+                self._current_append_field_length(),
+                self._append_field_cursor + 1,
+            )
+            self._refresh()
+            return True
+        if key == "home":
+            self._append_field_cursor = 0
+            self._refresh()
+            return True
+        if key == "end":
+            self._append_field_cursor = self._current_append_field_length()
+            self._refresh()
             return True
         if key == "backspace":
             if self._append_record is None:
                 return True
             current_value = self._append_record[self._append_field_idx]
-            self._append_record[self._append_field_idx] = current_value[:-1]
+            updated, cursor = self._delete_backward(
+                current_value,
+                self._append_field_cursor,
+            )
+            self._append_record[self._append_field_idx] = updated
+            self._append_field_cursor = cursor
+            self._refresh()
+            return True
+        if key == "delete":
+            if self._append_record is None:
+                return True
+            current_value = self._append_record[self._append_field_idx]
+            updated, cursor = self._delete_forward(
+                current_value,
+                self._append_field_cursor,
+            )
+            self._append_record[self._append_field_idx] = updated
+            self._append_field_cursor = cursor
             self._refresh()
             return True
         if character and len(character) == 1 and character.isprintable():
@@ -287,14 +320,25 @@ class SafariBaseScreen(Screen[None]):
                 return True
             field_name = self.session.current_columns()[self._append_field_idx]
             max_len = self._field_max_length(field_name)
-            self._append_record[self._append_field_idx] = self._accept_text(
+            updated, cursor = self._accept_text(
                 self._append_record[self._append_field_idx],
                 character,
+                self._append_field_cursor,
                 max_len=max_len,
             )
+            self._append_record[self._append_field_idx] = updated
+            self._append_field_cursor = cursor
             self._refresh()
             return True
         return False
+
+    def _show_assist(self) -> None:
+        self._show_not_implemented("ASSIST menu")
+
+    def _current_append_field_length(self) -> int:
+        if self._append_record is None:
+            return 0
+        return len(self._append_record[self._append_field_idx])
 
     def _toggle_insert_mode(self) -> None:
         self._insert_mode = not self._insert_mode
@@ -312,6 +356,7 @@ class SafariBaseScreen(Screen[None]):
         self._view_mode = "append"
         self._append_record = [""] * len(self.session.current_columns())
         self._append_field_idx = 0
+        self._append_field_cursor = 0
         self._message = "Append form active"
         _log.debug("append-start table=%s", self.session.current_table)
         self._refresh()
@@ -319,6 +364,7 @@ class SafariBaseScreen(Screen[None]):
     def _cancel_append(self) -> None:
         self._append_record = None
         self._append_field_idx = 0
+        self._append_field_cursor = 0
         self._view_mode = "browse"
         self._message = "Append cancelled"
         _log.debug("append-cancel")
@@ -330,6 +376,7 @@ class SafariBaseScreen(Screen[None]):
         rowid = self.session.append_record(self._append_record)
         self._append_record = None
         self._append_field_idx = 0
+        self._append_field_cursor = 0
         self._view_mode = "browse"
         self._cursor_row = max(0, self.session.record_count() - 1)
         self._ensure_cursor_visible()
@@ -337,29 +384,59 @@ class SafariBaseScreen(Screen[None]):
         _log.debug("append-save rowid=%s", rowid)
         self._refresh()
 
-    def _accept_text(self, current: str, character: str, max_len: int) -> str:
+    def _accept_text(
+        self,
+        current: str,
+        character: str,
+        cursor: int,
+        max_len: int,
+    ) -> tuple[str, int]:
         char = character.upper() if self._caps_mode else character
-        if self._insert_mode or not current:
-            updated = current + char
+        if self._insert_mode or cursor >= len(current):
+            updated = current[:cursor] + char + current[cursor:]
         else:
-            updated = current[:-1] + char
-        return updated[:max_len]
+            updated = current[:cursor] + char + current[cursor + 1 :]
+        updated = updated[:max_len]
+        return updated, min(cursor + 1, len(updated))
+
+    def _delete_backward(self, current: str, cursor: int) -> tuple[str, int]:
+        if cursor <= 0:
+            return current, cursor
+        updated = current[: cursor - 1] + current[cursor:]
+        return updated, cursor - 1
+
+    def _delete_forward(self, current: str, cursor: int) -> tuple[str, int]:
+        if cursor >= len(current):
+            return current, cursor
+        updated = current[:cursor] + current[cursor + 1 :]
+        return updated, cursor
 
     def _field_max_length(self, field_name: str) -> int:
         width_map = {name: width for name, width in DEFAULT_ADDRESS_SCHEMA}
         return width_map.get(field_name, 20)
 
+    def _prompt_max_length(self) -> int:
+        return max(20, self._shell_width() - 6)
+
+    def _shell_width(self) -> int:
+        return clamp_shell_dimension(self.size.width, TARGET_WIDTH)
+
+    def _shell_height(self) -> int:
+        return clamp_shell_dimension(self.size.height, TARGET_HEIGHT)
+
+    def _browse_grid_width(self) -> int:
+        return max(40, self._shell_width() - 8)
+
     def _sync_layout_bounds(self) -> None:
         root = self.query_one("#base-root", Container)
-        target_width = clamp_shell_dimension(self.size.width, TARGET_WIDTH)
-        target_height = clamp_shell_dimension(self.size.height, TARGET_HEIGHT)
+        target_width = self._shell_width()
+        target_height = self._shell_height()
         root.styles.width = target_width
         root.styles.height = target_height
         _log.debug("layout width=%s height=%s", target_width, target_height)
 
     def _visible_rows(self) -> int:
-        shell_height = clamp_shell_dimension(self.size.height, TARGET_HEIGHT)
-        return max(4, shell_height - 12)
+        return max(4, self._shell_height() - 8)
 
     def _show_help(self) -> None:
         self._view_mode = "help"
@@ -432,7 +509,7 @@ class SafariBaseScreen(Screen[None]):
             self._show_not_implemented("Delete record")
             return
         if upper in {"ASSIST", "MENU"}:
-            self._show_not_implemented("ASSIST menu")
+            self._show_assist()
             return
         if upper in {"QUIT", "EXIT"}:
             self.app.exit()
@@ -457,8 +534,6 @@ class SafariBaseScreen(Screen[None]):
         self.query_one("#workspace-title", Static).update(self._workspace_title())
         self.query_one("#workspace-body", Static).update(self._workspace_text())
         self.query_one("#status-bar", Static).update(self._status_text())
-        self.query_one("#button-bar", Static).update(self._button_text())
-        self.query_one("#help-bar", Static).update(self._help_text())
         self._refresh_prompt()
 
     def _refresh_prompt(self) -> None:
@@ -467,9 +542,8 @@ class SafariBaseScreen(Screen[None]):
     def _scoreboard_text(self) -> str:
         mode = self._view_mode.upper().ljust(9)
         return (
-            f" Ins {'ON ' if self._insert_mode else 'OFF'}  "
-            f"Caps {'ON ' if self._caps_mode else 'OFF'}  "
-            f"Area A  Mode {mode}  "
+            f" SAFARI BASE  Area [A]  Ins {'ON ' if self._insert_mode else 'OFF'}  "
+            f"Caps {'ON ' if self._caps_mode else 'OFF'}  Mode {mode}  "
             f"Table {self.session.current_table}"
         )
 
@@ -495,9 +569,9 @@ class SafariBaseScreen(Screen[None]):
     def _render_browse(self) -> str:
         columns = self.session.current_columns()
         width_map = {name: width for name, width in DEFAULT_ADDRESS_SCHEMA}
-        widths = [max(4, min(width_map.get(name, len(name) + 2), 12)) for name in columns]
+        widths = [max(4, min(width_map.get(name, len(name) + 2), 14)) for name in columns]
 
-        remaining = GRID_WIDTH - 6 - max(0, len(widths) - 1)
+        remaining = self._browse_grid_width() - 6 - max(0, len(widths) - 1)
         adjusted_widths: list[int] = []
         for width in widths:
             column_width = min(width, max(4, remaining))
@@ -508,10 +582,10 @@ class SafariBaseScreen(Screen[None]):
         visible_columns = columns[: len(adjusted_widths)]
 
         header_cells = ["REC#".ljust(5)]
-        divider_cells = ["".ljust(5, "─")]
+        divider_cells = ["".ljust(5, "-")]
         for name, width in zip(visible_columns, adjusted_widths):
             header_cells.append(name[:width].ljust(width))
-            divider_cells.append("".ljust(width, "─"))
+            divider_cells.append("".ljust(width, "-"))
 
         lines = [
             " ".join(header_cells),
@@ -562,13 +636,14 @@ class SafariBaseScreen(Screen[None]):
                 "",
                 " Keys",
                 "  Up/Down, PgUp/PgDn navigate rows",
+                "  Left/Right/Home/End edit the dot prompt",
                 "  F1 Help, F6 Structure, F7 Tables, F8 Browse",
-                "  F2 Assist, F3 Append, F4 Edit, F5 Delete",
+                "  F10 Assist (F2 legacy alias), F3 Append, F4 Edit",
+                "  Ctrl+D delete placeholder (F5 legacy alias)",
                 "  Insert toggles Insert mode",
-                "  CapsLock or Ctrl+L toggles Caps mode",
-                "  Ctrl+A opens the append form",
-                "  Esc clears the dot prompt",
-                "  Ctrl+Q or F10 quits",
+                "  CapsLock toggles Caps mode (Ctrl+L legacy alias)",
+                "  Ctrl+S/Ctrl+W/F2 save append, Esc/F3 cancel",
+                "  Ctrl+A opens append, Ctrl+Q quits",
             ]
         )
 
@@ -585,13 +660,14 @@ class SafariBaseScreen(Screen[None]):
             marker = ">" if index == self._append_field_idx else " "
             value = self._append_record[index]
             max_len = self._field_max_length(field_name)
-            lines.append(f" {marker} {field_name:<10}: {value:<20} [{len(value):>2}/{max_len}]")
+            lines.append(f" {marker} {field_name:<10}: {value:<28} [{len(value):>2}/{max_len}]")
         lines.extend(
             [
                 "",
-                " Enter/Down next field   Up previous field",
-                " F2 save record          Esc/F3 cancel",
-                " Insert toggle insert    CapsLock/Ctrl+L toggle caps",
+                " Enter/Tab/Down next field   Shift+Tab/Up previous field",
+                " Left/Right/Home/End move in field",
+                " Ctrl+S/Ctrl+W/F2 save       Esc/F3 cancel",
+                " Insert toggle insert        CapsLock/Ctrl+L toggle caps",
             ]
         )
         return "\n".join(lines)
@@ -605,19 +681,9 @@ class SafariBaseScreen(Screen[None]):
             else "(memory)"
         )
         return (
-            f" {database_label}  [A]  Rec {current_record}/{record_count}  "
+            f" {database_label}  {self.session.current_table}  [A]  "
+            f"Rec {current_record}/{record_count}  "
+            f"Ins {'ON' if self._insert_mode else 'OFF'}  "
+            f"Caps {'ON' if self._caps_mode else 'OFF'}  "
             f"{self._message}"
-        )
-
-    def _help_text(self) -> str:
-        if self._view_mode == "append":
-            return " Type into the highlighted field, then Enter or Down to continue "
-        return " Arrows Move  PgUp/PgDn Scroll  Enter Run Command  Esc Clear Prompt "
-
-    def _button_text(self) -> str:
-        if self._view_mode == "append":
-            return " F2 Save  F3 Cancel  Insert Toggle Ins  Ctrl+L Toggle Caps  F10 Quit "
-        return (
-            " F1 Help  F2 Assist  F3 Append  F4 Edit  F5 Delete  "
-            "F6 Struct  F7 Tables  F8 Browse  F10 Quit "
         )

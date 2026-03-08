@@ -94,10 +94,11 @@ def test_arrow_key_does_not_crash_prompt_handling():
     asyncio.run(run())
 
 
-def test_screen_css_uses_larger_shell():
-    assert "width: 80;" in SCREEN_CSS
-    assert "height: 60;" in SCREEN_CSS
-    assert "height: 4;" in SCREEN_CSS
+def test_screen_css_uses_roomier_shell():
+    assert "width: 100;" in SCREEN_CSS
+    assert "height: 34;" in SCREEN_CSS
+    assert "#prompt-line" in SCREEN_CSS
+    assert "#button-bar" not in SCREEN_CSS
 
 
 def test_shell_dimension_clamps_to_terminal_size():
@@ -111,9 +112,14 @@ def test_function_keys_are_wired():
         app = SafariBaseApp()
         async with app.run_test() as pilot:
             await pilot.pause()
-            await pilot.press("f2")
+            await pilot.press("f10")
             screen = app.screen
             assert isinstance(screen, SafariBaseScreen)
+            assert (
+                "ASSIST menu not implemented yet"
+                in screen.query_one("#status-bar", Static).content
+            )
+            await pilot.press("f2")
             assert (
                 "ASSIST menu not implemented yet"
                 in screen.query_one("#status-bar", Static).content
@@ -143,6 +149,18 @@ def test_ctrl_a_shows_placeholder_and_prompt_still_updates():
     asyncio.run(run())
 
 
+def test_prompt_supports_cursor_navigation_and_editing():
+    async def run() -> None:
+        app = SafariBaseApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("a", "b", "c", "left", "left", "delete")
+            prompt = app.screen.query_one("#prompt-line", Static).content
+            assert prompt == ". ac"
+
+    asyncio.run(run())
+
+
 def test_insert_and_caps_toggles_update_scoreboard():
     async def run() -> None:
         app = SafariBaseApp()
@@ -162,10 +180,24 @@ def test_append_form_saves_record():
         async with app.run_test() as pilot:
             await pilot.pause()
             await pilot.press("f3", "S", "m", "i", "t", "h", "enter", "J", "o", "enter")
-            await pilot.press("f2")
+            await pilot.press("ctrl+s")
             screen = app.screen
             assert isinstance(screen, SafariBaseScreen)
             assert "Saved record" in screen.query_one("#status-bar", Static).content
             assert "Smith" in screen.query_one("#workspace-body", Static).content
+
+    asyncio.run(run())
+
+
+def test_ctrl_d_uses_delete_placeholder_message():
+    async def run() -> None:
+        app = SafariBaseApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("ctrl+d")
+            assert "Delete mark not implemented yet" in app.screen.query_one(
+                "#status-bar",
+                Static,
+            ).content
 
     asyncio.run(run())
