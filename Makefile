@@ -34,3 +34,7 @@ mypy:
 
 format:
 	uv run ruff format safari_writer/ tests/
+
+.PHONY: publish
+publish: test
+	rm -rf dist && hatch build
