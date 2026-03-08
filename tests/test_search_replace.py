@@ -74,8 +74,9 @@ class TestFindNext:
     def test_finds_on_same_line(self):
         ed = make_editor("hello world")
         ed.state.search_string = "world"
-        ed.state.last_search_row = 0
-        ed.state.last_search_col = 0
+        # Search starts AFTER cursor. Set cursor before "world"
+        ed.state.cursor_row = 0
+        ed.state.cursor_col = 0
         result = ed._find_next()
         assert result is True
         assert ed.state.cursor_row == 0
@@ -84,8 +85,8 @@ class TestFindNext:
     def test_finds_on_next_line(self):
         ed = make_editor("hello\nworld")
         ed.state.search_string = "world"
-        ed.state.last_search_row = 0
-        ed.state.last_search_col = 0
+        ed.state.cursor_row = 0
+        ed.state.cursor_col = 0
         result = ed._find_next()
         assert result is True
         assert ed.state.cursor_row == 1
@@ -94,27 +95,29 @@ class TestFindNext:
     def test_not_found_returns_false(self):
         ed = make_editor("hello world")
         ed.state.search_string = "xyz"
-        ed.state.last_search_row = 0
-        ed.state.last_search_col = 0
+        ed.state.cursor_row = 0
+        ed.state.cursor_col = 0
         result = ed._find_next()
         assert result is False
 
     def test_advances_search_position(self):
         ed = make_editor("aaa")
         ed.state.search_string = "a"
-        ed.state.last_search_row = 0
-        ed.state.last_search_col = 0
+        ed.state.cursor_row = 0
+        ed.state.cursor_col = -1 # Start before first 'a'
         ed._find_next()
-        assert ed.state.last_search_col == 1
+        assert ed.state.cursor_col == 0
         ed._find_next()
-        assert ed.state.last_search_col == 2
+        assert ed.state.cursor_col == 1
+        ed._find_next()
+        assert ed.state.cursor_col == 2
 
     def test_wraps_around_to_beginning(self):
         ed = make_editor("target\nsomething else")
         ed.state.search_string = "target"
         # Start searching from row 1 (past the match)
-        ed.state.last_search_row = 1
-        ed.state.last_search_col = 0
+        ed.state.cursor_row = 1
+        ed.state.cursor_col = 0
         result = ed._find_next()
         assert result is True
         assert ed.state.cursor_row == 0
@@ -128,8 +131,8 @@ class TestFindNext:
     def test_wildcard_find(self):
         ed = make_editor("cat bat sat")
         ed.state.search_string = "?at"
-        ed.state.last_search_row = 0
-        ed.state.last_search_col = 0
+        ed.state.cursor_row = 0
+        ed.state.cursor_col = -1
         ed._find_next()
         assert ed.state.cursor_col == 0  # "cat" at 0
 
@@ -141,25 +144,25 @@ class TestFindNext:
 class TestReplaceAllInLine:
     def test_simple_replace(self):
         ed = make_editor()
-        line, count = ed._replace_all_in_line("hello world hello", "hello", "hi")
+        line, count = ed._replace_all_in_line_from("hello world hello", "hello", "hi", 0)
         assert line == "hi world hi"
         assert count == 2
 
     def test_no_match(self):
         ed = make_editor()
-        line, count = ed._replace_all_in_line("hello", "xyz", "abc")
+        line, count = ed._replace_all_in_line_from("hello", "xyz", "abc", 0)
         assert line == "hello"
         assert count == 0
 
     def test_wildcard_replace(self):
         ed = make_editor()
-        line, count = ed._replace_all_in_line("cat bat sat", "?at", "X")
+        line, count = ed._replace_all_in_line_from("cat bat sat", "?at", "X", 0)
         assert line == "X X X"
         assert count == 3
 
     def test_replace_with_longer_string(self):
         ed = make_editor()
-        line, count = ed._replace_all_in_line("a b a", "a", "longer")
+        line, count = ed._replace_all_in_line_from("a b a", "a", "longer", 0)
         assert line == "longer b longer"
         assert count == 2
 
@@ -174,6 +177,7 @@ class TestGlobalReplace:
         ed.state.search_string = "apple"
         ed.state.replace_string = "pear"
         ed.state.cursor_row = 0
+        ed.state.cursor_col = 0
         ed._global_replace()
         assert ed.state.buffer[0] == "pear"
         assert ed.state.buffer[2] == "pear"
@@ -184,6 +188,7 @@ class TestGlobalReplace:
         ed.state.search_string = "apple"
         ed.state.replace_string = "pear"
         ed.state.cursor_row = 2  # start from row 2
+        ed.state.cursor_col = 0
         ed._global_replace()
         assert ed.state.buffer[0] == "apple"  # row 0 untouched
         assert ed.state.buffer[2] == "pear"
@@ -193,6 +198,7 @@ class TestGlobalReplace:
         ed.state.search_string = "x"
         ed.state.replace_string = "y"
         ed.state.cursor_row = 0
+        ed.state.cursor_col = 0
         ed._global_replace()
         ed._mock_screen.set_message.assert_called_with("Replaced 3 occurrence(s)")
 
@@ -214,8 +220,6 @@ class TestReplaceCurrentAndFindNext:
         ed.state.replace_string = "hi"
         ed.state.cursor_row = 0
         ed.state.cursor_col = 0
-        ed.state.last_search_row = 0
-        ed.state.last_search_col = 0
         ed._replace_current_and_find_next()
         # First "hello" replaced
         assert ed.state.buffer[0].startswith("hi ")
@@ -227,8 +231,6 @@ class TestReplaceCurrentAndFindNext:
         ed.state.replace_string = "hi"
         ed.state.cursor_row = 0
         ed.state.cursor_col = 0
-        ed.state.last_search_row = 0
-        ed.state.last_search_col = 0
         ed._replace_current_and_find_next()
         # After replacing "hello" at 0, cursor should be on the second "hello"
         assert ed.state.cursor_col == 3  # "hi " = 3 chars, second match starts there

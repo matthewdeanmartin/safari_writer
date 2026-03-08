@@ -1,8 +1,24 @@
 [project]
 name = "safari-writer"
 version = "0.1.0"
-description = "A UI-compatible clone of AtariWriter 80, built with Textual"
+description = "A UI-compatible clone of AtariWriter, built with Textual"
 requires-python = ">=3.12"
+authors = [
+    {name = "Matthew Martin", email = "matthewdeanmartin@gmail.com"},
+]
+license = {text = "MIT"}
+readme = "README.md"
+keywords = ["packaging", "metadata", ]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 dependencies = [
     "textual>=1.0.0",
     "pyenchant>=3.2.0",
@@ -18,7 +34,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["safari_writer", "safari_dos"]
-include = ["safari_writer/*.sfw"]
+include = ["safari_writer/*.sfw",
+"metametameta/py.typed",
+    "/README.md", "LICENSE",]
+
+
+
+
 
 [dependency-groups]
 dev = [
@@ -28,6 +50,7 @@ dev = [
     "textual-dev>=1.0.0",
     "pytest>=8.0.0",
     "hypothesis>=6.151.9",
+    "tox>=4.0.0",
 ]
 
 [tool.mypy]

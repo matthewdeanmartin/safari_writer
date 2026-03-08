@@ -1,4 +1,4 @@
-.PHONY: install run dev test check lint lint-ruff pylint format mypy
+.PHONY: install run dev test check lint lint-ruff pylint format mypy tox
 
 install:
 	uv sync
@@ -11,6 +11,9 @@ dev:
 
 test:
 	uv run pytest tests/ -v
+
+tox:
+	uv run tox
 
 check: test lint mypy
 
