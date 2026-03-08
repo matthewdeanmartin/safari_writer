@@ -68,7 +68,7 @@ def test_main_menu_mount_shows_context_and_status_bars():
             assert (
                 "Merge: contacts.mm" in screen.query_one("#context-bar", Static).content
             )
-            assert "Bytes Free:" in screen.query_one("#status-bar", Static).content
+            assert "Bytes Free:" in screen.query_one("#status-text", Static).content
 
     asyncio.run(run())
 

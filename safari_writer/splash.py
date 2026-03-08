@@ -82,7 +82,7 @@ PALETTE = {
 
 TITLE = "SAFARI WRITER"
 SUBTITLE = "FIELD NOTES • STORY ENGINE • VINTAGE EDITION"
-SPLASH_DURATION_SECONDS = 3.0
+SPLASH_DURATION_SECONDS = 15.0
 
 
 ASCII_TITLE = [
@@ -282,8 +282,10 @@ def draw_frame(frame: int) -> None:
         y = title_y + i
         sys.stdout.write(move(x, y) + colorize_line(line, frame))
 
-    # Decorative animal banner
-    animal = random.choice(ANIMALS) if USE_EMOJI else "◆"
+    # Decorative animal banner - rotate every 1 second (10 frames @ 0.1s per frame)
+    frames_per_animal = 10
+    animal_index = (frame // frames_per_animal) % len(ANIMALS)
+    animal = ANIMALS[animal_index] if USE_EMOJI else "◆"
     banner = f"{animal}  {SUBTITLE}  {animal}"
     banner_x = center_x(banner, width)
     banner_y = title_y + len(ASCII_TITLE) + 2
@@ -441,7 +443,7 @@ def run_splash(duration: float = SPLASH_DURATION_SECONDS) -> None:
                 _draw_status_lines(frame)
                 if key_pressed() or time.monotonic() >= deadline:
                     break
-                time.sleep(0.08)
+                time.sleep(0.1)  # Slightly slower frame rate to reduce blinking
                 frame += 1
     finally:
         sys.stdout.write(CLEAR + HOME + SHOW_CURSOR + RESET)

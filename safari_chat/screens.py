@@ -254,7 +254,10 @@ class SafariChatMainScreen(Screen):
     # -- Actions ------------------------------------------------------------
 
     def action_quit_chat(self) -> None:
-        self.app.exit()
+        if hasattr(self.app, "quit_chat"):
+            self.app.quit_chat()  # type: ignore[attr-defined]
+        else:
+            self.app.exit()
 
     def action_show_topics(self) -> None:
         self.app.push_screen(SafariChatTopicsScreen(self.state))

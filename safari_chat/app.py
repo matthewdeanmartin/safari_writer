@@ -13,6 +13,9 @@ from safari_chat.state import SafariChatState
 __all__ = ["SafariChatApp"]
 
 
+_DEFAULT_HELP = Path(__file__).parent / "default_help.md"
+
+
 class SafariChatApp(App[None]):
     """ELIZA-RAG chat assistant with AtariWriter aesthetic."""
 
@@ -20,6 +23,10 @@ class SafariChatApp(App[None]):
 
     def __init__(self, document_path: Path | None = None) -> None:
         super().__init__()
+        # If no document provided, fall back to the bundled default help.
+        if document_path is None or not document_path.is_file():
+            if _DEFAULT_HELP.is_file():
+                document_path = _DEFAULT_HELP
         chunks = []
         if document_path and document_path.is_file():
             text = document_path.read_text(encoding="utf-8", errors="replace")

@@ -13,7 +13,9 @@
       "Bash(make lint:*)",
       "Bash(make mypy:*)",
       "Bash(uv add:*)",
-      "Bash(make check:*)"
+      "Bash(make check:*)",
+      "Bash(python3:*)",
+      "Bash(make test:*)"
     ]
   }
 }

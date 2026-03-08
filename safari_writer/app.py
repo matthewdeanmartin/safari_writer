@@ -39,6 +39,9 @@ from safari_dos.services import (
     record_recent_location,
 )
 from safari_dos.state import SafariDosState
+from safari_chat.engine import parse_document as parse_chat_document
+from safari_chat.screens import SafariChatMainScreen
+from safari_chat.state import SafariChatState
 
 __all__ = ["SafariWriterApp"]
 
@@ -132,6 +135,9 @@ class SafariWriterApp(App):
             self.dos_state = self._build_safari_dos_state(start_path.resolve())
             self.push_screen(SafariDosMainMenuScreen(self.dos_state))
             return
+        if destination == "safari_chat":
+            self._action_safari_chat()
+            return
 
     def _set_initial_cursor(self, line: int | None, column: int | None) -> None:
         if not self.state.buffer:
@@ -166,6 +172,8 @@ class SafariWriterApp(App):
             self._action_index_external()
         elif action == "safari_dos":
             self._action_safari_dos()
+        elif action == "safari_chat":
+            self._action_safari_chat()
         elif action == "load":
             self._action_load_via_safari_dos()
         elif action == "save":
@@ -476,6 +484,35 @@ class SafariWriterApp(App):
             return
         if hasattr(screen, "set_message"):
             screen.set_message(msg)
+
+    def action_quit(self) -> None:
+        """Override Textual's default ctrl+q quit.
+
+        If the active screen is a sub-app screen (Chat, DOS), return to the
+        menu instead of exiting the whole app.
+        """
+        if isinstance(self.screen, SafariChatMainScreen):
+            self.quit_chat()
+            return
+        if isinstance(self.screen, (SafariDosMainMenuScreen, SafariDosBrowserScreen)):
+            self.quit_dos()
+            return
+        self._action_quit()
+
+    def _action_safari_chat(self) -> None:
+        from safari_chat.app import _DEFAULT_HELP
+
+        doc_path = _DEFAULT_HELP if _DEFAULT_HELP.is_file() else None
+        chunks = []
+        if doc_path and doc_path.is_file():
+            text = doc_path.read_text(encoding="utf-8", errors="replace")
+            chunks = parse_chat_document(text)
+        self.chat_state = SafariChatState(document_path=doc_path, chunks=chunks)
+        self.push_screen(SafariChatMainScreen(self.chat_state))
+
+    def quit_chat(self) -> None:
+        """Called by SafariChatMainScreen to return to the writer menu."""
+        self.pop_screen()
 
     def _action_safari_dos(self) -> None:
         if self._last_safari_dos_path.exists():
