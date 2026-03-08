@@ -122,6 +122,38 @@ SafariDosMainMenuScreen {
     color: $foreground;
 }
 
+#dos-browser-main {
+    height: 1fr;
+    layout: horizontal;
+    padding: 0 1;
+}
+
+#dos-browser-menu {
+    width: 26;
+    min-width: 26;
+    height: 100%;
+    border: solid $accent;
+    background: $surface;
+    padding: 1;
+    margin-right: 1;
+}
+
+#dos-browser-menu-title {
+    color: $accent;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#dos-browser-menu-items {
+    color: $foreground;
+    text-style: bold;
+}
+
+#dos-browser-content {
+    width: 1fr;
+    height: 100%;
+}
+
 #dos-footer {
     dock: bottom;
     height: 2;
@@ -357,14 +389,19 @@ class SafariDosBrowserScreen(Screen):
 
     def compose(self) -> ComposeResult:
         with Container(id="dos-container"):
-            with Container(id="dos-header"):
-                yield Static("*** SAFARI DOS FILE LIST ***", id="dos-title")
-                yield Static("", id="dos-path")
-                yield Static(
-                    "SEL NAME                         SIZE     TYPE   MODIFIED         F",
-                    id="dos-columns",
-                )
-            yield Static("", id="dos-body")
+            with Container(id="dos-browser-main"):
+                with Container(id="dos-browser-menu"):
+                    yield Static(self._menu_title(), id="dos-browser-menu-title")
+                    yield Static(self._render_side_menu(), id="dos-browser-menu-items")
+                with Container(id="dos-browser-content"):
+                    with Container(id="dos-header"):
+                        yield Static("*** SAFARI DOS FILE LIST ***", id="dos-title")
+                        yield Static("", id="dos-path")
+                        yield Static(
+                            "SEL NAME                         SIZE     TYPE   MODIFIED         F",
+                            id="dos-columns",
+                        )
+                    yield Static("", id="dos-body")
             with Container(id="dos-footer"):
                 yield Static("", id="dos-status")
                 yield Static(
@@ -382,6 +419,64 @@ class SafariDosBrowserScreen(Screen):
         if self._picker_mode == "directory":
             return "Enter=open  Tab=choose folder  F=favorites  .=hidden  Esc=cancel"
         return "Enter=open  Space=select  C/M/R/U/N/X ops  F=favorites  P=protect  /=filter  S=sort  .=hidden  Esc=menu"
+
+    def _menu_title(self) -> str:
+        if self._picker_mode == "file":
+            return "SELECT FILE"
+        if self._picker_mode == "directory":
+            return "SELECT FOLDER"
+        return "FILE COMMANDS"
+
+    def _menu_entries(self) -> list[tuple[str, str]]:
+        if self._picker_mode == "file":
+            return [
+                ("RET.", "OPEN / CHOOSE"),
+                ("BS.", "PARENT FOLDER"),
+                ("F.", "FAVORITES"),
+                ("D.", "DEVICES"),
+                ("H.", "HOME"),
+                (".", "SHOW HIDDEN"),
+                ("ESC.", "CANCEL"),
+            ]
+        if self._picker_mode == "directory":
+            return [
+                ("RET.", "OPEN FOLDER"),
+                ("TAB.", "CHOOSE HERE"),
+                ("BS.", "PARENT FOLDER"),
+                ("F.", "FAVORITES"),
+                ("D.", "DEVICES"),
+                ("H.", "HOME"),
+                (".", "SHOW HIDDEN"),
+                ("ESC.", "CANCEL"),
+            ]
+        return [
+            ("RET.", "OPEN ITEM"),
+            ("SPC.", "SELECT ITEM"),
+            ("C.", "COPY FILE(S)"),
+            ("M.", "MOVE FILE(S)"),
+            ("R.", "RENAME FILE"),
+            ("U.", "DUPLICATE FILE"),
+            ("N.", "NEW FOLDER"),
+            ("X.", "DELETE FILE(S)"),
+            ("P.", "LOCK / UNLOCK"),
+            ("I.", "ITEM INFO"),
+            ("", ""),
+            ("BS.", "PARENT FOLDER"),
+            ("F.", "FAVORITES"),
+            ("D.", "DEVICES"),
+            ("G.", "GARBAGE"),
+            ("H.", "HOME"),
+            ("/.", "NAME FILTER"),
+            ("S.", "SORT FILES"),
+            (".", "SHOW HIDDEN"),
+            ("ESC.", "RETURN MENU"),
+        ]
+
+    def _render_side_menu(self) -> str:
+        return "\n".join(
+            f"{key:<5}{label}" if key else ""
+            for key, label in self._menu_entries()
+        )
 
     def set_message(self, message: str) -> None:
         self._message = message

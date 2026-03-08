@@ -28,6 +28,7 @@ dependencies = [
 [project.scripts]
 safari-writer = "safari_writer.main:main"
 safari-dos = "safari_dos.main:main"
+safari-chat = "safari_chat.main:main"
 
 
 [project.urls]
@@ -40,7 +41,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["safari_writer", "safari_dos"]
+packages = ["safari_writer", "safari_dos", "safari_chat"]
 include = ["safari_writer/*.sfw",
     "safari_writer/py.typed",
     "/README.md", "LICENSE", ]

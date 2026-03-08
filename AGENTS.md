@@ -26,3 +26,4 @@ Python + Textual TUI. `uv` manages env + deps.
 - Windows repo; commands may use git-bash syntax.
 - Specs: `spec/*.md`
 - TODO: `TODO.md`
+- Skill: `.github/skills/session-sql-todos/SKILL.md` for session SQL / TODO tracking.

@@ -19,7 +19,7 @@ authors:
       - fixed Safari DOS integration crash and implemented cross-app quit protocol
       - overhauled Mail Merge module with direct record entry, save-early support, and subset filtering
       - implemented full Search & Replace with wildcard support and wrapping search
-      - corrected AtariWriter 80 UI layout with top-docked tabs and bottom-docked command stack
+      - corrected Safari Writer layout with top-docked tabs and bottom-docked command stack
 ---
 # AUTHORS
 

@@ -4,7 +4,8 @@
 
 WRITER_MODULE := safari_writer
 DOS_MODULE := safari_dos
-ALL_MODULES := $(WRITER_MODULE) $(DOS_MODULE)
+CHAT_MODULE := safari_chat
+ALL_MODULES := $(WRITER_MODULE) $(DOS_MODULE) $(CHAT_MODULE)
 FORMAT_TARGETS := $(ALL_MODULES) tests
 
 PYLINT_RULES := --disable=all --enable=E,F,W0611,W0612
@@ -25,14 +26,14 @@ TOX_DEFAULT_FLAGS := -q
 TOX_VERBOSE_FLAGS := -v
 
 .PHONY: install install-verbose \
-	run run-verbose run-writer run-writer-verbose run-dos run-dos-verbose \
-	dev dev-verbose dev-writer dev-writer-verbose dev-dos dev-dos-verbose \
+	run run-verbose run-writer run-writer-verbose run-dos run-dos-verbose run-chat run-chat-verbose \
+	dev dev-verbose dev-writer dev-writer-verbose dev-dos dev-dos-verbose dev-chat dev-chat-verbose \
 	test test-verbose tox tox-verbose check check-verbose \
-	lint lint-verbose lint-all lint-all-verbose lint-writer lint-writer-verbose lint-dos lint-dos-verbose \
-	lint-ruff lint-ruff-verbose lint-ruff-all lint-ruff-all-verbose lint-ruff-writer lint-ruff-writer-verbose lint-ruff-dos lint-ruff-dos-verbose \
-	pylint pylint-verbose pylint-all pylint-all-verbose pylint-writer pylint-writer-verbose pylint-dos pylint-dos-verbose \
-	mypy mypy-verbose mypy-all mypy-all-verbose mypy-writer mypy-writer-verbose mypy-dos mypy-dos-verbose \
-	format format-verbose format-all format-all-verbose format-writer format-writer-verbose format-dos format-dos-verbose \
+	lint lint-verbose lint-all lint-all-verbose lint-writer lint-writer-verbose lint-dos lint-dos-verbose lint-chat lint-chat-verbose \
+	lint-ruff lint-ruff-verbose lint-ruff-all lint-ruff-all-verbose lint-ruff-writer lint-ruff-writer-verbose lint-ruff-dos lint-ruff-dos-verbose lint-ruff-chat lint-ruff-chat-verbose \
+	pylint pylint-verbose pylint-all pylint-all-verbose pylint-writer pylint-writer-verbose pylint-dos pylint-dos-verbose pylint-chat pylint-chat-verbose \
+	mypy mypy-verbose mypy-all mypy-all-verbose mypy-writer mypy-writer-verbose mypy-dos mypy-dos-verbose mypy-chat mypy-chat-verbose \
+	format format-verbose format-all format-all-verbose format-writer format-writer-verbose format-dos format-dos-verbose format-chat format-chat-verbose \
 	publish publish-verbose
 
 install:
@@ -57,6 +58,12 @@ run-dos:
 run-dos-verbose:
 	@uv run --verbose safari-dos
 
+run-chat:
+	@uv run --quiet safari-chat
+
+run-chat-verbose:
+	@uv run --verbose safari-chat
+
 dev: dev-writer
 
 dev-verbose: dev-writer-verbose
@@ -72,6 +79,12 @@ dev-dos:
 
 dev-dos-verbose:
 	@uv run textual run --dev safari_dos/main.py
+
+dev-chat:
+	@uv run textual run safari_chat/main.py
+
+dev-chat-verbose:
+	@uv run textual run --dev safari_chat/main.py
 
 test:
 	@uv run pytest tests/ $(PYTEST_DEFAULT_FLAGS)
@@ -105,6 +118,10 @@ lint-dos: lint-ruff-dos pylint-dos
 
 lint-dos-verbose: lint-ruff-dos-verbose pylint-dos-verbose
 
+lint-chat: lint-ruff-chat pylint-chat
+
+lint-chat-verbose: lint-ruff-chat-verbose pylint-chat-verbose
+
 lint-ruff: lint-ruff-all
 
 lint-ruff-verbose: lint-ruff-all-verbose
@@ -126,6 +143,12 @@ lint-ruff-dos:
 
 lint-ruff-dos-verbose:
 	@uv run ruff check $(RUFF_CHECK_VERBOSE_FLAGS) $(DOS_MODULE)
+
+lint-ruff-chat:
+	@uv run ruff check $(RUFF_CHECK_DEFAULT_FLAGS) $(CHAT_MODULE)
+
+lint-ruff-chat-verbose:
+	@uv run ruff check $(RUFF_CHECK_VERBOSE_FLAGS) $(CHAT_MODULE)
 
 pylint: pylint-all
 
@@ -149,6 +172,12 @@ pylint-dos:
 pylint-dos-verbose:
 	@uv run pylint $(PYLINT_VERBOSE_FLAGS) $(DOS_MODULE)
 
+pylint-chat:
+	@uv run pylint $(PYLINT_DEFAULT_FLAGS) $(CHAT_MODULE)
+
+pylint-chat-verbose:
+	@uv run pylint $(PYLINT_VERBOSE_FLAGS) $(CHAT_MODULE)
+
 mypy: mypy-writer
 
 mypy-verbose: mypy-writer-verbose
@@ -168,6 +197,12 @@ mypy-dos:
 
 mypy-dos-verbose:
 	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(DOS_MODULE)
+
+mypy-chat:
+	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_DEFAULT_FLAGS) $(CHAT_MODULE)
+
+mypy-chat-verbose:
+	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(CHAT_MODULE)
 
 format: format-all
 
@@ -190,6 +225,12 @@ format-dos:
 
 format-dos-verbose:
 	@uv run ruff format $(RUFF_FORMAT_VERBOSE_FLAGS) $(DOS_MODULE)
+
+format-chat:
+	@uv run ruff format $(RUFF_FORMAT_DEFAULT_FLAGS) $(CHAT_MODULE)
+
+format-chat-verbose:
+	@uv run ruff format $(RUFF_FORMAT_VERBOSE_FLAGS) $(CHAT_MODULE)
 
 publish: test
 	@if exist dist rmdir /s /q dist
