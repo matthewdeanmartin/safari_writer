@@ -6,6 +6,7 @@ from textual.app import App, ScreenStackError
 
 from safari_writer.cli_types import StartupRequest
 from safari_writer.state import AppState
+from safari_writer.path_utils import leaf_name
 from safari_writer.screens.main_menu import MainMenuScreen
 from safari_writer.screens.editor import EditorScreen
 from safari_writer.screens.global_format import GlobalFormatScreen
@@ -464,7 +465,7 @@ class SafariWriterApp(App):
 
     def _default_save_name(self) -> str:
         if self.state.filename:
-            return Path(self.state.filename).name
+            return leaf_name(self.state.filename)
         return "document.sfw" if has_controls(self.state.buffer) else "document.txt"
 
     def _picker_start_path(self) -> Path:

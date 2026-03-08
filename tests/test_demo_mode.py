@@ -71,6 +71,12 @@ def test_main_menu_mount_shows_context_and_status_bars():
     asyncio.run(run())
 
 
+def test_default_save_name_uses_windows_basename_on_linux():
+    app = SafariWriterApp(state=AppState(filename=r"C:\docs\draft.sfw"))
+
+    assert app._default_save_name() == "draft.sfw"
+
+
 def test_handle_menu_action_routes_to_demo(monkeypatch):
     app = SafariWriterApp()
     called: list[str] = []

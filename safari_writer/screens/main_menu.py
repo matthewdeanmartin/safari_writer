@@ -1,11 +1,11 @@
 """Main Menu screen — the hub for all Safari Writer operations."""
 
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
+
+from safari_writer.path_utils import leaf_name
 
 
 MENU_ITEMS = [
@@ -145,7 +145,7 @@ class MainMenuScreen(Screen):
     def _display_name(self, filename: str, empty_label: str) -> str:
         if not filename:
             return empty_label
-        return Path(filename).name or filename
+        return leaf_name(filename)
 
     def _refresh_footer(self) -> None:
         if not self.is_mounted:
