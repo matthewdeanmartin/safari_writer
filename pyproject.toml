@@ -1,6 +1,6 @@
 [project]
 name = "safari-writer"
-version = "0.1.0"
+version = "0.1.1"
 description = "A UI-compatible clone of AtariWriter, built with Textual"
 requires-python = ">=3.10"
 authors = [
@@ -10,6 +10,7 @@ license = { text = "MIT" }
 readme = "README.md"
 keywords = ["editor", "retro"]
 classifiers = [
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
@@ -35,7 +36,7 @@ safari-base = "safari_base.main:main"
 [project.urls]
 "Bug Tracker" = "https://github.com/matthewdeanmartin/safari-writer/issues"
 "Change Log" = "https://github.com/matthewdeanmartin/safari-writer/blob/main/CHANGELOG.md"
-
+"Documentation" = "https://safari-writer.readthedocs.io/en/latest/"
 
 [build-system]
 requires = ["hatchling"]
