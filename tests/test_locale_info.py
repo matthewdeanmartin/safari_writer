@@ -160,6 +160,31 @@ class TestGetTranslation:
         result = trans.gettext("Create File")
         assert result == "Crear archivo"
 
+    def test_po_fallback_when_mo_missing(self, tmp_path, monkeypatch):
+        locale_dir = tmp_path / "locales" / "fr" / "LC_MESSAGES"
+        locale_dir.mkdir(parents=True)
+        (locale_dir / "safari_writer.po").write_text(
+            '\n'.join([
+                'msgid ""',
+                'msgstr ""',
+                "",
+                'msgid "Quit"',
+                'msgstr "Quitter"',
+                "",
+            ]),
+            encoding="utf-8",
+        )
+
+        import safari_writer.locale_info as li
+
+        monkeypatch.setattr(li, "_LOCALES_DIR", tmp_path / "locales")
+        li._translation_cache.clear()
+
+        trans = li.get_translation("fr")
+        assert trans.gettext("Quit") == "Quitter"
+
+        li._translation_cache.clear()
+
     def test_unknown_lang_falls_back_to_identity(self):
         trans = get_translation("xx")
         # NullTranslations returns the msgid unchanged

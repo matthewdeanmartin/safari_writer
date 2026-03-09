@@ -174,6 +174,73 @@ _LOCALES_DIR = Path(__file__).parent / "locales"
 _translation_cache: dict[str, _gettext_mod.NullTranslations] = {}
 
 
+class _DictTranslations(_gettext_mod.NullTranslations):
+    """Simple translation catalog backed by msgid/msgstr pairs from a .po file."""
+
+    def __init__(self, catalog: dict[str, str]) -> None:
+        super().__init__()
+        self._catalog = catalog
+
+    def gettext(self, message: str) -> str:
+        return self._catalog.get(message, message)
+
+
+def _parse_po_catalog(po_path: Path) -> dict[str, str]:
+    """Parse a gettext .po file into a msgid → msgstr mapping."""
+
+    def _unescape(text: str) -> str:
+        return text.encode("raw_unicode_escape").decode("unicode_escape")
+
+    catalog: dict[str, str] = {}
+    msgid = ""
+    msgstr = ""
+    in_msgid = False
+    in_msgstr = False
+
+    for raw_line in po_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if line.startswith("#") or not line:
+            if in_msgstr and msgid and msgstr:
+                catalog[msgid] = msgstr
+            msgid = ""
+            msgstr = ""
+            in_msgid = False
+            in_msgstr = False
+            continue
+        if line.startswith("msgid "):
+            if in_msgstr and msgid and msgstr:
+                catalog[msgid] = msgstr
+            msgid = _unescape(line[7:-1])
+            msgstr = ""
+            in_msgid = True
+            in_msgstr = False
+            continue
+        if line.startswith("msgstr "):
+            msgstr = _unescape(line[8:-1])
+            in_msgid = False
+            in_msgstr = True
+            continue
+        if line.startswith('"') and line.endswith('"'):
+            chunk = _unescape(line[1:-1])
+            if in_msgid:
+                msgid += chunk
+            elif in_msgstr:
+                msgstr += chunk
+
+    if in_msgstr and msgid and msgstr:
+        catalog[msgid] = msgstr
+
+    return catalog
+
+
+def _load_po_translation(candidate: str) -> _gettext_mod.NullTranslations | None:
+    """Load a translation directly from a .po catalog when .mo is unavailable."""
+    po_path = _LOCALES_DIR / candidate / "LC_MESSAGES" / "safari_writer.po"
+    if not po_path.is_file():
+        return None
+    return _DictTranslations(_parse_po_catalog(po_path))
+
+
 def get_translation(lang: str | None = None) -> _gettext_mod.NullTranslations:
     """Return a GNUTranslations object for *lang* (e.g. ``'fr_FR'`` or ``'fr'``).
 
@@ -184,7 +251,8 @@ def get_translation(lang: str | None = None) -> _gettext_mod.NullTranslations:
 
     The result is cached per resolved language tag.
     """
-    resolved = lang or LOCALE
+    raw_resolved = lang or LOCALE
+    resolved = _normalize_tag(raw_resolved) or raw_resolved
     if resolved in _translation_cache:
         return _translation_cache[resolved]
 
@@ -202,7 +270,9 @@ def get_translation(lang: str | None = None) -> _gettext_mod.NullTranslations:
             )
             break
         except FileNotFoundError:
-            continue
+            trans = _load_po_translation(candidate)
+            if trans is not None:
+                break
 
     if trans is None:
         trans = _gettext_mod.NullTranslations()
