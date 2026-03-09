@@ -3,16 +3,22 @@
 from __future__ import annotations
 
 from pathlib import Path
+
+import safari_writer.locale_info as _locale_info
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
 from textual import events
-import safari_writer.locale_info as _locale_info
-
-
-def _(s: str) -> str:
-    return _locale_info.get_translation().gettext(s)
+from safari_writer.proofing import (
+    check_word as _check_word,
+    dict_lookup as _dict_lookup,
+    extract_words as _extract_words,
+    load_personal_dictionary,
+    make_checker as _make_checker,
+)
+from safari_writer.state import AppState
+from safari_writer.typed import SpellChecker, WordMatch
 
 
 _DEFAULT_PERSONAL_DICT = "personal.dict"
@@ -23,15 +29,8 @@ def _default_personal_dict_path() -> str:
     return str(Path.home() / ".safari" / _DEFAULT_PERSONAL_DICT)
 
 
-from safari_writer.proofing import (
-    check_word as _check_word,
-    dict_lookup as _dict_lookup,
-    extract_words as _extract_words,
-    load_personal_dictionary,
-    make_checker as _make_checker,
-)
-from safari_writer.state import AppState
-from safari_writer.typed import SpellChecker, WordMatch
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 
 
 # ---------------------------------------------------------------------------

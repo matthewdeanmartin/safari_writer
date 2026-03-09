@@ -17,12 +17,8 @@ import os
 from pathlib import Path
 from typing import Protocol, cast
 
-from textual.app import ComposeResult
 import safari_writer.locale_info as _locale_info
-
-
-def _(s: str) -> str:
-    return _locale_info.get_translation().gettext(s)
+from textual.app import ComposeResult
 from textual.screen import Screen, ModalScreen
 from textual.widgets import Static
 from textual.widget import Widget
@@ -32,6 +28,10 @@ from textual.containers import Container
 from safari_writer.file_types import HighlightProfile, StorageMode
 from safari_writer.state import AppState
 from safari_writer.syntax_highlight import create_highlighter
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 
 _log = logging.getLogger("safari_writer.editor")
 if os.environ.get("SAFARI_LOG"):

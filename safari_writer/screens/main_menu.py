@@ -16,6 +16,13 @@ def _(s: str) -> str:
     return _locale_info.get_translation().gettext(s)
 
 
+def _menu_label_suffix(key: str, text: str) -> str:
+    """Return the display label content after the hotkey character."""
+    if text and text[0].upper() == key.upper() and key.isalpha():
+        return text[1:]
+    return " " + text
+
+
 # Column 1: document operations — (hotkey, full_msgid, action)
 _COL1_DEFS = [
     ("C", "Create File", "create"),
@@ -50,10 +57,10 @@ _COL3_DEFS = [
 ]
 
 # Combined for binding generation (keep old names for compat)
-COL1_ITEMS = _COL1_DEFS
-COL2_ITEMS = _COL2_DEFS
-COL3_ITEMS = _COL3_DEFS
-MENU_ITEMS = _COL1_DEFS + _COL2_DEFS + _COL3_DEFS
+COL1_ITEMS = [(key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL1_DEFS]
+COL2_ITEMS = [(key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL2_DEFS]
+COL3_ITEMS = [(key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL3_DEFS]
+MENU_ITEMS = COL1_ITEMS + COL2_ITEMS + COL3_ITEMS
 
 MENU_CSS = """
 MainMenuScreen {
@@ -182,12 +189,7 @@ class MainMenuScreen(Screen):
 
         def _label(key: str, msgid: str) -> str:
             """Translate msgid and derive the label portion (after the hotkey)."""
-            t = _(msgid)
-            # If translated text starts with the hotkey letter (case-insensitive), drop it
-            if t and t[0].upper() == key.upper() and key.isalpha():
-                return t[1:]
-            # For non-alpha hotkeys (?, 1, 2) or when translation doesn't start with key
-            return " " + t
+            return _menu_label_suffix(key, _(msgid))
 
         with Container(id="menu-body"):
             with Container(id="menu-container"):
@@ -201,7 +203,7 @@ class MainMenuScreen(Screen):
                             yield MenuItem(key, _label(key, msgid))
                     with Container(id="menu-col-3"):
                         yield Static(_("--- Tools ---"), classes="menu-separator")
-                        for key, msgid, _ in _COL3_DEFS:
+                        for key, msgid, _action in _COL3_DEFS:
                             yield MenuItem(key, _label(key, msgid))
 
         with Container(id="menu-footer"):

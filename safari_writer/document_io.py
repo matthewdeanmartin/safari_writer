@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from importlib.resources import files
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from safari_writer.file_types import resolve_file_profile, StorageMode
 from safari_writer.format_codec import (
@@ -16,6 +17,9 @@ from safari_writer.format_codec import (
     strip_controls,
 )
 from safari_writer.state import AppState
+
+if TYPE_CHECKING:
+    from safari_writer.mail_merge_db import MailMergeDB
 
 DEMO_DOCUMENT_RESOURCE = "demo_document.sfw"
 DEMO_MAILMERGE_RESOURCE = "demo_mailmerge.json"

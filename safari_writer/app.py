@@ -4,14 +4,10 @@ from pathlib import Path
 
 from textual.app import App, ScreenStackError
 
+import safari_writer.locale_info as _locale_info
 from safari_writer.cli_types import StartupRequest
 from safari_writer.state import AppState
 from safari_writer.path_utils import leaf_name
-import safari_writer.locale_info as _locale_info
-
-
-def _(s: str) -> str:
-    return _locale_info.get_translation().gettext(s)
 from safari_writer.screens.main_menu import MainMenuScreen
 from safari_writer.screens.editor import EditorScreen
 from safari_writer.screens.global_format import GlobalFormatScreen
@@ -55,6 +51,10 @@ from safari_repl.screens import ReplMainMenuScreen, ReplEditorScreen
 from safari_repl.state import ReplState
 
 __all__ = ["SafariWriterApp"]
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 
 
 class SafariWriterApp(App):

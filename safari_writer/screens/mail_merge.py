@@ -5,15 +5,12 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+
+import safari_writer.locale_info as _locale_info
 from textual.app import ComposeResult
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
-import safari_writer.locale_info as _locale_info
-
-
-def _(s: str) -> str:
-    return _locale_info.get_translation().gettext(s)
 
 from safari_writer.mail_merge_db import (
     DEFAULT_FIELDS as _DEFAULT_FIELDS,
@@ -27,6 +24,10 @@ from safari_writer.mail_merge_db import (
     save_mail_merge_db,
 )
 from safari_writer.state import AppState
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 
 DEFAULT_FIELDS = _DEFAULT_FIELDS
 MAX_RECORDS = _MAX_RECORDS

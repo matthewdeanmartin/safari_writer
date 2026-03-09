@@ -9,6 +9,8 @@ Plain-text files use no encoding — control characters are stripped on save.
 
 from __future__ import annotations
 
+import re as _re
+
 __all__ = [
     "decode_sfw",
     "encode_sfw",
@@ -128,8 +130,6 @@ def is_sfw(filename: str) -> bool:
 # ---------------------------------------------------------------------------
 # Metadata header helpers  (i18n Level 1)
 # ---------------------------------------------------------------------------
-
-import re as _re
 
 _META_RE = _re.compile(r"^%%(\w+):\s*(.+)$")
 
