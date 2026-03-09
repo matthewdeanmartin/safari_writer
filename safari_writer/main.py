@@ -34,7 +34,7 @@ from safari_writer.state import AppState, GlobalFormat
 
 __all__ = ["build_parser", "build_startup_request", "main", "parse_args"]
 
-TOP_LEVEL_COMMANDS = {"tui", "export", "proof", "format", "mail-merge"}
+TOP_LEVEL_COMMANDS = {"tui", "export", "proof", "format", "mail-merge", "doctor"}
 
 
 def _version_string() -> str:
@@ -306,6 +306,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     mail_merge_validate.add_argument("database")
     mail_merge_validate.set_defaults(handler=_handle_mail_merge_validate)
+
+    doctor_parser = subparsers.add_parser(
+        "doctor", help="Print diagnostic information for troubleshooting."
+    )
+    doctor_parser.set_defaults(handler=_handle_doctor)
 
     return parser
 
@@ -756,6 +761,18 @@ def _handle_mail_merge_validate(args: argparse.Namespace) -> int:
             _emit(error)
         return 1
     _emit_status(args, f"{database_path} is valid")
+    return 0
+
+
+def _handle_doctor(args: argparse.Namespace) -> int:
+    from safari_writer.screens.doctor import gather_doctor_info
+
+    import re
+
+    # Strip Textual/Rich markup tags for plain-text CLI output
+    raw = gather_doctor_info()
+    plain = re.sub(r"\[/?[a-z ]*\]", "", raw)
+    _emit(plain)
     return 0
 
 

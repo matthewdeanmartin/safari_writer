@@ -52,7 +52,10 @@ def test_main_menu_context_text_includes_edit_and_merge_files():
 
     with patch.object(MainMenuScreen, "app", new_callable=PropertyMock) as app_prop:
         app_prop.return_value = app
-        assert screen._context_text() == " Edit: draft.sfw   Merge: contacts.mm"
+        text = screen._context_text()
+        assert "Edit: draft.sfw" in text
+        assert "Merge: contacts.mm" in text
+        assert "Lang:" in text
 
 
 def test_main_menu_mount_shows_context_and_status_bars():
@@ -104,6 +107,9 @@ def test_do_demo_loads_bundled_document(monkeypatch):
     monkeypatch.setattr(
         "safari_writer.app.load_demo_document_buffer", lambda: ["demo", "text"]
     )
+    monkeypatch.setattr(
+        "safari_writer.app.load_demo_mail_merge_db", lambda: MailMergeDB()
+    )
     monkeypatch.setattr(app, "set_message", lambda msg: messages.append(msg))
     monkeypatch.setattr(app, "_open_editor", lambda: opened.append(app.state))
 
@@ -114,7 +120,8 @@ def test_do_demo_loads_bundled_document(monkeypatch):
     assert app.state.cursor_col == 0
     assert app.state.filename == ""
     assert app.state.modified is False
-    assert messages == ["Loaded demo document"]
+    assert messages == ["Loaded demo document + mail merge database"]
+    assert app.state.mail_merge_db is not None
     assert opened == [app.state]
 
 

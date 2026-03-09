@@ -42,6 +42,36 @@ Follow the menus.
 - **Safari Base**: An alternative UI for the mail merge data files (currently in extreme beta).
 - **Safari Fed**: A calm, keyboard-driven Mastodon client styled after Pine and retro BBS readers. Queue-based reading, folder metaphors, thread view, and a direct handoff to Safari Writer.
 
+## Languages / Internationalization
+
+Safari Writer automatically uses your operating system's locale. If you want to run the app in a different language, set the `SAFARI_LOCALE` environment variable before launching.
+
+| Code | Language   |
+|------|------------|
+| `en` | English    |
+| `eo` | Esperanto  |
+| `es` | Spanish    |
+| `fr` | French     |
+| `is` | Icelandic  |
+| `ru` | Russian    |
+
+**Linux / macOS:**
+```bash
+SAFARI_LOCALE=eo safari-writer
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:SAFARI_LOCALE="eo"; safari-writer
+```
+
+**Windows (Command Prompt):**
+```cmd
+set SAFARI_LOCALE=eo && safari-writer
+```
+
+You can use a bare language code (`eo`) or a full IETF tag (`eo_EO`). If no catalog exists for the full tag, the bare code is tried automatically. If neither is found, the app falls back to English.
+
 ## Roadmap
 
 - **Safari Basic**: An Atari BASIC subset REPL.

@@ -14,7 +14,6 @@ That means you can experiment freely, then save your own version if you want to 
 \S2Inline Formatting
 You can toggle \Bbold\B, \Uunderline\U, and \Gelongated\G text without leaving the keyboard.
 Scientific notation can use E=mc\^2\^, and chemistry can use H\v2\vO.
-Mail merge fields can appear inline too: Dear \@1,
 Form blanks are useful for worksheets and templates: Name \_  Role \_
 
 \S2Document Structure
@@ -23,6 +22,29 @@ The header and footer are stored on their own lines so preview and export can re
 Section headings, like this one, are numbered automatically when Safari Writer prints or exports the document.
 The next line is a hard page break so you can see multi-page behavior in preview.
 \E
+\S1Mail Merge Demo
+Demo Mode loads a sample mail merge database with three records.
+Open Ctrl+P to preview or export and you will see one copy of this letter per record.
+Use the Mail Merge screen (M from the Main Menu) to browse or edit the records.
+
+\@9 \@1,
+
+\PI am writing to you at \@3 regarding the \@11 department.
+\PYour title of \@10 in the \@12 office tells me you are the right person to contact.
+
+Please reply to this address:
+\@2 \@1
+\@3
+\@4
+\@5, \@6  \@7
+
+\BContact Details\B
+Phone: \@8
+Email: \@13
+Fax: \@14
+
+\UNotes:\U \@15
+
 \S1Second Page
 Try typing below, then use Esc to return to the Main Menu when you are done exploring.
 

@@ -8,6 +8,20 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
 from textual import events
+import safari_writer.locale_info as _locale_info
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
+
+
+_DEFAULT_PERSONAL_DICT = "personal.dict"
+
+
+def _default_personal_dict_path() -> str:
+    """Return the default personal dictionary path under ~/.safari/."""
+    return str(Path.home() / ".safari" / _DEFAULT_PERSONAL_DICT)
+
 
 from safari_writer.proofing import (
     check_word as _check_word,
@@ -57,6 +71,7 @@ ProofreaderScreen {
     height: 1fr;
     padding: 1 2;
     color: $foreground;
+    overflow-y: auto;
 }
 
 #pr-help {
@@ -122,6 +137,7 @@ class ProofreaderScreen(Screen):
         self._dict_results: list[str] = []
         self._dict_page = 0
         self._dict_prefix = ""
+        self._dict_exact = False
         self._from_correct = False
         self._enter_menu()
 
@@ -129,12 +145,18 @@ class ProofreaderScreen(Screen):
     # Compose
     # ------------------------------------------------------------------
 
+    def _title_text(self) -> str:
+        from safari_writer.locale_info import LOCALE
+
+        lang = self._state.doc_language or LOCALE
+        return _("*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]").format(lang=lang)
+
     def compose(self) -> ComposeResult:
         from textual.containers import Container
 
         with Container(id="pr-outer"):
             yield Static(self._message_text, id="pr-message")
-            yield Static("*** SAFARI WRITER — PROOFREADER ***", id="pr-title")
+            yield Static(self._title_text(), id="pr-title")
             yield Static(self._body_text, id="pr-body")
             yield Static(self._help_text, id="pr-help")
 
@@ -153,7 +175,8 @@ class ProofreaderScreen(Screen):
 
     def _ensure_checker(self) -> SpellChecker | None:
         if not self._checker_loaded:
-            self._checker = _make_checker()
+            lang = self._state.doc_language or None
+            self._checker = _make_checker(lang)
             self._checker_loaded = True
         return self._checker
 
@@ -167,8 +190,12 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def _enter_menu(self) -> None:
+        from safari_writer.locale_info import LOCALE
+
         self._mode = MODE_MENU
+        lang = self._state.doc_language or LOCALE
         self._set_body(
+            f"[bold]Dictionary:[/] {lang}\n\n"
             "[bold]H[/]  Highlight Errors\n"
             "[bold]P[/]  Print Errors (list on-screen)\n"
             "[bold]C[/]  Correct Errors\n"
@@ -178,7 +205,7 @@ class ProofreaderScreen(Screen):
             "\n"
             "[dim]Esc  Return to Main Menu[/]"
         )
-        self._set_message("Select a proofing mode.")
+        self._set_message(f"Proofing in [{lang}]. Select a mode.")
         self._set_help(
             " H Highlight  P Print  C Correct  S Search  L Load  W Write  Esc Exit"
         )
@@ -202,13 +229,13 @@ class ProofreaderScreen(Screen):
             if not _check_word(w, checker, self._state.kept_spellings, self._personal)
         ]
         if not self._errors:
-            self._set_body("No spelling errors found.")
+            self._set_body(_("No spelling errors found."))
         else:
             lines = [f"[bold]Spelling Errors ({len(self._errors)} found):[/]\n"]
             for r, c, w in self._errors:
                 lines.append(f"  Line {r + 1}, col {c + 1}: [reverse]{w}[/]")
             self._set_body("\n".join(lines))
-        self._set_message("Scan complete. Press any key to return to menu.")
+        self._set_message(_("Scan complete. Press any key to return to menu."))
         self._set_help(" Any key → return to menu")
 
     def _enter_correct(self) -> None:
@@ -236,7 +263,7 @@ class ProofreaderScreen(Screen):
             f"[bold]W[/]  Save kept words to personal dictionary\n"
             f"[bold]Esc[/]  Return to menu"
         )
-        self._set_message("No more errors found.")
+        self._set_message(_("No more errors found."))
         self._set_help(" W Save personal dict  Esc Return to menu")
         self._mode = MODE_MENU
 
@@ -304,19 +331,21 @@ class ProofreaderScreen(Screen):
             self._enter_dict_search(from_correct=False)
         elif k == "l":
             self._mode = MODE_LOAD_PERSONAL
-            self._input_buf = ""
+            default = _default_personal_dict_path()
+            self._input_buf = default
             self._set_message(
-                "Load Personal Dictionary: enter filename, Enter to confirm"
+                "Load Personal Dictionary: edit path or Enter to confirm"
             )
-            self._set_body("Load personal dictionary file:\n\n> ")
+            self._set_body(f"Load personal dictionary file:\n\n> {default}")
             self._set_help(" Enter Load  Esc Cancel")
         elif k == "w":
             self._mode = MODE_SAVE_PERSONAL
-            self._input_buf = ""
+            default = _default_personal_dict_path()
+            self._input_buf = default
             self._set_message(
-                "Save Personal Dictionary: enter filename, Enter to confirm"
+                "Save Personal Dictionary: edit path or Enter to confirm"
             )
-            self._set_body("Save personal dictionary to file:\n\n> ")
+            self._set_body(f"Save personal dictionary to file:\n\n> {default}")
             self._set_help(" Enter Save  Esc Cancel")
         elif key == "escape":
             self.action_exit_proofreader()
@@ -395,8 +424,9 @@ class ProofreaderScreen(Screen):
             if len(prefix) < 2:
                 self._set_message("Please enter at least 2 letters.")
                 return
-            results = _dict_lookup(prefix, self._ensure_checker())
+            exact, results = _dict_lookup(prefix, self._ensure_checker())
             self._dict_prefix = prefix
+            self._dict_exact = exact
             self._dict_results = results
             self._dict_page = 0
             self._show_dict_results_page()
@@ -415,27 +445,45 @@ class ProofreaderScreen(Screen):
         self._mode = MODE_DICT_RESULTS
         page_size = 126
         results = self._dict_results
+        exact = getattr(self, "_dict_exact", False)
         start = self._dict_page * page_size
         page = results[start : start + page_size]
         total = len(results)
 
-        if not page:
-            self._set_body(f"No words found starting with '{self._dict_prefix}'.")
+        if not page and not exact:
+            self._set_body(f"No words found for '{self._dict_prefix}'.")
             self._set_message("No matches. Press any key to search again.")
             self._set_help(" Any key → new search")
             return
 
-        cols = 3
-        col_width = 26
-        col_lines = [page[i::cols] for i in range(cols)]
-        max_rows = max(len(c) for c in col_lines)
-        lines = [f"[bold]Dictionary: '{self._dict_prefix}'[/]  ({total} matches)\n"]
-        for row_i in range(max_rows):
-            row_parts = []
-            for col_i in range(cols):
-                word = col_lines[col_i][row_i] if row_i < len(col_lines[col_i]) else ""
-                row_parts.append(word.ljust(col_width))
-            lines.append("".join(row_parts))
+        lines: list[str] = []
+        if exact:
+            lines.append(
+                f"[bold green]'{self._dict_prefix}'[/] is a valid word.\n"
+            )
+
+        if page:
+            cols = 3
+            col_width = 26
+            col_lines = [page[i::cols] for i in range(cols)]
+            max_rows = max(len(c) for c in col_lines)
+            label = "Related" if exact else "Suggestions"
+            lines.append(
+                f"[bold]{label} for '{self._dict_prefix}'[/]"
+                f"  ({total} found)\n"
+            )
+            for row_i in range(max_rows):
+                row_parts = []
+                for col_i in range(cols):
+                    word = (
+                        col_lines[col_i][row_i]
+                        if row_i < len(col_lines[col_i])
+                        else ""
+                    )
+                    row_parts.append(word.ljust(col_width))
+                lines.append("".join(row_parts))
+        elif exact:
+            lines.append("[dim]No additional suggestions.[/]")
 
         has_next = (start + page_size) < total
         has_prev = self._dict_page > 0
@@ -447,8 +495,9 @@ class ProofreaderScreen(Screen):
         nav.append("Esc New search")
 
         self._set_body("\n".join(lines))
+        page_count = max(1, (total - 1) // page_size + 1) if total else 1
         self._set_message(
-            f"Page {self._dict_page + 1} of {(total - 1) // page_size + 1}"
+            f"Page {self._dict_page + 1} of {page_count}"
         )
         self._set_help("  ".join(nav))
 
@@ -486,12 +535,14 @@ class ProofreaderScreen(Screen):
     def _save_personal_dict(self, filename: str) -> None:
         words = sorted(self._state.kept_spellings | self._personal)
         if not words:
-            self._set_message("No words to save.")
+            self._set_message(_("No words to save."))
             self._enter_menu()
             return
         words = words[:256]
         try:
-            Path(filename).write_text(" ".join(words))
+            out_path = Path(filename)
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(" ".join(words))
             self._set_message(f"Saved {len(words)} words to '{filename}'.")
         except OSError as e:
             self._set_message(f"Error saving: {e}")
@@ -556,7 +607,7 @@ class ProofreaderScreen(Screen):
         error_count = len(error_positions)
         self._set_body("\n".join(lines_out))
         self._set_message(
-            f"Highlight scan complete — {error_count} error(s) found. Press any key to return."
+            _("Highlight scan complete — {error_count} error(s) found. Press any key to return.").format(error_count=error_count)
         )
         self._set_help(" Any key → return to menu")
         self._mode = MODE_HIGHLIGHT

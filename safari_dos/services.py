@@ -215,9 +215,10 @@ def set_protected(path: Path, protected: bool) -> None:
 
 
 def format_timestamp(value: datetime) -> str:
-    """Render a timestamp using a stable Atari-like format."""
+    """Render a timestamp using the user's locale format."""
+    from safari_writer.locale_info import format_datetime
 
-    return value.strftime("%Y-%m-%d %H:%M")
+    return format_datetime(value, style="short")
 
 
 def _format_copy_name(path: Path, index: int) -> str:

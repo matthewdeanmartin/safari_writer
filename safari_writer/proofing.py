@@ -20,13 +20,24 @@ __all__ = [
 ]
 
 
-def make_checker() -> SpellChecker | None:
-    """Return an enchant dictionary, or None if unavailable."""
+def make_checker(lang: str | None = None) -> SpellChecker | None:
+    """Return an enchant dictionary for *lang*, defaulting to the OS locale.
 
+    Falls back to the bare language code (e.g. ``'de'``) if the full tag
+    (e.g. ``'de_DE'``) is not available.
+    """
+    from safari_writer.locale_info import LANGUAGE, LOCALE
+
+    lang = lang or LOCALE
     try:
         import enchant
 
-        return cast(SpellChecker, enchant.Dict("en_US"))
+        try:
+            return cast(SpellChecker, enchant.Dict(lang))
+        except enchant.DictNotFoundError:
+            # Try bare language code
+            bare = lang.split("_")[0] if "_" in lang else LANGUAGE
+            return cast(SpellChecker, enchant.Dict(bare))
     except Exception:
         return None
 
@@ -61,17 +72,25 @@ def suggest_words(word: str, checker: SpellChecker | None) -> list[str]:
         return []
 
 
-def dict_lookup(prefix: str, checker: SpellChecker | None) -> list[str]:
-    """Return dictionary words starting with a prefix."""
+def dict_lookup(prefix: str, checker: SpellChecker | None) -> tuple[bool, list[str]]:
+    """Look up a word/prefix in the dictionary.
+
+    Returns (exact_match, suggestions) where *exact_match* is True when
+    the prefix itself is a recognized word and *suggestions* contains
+    related words from the dictionary (up to 126).
+    """
 
     if checker is None or len(prefix) < 2:
-        return []
+        return False, []
+    exact = checker.check(prefix)
     try:
         suggestions = checker.suggest(prefix)
     except Exception:
-        return []
-    matches = [word for word in suggestions if word.lower().startswith(prefix.lower())]
-    return matches[:126]
+        suggestions = []
+    # Remove the exact word from suggestions to avoid duplication
+    lower_prefix = prefix.lower()
+    suggestions = [w for w in suggestions if w.lower() != lower_prefix]
+    return exact, suggestions[:126]
 
 
 def extract_words(buffer: list[str]) -> list[WordMatch]:

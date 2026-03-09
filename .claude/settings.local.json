@@ -18,7 +18,8 @@
       "Bash(make test:*)",
       "Bash(grep:*)",
       "WebSearch",
-      "WebFetch(domain:textual.textualize.io)"
+      "WebFetch(domain:textual.textualize.io)",
+      "Bash(ls:*)"
     ]
   }
 }

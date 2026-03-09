@@ -78,9 +78,12 @@ def test_public_submodule_exports_are_explicit():
     assert cli_types.__all__ == ["StartupRequest"]
     assert document_io.__all__ == [
         "DEMO_DOCUMENT_RESOURCE",
+        "DEMO_MAILMERGE_RESOURCE",
         "load_demo_document_buffer",
+        "load_demo_mail_merge_db",
         "load_document_buffer",
         "load_document_state",
+        "load_sfw_language",
         "sanitize_plain_buffer",
         "serialize_document_buffer",
     ]
@@ -95,7 +98,9 @@ def test_public_submodule_exports_are_explicit():
     assert format_codec.__all__ == [
         "decode_sfw",
         "encode_sfw",
+        "extract_sfw_metadata",
         "has_controls",
+        "inject_sfw_metadata",
         "is_sfw",
         "strip_controls",
     ]

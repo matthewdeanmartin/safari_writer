@@ -1,0 +1,228 @@
+# Safari Writer — Spanish (es)
+# Copyright (C) 2025 Matthew Martin
+# This file is distributed under the same license as the safari-writer package.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "*** SAFARI WRITER ***"
+msgstr "*** SAFARI WRITER ***"
+
+msgid "Create File"
+msgstr "Crear archivo"
+
+msgid "Edit File"
+msgstr "Editar archivo"
+
+msgid "Verify Spelling"
+msgstr "Verificar ortografía"
+
+msgid "Print File"
+msgstr "Imprimir archivo"
+
+msgid "Global Format"
+msgstr "Formato global"
+
+msgid "Mail Merge"
+msgstr "Combinar correspondencia"
+
+msgid "Doctor (diagnostics)"
+msgstr "Doctor (diagnóstico)"
+
+msgid "Index Current Folder"
+msgstr "Indexar carpeta actual"
+
+msgid "Index External Drive"
+msgstr "Indexar unidad externa"
+
+msgid "Load File"
+msgstr "Cargar archivo"
+
+msgid "Save File"
+msgstr "Guardar archivo"
+
+msgid "Save As..."
+msgstr "Guardar como..."
+
+msgid "Delete File"
+msgstr "Eliminar archivo"
+
+msgid "Folder (New)"
+msgstr "Carpeta (nueva)"
+
+msgid "Quit"
+msgstr "Salir"
+
+msgid "Open Safari DOS"
+msgstr "Abrir Safari DOS"
+
+msgid "Help Chat"
+msgstr "Chat de ayuda"
+
+msgid "Net Safari Fed"
+msgstr "Red Safari Fed"
+
+msgid "Run Safari REPL"
+msgstr "Ejecutar Safari REPL"
+
+msgid "Style Switcher"
+msgstr "Selector de estilo"
+
+msgid "Try Demo Mode"
+msgstr "Probar modo de demostración"
+
+msgid "--- Tools ---"
+msgstr "--- Herramientas ---"
+
+msgid "(new document)"
+msgstr "(nuevo documento)"
+
+msgid "(no merge data)"
+msgstr "(sin datos de combinación)"
+
+msgid "Welcome to Safari Writer"
+msgstr "Bienvenido a Safari Writer"
+
+msgid "Nothing to undo"
+msgstr "Nada que deshacer"
+
+msgid "Cancelled"
+msgstr "Cancelado"
+
+msgid "Not found: {needle!r}"
+msgstr "No encontrado: {needle!r}"
+
+msgid "Formatting is only available in .sfw files"
+msgstr "El formato solo está disponible en archivos .sfw"
+
+msgid "No search string set — press Ctrl+F"
+msgstr "No se ha definido cadena de búsqueda — pulse Ctrl+F"
+
+msgid "*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]"
+msgstr "*** SAFARI WRITER — CORRECTOR ***  [Dict: {lang}]"
+
+msgid "No spelling errors found."
+msgstr "No se encontraron errores ortográficos."
+
+msgid "Scan complete. Press any key to return to menu."
+msgstr "Análisis completo. Pulse cualquier tecla para volver al menú."
+
+msgid "No more errors found."
+msgstr "No se encontraron más errores."
+
+msgid "*** GLOBAL FORMAT ***"
+msgstr "*** FORMATO GLOBAL ***"
+
+msgid "Press a letter key to select a parameter."
+msgstr "Pulse una tecla de letra para seleccionar un parámetro."
+
+msgid "All settings reset to factory defaults."
+msgstr "Todos los ajustes restablecidos a los valores de fábrica."
+
+msgid "Edit cancelled."
+msgstr "Edición cancelada."
+
+msgid "*** SAFARI WRITER — DOCTOR ***"
+msgstr "*** SAFARI WRITER — DOCTOR ***"
+
+msgid "*** PRINT / EXPORT ***"
+msgstr "*** IMPRIMIR / EXPORTAR ***"
+
+msgid "*** MAIL MERGE ***"
+msgstr "*** COMBINAR CORRESPONDENCIA ***"
+
+msgid "Database full — max 255 records reached."
+msgstr "Base de datos llena — se alcanzó el máximo de 255 registros."
+
+msgid "No records yet — use C to create and enter records first."
+msgstr "Aún no hay registros — use C para crear e introducir registros primero."
+
+msgid "Record deleted."
+msgstr "Registro eliminado."
+
+msgid "Deletion cancelled."
+msgstr "Eliminación cancelada."
+
+msgid "Done."
+msgstr "Hecho."
+
+msgid "Cancelled."
+msgstr "Cancelado."
+
+msgid "No words to save."
+msgstr "No hay palabras para guardar."
+
+msgid "No external drives found"
+msgstr "No se encontraron unidades externas"
+
+msgid "Load cancelled"
+msgstr "Carga cancelada"
+
+msgid "Delete cancelled"
+msgstr "Eliminación cancelada"
+
+msgid "Save cancelled"
+msgstr "Guardado cancelado"
+
+msgid "Current Folder"
+msgstr "Carpeta actual"
+
+msgid "Unsaved changes will be lost. Quit?"
+msgstr "Los cambios no guardados se perderán. ¿Salir?"
+
+msgid "Unsaved changes will be lost. Continue?"
+msgstr "Los cambios no guardados se perderán. ¿Continuar?"
+
+msgid "No file selected"
+msgstr "Ningún archivo seleccionado"
+
+msgid "Cannot post an empty document"
+msgstr "No se puede publicar un documento vacío"
+
+msgid "Loaded demo document + mail merge database"
+msgstr "Documento de demostración cargado + base de datos de combinación"
+
+msgid "SELECT ITEM"
+msgstr "SELECCIONAR ELEMENTO"
+
+msgid "Subset cleared."
+msgstr "Subconjunto limpiado."
+
+msgid "Entry aborted."
+msgstr "Entrada cancelada."
+
+msgid "All records deleted."
+msgstr "Todos los registros eliminados."
+
+msgid "Record updated and saved."
+msgstr "Registro actualizado y guardado."
+
+msgid "No records to merge. Load a database or clear the subset."
+msgstr "No hay registros para combinar. Cargue una base de datos o limpie el subconjunto."
+
+msgid "Press any key to return to menu."
+msgstr "Pulse cualquier tecla para volver al menú."
+
+msgid "All tab stops cleared"
+msgstr "Todas las tabulaciones eliminadas"
+
+msgid "Name cannot be empty."
+msgstr "El nombre no puede estar vacío."
+
+msgid "Field deleted."
+msgstr "Campo eliminado."
+
+msgid "Cannot delete the last field."
+msgstr "No se puede eliminar el último campo."
+
+msgid "Highlight scan complete — {error_count} error(s) found. Press any key to return."
+msgstr "Análisis de resaltado completo — {error_count} error(es) encontrado(s). Pulse cualquier tecla para volver."
+
+msgid "New Mastodon Post"
+msgstr "Nueva publicación en Mastodon"
+
+msgid "No Safari Fed session active"
+msgstr "No hay sesión de Safari Fed activa"

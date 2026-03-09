@@ -1,0 +1,228 @@
+# Safari Writer — English (en)
+# Copyright (C) 2025 Matthew Martin
+# This file is distributed under the same license as the safari-writer package.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "*** SAFARI WRITER ***"
+msgstr "*** SAFARI WRITER ***"
+
+msgid "Create File"
+msgstr "Create File"
+
+msgid "Edit File"
+msgstr "Edit File"
+
+msgid "Verify Spelling"
+msgstr "Verify Spelling"
+
+msgid "Print File"
+msgstr "Print File"
+
+msgid "Global Format"
+msgstr "Global Format"
+
+msgid "Mail Merge"
+msgstr "Mail Merge"
+
+msgid "Doctor (diagnostics)"
+msgstr "Doctor (diagnostics)"
+
+msgid "Index Current Folder"
+msgstr "Index Current Folder"
+
+msgid "Index External Drive"
+msgstr "Index External Drive"
+
+msgid "Load File"
+msgstr "Load File"
+
+msgid "Save File"
+msgstr "Save File"
+
+msgid "Save As..."
+msgstr "Save As..."
+
+msgid "Delete File"
+msgstr "Delete File"
+
+msgid "Folder (New)"
+msgstr "Folder (New)"
+
+msgid "Quit"
+msgstr "Quit"
+
+msgid "Open Safari DOS"
+msgstr "Open Safari DOS"
+
+msgid "Help Chat"
+msgstr "Help Chat"
+
+msgid "Net Safari Fed"
+msgstr "Net Safari Fed"
+
+msgid "Run Safari REPL"
+msgstr "Run Safari REPL"
+
+msgid "Style Switcher"
+msgstr "Style Switcher"
+
+msgid "Try Demo Mode"
+msgstr "Try Demo Mode"
+
+msgid "--- Tools ---"
+msgstr "--- Tools ---"
+
+msgid "(new document)"
+msgstr "(new document)"
+
+msgid "(no merge data)"
+msgstr "(no merge data)"
+
+msgid "Welcome to Safari Writer"
+msgstr "Welcome to Safari Writer"
+
+msgid "Nothing to undo"
+msgstr "Nothing to undo"
+
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgid "Not found: {needle!r}"
+msgstr "Not found: {needle!r}"
+
+msgid "Formatting is only available in .sfw files"
+msgstr "Formatting is only available in .sfw files"
+
+msgid "No search string set — press Ctrl+F"
+msgstr "No search string set — press Ctrl+F"
+
+msgid "*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]"
+msgstr "*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]"
+
+msgid "No spelling errors found."
+msgstr "No spelling errors found."
+
+msgid "Scan complete. Press any key to return to menu."
+msgstr "Scan complete. Press any key to return to menu."
+
+msgid "No more errors found."
+msgstr "No more errors found."
+
+msgid "*** GLOBAL FORMAT ***"
+msgstr "*** GLOBAL FORMAT ***"
+
+msgid "Press a letter key to select a parameter."
+msgstr "Press a letter key to select a parameter."
+
+msgid "All settings reset to factory defaults."
+msgstr "All settings reset to factory defaults."
+
+msgid "Edit cancelled."
+msgstr "Edit cancelled."
+
+msgid "*** SAFARI WRITER — DOCTOR ***"
+msgstr "*** SAFARI WRITER — DOCTOR ***"
+
+msgid "*** PRINT / EXPORT ***"
+msgstr "*** PRINT / EXPORT ***"
+
+msgid "*** MAIL MERGE ***"
+msgstr "*** MAIL MERGE ***"
+
+msgid "Database full — max 255 records reached."
+msgstr "Database full — max 255 records reached."
+
+msgid "No records yet — use C to create and enter records first."
+msgstr "No records yet — use C to create and enter records first."
+
+msgid "Record deleted."
+msgstr "Record deleted."
+
+msgid "Deletion cancelled."
+msgstr "Deletion cancelled."
+
+msgid "Done."
+msgstr "Done."
+
+msgid "Cancelled."
+msgstr "Cancelled."
+
+msgid "No words to save."
+msgstr "No words to save."
+
+msgid "No external drives found"
+msgstr "No external drives found"
+
+msgid "Load cancelled"
+msgstr "Load cancelled"
+
+msgid "Delete cancelled"
+msgstr "Delete cancelled"
+
+msgid "Save cancelled"
+msgstr "Save cancelled"
+
+msgid "Current Folder"
+msgstr "Current Folder"
+
+msgid "Unsaved changes will be lost. Quit?"
+msgstr "Unsaved changes will be lost. Quit?"
+
+msgid "Unsaved changes will be lost. Continue?"
+msgstr "Unsaved changes will be lost. Continue?"
+
+msgid "No file selected"
+msgstr "No file selected"
+
+msgid "Cannot post an empty document"
+msgstr "Cannot post an empty document"
+
+msgid "Loaded demo document + mail merge database"
+msgstr "Loaded demo document + mail merge database"
+
+msgid "SELECT ITEM"
+msgstr "SELECT ITEM"
+
+msgid "Subset cleared."
+msgstr "Subset cleared."
+
+msgid "Entry aborted."
+msgstr "Entry aborted."
+
+msgid "All records deleted."
+msgstr "All records deleted."
+
+msgid "Record updated and saved."
+msgstr "Record updated and saved."
+
+msgid "No records to merge. Load a database or clear the subset."
+msgstr "No records to merge. Load a database or clear the subset."
+
+msgid "Press any key to return to menu."
+msgstr "Press any key to return to menu."
+
+msgid "All tab stops cleared"
+msgstr "All tab stops cleared"
+
+msgid "Name cannot be empty."
+msgstr "Name cannot be empty."
+
+msgid "Field deleted."
+msgstr "Field deleted."
+
+msgid "Cannot delete the last field."
+msgstr "Cannot delete the last field."
+
+msgid "Highlight scan complete — {error_count} error(s) found. Press any key to return."
+msgstr "Highlight scan complete — {error_count} error(s) found. Press any key to return."
+
+msgid "New Mastodon Post"
+msgstr "New Mastodon Post"
+
+msgid "No Safari Fed session active"
+msgstr "No Safari Fed session active"

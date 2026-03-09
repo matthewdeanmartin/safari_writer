@@ -1,0 +1,228 @@
+# Safari Writer — Esperanto (eo)
+# Copyright (C) 2025 Matthew Martin
+# This file is distributed under the same license as the safari-writer package.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: eo\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "*** SAFARI WRITER ***"
+msgstr "*** SAFARI WRITER ***"
+
+msgid "Create File"
+msgstr "Krei Dosieron"
+
+msgid "Edit File"
+msgstr "Redakti Dosieron"
+
+msgid "Verify Spelling"
+msgstr "Kontroli Literumadon"
+
+msgid "Print File"
+msgstr "Presi Dosieron"
+
+msgid "Global Format"
+msgstr "Ĝenerala Formato"
+
+msgid "Mail Merge"
+msgstr "Kunfandi Mesaĝojn"
+
+msgid "Doctor (diagnostics)"
+msgstr "Kuracisto (Diagnostiko)"
+
+msgid "Index Current Folder"
+msgstr "Indeksi Nunan Dosierujon"
+
+msgid "Index External Drive"
+msgstr "Indeksi Eksteran Diskon"
+
+msgid "Load File"
+msgstr "Ŝargi Dosieron"
+
+msgid "Save File"
+msgstr "Konservi Dosieron"
+
+msgid "Save As..."
+msgstr "Konservi kiel..."
+
+msgid "Delete File"
+msgstr "Forigi Dosieron"
+
+msgid "Folder (New)"
+msgstr "Dosierujo (Nova)"
+
+msgid "Quit"
+msgstr "Eliri"
+
+msgid "Open Safari DOS"
+msgstr "Malfermi Safari DOS"
+
+msgid "Help Chat"
+msgstr "Helpa Babilo"
+
+msgid "Net Safari Fed"
+msgstr "Reta Safari Fed"
+
+msgid "Run Safari REPL"
+msgstr "Ruligi Safari REPL"
+
+msgid "Style Switcher"
+msgstr "Stila Ŝanĝilo"
+
+msgid "Try Demo Mode"
+msgstr "Provi Demonstran Reĝimon"
+
+msgid "--- Tools ---"
+msgstr "--- Iloj ---"
+
+msgid "(new document)"
+msgstr "(nova dokumento)"
+
+msgid "(no merge data)"
+msgstr "(neniu kunfanda datumaro)"
+
+msgid "Welcome to Safari Writer"
+msgstr "Bonvenon al Safari Writer"
+
+msgid "Nothing to undo"
+msgstr "Nenio por malfari"
+
+msgid "Cancelled"
+msgstr "Nuligita"
+
+msgid "Not found: {needle!r}"
+msgstr "Ne trovita: {needle!r}"
+
+msgid "Formatting is only available in .sfw files"
+msgstr "Formatado disponeblas nur en .sfw dosieroj"
+
+msgid "No search string set — press Ctrl+F"
+msgstr "Neniu serĉa ĉeno agordita — premu Ctrl+F"
+
+msgid "*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]"
+msgstr "*** SAFARI WRITER — KOREKTISTO ***  [Vort: {lang}]"
+
+msgid "No spelling errors found."
+msgstr "Neniuj literumaj eraroj trovitaj."
+
+msgid "Scan complete. Press any key to return to menu."
+msgstr "Skanado kompleta. Premu ajnan klavon por reveni al menuo."
+
+msgid "No more errors found."
+msgstr "Neniuj pliaj eraroj trovitaj."
+
+msgid "*** GLOBAL FORMAT ***"
+msgstr "*** ĜENERALA FORMATO ***"
+
+msgid "Press a letter key to select a parameter."
+msgstr "Premu literklavon por elekti parametron."
+
+msgid "All settings reset to factory defaults."
+msgstr "Ĉiuj agordoj restarigitaj al fabriko-defaŭltoj."
+
+msgid "Edit cancelled."
+msgstr "Redaktado nuligita."
+
+msgid "*** SAFARI WRITER — DOCTOR ***"
+msgstr "*** SAFARI WRITER — KURACISTO ***"
+
+msgid "*** PRINT / EXPORT ***"
+msgstr "*** PRESI / EKSPORTI ***"
+
+msgid "*** MAIL MERGE ***"
+msgstr "*** MESAĜA KUNFANDO ***"
+
+msgid "Database full — max 255 records reached."
+msgstr "Datumbazo plena — atingita maksimumo de 255 rekordoj."
+
+msgid "No records yet — use C to create and enter records first."
+msgstr "Ankoraŭ neniuj rekordoj — uzu C por krei kaj enigi rekordojn unue."
+
+msgid "Record deleted."
+msgstr "Rekordo forigita."
+
+msgid "Deletion cancelled."
+msgstr "Forigo nuligita."
+
+msgid "Done."
+msgstr "Farita."
+
+msgid "Cancelled."
+msgstr "Nuligita."
+
+msgid "No words to save."
+msgstr "Neniuj vortoj por konservi."
+
+msgid "No external drives found"
+msgstr "Neniuj eksteraj diskoj trovitaj"
+
+msgid "Load cancelled"
+msgstr "Ŝargado nuligita"
+
+msgid "Delete cancelled"
+msgstr "Forigo nuligita"
+
+msgid "Save cancelled"
+msgstr "Konservado nuligita"
+
+msgid "Current Folder"
+msgstr "Nuna Dosierujo"
+
+msgid "Unsaved changes will be lost. Quit?"
+msgstr "Nekonservitaj ŝanĝoj perdiĝos. Eliri?"
+
+msgid "Unsaved changes will be lost. Continue?"
+msgstr "Nekonservitaj ŝanĝoj perdiĝos. Daŭrigi?"
+
+msgid "No file selected"
+msgstr "Neniu dosiero elektita"
+
+msgid "Cannot post an empty document"
+msgstr "Ne eblas afiŝi malplenan dokumenton"
+
+msgid "Loaded demo document + mail merge database"
+msgstr "Ŝargita demonstra dokumento + mesaĝa kunfanda datumbazo"
+
+msgid "SELECT ITEM"
+msgstr "ELEKTI ERON"
+
+msgid "Subset cleared."
+msgstr "Subaro forigita."
+
+msgid "Entry aborted."
+msgstr "Enigo nuligita."
+
+msgid "All records deleted."
+msgstr "Ĉiuj rekordoj forigitaj."
+
+msgid "Record updated and saved."
+msgstr "Rekordo ĝisdatigita kaj konservita."
+
+msgid "No records to merge. Load a database or clear the subset."
+msgstr "Neniuj rekordoj por kunfandi. Ŝargu datumbazon aŭ forigu subaron."
+
+msgid "Press any key to return to menu."
+msgstr "Premu ajnan klavon por reveni al menuo."
+
+msgid "All tab stops cleared"
+msgstr "Ĉiuj langedaj haltoj forigitaj"
+
+msgid "Name cannot be empty."
+msgstr "Nomo ne povas esti malplena."
+
+msgid "Field deleted."
+msgstr "Kampo forigita."
+
+msgid "Cannot delete the last field."
+msgstr "Ne eblas forigi la lastan kampon."
+
+msgid "Highlight scan complete — {error_count} error(s) found. Press any key to return."
+msgstr "Markada skanado kompleta — {error_count} eraro(j) trovita(j). Premu ajnan klavon por reveni."
+
+msgid "New Mastodon Post"
+msgstr "Nova Mastodon-Afiŝo"
+
+msgid "No Safari Fed session active"
+msgstr "Neniu Safari Fed-sesio aktiva"

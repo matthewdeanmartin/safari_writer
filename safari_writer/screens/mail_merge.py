@@ -9,6 +9,11 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
+import safari_writer.locale_info as _locale_info
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 
 from safari_writer.mail_merge_db import (
     DEFAULT_FIELDS as _DEFAULT_FIELDS,
@@ -280,7 +285,7 @@ class MailMergeScreen(Screen):
 
         with Container(id="mm-outer"):
             yield Static(self._message_text, id="mm-message")
-            yield Static("*** MAIL MERGE ***", id="mm-title")
+            yield Static(_("*** MAIL MERGE ***"), id="mm-title")
             yield Static(self._status_text, id="mm-status")
             yield Static(self._body_text, id="mm-body")
             yield Static(self._help_text, id="mm-help")
@@ -328,7 +333,7 @@ class MailMergeScreen(Screen):
             "[dim]F  Format Record (extra)    F1/?  Help[/]"
         )
         if not preserve_message:
-            self._set_message("SELECT ITEM")
+            self._set_message(_("SELECT ITEM"))
         self._set_help(
             " C Create  N New  E Edit  B Subset  A Append  P Print  1/2 Index  L Load  S Save  R Return"
         )
@@ -347,7 +352,7 @@ class MailMergeScreen(Screen):
     def _enter_data_entry(self) -> None:
         self._mode = MODE_ENTER
         if self._db.records_free <= 0:
-            self._set_message("Database full — max 255 records reached.")
+            self._set_message(_("Database full — max 255 records reached."))
             self._enter_main()
             return
         self._entry_record = self._db.new_record()
@@ -363,7 +368,7 @@ class MailMergeScreen(Screen):
         self._mode = MODE_UPDATE
         if not self._db.records:
             self._set_message(
-                "No records yet — use C to create and enter records first."
+                _("No records yet — use C to create and enter records first.")
             )
             self._enter_main()
             return
@@ -589,7 +594,7 @@ class MailMergeScreen(Screen):
             self._set_help(" Enter Confirm  Esc Cancel")
         elif key.lower() == "d":
             if len(fields) <= 1:
-                self._set_message("Cannot delete the last field.")
+                self._set_message(_("Cannot delete the last field."))
                 return
             self._schema_action = SCHEMA_ACTION_DELETE
             self._mode = MODE_SCHEMA_EDIT
@@ -617,24 +622,24 @@ class MailMergeScreen(Screen):
                 self._schema_field_idx = min(idx, len(self._db.fields) - 1)
                 self._mode = MODE_SCHEMA
                 self._render_schema()
-                self._set_message("Field deleted.")
+                self._set_message(_("Field deleted."))
             else:
                 self._mode = MODE_SCHEMA
                 self._render_schema()
-                self._set_message("Cancelled.")
+                self._set_message(_("Cancelled."))
             return
 
         if key == "escape":
             self._mode = MODE_SCHEMA
             self._render_schema()
-            self._set_message("Cancelled.")
+            self._set_message(_("Cancelled."))
             return
 
         if key == "enter":
             val = self._input_buf.strip()
             if action == SCHEMA_ACTION_RENAME:
                 if not val:
-                    self._set_message("Name cannot be empty.")
+                    self._set_message(_("Name cannot be empty."))
                     return
                 self._db.fields[idx].name = val[:MAX_FIELD_NAME_LEN]
             elif action == SCHEMA_ACTION_MAXLEN:
@@ -648,7 +653,7 @@ class MailMergeScreen(Screen):
                         rec[idx] = rec[idx][:new_len]
             elif action == SCHEMA_ACTION_INSERT:
                 if not val:
-                    self._set_message("Name cannot be empty.")
+                    self._set_message(_("Name cannot be empty."))
                     return
                 new_field = FieldDef(val[:MAX_FIELD_NAME_LEN])
                 insert_pos = idx + 1
@@ -658,7 +663,7 @@ class MailMergeScreen(Screen):
                 self._schema_field_idx = insert_pos
             self._mode = MODE_SCHEMA
             self._render_schema()
-            self._set_message("Done.")
+            self._set_message(_("Done."))
             return
 
         if key == "backspace":
@@ -700,7 +705,7 @@ class MailMergeScreen(Screen):
         fdef = self._db.fields[fi]
 
         if key == "escape":
-            self._set_message("Entry aborted.")
+            self._set_message(_("Entry aborted."))
             self._enter_main()
             return
 
@@ -860,18 +865,18 @@ class MailMergeScreen(Screen):
             self._refresh_status()
             self._autosave()
             if not self._db.records:
-                self._set_message("All records deleted.")
+                self._set_message(_("All records deleted."))
                 self._enter_main()
                 return
             self._update_record_idx = min(idx, len(self._db.records) - 1)
             self._update_field_idx = 0
             self._mode = MODE_UPDATE
             self._render_update_record()
-            self._set_message("Record deleted.")
+            self._set_message(_("Record deleted."))
         elif k == "n" or key == "escape":
             self._mode = MODE_UPDATE
             self._render_update_record()
-            self._set_message("Deletion cancelled.")
+            self._set_message(_("Deletion cancelled."))
 
     def _key_update_edit(self, key: str, event) -> None:
         rec = self._db.records[self._update_record_idx]
@@ -893,7 +898,7 @@ class MailMergeScreen(Screen):
                 self._update_editing = False
                 self._autosave()
                 self._render_update_record()
-                self._set_message("Record updated and saved.")
+                self._set_message(_("Record updated and saved."))
             else:
                 self._update_field_idx = next_fi
                 self._input_buf = rec[next_fi] if next_fi < len(rec) else ""
@@ -971,7 +976,7 @@ class MailMergeScreen(Screen):
     def _key_subset(self, key: str, event) -> None:
         if key == "escape":
             self._active_subset = None
-            self._set_message("Subset cleared.")
+            self._set_message(_("Subset cleared."))
             self._enter_main()
             return
         if key == "enter":
@@ -1273,7 +1278,7 @@ class MailMergeScreen(Screen):
 
         if not records:
             self._set_message(
-                "No records to merge. Load a database or clear the subset."
+                _("No records to merge. Load a database or clear the subset.")
             )
             self._enter_main()
             return
@@ -1295,8 +1300,8 @@ class MailMergeScreen(Screen):
             f"[bold]Mail Merge Complete — {count} document(s)[/]\n\n"
             f"[dim]Preview of record 1:[/]\n"
             f"{preview}\n\n"
-            f"[dim](Full print output would go to printer — not yet wired to print driver)[/]\n\n"
-            "Press any key to return to menu."
+            f"[dim](Full print output would go to printer — not yet wired to print driver)[/]\n\n" +
+            _("Press any key to return to menu.")
         )
         self._set_body(body)
         self._set_message(f"Merged {count} records. Press any key.")

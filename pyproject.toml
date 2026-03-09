@@ -50,6 +50,8 @@ build-backend = "hatchling.build"
 packages = ["safari_writer", "safari_dos", "safari_chat", "safari_base", "safari_fed", "safari_basic", "safari_repl"]
 include = [
     "safari_writer/*.sfw",
+    "safari_writer/*.json",
+    "safari_writer/locales/**/*.mo",
     "safari_writer/py.typed",
     "safari_dos/py.typed",
     "safari_chat/default_help.md",

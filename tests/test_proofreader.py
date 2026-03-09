@@ -51,6 +51,7 @@ def make_screen(buffer: list[str] | None = None) -> ProofreaderScreen:
         screen._dict_results = []
         screen._dict_page = 0
         screen._dict_prefix = ""
+        screen._dict_exact = False
         screen._from_correct = False
     # Stub UI methods — patch instance methods directly
     screen._set_message = MagicMock()
@@ -198,7 +199,7 @@ class TestMountBehavior:
     def test_menu_is_seeded_before_mount(self):
         screen = ProofreaderScreen(AppState())
         assert "Highlight Errors" in screen._body_text
-        assert "Select a proofing mode." in screen._message_text
+        assert "Select a mode." in screen._message_text
         assert "Highlight" in screen._help_text
 
     def test_menu_is_visible_after_mount(self):
@@ -209,7 +210,7 @@ class TestMountBehavior:
                 await pilot.pause()
                 screen = app.screen
                 assert "Highlight Errors" in screen._body_text
-                assert "Select a proofing mode." in screen._message_text
+                assert "Select a mode." in screen._message_text
                 assert "Highlight" in screen._help_text
 
         asyncio.run(run())
@@ -354,12 +355,28 @@ class TestDictSearch:
         screen._show_dict_results_page = MagicMock()
         with patch(
             "safari_writer.screens.proofreader._dict_lookup",
-            return_value=["hello", "help"],
+            return_value=(False, ["hello", "help"]),
         ):
             ev = make_key("enter")
             screen._handle_dict_search_key("enter", ev)
         screen._show_dict_results_page.assert_called_once()
         assert screen._dict_results == ["hello", "help"]
+        assert screen._dict_exact is False
+
+    def test_valid_prefix_exact_match(self):
+        screen = make_screen()
+        screen._mode = MODE_DICT_SEARCH
+        screen._input_buf = "cats"
+        screen._show_dict_results_page = MagicMock()
+        with patch(
+            "safari_writer.screens.proofreader._dict_lookup",
+            return_value=(True, ["catch", "acts", "cast"]),
+        ):
+            ev = make_key("enter")
+            screen._handle_dict_search_key("enter", ev)
+        screen._show_dict_results_page.assert_called_once()
+        assert screen._dict_exact is True
+        assert screen._dict_results == ["catch", "acts", "cast"]
 
     def test_backspace_in_search(self):
         screen = make_screen()

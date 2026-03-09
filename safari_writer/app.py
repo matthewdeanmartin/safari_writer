@@ -7,6 +7,11 @@ from textual.app import App, ScreenStackError
 from safari_writer.cli_types import StartupRequest
 from safari_writer.state import AppState
 from safari_writer.path_utils import leaf_name
+import safari_writer.locale_info as _locale_info
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 from safari_writer.screens.main_menu import MainMenuScreen
 from safari_writer.screens.editor import EditorScreen
 from safari_writer.screens.global_format import GlobalFormatScreen
@@ -20,9 +25,10 @@ from safari_writer.screens.index_screen import (
 )
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
 from safari_writer.screens.style_switcher import StyleSwitcherScreen
-from safari_writer.document_io import load_demo_document_buffer, load_document_buffer
+from safari_writer.screens.doctor import DoctorScreen
+from safari_writer.document_io import load_demo_document_buffer, load_demo_mail_merge_db, load_document_buffer, load_sfw_language, serialize_document_buffer
 from safari_writer.file_types import StorageMode, resolve_file_profile
-from safari_writer.format_codec import encode_sfw, strip_controls, has_controls, is_sfw
+from safari_writer.format_codec import strip_controls, has_controls, is_sfw
 from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
 from safari_dos.screens import (
     SafariDosBrowserScreen,
@@ -111,7 +117,7 @@ class SafariWriterApp(App):
             )
             return
         if destination == "global_format":
-            self.push_screen(GlobalFormatScreen(self.state.fmt))
+            self.push_screen(GlobalFormatScreen(self.state.fmt, state=self.state))
             return
         if destination == "mail_merge":
             initial_mode = {
@@ -132,7 +138,7 @@ class SafariWriterApp(App):
             return
         if destination == "index_current":
             directory = request.index_path or Path.cwd()
-            self.push_screen(IndexScreen(directory, label="Current Folder"))
+            self.push_screen(IndexScreen(directory, label=_("Current Folder")))
             return
         if destination == "index_external":
             self._action_index_external()
@@ -177,11 +183,11 @@ class SafariWriterApp(App):
         elif action == "print":
             self._action_print()
         elif action == "global_format":
-            self.push_screen(GlobalFormatScreen(self.state.fmt))
+            self.push_screen(GlobalFormatScreen(self.state.fmt, state=self.state))
         elif action == "mail_merge":
             self.push_screen(MailMergeScreen(self.state))
         elif action == "index1":
-            self.push_screen(IndexScreen(Path.cwd(), label="Current Folder"))
+            self.push_screen(IndexScreen(Path.cwd(), label=_("Current Folder")))
         elif action == "index2":
             self._action_index_external()
         elif action == "safari_dos":
@@ -209,6 +215,8 @@ class SafariWriterApp(App):
             self._action_demo()
         elif action == "style_switcher":
             self.push_screen(StyleSwitcherScreen(self.theme))
+        elif action == "doctor":
+            self.push_screen(DoctorScreen(doc_language=self.state.doc_language))
         elif action == "quit":
             self._action_quit()
 
@@ -310,7 +318,7 @@ class SafariWriterApp(App):
     def _action_quit(self) -> None:
         if self.state.modified:
             self.push_screen(
-                ConfirmScreen("Unsaved changes will be lost. Quit?"),
+                ConfirmScreen(_("Unsaved changes will be lost. Quit?")),
                 callback=self._on_quit_confirm,
             )
         else:
@@ -326,7 +334,7 @@ class SafariWriterApp(App):
     def _action_demo(self) -> None:
         if self.state.modified:
             self.push_screen(
-                ConfirmScreen("Unsaved changes will be lost. Continue?"),
+                ConfirmScreen(_("Unsaved changes will be lost. Continue?")),
                 callback=self._on_demo_confirm,
             )
         else:
@@ -342,12 +350,16 @@ class SafariWriterApp(App):
         except (FileNotFoundError, OSError) as e:
             self.set_message(f"Demo load error: {e}")
             return
+        try:
+            self.state.mail_merge_db = load_demo_mail_merge_db()
+        except Exception:
+            pass  # mail merge demo is optional; document still loads
         self.state.cursor_row = 0
         self.state.cursor_col = 0
         self.state.filename = ""
         self.state.modified = False
         self.state.file_profile = resolve_file_profile("demo_document.sfw")
-        self.set_message("Loaded demo document")
+        self.set_message(_("Loaded demo document + mail merge database"))
         self._open_editor()
 
     def _open_editor(self) -> None:
@@ -367,6 +379,8 @@ class SafariWriterApp(App):
             self.state.cursor_col = 0
             self.state.filename = str(document_path)
             self.state.modified = False
+            # Per-document language (i18n Level 1)
+            self.state.doc_language = load_sfw_language(document_path)
             # Resolve file profile and sanitize if needed
             self.state.file_profile = resolve_file_profile(document_path.name)
             if self.state.storage_mode == StorageMode.PLAIN and has_controls(
@@ -417,10 +431,11 @@ class SafariWriterApp(App):
     def _do_save(self, filename: str) -> None:
         try:
             target_path = Path(filename).resolve()
-            if is_sfw(filename):
-                text = encode_sfw(self.state.buffer)
-            else:
-                text = "\n".join(strip_controls(self.state.buffer))
+            text = serialize_document_buffer(
+                self.state.buffer,
+                target_path,
+                doc_language=self.state.doc_language,
+            )
             target_path.write_text(text, encoding="utf-8")
             self.state.filename = str(target_path)
             self.state.modified = False
@@ -469,7 +484,7 @@ class SafariWriterApp(App):
             self.set_message("Garbage move cancelled")
             return
         if self._pending_delete_path is None:
-            self.set_message("No file selected")
+            self.set_message(_("No file selected"))
             return
         try:
             move_to_garbage(self._pending_delete_path)
@@ -490,7 +505,7 @@ class SafariWriterApp(App):
     def _action_index_external(self) -> None:
         drives = _find_external_drives()
         if not drives:
-            self.set_message("No external drives found")
+            self.set_message(_("No external drives found"))
         elif len(drives) == 1:
             self.push_screen(IndexScreen(drives[0], label=f"External: {drives[0]}"))
         else:
@@ -657,11 +672,11 @@ class SafariWriterApp(App):
     def post_to_mastodon(self) -> None:
         """Post the current editor buffer to Mastodon via the active Fed client."""
         if self.fed_state is None:
-            self.set_message("No Safari Fed session active")
+            self.set_message(_("No Safari Fed session active"))
             return
         text = "\n".join(self.state.buffer).strip()
         if not text:
-            self.set_message("Cannot post an empty document")
+            self.set_message(_("Cannot post an empty document"))
             return
         # Use fed state's compose flow
         self.fed_state.compose_lines = text.splitlines()
@@ -769,7 +784,7 @@ class SafariWriterApp(App):
 
     def _on_choose_load_file(self, path: Path | None) -> None:
         if path is None:
-            self.set_message("Load cancelled")
+            self.set_message(_("Load cancelled"))
             return
         self._on_load_file(str(path))
         self._open_editor()
@@ -792,7 +807,7 @@ class SafariWriterApp(App):
 
     def _on_choose_save_name(self, filename: str | None) -> None:
         if not filename:
-            self.set_message("Save cancelled")
+            self.set_message(_("Save cancelled"))
             return
         # Default to .sfw extension if none provided
         if "." not in Path(filename).name:
@@ -825,7 +840,7 @@ class SafariWriterApp(App):
 
     def _on_choose_save_location(self, directory: Path | None) -> None:
         if directory is None:
-            self.set_message("Save cancelled")
+            self.set_message(_("Save cancelled"))
             return
         self._on_save_file(str(directory / self._pending_save_filename))
 
@@ -840,6 +855,6 @@ class SafariWriterApp(App):
 
     def _on_choose_delete_file(self, path: Path | None) -> None:
         if path is None:
-            self.set_message("Delete cancelled")
+            self.set_message(_("Delete cancelled"))
             return
         self._on_delete_prompt(str(path))

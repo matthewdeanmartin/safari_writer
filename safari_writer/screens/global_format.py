@@ -7,7 +7,12 @@ from textual import events
 from textual.screen import Screen
 from textual.widgets import Static
 
-from safari_writer.state import GlobalFormat
+from safari_writer.state import AppState, GlobalFormat
+import safari_writer.locale_info as _locale_info
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 
 
 # ---------------------------------------------------------------------------
@@ -163,6 +168,27 @@ class GFRow(Static):
 # ---------------------------------------------------------------------------
 
 
+class GFLangRow(Static):
+    """Special row for the document language selector."""
+
+    def __init__(self, lang: str) -> None:
+        self._lang = lang
+        super().__init__(self._row_markup(), classes="gf-row")
+
+    def _row_markup(self) -> str:
+        display = self._lang or "(auto)"
+        return f" [bold underline]K[/]  {'Language'.ljust(25)} [bold]{display.ljust(5)}[/] [dim]spell-check language[/]"
+
+    def refresh_lang(self, lang: str, editing: bool = False) -> None:
+        self._lang = lang
+        display = lang or "(auto)"
+        if editing:
+            markup = f" [bold underline]K[/]  {'Language'.ljust(25)} [bold reverse]{display.ljust(5)}[/] [dim]spell-check language[/]"
+        else:
+            markup = self._row_markup()
+        self.update(markup)
+
+
 class GlobalFormatScreen(Screen):
     """Global Format parameter editor screen."""
 
@@ -173,12 +199,14 @@ class GlobalFormatScreen(Screen):
         Binding("tab", "reset_defaults", "Reset Defaults", show=False),
     ]
 
-    def __init__(self, fmt: GlobalFormat) -> None:
+    def __init__(self, fmt: GlobalFormat, state: AppState | None = None) -> None:
         super().__init__()
         self._fmt = fmt
+        self._state = state
         self._editing_key: str | None = None
         self._input_buf: str = ""
         self._rows: dict[str, GFRow] = {}
+        self._lang_row: GFLangRow | None = None
 
     # ------------------------------------------------------------------
     # Compose
@@ -189,19 +217,22 @@ class GlobalFormatScreen(Screen):
 
         with Container(id="gf-outer"):
             yield Static("", id="gf-message")
-            yield Static("*** GLOBAL FORMAT ***", id="gf-title")
+            yield Static(_("*** GLOBAL FORMAT ***"), id="gf-title")
             with Static(id="gf-table"):
                 for p in PARAMS:
                     row = GFRow(p, getattr(self._fmt, p.attr))
                     self._rows[p.key] = row
                     yield row
+                if self._state is not None:
+                    self._lang_row = GFLangRow(self._state.doc_language)
+                    yield self._lang_row
             yield Static(
                 " Press letter to edit value | [Tab] Reset Defaults | [Esc] Exit",
                 id="gf-help",
             )
 
     def on_mount(self) -> None:
-        self.set_message("Press a letter key to select a parameter.")
+        self.set_message(_("Press a letter key to select a parameter."))
 
     # ------------------------------------------------------------------
     # Key handling
@@ -211,11 +242,18 @@ class GlobalFormatScreen(Screen):
         key = event.key
 
         if self._editing_key is not None:
-            self._handle_edit_key(key)
+            if self._editing_key == "K":
+                self._handle_lang_edit_key(key, event)
+            else:
+                self._handle_edit_key(key)
             event.stop()
             return
 
         upper_key = key.upper() if len(key) == 1 else key
+        if upper_key == "K" and self._state is not None:
+            self._start_lang_editing()
+            event.stop()
+            return
         if upper_key in KEY_TO_PARAM:
             self._start_editing(upper_key)
             event.stop()
@@ -275,7 +313,50 @@ class GlobalFormatScreen(Screen):
         self._editing_key = None
         self._input_buf = ""
         self._rows[param.key].refresh_value(original, editing=False)
-        self.set_message("Edit cancelled.")
+        self.set_message(_("Edit cancelled."))
+
+    # ------------------------------------------------------------------
+    # Language (K) editing  (i18n Level 1)
+    # ------------------------------------------------------------------
+
+    def _start_lang_editing(self) -> None:
+        self._editing_key = "K"
+        self._input_buf = ""
+        if self._lang_row is not None:
+            self._lang_row.refresh_lang(self._state.doc_language if self._state else "", editing=True)  # type: ignore[union-attr]
+        from safari_writer.locale_info import LOCALE, available_languages
+
+        langs = available_languages()
+        hint = f"Available: {', '.join(langs)}" if langs else "No dictionaries installed"
+        self.set_message(
+            f"Language (current: {self._state.doc_language or LOCALE}): "  # type: ignore[union-attr]
+            f"type tag or Enter=(auto). {hint}"
+        )
+
+    def _handle_lang_edit_key(self, key: str, event: events.Key) -> None:
+        if key == "escape":
+            self._editing_key = None
+            if self._lang_row is not None:
+                self._lang_row.refresh_lang(self._state.doc_language if self._state else "")  # type: ignore[union-attr]
+            self.set_message(_("Edit cancelled."))
+        elif key == "enter":
+            new_lang = self._input_buf.strip()
+            if self._state is not None:
+                self._state.doc_language = new_lang
+            self._editing_key = None
+            if self._lang_row is not None:
+                self._lang_row.refresh_lang(new_lang)
+            label = new_lang or "(auto — OS locale)"
+            self.set_message(f"Language set to {label}.")
+        elif key == "backspace":
+            self._input_buf = self._input_buf[:-1]
+            if self._lang_row is not None:
+                self._lang_row.refresh_lang(self._input_buf or "…", editing=True)
+        elif event.character and event.character.isprintable():
+            if len(self._input_buf) < 10:
+                self._input_buf += event.character
+                if self._lang_row is not None:
+                    self._lang_row.refresh_lang(self._input_buf, editing=True)
 
     # ------------------------------------------------------------------
     # Actions
@@ -283,8 +364,14 @@ class GlobalFormatScreen(Screen):
 
     def action_accept_and_exit(self) -> None:
         if self._editing_key is not None:
-            param = KEY_TO_PARAM[self._editing_key]
-            self._cancel_edit(param)
+            if self._editing_key == "K":
+                self._editing_key = None
+                if self._lang_row is not None:
+                    self._lang_row.refresh_lang(self._state.doc_language if self._state else "")  # type: ignore[union-attr]
+                self.set_message(_("Edit cancelled."))
+            else:
+                param = KEY_TO_PARAM[self._editing_key]
+                self._cancel_edit(param)
             return
         self.app.pop_screen()  # type: ignore[attr-defined]
 
@@ -294,7 +381,7 @@ class GlobalFormatScreen(Screen):
         self._fmt.reset_defaults()
         for p in PARAMS:
             self._rows[p.key].refresh_value(getattr(self._fmt, p.attr), editing=False)
-        self.set_message("All settings reset to factory defaults.")
+        self.set_message(_("All settings reset to factory defaults."))
 
     # ------------------------------------------------------------------
     # Helpers

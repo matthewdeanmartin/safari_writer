@@ -1,0 +1,228 @@
+# Safari Writer — Icelandic (is)
+# Copyright (C) 2025 Matthew Martin
+# This file is distributed under the same license as the safari-writer package.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: is\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "*** SAFARI WRITER ***"
+msgstr "*** SAFARI WRITER ***"
+
+msgid "Create File"
+msgstr "Búa til skrá"
+
+msgid "Edit File"
+msgstr "Breyta skrá"
+
+msgid "Verify Spelling"
+msgstr "Athuga stafsetningu"
+
+msgid "Print File"
+msgstr "Prenta skrá"
+
+msgid "Global Format"
+msgstr "Altækt snið"
+
+msgid "Mail Merge"
+msgstr "Sameina póstsendingar"
+
+msgid "Doctor (diagnostics)"
+msgstr "Læknir (greining)"
+
+msgid "Index Current Folder"
+msgstr "Skrá yfir núverandi möppu"
+
+msgid "Index External Drive"
+msgstr "Skrá yfir ytri disk"
+
+msgid "Load File"
+msgstr "Hlaða skrá"
+
+msgid "Save File"
+msgstr "Vista skrá"
+
+msgid "Save As..."
+msgstr "Vista sem..."
+
+msgid "Delete File"
+msgstr "Eyða skrá"
+
+msgid "Folder (New)"
+msgstr "Mappa (ný)"
+
+msgid "Quit"
+msgstr "Hætta"
+
+msgid "Open Safari DOS"
+msgstr "Opna Safari DOS"
+
+msgid "Help Chat"
+msgstr "Hjálparspjall"
+
+msgid "Net Safari Fed"
+msgstr "Net Safari Fed"
+
+msgid "Run Safari REPL"
+msgstr "Keyra Safari REPL"
+
+msgid "Style Switcher"
+msgstr "Stílaskiptir"
+
+msgid "Try Demo Mode"
+msgstr "Prófa kynningarham"
+
+msgid "--- Tools ---"
+msgstr "--- Verkfæri ---"
+
+msgid "(new document)"
+msgstr "(ný skjal)"
+
+msgid "(no merge data)"
+msgstr "(engin sameiningargögn)"
+
+msgid "Welcome to Safari Writer"
+msgstr "Velkomin/n í Safari Writer"
+
+msgid "Nothing to undo"
+msgstr "Ekkert að afturkalla"
+
+msgid "Cancelled"
+msgstr "Hætt við"
+
+msgid "Not found: {needle!r}"
+msgstr "Fannst ekki: {needle!r}"
+
+msgid "Formatting is only available in .sfw files"
+msgstr "Snið er aðeins í boði í .sfw skrám"
+
+msgid "No search string set — press Ctrl+F"
+msgstr "Engin leitarstrengur stilltur — ýttu á Ctrl+F"
+
+msgid "*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]"
+msgstr "*** SAFARI WRITER — PRÓFARKALESARI ***  [Orðab: {lang}]"
+
+msgid "No spelling errors found."
+msgstr "Engar stafsetningarvillur fundust."
+
+msgid "Scan complete. Press any key to return to menu."
+msgstr "Skönnun lokið. Ýttu á einhvern lykil til að fara aftur í valmynd."
+
+msgid "No more errors found."
+msgstr "Engar fleiri villur fundust."
+
+msgid "*** GLOBAL FORMAT ***"
+msgstr "*** ALTÆKT SNIÐ ***"
+
+msgid "Press a letter key to select a parameter."
+msgstr "Ýttu á stafslykil til að velja færibreytu."
+
+msgid "All settings reset to factory defaults."
+msgstr "Allar stillingar endurstilltar á verksmiðjustillingar."
+
+msgid "Edit cancelled."
+msgstr "Breytingu hætt við."
+
+msgid "*** SAFARI WRITER — DOCTOR ***"
+msgstr "*** SAFARI WRITER — LÆKNIR ***"
+
+msgid "*** PRINT / EXPORT ***"
+msgstr "*** PRENTA / FLYTJA ÚT ***"
+
+msgid "*** MAIL MERGE ***"
+msgstr "*** SAMEINING PÓSTSENDINGA ***"
+
+msgid "Database full — max 255 records reached."
+msgstr "Gagnagrunnur fullur — hámark 255 færslur náð."
+
+msgid "No records yet — use C to create and enter records first."
+msgstr "Engar færslur enn — notaðu C til að búa til og slá inn færslur fyrst."
+
+msgid "Record deleted."
+msgstr "Færslu eytt."
+
+msgid "Deletion cancelled."
+msgstr "Eyðingu hætt við."
+
+msgid "Done."
+msgstr "Lokið."
+
+msgid "Cancelled."
+msgstr "Hætt við."
+
+msgid "No words to save."
+msgstr "Engin orð til að vista."
+
+msgid "No external drives found"
+msgstr "Engir ytri diskar fundust"
+
+msgid "Load cancelled"
+msgstr "Hleðslu hætt við"
+
+msgid "Delete cancelled"
+msgstr "Eyðingu hætt við"
+
+msgid "Save cancelled"
+msgstr "Vistun hætt við"
+
+msgid "Current Folder"
+msgstr "Núverandi mappa"
+
+msgid "Unsaved changes will be lost. Quit?"
+msgstr "Óvistaðar breytingar tapast. Hætta?"
+
+msgid "Unsaved changes will be lost. Continue?"
+msgstr "Óvistaðar breytingar tapast. Halda áfram?"
+
+msgid "No file selected"
+msgstr "Engin skrá valin"
+
+msgid "Cannot post an empty document"
+msgstr "Get ekki birt tómt skjal"
+
+msgid "Loaded demo document + mail merge database"
+msgstr "Hlaðið kynningaskjal + sameiningargagnagrunnur"
+
+msgid "SELECT ITEM"
+msgstr "VELDU LIÐ"
+
+msgid "Subset cleared."
+msgstr "Hlutmengi hreinsað."
+
+msgid "Entry aborted."
+msgstr "Innslátt hætt við."
+
+msgid "All records deleted."
+msgstr "Öllum færslum eytt."
+
+msgid "Record updated and saved."
+msgstr "Færsla uppfærð og vistuð."
+
+msgid "No records to merge. Load a database or clear the subset."
+msgstr "Engar færslur til að sameina. Hladdu gagnagrunn eða hreinsaðu hlutmengi."
+
+msgid "Press any key to return to menu."
+msgstr "Ýttu á einhvern lykil til að fara aftur í valmynd."
+
+msgid "All tab stops cleared"
+msgstr "Öllum dálkstopp eytt"
+
+msgid "Name cannot be empty."
+msgstr "Nafn má ekki vera tómt."
+
+msgid "Field deleted."
+msgstr "Reit eytt."
+
+msgid "Cannot delete the last field."
+msgstr "Get ekki eytt síðasta reitnum."
+
+msgid "Highlight scan complete — {error_count} error(s) found. Press any key to return."
+msgstr "Auðkenningu lokið — {error_count} villa(r) fundust. Ýttu á einhvern lykil til að fara aftur."
+
+msgid "New Mastodon Post"
+msgstr "Ný Mastodon-færsla"
+
+msgid "No Safari Fed session active"
+msgstr "Engin Safari Fed-lota virk"

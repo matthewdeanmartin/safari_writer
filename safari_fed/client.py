@@ -266,10 +266,12 @@ class SafariFedClient:
         return f"@{acct}" if not acct.startswith("@") else acct
 
     def _format_posted_at(self, value: object) -> str:
+        from safari_writer.locale_info import format_datetime
+
         parsed = self._parse_datetime(value)
         if parsed is None:
             return "unknown"
-        return parsed.astimezone(UTC).strftime("%Y-%m-%d %H:%M UTC")
+        return format_datetime(parsed.astimezone(UTC), style="short") + " UTC"
 
     def _format_age(self, value: object) -> str:
         parsed = self._parse_datetime(value)

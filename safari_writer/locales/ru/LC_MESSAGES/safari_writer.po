@@ -1,0 +1,228 @@
+# Safari Writer — Russian (ru)
+# Copyright (C) 2025 Matthew Martin
+# This file is distributed under the same license as the safari-writer package.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "*** SAFARI WRITER ***"
+msgstr "*** SAFARI WRITER ***"
+
+msgid "Create File"
+msgstr "Создать файл"
+
+msgid "Edit File"
+msgstr "Редактировать файл"
+
+msgid "Verify Spelling"
+msgstr "Проверить орфографию"
+
+msgid "Print File"
+msgstr "Печатать файл"
+
+msgid "Global Format"
+msgstr "Глобальный формат"
+
+msgid "Mail Merge"
+msgstr "Слияние писем"
+
+msgid "Doctor (diagnostics)"
+msgstr "Доктор (диагностика)"
+
+msgid "Index Current Folder"
+msgstr "Индекс текущей папки"
+
+msgid "Index External Drive"
+msgstr "Индекс внешнего диска"
+
+msgid "Load File"
+msgstr "Загрузить файл"
+
+msgid "Save File"
+msgstr "Сохранить файл"
+
+msgid "Save As..."
+msgstr "Сохранить как..."
+
+msgid "Delete File"
+msgstr "Удалить файл"
+
+msgid "Folder (New)"
+msgstr "Папка (новая)"
+
+msgid "Quit"
+msgstr "Выйти"
+
+msgid "Open Safari DOS"
+msgstr "Открыть Safari DOS"
+
+msgid "Help Chat"
+msgstr "Чат помощи"
+
+msgid "Net Safari Fed"
+msgstr "Сеть Safari Fed"
+
+msgid "Run Safari REPL"
+msgstr "Запустить Safari REPL"
+
+msgid "Style Switcher"
+msgstr "Переключатель стилей"
+
+msgid "Try Demo Mode"
+msgstr "Попробовать демо-режим"
+
+msgid "--- Tools ---"
+msgstr "--- Инструменты ---"
+
+msgid "(new document)"
+msgstr "(новый документ)"
+
+msgid "(no merge data)"
+msgstr "(нет данных для слияния)"
+
+msgid "Welcome to Safari Writer"
+msgstr "Добро пожаловать в Safari Writer"
+
+msgid "Nothing to undo"
+msgstr "Нечего отменять"
+
+msgid "Cancelled"
+msgstr "Отменено"
+
+msgid "Not found: {needle!r}"
+msgstr "Не найдено: {needle!r}"
+
+msgid "Formatting is only available in .sfw files"
+msgstr "Форматирование доступно только в файлах .sfw"
+
+msgid "No search string set — press Ctrl+F"
+msgstr "Строка поиска не задана — нажмите Ctrl+F"
+
+msgid "*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]"
+msgstr "*** SAFARI WRITER — КОРРЕКТОР ***  [Слов: {lang}]"
+
+msgid "No spelling errors found."
+msgstr "Орфографических ошибок не найдено."
+
+msgid "Scan complete. Press any key to return to menu."
+msgstr "Сканирование завершено. Нажмите любую клавишу для возврата в меню."
+
+msgid "No more errors found."
+msgstr "Больше ошибок не найдено."
+
+msgid "*** GLOBAL FORMAT ***"
+msgstr "*** ГЛОБАЛЬНЫЙ ФОРМАТ ***"
+
+msgid "Press a letter key to select a parameter."
+msgstr "Нажмите клавишу с буквой для выбора параметра."
+
+msgid "All settings reset to factory defaults."
+msgstr "Все настройки сброшены до заводских."
+
+msgid "Edit cancelled."
+msgstr "Редактирование отменено."
+
+msgid "*** SAFARI WRITER — DOCTOR ***"
+msgstr "*** SAFARI WRITER — ДОКТОР ***"
+
+msgid "*** PRINT / EXPORT ***"
+msgstr "*** ПЕЧАТЬ / ЭКСПОРТ ***"
+
+msgid "*** MAIL MERGE ***"
+msgstr "*** СЛИЯНИЕ ПИСЕМ ***"
+
+msgid "Database full — max 255 records reached."
+msgstr "База данных полна — достигнуто максимум 255 записей."
+
+msgid "No records yet — use C to create and enter records first."
+msgstr "Записей пока нет — используйте C для создания и ввода записей."
+
+msgid "Record deleted."
+msgstr "Запись удалена."
+
+msgid "Deletion cancelled."
+msgstr "Удаление отменено."
+
+msgid "Done."
+msgstr "Готово."
+
+msgid "Cancelled."
+msgstr "Отменено."
+
+msgid "No words to save."
+msgstr "Нет слов для сохранения."
+
+msgid "No external drives found"
+msgstr "Внешние диски не найдены"
+
+msgid "Load cancelled"
+msgstr "Загрузка отменена"
+
+msgid "Delete cancelled"
+msgstr "Удаление отменено"
+
+msgid "Save cancelled"
+msgstr "Сохранение отменено"
+
+msgid "Current Folder"
+msgstr "Текущая папка"
+
+msgid "Unsaved changes will be lost. Quit?"
+msgstr "Несохранённые изменения будут потеряны. Выйти?"
+
+msgid "Unsaved changes will be lost. Continue?"
+msgstr "Несохранённые изменения будут потеряны. Продолжить?"
+
+msgid "No file selected"
+msgstr "Файл не выбран"
+
+msgid "Cannot post an empty document"
+msgstr "Невозможно опубликовать пустой документ"
+
+msgid "Loaded demo document + mail merge database"
+msgstr "Загружен демо-документ + база данных слияния писем"
+
+msgid "SELECT ITEM"
+msgstr "ВЫБЕРИТЕ ПУНКТ"
+
+msgid "Subset cleared."
+msgstr "Подмножество очищено."
+
+msgid "Entry aborted."
+msgstr "Ввод прерван."
+
+msgid "All records deleted."
+msgstr "Все записи удалены."
+
+msgid "Record updated and saved."
+msgstr "Запись обновлена и сохранена."
+
+msgid "No records to merge. Load a database or clear the subset."
+msgstr "Нет записей для слияния. Загрузите базу данных или очистите подмножество."
+
+msgid "Press any key to return to menu."
+msgstr "Нажмите любую клавишу для возврата в меню."
+
+msgid "All tab stops cleared"
+msgstr "Все позиции табуляции очищены"
+
+msgid "Name cannot be empty."
+msgstr "Имя не может быть пустым."
+
+msgid "Field deleted."
+msgstr "Поле удалено."
+
+msgid "Cannot delete the last field."
+msgstr "Невозможно удалить последнее поле."
+
+msgid "Highlight scan complete — {error_count} error(s) found. Press any key to return."
+msgstr "Сканирование с выделением завершено — найдено {error_count} ошибок. Нажмите любую клавишу для возврата."
+
+msgid "New Mastodon Post"
+msgstr "Новая запись Mastodon"
+
+msgid "No Safari Fed session active"
+msgstr "Нет активной сессии Safari Fed"

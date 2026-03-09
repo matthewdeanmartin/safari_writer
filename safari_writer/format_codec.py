@@ -9,7 +9,15 @@ Plain-text files use no encoding — control characters are stripped on save.
 
 from __future__ import annotations
 
-__all__ = ["decode_sfw", "encode_sfw", "has_controls", "is_sfw", "strip_controls"]
+__all__ = [
+    "decode_sfw",
+    "encode_sfw",
+    "extract_sfw_metadata",
+    "has_controls",
+    "inject_sfw_metadata",
+    "is_sfw",
+    "strip_controls",
+]
 
 # Internal control bytes → .sfw tag (without the leading backslash)
 _ENCODE_MAP: dict[str, str] = {
@@ -115,3 +123,40 @@ def has_controls(buffer: list[str]) -> bool:
 def is_sfw(filename: str) -> bool:
     """Check if a filename uses the .sfw extension."""
     return filename.lower().endswith(".sfw")
+
+
+# ---------------------------------------------------------------------------
+# Metadata header helpers  (i18n Level 1)
+# ---------------------------------------------------------------------------
+
+import re as _re
+
+_META_RE = _re.compile(r"^%%(\w+):\s*(.+)$")
+
+
+def extract_sfw_metadata(text: str) -> tuple[dict[str, str], str]:
+    """Extract ``%%key: value`` header lines from raw .sfw file text.
+
+    Returns ``(metadata_dict, remaining_text)`` where *remaining_text* has
+    the header lines stripped.
+    """
+    meta: dict[str, str] = {}
+    lines = text.split("\n")
+    body_start = 0
+    for i, line in enumerate(lines):
+        m = _META_RE.match(line)
+        if m:
+            meta[m.group(1)] = m.group(2).strip()
+            body_start = i + 1
+        else:
+            break
+    remaining = "\n".join(lines[body_start:])
+    return meta, remaining
+
+
+def inject_sfw_metadata(metadata: dict[str, str], body: str) -> str:
+    """Prepend ``%%key: value`` header lines to encoded .sfw body text."""
+    if not metadata:
+        return body
+    header = "\n".join(f"%%{k}: {v}" for k, v in sorted(metadata.items()))
+    return header + "\n" + body

@@ -29,7 +29,8 @@ MYPY_DOS_CONFIG_FLAGS := --config-file NUL
 TOX_DEFAULT_FLAGS := -q
 TOX_VERBOSE_FLAGS := -v
 
-.PHONY: install install-verbose \
+.PHONY: locale locale-verbose \
+	install install-verbose \
 	run run-verbose run-writer run-writer-verbose run-dos run-dos-verbose run-chat run-chat-verbose run-fed run-fed-verbose \
 	dev dev-verbose dev-writer dev-writer-verbose dev-dos dev-dos-verbose dev-chat dev-chat-verbose dev-fed dev-fed-verbose \
 	test test-verbose coverage coverage-verbose tox tox-verbose check check-verbose \
@@ -39,6 +40,12 @@ TOX_VERBOSE_FLAGS := -v
 	mypy mypy-verbose mypy-all mypy-all-verbose mypy-writer mypy-writer-verbose mypy-dos mypy-dos-verbose mypy-chat mypy-chat-verbose mypy-fed mypy-fed-verbose \
 	format format-verbose format-all format-all-verbose format-writer format-writer-verbose format-dos format-dos-verbose format-chat format-chat-verbose format-fed format-fed-verbose \
 	publish publish-verbose
+
+locale:
+	@uv run --no-sync python scripts/compile_mo.py
+
+locale-verbose:
+	@uv run --no-sync python scripts/compile_mo.py
 
 install:
 	@uv sync $(UV_SYNC_DEFAULT_FLAGS)

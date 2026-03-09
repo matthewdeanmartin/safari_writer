@@ -6,6 +6,11 @@ from textual.app import ComposeResult
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
+import safari_writer.locale_info as _locale_info
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.mail_merge_db import MailMergeDB
@@ -78,7 +83,7 @@ class PrintScreen(ModalScreen[str | None]):
         from textual.containers import Container
 
         with Container(id="print-dialog"):
-            yield Static("*** PRINT / EXPORT ***", id="print-title")
+            yield Static(_("*** PRINT / EXPORT ***"), id="print-title")
             yield Static("[bold underline]A[/]  ANSI Preview", classes="print-option")
             yield Static(
                 "[bold underline]M[/]  Export to Markdown (.md)", classes="print-option"

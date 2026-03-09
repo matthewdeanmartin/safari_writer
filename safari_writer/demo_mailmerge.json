@@ -1,0 +1,30 @@
+{
+  "fields": [
+    {"name": "Last Name", "max_len": 20},
+    {"name": "First Name", "max_len": 20},
+    {"name": "Company", "max_len": 20},
+    {"name": "Address", "max_len": 20},
+    {"name": "City", "max_len": 20},
+    {"name": "State", "max_len": 10},
+    {"name": "Zipcode", "max_len": 10},
+    {"name": "Phone", "max_len": 15},
+    {"name": "Salutation", "max_len": 20},
+    {"name": "Title", "max_len": 20},
+    {"name": "Department", "max_len": 20},
+    {"name": "Country", "max_len": 20},
+    {"name": "Email", "max_len": 20},
+    {"name": "Fax", "max_len": 15},
+    {"name": "Notes", "max_len": 20}
+  ],
+  "records": [
+    [
+      "Atkinson", "Jack", "Atari Inc.", "1265 Borregas Ave", "Sunnyvale", "CA", "94088", "408-555-0142", "Dear Jack", "Engineer", "Software", "USA", "jack@atari.example", "408-555-0199", "Original team"
+    ],
+    [
+      "Miner", "Jay", "Amiga Corp.", "983 University Ave", "Los Gatos", "CA", "95030", "408-555-0237", "Dear Jay", "Chip Designer", "Hardware", "USA", "jay@amiga.example", "408-555-0200", "Custom chips"
+    ],
+    [
+      "Tramiel", "Sam", "Commodore Ltd.", "1200 Wilson Dr", "West Chester", "PA", "19380", "215-555-0364", "Dear Sam", "VP Operations", "Management", "USA", "sam@cbm.example", "215-555-0399", "Business side"
+    ]
+  ]
+}

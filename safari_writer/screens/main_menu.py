@@ -9,41 +9,51 @@ from textual.timer import Timer
 from textual.widgets import Static
 
 from safari_writer.path_utils import leaf_name
+import safari_writer.locale_info as _locale_info
 
-# Column 1: document operations
-COL1_ITEMS = [
-    ("C", "reate File", "create"),
-    ("E", "dit File", "edit"),
-    ("V", "erify Spelling", "verify"),
-    ("P", "rint File", "print"),
-    ("G", "lobal Format", "global_format"),
-    ("M", "ail Merge", "mail_merge"),
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
+
+
+# Column 1: document operations — (hotkey, full_msgid, action)
+_COL1_DEFS = [
+    ("C", "Create File", "create"),
+    ("E", "Edit File", "edit"),
+    ("V", "Verify Spelling", "verify"),
+    ("P", "Print File", "print"),
+    ("G", "Global Format", "global_format"),
+    ("M", "Mail Merge", "mail_merge"),
+    ("?", "Doctor (diagnostics)", "doctor"),
 ]
 
 # Column 2: file/disk operations
-COL2_ITEMS = [
-    ("1", " Index Current Folder", "index1"),
-    ("2", " Index External Drive", "index2"),
-    ("L", "oad File", "load"),
-    ("S", "ave File", "save"),
-    ("A", " Save As...", "save_as"),
-    ("D", "elete File", "delete"),
-    ("F", "older (New)", "new_folder"),
-    ("Q", "uit", "quit"),
+_COL2_DEFS = [
+    ("1", "Index Current Folder", "index1"),
+    ("2", "Index External Drive", "index2"),
+    ("L", "Load File", "load"),
+    ("S", "Save File", "save"),
+    ("A", "Save As...", "save_as"),
+    ("D", "Delete File", "delete"),
+    ("F", "Folder (New)", "new_folder"),
+    ("Q", "Quit", "quit"),
 ]
 
 # Column 3: tools & extras (separator + special items)
-COL3_ITEMS = [
-    ("O", "pen Safari DOS", "safari_dos"),
-    ("H", "elp Chat", "safari_chat"),
-    ("N", " et Safari Fed", "safari_fed"),
-    ("R", "un Safari REPL", "safari_repl"),
-    ("X", " Style Switcher", "style_switcher"),
-    ("T", "ry Demo Mode", "demo"),
+_COL3_DEFS = [
+    ("O", "Open Safari DOS", "safari_dos"),
+    ("H", "Help Chat", "safari_chat"),
+    ("N", "Net Safari Fed", "safari_fed"),
+    ("R", "Run Safari REPL", "safari_repl"),
+    ("X", "Style Switcher", "style_switcher"),
+    ("T", "Try Demo Mode", "demo"),
 ]
 
-# Combined for binding generation
-MENU_ITEMS = COL1_ITEMS + COL2_ITEMS + COL3_ITEMS
+# Combined for binding generation (keep old names for compat)
+COL1_ITEMS = _COL1_DEFS
+COL2_ITEMS = _COL2_DEFS
+COL3_ITEMS = _COL3_DEFS
+MENU_ITEMS = _COL1_DEFS + _COL2_DEFS + _COL3_DEFS
 
 MENU_CSS = """
 MainMenuScreen {
@@ -159,6 +169,7 @@ class MainMenuScreen(Screen):
         Binding("r", "menu_action('safari_repl')", "Run Safari REPL", show=False),
         Binding("x", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("t", "menu_action('demo')", "Try Demo Mode", show=False),
+        Binding("question_mark", "menu_action('doctor')", "Doctor", show=False),
     ]
 
     def __init__(self) -> None:
@@ -169,20 +180,29 @@ class MainMenuScreen(Screen):
     def compose(self) -> ComposeResult:
         from textual.containers import Container, Horizontal
 
+        def _label(key: str, msgid: str) -> str:
+            """Translate msgid and derive the label portion (after the hotkey)."""
+            t = _(msgid)
+            # If translated text starts with the hotkey letter (case-insensitive), drop it
+            if t and t[0].upper() == key.upper() and key.isalpha():
+                return t[1:]
+            # For non-alpha hotkeys (?, 1, 2) or when translation doesn't start with key
+            return " " + t
+
         with Container(id="menu-body"):
             with Container(id="menu-container"):
-                yield Static("*** SAFARI WRITER ***", id="title")
+                yield Static(_("*** SAFARI WRITER ***"), id="title")
                 with Horizontal(id="menu-columns"):
                     with Container(id="menu-col-1"):
-                        for key, label, _ in COL1_ITEMS:
-                            yield MenuItem(key, label)
+                        for key, msgid, _unused in _COL1_DEFS:
+                            yield MenuItem(key, _label(key, msgid))
                     with Container(id="menu-col-2"):
-                        for key, label, _ in COL2_ITEMS:
-                            yield MenuItem(key, label)
+                        for key, msgid, _unused in _COL2_DEFS:
+                            yield MenuItem(key, _label(key, msgid))
                     with Container(id="menu-col-3"):
-                        yield Static("--- Tools ---", classes="menu-separator")
-                        for key, label, _ in COL3_ITEMS:
-                            yield MenuItem(key, label)
+                        yield Static(_("--- Tools ---"), classes="menu-separator")
+                        for key, msgid, _ in _COL3_DEFS:
+                            yield MenuItem(key, _label(key, msgid))
 
         with Container(id="menu-footer"):
             yield Static(self._context_text(), id="context-bar")
@@ -191,8 +211,9 @@ class MainMenuScreen(Screen):
                 yield Static(self._clock_text(), id="status-clock")
 
     def _clock_text(self) -> str:
-        now = datetime.now()
-        return now.strftime("%Y-%m-%d %H:%M:%S")
+        from safari_writer.locale_info import format_datetime
+
+        return format_datetime(datetime.now(), style="full")
 
     def _update_clock(self) -> None:
         try:
@@ -208,13 +229,16 @@ class MainMenuScreen(Screen):
         return f" {self._message}" if self._message else self._status_text()
 
     def _context_text(self) -> str:
+        from safari_writer.locale_info import LANGUAGE
+
         state = self.app.state  # type: ignore[attr-defined]
-        edit_file = self._display_name(state.filename, "(new document)")
+        edit_file = self._display_name(state.filename, _("(new document)"))
         merge_filename = (
             state.mail_merge_db.filename if state.mail_merge_db is not None else ""
         )
-        merge_file = self._display_name(merge_filename, "(no merge data)")
-        return f" Edit: {edit_file}   Merge: {merge_file}"
+        merge_file = self._display_name(merge_filename, _("(no merge data)"))
+        lang = state.doc_language or LANGUAGE
+        return f" Edit: {edit_file}   Merge: {merge_file}   Lang: {lang}"
 
     def _display_name(self, filename: str, empty_label: str) -> str:
         if not filename:

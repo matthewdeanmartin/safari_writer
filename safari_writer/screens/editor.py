@@ -18,6 +18,11 @@ from pathlib import Path
 from typing import Protocol, cast
 
 from textual.app import ComposeResult
+import safari_writer.locale_info as _locale_info
+
+
+def _(s: str) -> str:
+    return _locale_info.get_translation().gettext(s)
 from textual.screen import Screen, ModalScreen
 from textual.widgets import Static
 from textual.widget import Widget
@@ -449,7 +454,7 @@ class EditorArea(Widget, can_focus=True):
             self._last_undo_action = ""
             self._set_screen_message("Undo")
         else:
-            self._set_screen_message("Nothing to undo")
+            self._set_screen_message(_("Nothing to undo"))
 
     # ------------------------------------------------------------------
     # Selection helpers
@@ -996,7 +1001,7 @@ class EditorArea(Widget, can_focus=True):
             self._heading_active = False
             self._chain_active = False
             self._input_buffer = ""
-            self._set_screen_message("Cancelled")
+            self._set_screen_message(_("Cancelled"))
             event.stop()
             self.refresh()
             return
@@ -1041,7 +1046,7 @@ class EditorArea(Widget, can_focus=True):
                     s.modified = True
                     self._set_screen_message(f"Chain: {filename}")
                 else:
-                    self._set_screen_message("Cancelled")
+                    self._set_screen_message(_("Cancelled"))
         elif key == "backspace":
             self._input_buffer = self._input_buffer[:-1]
             self._set_screen_message(self._current_prompt() + self._input_buffer + "█")
@@ -1076,7 +1081,7 @@ class EditorArea(Widget, can_focus=True):
         s = self.state
         needle = s.search_string
         if not needle:
-            self._set_screen_message("No search string set — press Ctrl+F")
+            self._set_screen_message(_("No search string set — press Ctrl+F"))
             return False
 
         # Start search AFTER current cursor position
@@ -1111,7 +1116,7 @@ class EditorArea(Widget, can_focus=True):
                     self._set_screen_message(f"Found (wrapped): {needle!r}")
                     return True
 
-        self._set_screen_message(f"Not found: {needle!r}")
+        self._set_screen_message(_("Not found: {needle!r}").format(needle=needle))
         return False
 
     def _find_in_line(self, line: str, needle: str, start: int = 0) -> int:
@@ -1188,7 +1193,7 @@ class EditorArea(Widget, can_focus=True):
             s.modified = True
             self._set_screen_message(f"Replaced {count} occurrence(s)")
         else:
-            self._set_screen_message(f"Not found: {needle!r}")
+            self._set_screen_message(_("Not found: {needle!r}").format(needle=needle))
 
     def _replace_all_in_line_from(
         self, line: str, needle: str, repl: str, start: int
@@ -1297,7 +1302,7 @@ class EditorArea(Widget, can_focus=True):
     def _tab_clear_all(self) -> None:
         """Clear all tab stops."""
         self.tab_stops.clear()
-        self._set_screen_message("All tab stops cleared")
+        self._set_screen_message(_("All tab stops cleared"))
         self._update_tab_bar()
 
     def _update_tab_bar(self) -> None:
@@ -1359,7 +1364,7 @@ class EditorArea(Widget, can_focus=True):
     def _insert_control(self, ctrl: str) -> None:
         s = self.state
         if not s.allows_formatting:
-            self._set_screen_message("Formatting is only available in .sfw files")
+            self._set_screen_message(_("Formatting is only available in .sfw files"))
             return
         row, col = s.cursor_row, s.cursor_col
         line = s.buffer[row]
@@ -1371,7 +1376,7 @@ class EditorArea(Widget, can_focus=True):
         """Insert a structure marker on its own line at the cursor position."""
         s = self.state
         if not s.allows_formatting:
-            self._set_screen_message("Formatting is only available in .sfw files")
+            self._set_screen_message(_("Formatting is only available in .sfw files"))
             return
         row = s.cursor_row
         # Insert a new line above cursor containing just the marker
@@ -1663,7 +1668,7 @@ class EditorScreen(Screen):
         else:
             help_bar = HELP_TEXT
         with Container(id="editor-footer"):
-            yield Static(self._message or "Welcome to Safari Writer", id="message-bar")
+            yield Static(self._message or _("Welcome to Safari Writer"), id="message-bar")
             yield Static(self._status_text(), id="status-bar")
             yield Static(help_bar, id="help-bar")
 
@@ -1672,12 +1677,15 @@ class EditorScreen(Screen):
         self.update_status()
 
     def _status_text(self) -> str:
+        from safari_writer.locale_info import LANGUAGE
+
         s = self.state
         mode = "Insert" if s.insert_mode else "Type-over"
         caps = "Uppercase" if s.caps_mode else "Lowercase"
         storage = "SFW" if s.storage_mode == StorageMode.FORMATTED else "PLAIN"
         profile_name = s.file_profile.display_name
-        return f" Bytes Free: {s.bytes_free:,}   [{mode}]   [{caps}]   [{storage}]   [{profile_name}]"
+        lang = s.doc_language or LANGUAGE
+        return f" Bytes Free: {s.bytes_free:,}   [{mode}]   [{caps}]   [{storage}]   [{profile_name}]   [{lang}]"
 
     def _tab_bar_text(self) -> str:
         try:
