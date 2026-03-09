@@ -32,7 +32,9 @@ nav:
   - "Modules":
       - "Safari DOS": "modules/safari_dos.md"
       - "Safari Chat": "modules/safari_chat.md"
+      - "Safari Fed": "modules/safari_fed.md"
       - "Safari Basic": "modules/safari_basic.md"
+      - "Safari REPL": "modules/safari_repl.md"
   - "Reference":
       - "File Types": "reference/file_types.md"
       - "CLI Usage": "reference/cli.md"

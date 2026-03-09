@@ -23,3 +23,9 @@ You can use Safari Writer from the command line without the full interface.
 - `safari-fed` — Launch the Mastodon client in demo mode (no credentials needed).
 - `safari-fed --folder FOLDER` — Open a specific folder on launch (`Home`, `Mentions`, `Bookmarks`, `Drafts`, `Sent`, `Deferred`).
 - `safari-fed --account NAME` — Start with a named Mastodon identity selected.
+
+## Safari REPL Commands
+- `safari-repl` — Launch the standalone Atari BASIC REPL.
+- `safari-repl FILE` — Load a `.BAS` program on startup.
+- `safari-writer tui safari-repl` — Open Safari REPL inside the Safari Writer shell.
+- `safari-writer tui safari-repl --file FILE` — Open the embedded REPL with a `.BAS` file preloaded.
