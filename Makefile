@@ -5,7 +5,10 @@
 WRITER_MODULE := safari_writer
 DOS_MODULE := safari_dos
 CHAT_MODULE := safari_chat
-ALL_MODULES := $(WRITER_MODULE) $(DOS_MODULE) $(CHAT_MODULE)
+BASE_MODULE := safari_base
+FED_MODULE := safari_fed
+ALL_MODULES := $(WRITER_MODULE) $(DOS_MODULE) $(CHAT_MODULE) $(FED_MODULE)
+PYTEST_COVERAGE_MODULES := $(WRITER_MODULE) $(DOS_MODULE) $(CHAT_MODULE) $(BASE_MODULE) $(FED_MODULE)
 FORMAT_TARGETS := $(ALL_MODULES) tests
 
 PYLINT_RULES := --disable=all --enable=E,F,W0611,W0612
@@ -13,6 +16,7 @@ UV_SYNC_DEFAULT_FLAGS := --quiet --no-progress
 UV_SYNC_VERBOSE_FLAGS := --verbose
 PYTEST_DEFAULT_FLAGS := -q --disable-warnings
 PYTEST_VERBOSE_FLAGS := -v
+PYTEST_COVERAGE_REPORT_FLAGS := --cov-report=term-missing --cov-report=xml:coverage.xml
 RUFF_CHECK_DEFAULT_FLAGS := --quiet --fix
 RUFF_CHECK_VERBOSE_FLAGS := --verbose --fix
 RUFF_FORMAT_DEFAULT_FLAGS := --quiet
@@ -26,14 +30,14 @@ TOX_DEFAULT_FLAGS := -q
 TOX_VERBOSE_FLAGS := -v
 
 .PHONY: install install-verbose \
-	run run-verbose run-writer run-writer-verbose run-dos run-dos-verbose run-chat run-chat-verbose \
-	dev dev-verbose dev-writer dev-writer-verbose dev-dos dev-dos-verbose dev-chat dev-chat-verbose \
-	test test-verbose tox tox-verbose check check-verbose \
-	lint lint-verbose lint-all lint-all-verbose lint-writer lint-writer-verbose lint-dos lint-dos-verbose lint-chat lint-chat-verbose \
-	lint-ruff lint-ruff-verbose lint-ruff-all lint-ruff-all-verbose lint-ruff-writer lint-ruff-writer-verbose lint-ruff-dos lint-ruff-dos-verbose lint-ruff-chat lint-ruff-chat-verbose \
-	pylint pylint-verbose pylint-all pylint-all-verbose pylint-writer pylint-writer-verbose pylint-dos pylint-dos-verbose pylint-chat pylint-chat-verbose \
-	mypy mypy-verbose mypy-all mypy-all-verbose mypy-writer mypy-writer-verbose mypy-dos mypy-dos-verbose mypy-chat mypy-chat-verbose \
-	format format-verbose format-all format-all-verbose format-writer format-writer-verbose format-dos format-dos-verbose format-chat format-chat-verbose \
+	run run-verbose run-writer run-writer-verbose run-dos run-dos-verbose run-chat run-chat-verbose run-fed run-fed-verbose \
+	dev dev-verbose dev-writer dev-writer-verbose dev-dos dev-dos-verbose dev-chat dev-chat-verbose dev-fed dev-fed-verbose \
+	test test-verbose coverage coverage-verbose tox tox-verbose check check-verbose \
+	lint lint-verbose lint-all lint-all-verbose lint-writer lint-writer-verbose lint-dos lint-dos-verbose lint-chat lint-chat-verbose lint-fed lint-fed-verbose \
+	lint-ruff lint-ruff-verbose lint-ruff-all lint-ruff-all-verbose lint-ruff-writer lint-ruff-writer-verbose lint-ruff-dos lint-ruff-dos-verbose lint-ruff-chat lint-ruff-chat-verbose lint-ruff-fed lint-ruff-fed-verbose \
+	pylint pylint-verbose pylint-all pylint-all-verbose pylint-writer pylint-writer-verbose pylint-dos pylint-dos-verbose pylint-chat pylint-chat-verbose pylint-fed pylint-fed-verbose \
+	mypy mypy-verbose mypy-all mypy-all-verbose mypy-writer mypy-writer-verbose mypy-dos mypy-dos-verbose mypy-chat mypy-chat-verbose mypy-fed mypy-fed-verbose \
+	format format-verbose format-all format-all-verbose format-writer format-writer-verbose format-dos format-dos-verbose format-chat format-chat-verbose format-fed format-fed-verbose \
 	publish publish-verbose
 
 install:
@@ -64,6 +68,12 @@ run-chat:
 run-chat-verbose:
 	@uv run --verbose safari-chat
 
+run-fed:
+	@uv run --quiet safari-fed
+
+run-fed-verbose:
+	@uv run --verbose safari-fed
+
 dev: dev-writer
 
 dev-verbose: dev-writer-verbose
@@ -86,11 +96,23 @@ dev-chat:
 dev-chat-verbose:
 	@uv run textual run --dev safari_chat/main.py
 
+dev-fed:
+	@uv run textual run safari_fed/main.py
+
+dev-fed-verbose:
+	@uv run textual run --dev safari_fed/main.py
+
 test:
 	@uv run pytest tests/ $(PYTEST_DEFAULT_FLAGS)
 
 test-verbose:
 	@uv run pytest tests/ $(PYTEST_VERBOSE_FLAGS)
+
+coverage:
+	@uv run pytest tests/ $(PYTEST_DEFAULT_FLAGS) $(foreach module,$(PYTEST_COVERAGE_MODULES),--cov=$(module)) $(PYTEST_COVERAGE_REPORT_FLAGS)
+
+coverage-verbose:
+	@uv run pytest tests/ $(PYTEST_VERBOSE_FLAGS) $(foreach module,$(PYTEST_COVERAGE_MODULES),--cov=$(module)) $(PYTEST_COVERAGE_REPORT_FLAGS)
 
 tox:
 	@uv run tox $(TOX_DEFAULT_FLAGS)
@@ -122,6 +144,10 @@ lint-chat: lint-ruff-chat pylint-chat
 
 lint-chat-verbose: lint-ruff-chat-verbose pylint-chat-verbose
 
+lint-fed: lint-ruff-fed pylint-fed
+
+lint-fed-verbose: lint-ruff-fed-verbose pylint-fed-verbose
+
 lint-ruff: lint-ruff-all
 
 lint-ruff-verbose: lint-ruff-all-verbose
@@ -149,6 +175,12 @@ lint-ruff-chat:
 
 lint-ruff-chat-verbose:
 	@uv run ruff check $(RUFF_CHECK_VERBOSE_FLAGS) $(CHAT_MODULE)
+
+lint-ruff-fed:
+	@uv run ruff check $(RUFF_CHECK_DEFAULT_FLAGS) $(FED_MODULE)
+
+lint-ruff-fed-verbose:
+	@uv run ruff check $(RUFF_CHECK_VERBOSE_FLAGS) $(FED_MODULE)
 
 pylint: pylint-all
 
@@ -178,13 +210,19 @@ pylint-chat:
 pylint-chat-verbose:
 	@uv run pylint $(PYLINT_VERBOSE_FLAGS) $(CHAT_MODULE)
 
+pylint-fed:
+	@uv run pylint $(PYLINT_DEFAULT_FLAGS) $(FED_MODULE)
+
+pylint-fed-verbose:
+	@uv run pylint $(PYLINT_VERBOSE_FLAGS) $(FED_MODULE)
+
 mypy: mypy-writer
 
 mypy-verbose: mypy-writer-verbose
 
-mypy-all: mypy-writer mypy-dos
+mypy-all: mypy-writer mypy-dos mypy-chat mypy-fed
 
-mypy-all-verbose: mypy-writer-verbose mypy-dos-verbose
+mypy-all-verbose: mypy-writer-verbose mypy-dos-verbose mypy-chat-verbose mypy-fed-verbose
 
 mypy-writer:
 	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(WRITER_MODULE)
@@ -203,6 +241,12 @@ mypy-chat:
 
 mypy-chat-verbose:
 	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(CHAT_MODULE)
+
+mypy-fed:
+	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_DEFAULT_FLAGS) $(FED_MODULE)
+
+mypy-fed-verbose:
+	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(FED_MODULE)
 
 format: format-all
 
@@ -231,6 +275,12 @@ format-chat:
 
 format-chat-verbose:
 	@uv run ruff format $(RUFF_FORMAT_VERBOSE_FLAGS) $(CHAT_MODULE)
+
+format-fed:
+	@uv run ruff format $(RUFF_FORMAT_DEFAULT_FLAGS) $(FED_MODULE)
+
+format-fed-verbose:
+	@uv run ruff format $(RUFF_FORMAT_VERBOSE_FLAGS) $(FED_MODULE)
 
 publish: test
 	@uv run python -c "from pathlib import Path; import shutil; shutil.rmtree(Path('dist'), ignore_errors=True)"

@@ -23,4 +23,5 @@ class StartupRequest:
     read_only: bool = False
     index_path: Path | None = None
     safari_dos_path: Path | None = None
+    safari_repl_path: Path | None = None
     personal_dict_paths: tuple[Path, ...] = field(default_factory=tuple)

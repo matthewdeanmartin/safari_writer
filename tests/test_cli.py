@@ -155,6 +155,25 @@ def test_build_startup_request_for_safari_dos():
     )
 
 
+def test_build_startup_request_for_safari_fed():
+    args = parse_args(["tui", "safari-fed"])
+
+    request = build_startup_request(args)
+
+    assert request == StartupRequest(destination="safari_fed")
+
+
+def test_build_startup_request_for_safari_repl():
+    args = parse_args(["tui", "safari-repl", "--file", "demo.bas"])
+
+    request = build_startup_request(args)
+
+    assert request == StartupRequest(
+        destination="safari_repl",
+        safari_repl_path=Path("demo.bas").resolve(),
+    )
+
+
 def test_main_default_invocation_launches_menu(monkeypatch):
     captured: dict[str, object] = {}
     splash_calls: list[bool] = []

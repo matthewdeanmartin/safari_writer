@@ -1,5 +1,17 @@
 """Textual screens for Safari DOS."""
 
+# -----------------------------------------------------------------------
+# Textual reserved keys (do not rebind without care):
+#   Ctrl+Q   quit (App default, priority)
+#   Ctrl+C   copy text / help-quit (App + Screen default)
+#   Ctrl+P   command palette (App.COMMAND_PALETTE_BINDING)
+#   Tab      focus next widget (Screen default)
+#   Shift+Tab focus previous widget (Screen default)
+#   Ctrl+I   alias for Tab (terminal limitation)
+#   Ctrl+J   alias for Enter (terminal limitation)
+#   Ctrl+M   alias for Enter (terminal limitation)
+# -----------------------------------------------------------------------
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -240,6 +252,37 @@ InputScreen, ConfirmScreen, MessageScreen {
     color: $foreground;
     margin-top: 1;
 }
+
+SafariDosHelpScreen {
+    align: center middle;
+}
+
+#dos-help-dialog {
+    width: 80;
+    height: auto;
+    max-height: 90%;
+    border: solid $primary;
+    background: $surface;
+    padding: 1 2;
+}
+
+#dos-help-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+#dos-help-content {
+    height: 1fr;
+    color: $foreground;
+}
+
+#dos-help-footer {
+    text-align: center;
+    color: $text-muted;
+    margin-top: 1;
+}
 """
 
 
@@ -349,7 +392,7 @@ class SafariDosMainMenuScreen(Screen):
         Binding("f", "menu_action('browse')", "File List", show=False),
         Binding("d", "menu_action('devices')", "Devices", show=False),
         Binding("g", "menu_action('garbage')", "Garbage", show=False),
-        Binding("h", "menu_action('help')", "Help", show=False),
+        Binding("h,f1", "menu_action('help')", "Help", show=False),
         Binding("y", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("q,escape", "menu_action('quit')", "Quit", show=False),
     ]
@@ -420,6 +463,7 @@ class SafariDosBrowserScreen(Screen):
         Binding("h", "home", "Home", show=False),
         Binding("pageup", "page_up", "Page Up", show=False),
         Binding("pagedown", "page_down", "Page Down", show=False),
+        Binding("f1", "show_help", "Help", show=False),
         Binding("escape", "back_to_menu", "Menu", show=False),
     ]
 
@@ -465,10 +509,10 @@ class SafariDosBrowserScreen(Screen):
 
     def _help_text(self) -> str:
         if self._picker_mode == "file":
-            return "Enter=choose/open  Backspace=up  F=favorites  .=hidden  Esc=cancel"
+            return "Enter=choose/open  Backspace=up  F=favorites  .=hidden  F1=help  Esc=cancel"
         if self._picker_mode == "directory":
-            return "Enter=open  Tab=choose folder  F=favorites  .=hidden  Esc=cancel"
-        return "Enter=open  T=select  C/M/R/W/N/X ops  Z/U zip  V=view  Space=preview  Esc=menu"
+            return "Enter=open  Tab=choose folder  F=favorites  .=hidden  F1=help  Esc=cancel"
+        return "Enter=open  T=select  C/M/R/W/N/X ops  Z/U zip  V=view  F1=help  Esc=menu"
 
     def _menu_title(self) -> str:
         if self._picker_mode == "file":
@@ -528,8 +572,7 @@ class SafariDosBrowserScreen(Screen):
 
     def _render_side_menu(self) -> str:
         return "\n".join(
-            f"{key:<5}{label}" if key else ""
-            for key, label in self._menu_entries()
+            f"{key:<5}{label}" if key else "" for key, label in self._menu_entries()
         )
 
     def set_message(self, message: str) -> None:
@@ -661,9 +704,7 @@ class SafariDosBrowserScreen(Screen):
 
     def action_page_down(self) -> None:
         if self._entries:
-            self._selected_index = min(
-                len(self._entries) - 1, self._selected_index + 5
-            )
+            self._selected_index = min(len(self._entries) - 1, self._selected_index + 5)
             self._refresh_view()
 
     def action_parent(self) -> None:
@@ -1047,6 +1088,9 @@ class SafariDosBrowserScreen(Screen):
             return
         self.app.pop_screen()
 
+    def action_show_help(self) -> None:
+        self.app.push_screen(SafariDosHelpScreen())
+
     def action_favorites(self) -> None:
         self.app.push_screen(
             SafariDosFavoritesScreen(self._state),
@@ -1313,45 +1357,60 @@ class SafariDosGarbageScreen(ModalScreen[Path | None]):
         self.dismiss(restored)
 
 
-class SafariDosHelpScreen(Screen):
-    """Compact help for Safari DOS."""
+DOS_HELP_CONTENT = """\
+MAIN MENU
+  F                 File List (browser)
+  D                 Devices
+  G                 Garbage
+  H                 Help (this screen)
+  Y                 Style Switcher
+  Q / Esc           Quit Safari DOS
+
+FILE BROWSER — NAVIGATION
+  Up / Down         Move cursor            Home / End        First / last
+  PageUp / PageDown Scroll page            Enter             Open folder/file
+  Backspace         Parent folder          H                 Home folder
+  .                 Toggle hidden files    /                 Filter by pattern
+  S                 Cycle sort order       D                 Switch device
+
+FILE BROWSER — SELECTION
+  T                 Toggle select item     A                 Select all items
+  Tab               Choose current folder (picker mode)
+
+FILE BROWSER — OPERATIONS
+  C                 Copy selected          M                 Move selected
+  R                 Rename item            W                 Duplicate item
+  N                 New folder             X                 Send to Garbage
+  P                 Toggle protected       I                 File info
+  Z                 Create zip archive     U                 Unzip archive
+  F                 Favorites / recent     G                 Garbage list
+  V                 Toggle preview pane    Space             Fullscreen preview
+
+OTHER
+  F1                This help screen       Esc               Back / Cancel
+
+Garbage restores items without permanent delete.
+Safari DOS stays foreground-only; no background daemon.
+
+TEXTUAL FRAMEWORK (reserved)
+  Ctrl+Q            Quit application       Ctrl+C            Copy text
+  Ctrl+P            Command palette        Tab/Shift+Tab     Focus widgets\
+"""
+
+
+class SafariDosHelpScreen(ModalScreen):
+    """Full key-command reference for Safari DOS."""
 
     CSS = DOS_CSS
 
     def compose(self) -> ComposeResult:
-        body = "\n".join(
-            [
-                "Select Function",
-                "",
-                "File List:",
-                "  Enter open folder/file",
-                "  T mark items (Tag)",
-                "  C copy  M move  R rename  W duplicate",
-                "  N new folder  X send to Garbage",
-                "  Z zip archive  U unzip archive",
-                "  V toggle preview  Space fullscreen preview",
-                "  F favorites/recent  P protect toggle",
-                "  / filter  S sort  . hidden toggle",
-                "",
-                "Garbage restores items without permanent delete.",
-                "Safari DOS stays foreground-only; no background daemon.",
-                "",
-                "Esc returns to menu.",
-            ]
-        )
-        with Container(id="dos-container"):
-            with Container(id="dos-header"):
-                yield Static("*** SAFARI DOS HELP ***", id="dos-title")
-                yield Static("Operational help", id="dos-path")
-                yield Static("", id="dos-columns")
-            yield Static(body, id="dos-body")
-            with Container(id="dos-footer"):
-                yield Static("Ready", id="dos-status")
-                yield Static("Esc=back", id="dos-help")
+        with Container(id="dos-help-dialog"):
+            yield Static("=== SAFARI DOS — KEY COMMANDS ===", id="dos-help-title")
+            yield Static(DOS_HELP_CONTENT, id="dos-help-content")
+            yield Static("Press any key to close", id="dos-help-footer")
 
     def on_key(self, event: events.Key) -> None:
-        if event.key == "escape":
-            self.app.pop_screen()
+        self.dismiss()
         event.stop()
 
 

@@ -36,6 +36,8 @@ COL2_ITEMS = [
 COL3_ITEMS = [
     ("O", "pen Safari DOS", "safari_dos"),
     ("H", "elp Chat", "safari_chat"),
+    ("N", " et Safari Fed", "safari_fed"),
+    ("R", "un Safari REPL", "safari_repl"),
     ("X", " Style Switcher", "style_switcher"),
     ("T", "ry Demo Mode", "demo"),
 ]
@@ -153,6 +155,8 @@ class MainMenuScreen(Screen):
         Binding("q", "menu_action('quit')", "Quit", show=False),
         Binding("o", "menu_action('safari_dos')", "Open Safari DOS", show=False),
         Binding("h", "menu_action('safari_chat')", "Help Chat", show=False),
+        Binding("n", "menu_action('safari_fed')", "Open Safari Fed", show=False),
+        Binding("r", "menu_action('safari_repl')", "Run Safari REPL", show=False),
         Binding("x", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("t", "menu_action('demo')", "Try Demo Mode", show=False),
     ]

@@ -169,6 +169,17 @@ def build_parser() -> argparse.ArgumentParser:
     tui_safari_dos.add_argument("--path", help="Directory to browse.")
     tui_safari_dos.set_defaults(handler=_handle_tui_command)
 
+    tui_safari_fed = tui_subparsers.add_parser(
+        "safari-fed", help="Open Safari Fed inside Safari Writer."
+    )
+    tui_safari_fed.set_defaults(handler=_handle_tui_command)
+
+    tui_safari_repl = tui_subparsers.add_parser(
+        "safari-repl", help="Open Safari REPL (Atari BASIC) inside Safari Writer."
+    )
+    tui_safari_repl.add_argument("--file", help="Load a .BAS file on startup.")
+    tui_safari_repl.set_defaults(handler=_handle_tui_command)
+
     export_parser = subparsers.add_parser(
         "export", help="Run headless export commands."
     )
@@ -483,6 +494,13 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
             destination="safari_dos",
             safari_dos_path=Path(args.path).resolve() if args.path else Path.cwd(),
         )
+    if command == "safari-fed":
+        return StartupRequest(destination="safari_fed")
+    if command == "safari-repl":
+        return StartupRequest(
+            destination="safari_repl",
+            safari_repl_path=Path(args.file).resolve() if args.file else None,
+        )
     raise ValueError(f"Unsupported TUI destination: {command}")
 
 
@@ -511,6 +529,8 @@ def _handle_tui_command(args: argparse.Namespace) -> int:
         raise NotADirectoryError(
             f"Safari DOS path is not a directory: {request.safari_dos_path}"
         )
+    if request.safari_repl_path and not request.safari_repl_path.exists():
+        raise FileNotFoundError(f"Safari REPL file not found: {request.safari_repl_path}")
     for path in request.personal_dict_paths:
         if not path.exists():
             raise FileNotFoundError(f"Personal dictionary not found: {path}")

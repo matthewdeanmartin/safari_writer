@@ -1,5 +1,17 @@
 """Textual screens for Safari Chat."""
 
+# -----------------------------------------------------------------------
+# Textual reserved keys (do not rebind without care):
+#   Ctrl+Q   quit (App default, priority)
+#   Ctrl+C   copy text / help-quit (App + Screen default)
+#   Ctrl+P   command palette (App.COMMAND_PALETTE_BINDING)
+#   Tab      focus next widget (Screen default)
+#   Shift+Tab focus previous widget (Screen default)
+#   Ctrl+I   alias for Tab (terminal limitation)
+#   Ctrl+J   alias for Enter (terminal limitation)
+#   Ctrl+M   alias for Enter (terminal limitation)
+# -----------------------------------------------------------------------
+
 from __future__ import annotations
 
 
@@ -462,47 +474,56 @@ class SafariChatOptionsScreen(ModalScreen[None]):
 # ---------------------------------------------------------------------------
 
 
+CHAT_HELP_CONTENT = """\
+KEYBOARD SHORTCUTS
+  F1 / Ctrl+H      Show this help
+  Ctrl+T            Show parsed topics
+  Ctrl+M            Show conversation memory
+  Ctrl+S            Show safety notice
+  Ctrl+O            Show options
+  Ctrl+Q / Escape   Quit
+  PgUp / PgDn       Scroll transcript
+  Enter             Submit message
+  Backspace         Delete last character
+
+SLASH COMMANDS
+  /topics           List document topics
+  /memory           Show conversation tree
+  /safety           Show safety notice
+  /options          Show options
+  /clear            Clear conversation
+  /help             Show this help
+  /quit             Quit
+
+ABOUT
+  Safari Chat is an ELIZA-inspired help
+  assistant that retrieves answers from a
+  Markdown knowledge document.
+  It is NOT an AI or LLM.
+
+TEXTUAL FRAMEWORK (reserved)
+  Ctrl+Q            Quit application
+  Ctrl+C            Copy text
+  Ctrl+P            Command palette\
+"""
+
+
 class SafariChatHelpScreen(ModalScreen[None]):
     """Key commands reference and about text."""
 
     CSS = CHAT_CSS
     BINDINGS = [Binding("escape", "dismiss_modal", "Close")]
 
-    _HELP_TEXT = (
-        "SAFARI CHAT - HELP\n"
-        "=" * 40 + "\n\n"
-        "KEYBOARD SHORTCUTS\n"
-        "  F1        Show this help\n"
-        "  Ctrl+T    Show parsed topics\n"
-        "  Ctrl+M    Show conversation memory\n"
-        "  Ctrl+S    Show safety notice\n"
-        "  Ctrl+O    Show options\n"
-        "  Ctrl+H    Show this help\n"
-        "  Ctrl+Q    Quit\n"
-        "  Escape    Quit\n"
-        "  PgUp/PgDn Scroll transcript\n"
-        "  Enter     Submit message\n"
-        "  Backspace Delete last character\n\n"
-        "SLASH COMMANDS\n"
-        "  /topics   List document topics\n"
-        "  /memory   Show conversation tree\n"
-        "  /safety   Show safety notice\n"
-        "  /options  Show options\n"
-        "  /clear    Clear conversation\n"
-        "  /help     Show this help\n"
-        "  /quit     Quit\n\n"
-        "ABOUT\n"
-        "  Safari Chat is an ELIZA-inspired\n"
-        "  help assistant that retrieves answers\n"
-        "  from a Markdown knowledge document.\n"
-        "  It is NOT an AI or LLM.\n\n"
-        "Press Escape to close."
-    )
-
     def compose(self) -> ComposeResult:
         with VerticalScroll(classes="modal-container"):
-            yield Static("HELP", classes="modal-title")
-            yield Static(self._HELP_TEXT, classes="modal-body")
+            yield Static(
+                "=== SAFARI CHAT — KEY COMMANDS ===", classes="modal-title"
+            )
+            yield Static(CHAT_HELP_CONTENT, classes="modal-body")
+            yield Static(
+                "Press Escape to close",
+                classes="modal-body",
+            )
 
     def action_dismiss_modal(self) -> None:
         self.dismiss()

@@ -41,7 +41,7 @@ PrintScreen {
 
 #print-dialog {
     width: 44;
-    height: 11;
+    height: 14;
     border: solid $primary;
     background: $surface;
     padding: 1 2;
@@ -87,6 +87,10 @@ class PrintScreen(ModalScreen[str | None]):
                 "[bold underline]P[/]  Export to PostScript (.ps)",
                 classes="print-option",
             )
+            yield Static(
+                "[bold underline]T[/]  Post to Mastodon (Toot)",
+                classes="print-option",
+            )
             yield Static("R=Return  Esc=Cancel", id="print-hint")
 
     def on_key(self, event: events.Key) -> None:
@@ -96,6 +100,8 @@ class PrintScreen(ModalScreen[str | None]):
             self.dismiss("markdown")
         elif event.key == "p":
             self.dismiss("postscript")
+        elif event.key == "t":
+            self.dismiss("mastodon")
         elif event.key in ("escape", "r"):
             self.dismiss(None)
         event.stop()

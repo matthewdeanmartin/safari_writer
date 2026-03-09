@@ -41,6 +41,8 @@ class TestMenuColumns:
         actions = [action for _, _, action in COL3_ITEMS]
         assert "safari_dos" in actions
         assert "safari_chat" in actions
+        assert "safari_fed" in actions
+        assert "safari_repl" in actions
         assert "style_switcher" in actions
         assert "demo" in actions
 
@@ -126,3 +128,11 @@ class TestActionQuitOverride:
     def test_app_has_quit_dos(self) -> None:
         app = SafariWriterApp()
         assert hasattr(app, "quit_dos")
+
+    def test_app_has_quit_fed(self) -> None:
+        app = SafariWriterApp()
+        assert hasattr(app, "quit_fed")
+
+    def test_app_has_quit_repl(self) -> None:
+        app = SafariWriterApp()
+        assert hasattr(app, "quit_repl")

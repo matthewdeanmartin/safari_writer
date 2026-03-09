@@ -18,3 +18,8 @@ You can use Safari Writer from the command line without the full interface.
 ## Mail Merge Commands
 - `safari-writer mail-merge validate DATABASE` — Check a database for errors.
 - `safari-writer mail-merge inspect DATABASE` — View database schema and records.
+
+## Safari Fed Commands
+- `safari-fed` — Launch the Mastodon client in demo mode (no credentials needed).
+- `safari-fed --folder FOLDER` — Open a specific folder on launch (`Home`, `Mentions`, `Bookmarks`, `Drafts`, `Sent`, `Deferred`).
+- `safari-fed --account NAME` — Start with a named Mastodon identity selected.

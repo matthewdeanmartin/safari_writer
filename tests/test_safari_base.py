@@ -40,7 +40,9 @@ def test_ensure_database_bootstraps_default_address_table(tmp_path):
 
     assert session.current_table == "ADDRESS"
     assert list_tables(session.connection) == ["ADDRESS"]
-    assert [name for name, _width in DEFAULT_ADDRESS_SCHEMA] == session.current_columns()
+    assert [
+        name for name, _width in DEFAULT_ADDRESS_SCHEMA
+    ] == session.current_columns()
 
 
 def test_append_record_persists_values(tmp_path):
@@ -74,7 +76,9 @@ def test_default_mount_opens_address_browse():
             await pilot.pause()
             screen = app.screen
             assert isinstance(screen, SafariBaseScreen)
-            assert "Table: ADDRESS" in screen.query_one("#workspace-title", Static).content
+            assert (
+                "Table: ADDRESS" in screen.query_one("#workspace-title", Static).content
+            )
             assert "LAST" in screen.query_one("#workspace-body", Static).content
             assert ". " == screen.query_one("#prompt-line", Static).content
             assert "Fld LAST 1/15" in screen.query_one("#status-bar", Static).content
@@ -135,9 +139,14 @@ def test_function_keys_are_wired():
                 in screen.query_one("#status-bar", Static).content
             )
             await pilot.press("f6")
-            assert "Field      Type" in screen.query_one("#workspace-body", Static).content
+            assert (
+                "Field      Type" in screen.query_one("#workspace-body", Static).content
+            )
             await pilot.press("f7")
-            assert "Available tables" in screen.query_one("#workspace-body", Static).content
+            assert (
+                "Available tables"
+                in screen.query_one("#workspace-body", Static).content
+            )
             await pilot.press("f8")
             assert "LAST" in screen.query_one("#workspace-body", Static).content
 
@@ -152,7 +161,9 @@ def test_ctrl_a_shows_placeholder_and_prompt_still_updates():
             await pilot.press("ctrl+a", "x", "y", "z")
             screen = app.screen
             assert isinstance(screen, SafariBaseScreen)
-            assert "Append form active" in screen.query_one("#status-bar", Static).content
+            assert (
+                "Append form active" in screen.query_one("#status-bar", Static).content
+            )
             assert "> LAST" in screen.query_one("#workspace-body", Static).content
             assert "xyz" in screen.query_one("#workspace-body", Static).content
 
@@ -221,10 +232,13 @@ def test_ctrl_d_uses_delete_placeholder_message():
         async with app.run_test() as pilot:
             await pilot.pause()
             await pilot.press("ctrl+d")
-            assert "Delete mark not implemented yet" in app.screen.query_one(
-                "#status-bar",
-                Static,
-            ).content
+            assert (
+                "Delete mark not implemented yet"
+                in app.screen.query_one(
+                    "#status-bar",
+                    Static,
+                ).content
+            )
 
     asyncio.run(run())
 
@@ -241,7 +255,10 @@ def test_command_abbreviations_and_reports_work():
             assert "LIST ADDRESS" in body
 
             await pilot.press("c", "o", "m", "m", "enter")
-            assert "Supported commands" in app.screen.query_one("#workspace-body", Static).content
+            assert (
+                "Supported commands"
+                in app.screen.query_one("#workspace-body", Static).content
+            )
 
             await pilot.press("b", "r", "o", "w", "enter")
             assert "LAST" in app.screen.query_one("#workspace-body", Static).content

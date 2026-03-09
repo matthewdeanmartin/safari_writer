@@ -1,7 +1,7 @@
 # Safari Writer Help
 
 Welcome to Safari Writer, a word processor inspired by AtariWriter 80.
-This document covers Safari Writer, Safari DOS, and Safari Chat.
+This document covers Safari Writer, Safari DOS, Safari Chat, and Safari Fed.
 If something is frustrating, that is okay. Take it one step at a time.
 
 ---
@@ -454,6 +454,104 @@ Favorites let you bookmark frequently-used folders.
 
 ---
 
+## Safari Fed Mastodon Client
+
+Safari Fed is a calm, keyboard-driven Mastodon client. It treats the
+fediverse like a retro message system — more Pine or BBS reader than
+an infinite-scroll social app.
+
+Run **safari-fed** from the command line to start it. If no Mastodon
+credentials are configured it opens in demo mode with a seeded local
+packet so you can explore the interface.
+
+---
+
+## Safari Fed Folders
+
+Posts are organised into folders like a mail program. Use **Tab** and
+**Shift+Tab** to cycle through them.
+
+- **Home** — your main timeline
+- **Mentions** — posts that mention you
+- **Bookmarks** — posts you have bookmarked
+- **Drafts** — locally saved compose drafts
+- **Sent** — posts you have sent this session
+- **Deferred** — posts pushed aside for later
+
+---
+
+## Safari Fed Navigation
+
+- **J / Down** — next post
+- **K / Up** — previous post
+- **PageDown / PageUp** — skip 5 posts
+- **Enter** — open the reader view for the selected post
+- **T** — open the thread tree view
+- **H** — jump to Home folder
+- **N** — jump to Mentions folder
+- **Esc / Q** — return to the index or quit
+
+---
+
+## Safari Fed Post Actions
+
+- **C** — compose a new post
+- **R** — reply to the selected post
+- **B** — boost the selected post
+- **F** — favourite the selected post
+- **M** — toggle bookmark on the selected post
+- **X** — toggle the post between read and unread
+- **D** — defer the post to the Deferred folder
+- **U** — sync from Mastodon (requires credentials)
+- **W** — export the selected post or thread to Safari Writer
+
+---
+
+## Safari Fed Compose
+
+Press **C** to start a new post or **R** to reply. A mini compose
+editor opens inside Safari Fed.
+
+- **Ctrl+X** — send the post
+- **Ctrl+S** — save as a local draft
+- **Esc** — cancel without saving
+
+When launched from inside the full Safari Writer app, **C** and **R**
+open the full Safari Writer editor instead of the mini shell.
+
+---
+
+## Safari Fed Multiple Accounts
+
+You can configure more than one Mastodon identity. Each account keeps
+its own folder state and compose buffer.
+
+- **A** — cycle through configured accounts
+- **1 through 9** — select an account by number
+
+To set up accounts, copy **.env.example** to **.env** and fill in
+your credentials using the MASTODON_ID_ pattern.
+
+---
+
+## Safari Fed Writer Handoff
+
+Press **W** on any post or thread to export it as plain text and open
+it in Safari Writer. This is useful for quoting posts, building
+reading notes, or drafting a blog post from a saved thread.
+
+In thread view the full thread tree is exported, not just the
+selected post.
+
+---
+
+## Safari Fed Help
+
+Press **F1** or **?** inside Safari Fed to see the full key-command
+reference screen.
+
+---
+
 ## Safari Chat Help Assistant
 
 Safari Chat is an ELIZA-inspired help assistant. It answers your
@@ -563,6 +661,11 @@ the full interface.
 - safari-writer mail-merge append BASE OTHER -o OUTPUT
 - safari-writer mail-merge validate DATABASE
 
+**Safari Fed commands:**
+- safari-fed
+- safari-fed --folder Home|Mentions|Bookmarks|Drafts|Sent|Deferred
+- safari-fed --account NAME
+
 ---
 
 ## File Types
@@ -625,10 +728,11 @@ Press **Ctrl + Z** to undo the last action in the editor.
 Safari Writer is a word processor, built with Python and the 
 Textual framework.
 
-It includes three applications:
+It includes four applications:
 - **Safari Writer** — the word processor
 - **Safari DOS** — the file manager
 - **Safari Chat** — the help assistant
+- **Safari Fed** — the Mastodon client
 
 All three share the same retro text-mode aesthetic and can be
 run independently or together.

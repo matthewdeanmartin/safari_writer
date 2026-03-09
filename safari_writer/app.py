@@ -42,6 +42,11 @@ from safari_dos.state import SafariDosState
 from safari_chat.engine import parse_document as parse_chat_document
 from safari_chat.screens import SafariChatMainScreen
 from safari_chat.state import SafariChatState
+from safari_fed.app import build_fed_state
+from safari_fed.screens import SafariFedMainScreen
+from safari_fed.state import SafariFedState
+from safari_repl.screens import ReplMainMenuScreen, ReplEditorScreen
+from safari_repl.state import ReplState
 
 __all__ = ["SafariWriterApp"]
 
@@ -65,6 +70,9 @@ class SafariWriterApp(App):
         self._pending_save_filename = ""
         self._last_safari_dos_path = Path.cwd()
         self.dos_state: SafariDosState | None = None
+        self.fed_state: SafariFedState | None = None
+        self.repl_state: ReplState | None = None
+        self._fed_compose_active: bool = False
 
     def on_mount(self) -> None:
         # Register all themes
@@ -138,6 +146,12 @@ class SafariWriterApp(App):
         if destination == "safari_chat":
             self._action_safari_chat()
             return
+        if destination == "safari_fed":
+            self._action_safari_fed()
+            return
+        if destination == "safari_repl":
+            self._action_safari_repl(request.safari_repl_path)
+            return
 
     def _set_initial_cursor(self, line: int | None, column: int | None) -> None:
         if not self.state.buffer:
@@ -174,6 +188,10 @@ class SafariWriterApp(App):
             self._action_safari_dos()
         elif action == "safari_chat":
             self._action_safari_chat()
+        elif action == "safari_fed":
+            self._action_safari_fed()
+        elif action == "safari_repl":
+            self._action_safari_repl()
         elif action == "load":
             self._action_load_via_safari_dos()
         elif action == "save":
@@ -212,6 +230,8 @@ class SafariWriterApp(App):
                 FilePromptScreen("Export Markdown to", base),
                 callback=self._on_export_md,
             )
+        elif choice == "mastodon":
+            self.post_to_mastodon()
         elif choice == "postscript":
             base = self.state.filename
             if base and "." in base:
@@ -263,8 +283,7 @@ class SafariWriterApp(App):
             name = leaf_name(self.state.filename) if self.state.filename else "untitled"
             self.push_screen(
                 ConfirmScreen(
-                    f"'{name}' has unsaved changes.\n"
-                    "Discard and create new file?"
+                    f"'{name}' has unsaved changes.\nDiscard and create new file?"
                 ),
                 callback=self._on_create_confirm,
             )
@@ -494,6 +513,9 @@ class SafariWriterApp(App):
         if isinstance(self.screen, SafariChatMainScreen):
             self.quit_chat()
             return
+        if isinstance(self.screen, SafariFedMainScreen):
+            self.quit_fed()
+            return
         if isinstance(self.screen, (SafariDosMainMenuScreen, SafariDosBrowserScreen)):
             self.quit_dos()
             return
@@ -513,6 +535,141 @@ class SafariWriterApp(App):
     def quit_chat(self) -> None:
         """Called by SafariChatMainScreen to return to the writer menu."""
         self.pop_screen()
+
+    def _action_safari_fed(self) -> None:
+        if self.fed_state is None:
+            self.fed_state = build_fed_state()
+        self.push_screen(SafariFedMainScreen(self.fed_state))
+
+    def quit_fed(self) -> None:
+        """Called by SafariFedMainScreen to return to the writer menu."""
+        self.pop_screen()
+
+    def _action_safari_repl(self, bas_path: Path | None = None) -> None:
+        if self.repl_state is None:
+            self.repl_state = ReplState(loaded_path=bas_path)
+        elif bas_path is not None:
+            self.repl_state.loaded_path = bas_path
+            self.repl_state.output_lines = []
+        self.push_screen(ReplMainMenuScreen(self.repl_state))
+
+    def quit_repl(self) -> None:
+        """Called by REPL screens to return to the writer menu."""
+        self.pop_screen()
+
+    def open_repl(self) -> None:
+        """Open the REPL editor screen (called from ReplMainMenuScreen)."""
+        if self.repl_state is None:
+            self.repl_state = ReplState()
+        self.push_screen(ReplEditorScreen(self.repl_state))
+
+    def load_file(self) -> None:
+        """Open file picker for the REPL (called from ReplMainMenuScreen)."""
+        from safari_repl.app import _FilePickerScreen
+
+        self.push_screen(
+            _FilePickerScreen(start_path=Path.cwd()),
+            callback=self._on_repl_file_picked,
+        )
+
+    def open_help(self) -> None:
+        """Open REPL help (called from ReplMainMenuScreen)."""
+        from safari_repl.app import _HelpScreen
+
+        self.push_screen(_HelpScreen())
+
+    def request_writer_launch(self, path: Path) -> None:
+        """Open a .BAS file from the REPL directly in the writer editor."""
+        # Pop REPL screens back to the writer menu, then open in editor
+        while isinstance(self.screen, (ReplEditorScreen, ReplMainMenuScreen)):
+            self.pop_screen()
+        self._on_load_file(str(path))
+        self._open_editor()
+
+    def _on_repl_file_picked(self, path: Path | None) -> None:
+        if path is None or self.repl_state is None:
+            return
+        self.repl_state.loaded_path = path
+        self.repl_state.output_lines = []
+        self.open_repl()
+
+    def open_in_writer_from_text(self, title: str, text: str) -> None:
+        """Load Safari Fed text into the editor when it is safe to do so."""
+
+        if self.state.modified:
+            self.set_message("Save current document before importing from Safari Fed")
+            return
+        try:
+            current_screen = self.screen
+        except ScreenStackError:
+            current_screen = None
+        if isinstance(current_screen, SafariFedMainScreen):
+            self.pop_screen()
+        self.state.buffer = text.splitlines() or [""]
+        self.state.cursor_row = 0
+        self.state.cursor_col = 0
+        self.state.filename = ""
+        self.state.modified = False
+        self.state.file_profile = resolve_file_profile(f"{title}.txt")
+        self.state.clear_undo()
+        self.set_message(f"Loaded Safari Fed export: {title}")
+        self._open_editor()
+
+    def open_fed_compose(
+        self,
+        reply_to_post: object = None,
+        reply: bool = False,
+    ) -> None:
+        """Open the Safari Writer editor for composing a Mastodon post.
+
+        The editor operates in plain-text / markdown mode.  When the user
+        presses Escape the editor returns to Safari Fed instead of the
+        main menu.
+        """
+        from safari_fed.state import FedPost
+
+        lines: list[str] = [""]
+        title = "New Mastodon Post"
+        if reply and isinstance(reply_to_post, FedPost):
+            title = f"Reply to {reply_to_post.handle}"
+            lines = [
+                f"> {reply_to_post.handle}:",
+                *(f"> {line}" for line in reply_to_post.content_lines),
+                "",
+                f"@{reply_to_post.author} ",
+            ]
+        self.state.buffer = lines
+        self.state.cursor_row = len(lines) - 1
+        self.state.cursor_col = len(lines[-1])
+        self.state.filename = ""
+        self.state.modified = False
+        self.state.file_profile = resolve_file_profile(f"{title}.md")
+        self.state.clear_undo()
+        self._fed_compose_active = True
+        self.set_message(f"Compose: {title}  |  Ctrl+P to Post/Export  |  Esc to cancel")
+        self._open_editor()
+
+    def finish_fed_compose(self) -> None:
+        """Return from fed compose editor back to the Safari Fed screen."""
+        self._fed_compose_active = False
+        self.pop_screen()
+
+    def post_to_mastodon(self) -> None:
+        """Post the current editor buffer to Mastodon via the active Fed client."""
+        if self.fed_state is None:
+            self.set_message("No Safari Fed session active")
+            return
+        text = "\n".join(self.state.buffer).strip()
+        if not text:
+            self.set_message("Cannot post an empty document")
+            return
+        # Use fed state's compose flow
+        self.fed_state.compose_lines = text.splitlines()
+        message = self.fed_state.send_compose_post()
+        self._fed_compose_active = False
+        # Pop editor, return to fed screen
+        self.pop_screen()
+        self.set_message(message)
 
     def _action_safari_dos(self) -> None:
         if self._last_safari_dos_path.exists():

@@ -15,7 +15,10 @@
       "Bash(uv add:*)",
       "Bash(make check:*)",
       "Bash(python3:*)",
-      "Bash(make test:*)"
+      "Bash(make test:*)",
+      "Bash(grep:*)",
+      "WebSearch",
+      "WebFetch(domain:textual.textualize.io)"
     ]
   }
 }

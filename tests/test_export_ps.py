@@ -127,9 +127,7 @@ class TestExportPostscript:
         assert "(right text)" in ps
 
     def test_bold_text_uses_bold_font(self) -> None:
-        ps = export_postscript(
-            [f"{CTRL_BOLD}bold text{CTRL_BOLD}"], GlobalFormat()
-        )
+        ps = export_postscript([f"{CTRL_BOLD}bold text{CTRL_BOLD}"], GlobalFormat())
         assert "Courier-Bold" in ps
 
     def test_heading_line(self) -> None:

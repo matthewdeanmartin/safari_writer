@@ -1,5 +1,17 @@
 """Editor screen — the main text editing workspace."""
 
+# -----------------------------------------------------------------------
+# Textual reserved keys (do not rebind without care):
+#   Ctrl+Q   quit (App default, priority)
+#   Ctrl+C   copy text / help-quit (App + Screen default)
+#   Ctrl+P   command palette (App.COMMAND_PALETTE_BINDING)
+#   Tab      focus next widget (Screen default)
+#   Shift+Tab focus previous widget (Screen default)
+#   Ctrl+I   alias for Tab (terminal limitation)
+#   Ctrl+J   alias for Enter (terminal limitation)
+#   Ctrl+M   alias for Enter (terminal limitation)
+# -----------------------------------------------------------------------
+
 import logging
 import os
 from pathlib import Path
@@ -114,12 +126,15 @@ EditorArea {
     layout: vertical;
 }
 
+"""
+
+HELP_CSS = """
 HelpScreen {
     align: center middle;
 }
 
 #help-dialog {
-    width: 72;
+    width: 80;
     height: auto;
     max-height: 90%;
     border: solid $primary;
@@ -135,12 +150,13 @@ HelpScreen {
 }
 
 #help-content {
-    color: $text;
+    height: 1fr;
+    color: $foreground;
 }
 
 #help-footer {
     text-align: center;
-    color: $primary;
+    color: $text-muted;
     margin-top: 1;
 }
 """
@@ -149,14 +165,34 @@ HELP_TEXT = (
     "^X Cut  ^C Copy  ^V Paste  ^F Find  ^B Bold  ^U Underline  "
     "^E Center  ^G Elongate  F1 Help  Esc Menu"
 )
+HELP_TEXT_PLAIN = (
+    "^X Cut  ^C Copy  ^V Paste  ^F Find  ^Z Undo  "
+    "^P Print/Export  F1 Help  Esc Menu"
+)
+HELP_TEXT_FED = (
+    "^X Cut  ^C Copy  ^V Paste  ^F Find  ^Z Undo  "
+    "^P Post/Export  F1 Help  Esc Cancel"
+)
 EDITOR_RESERVED_LINES = 4
+
+# -----------------------------------------------------------------------
+# Textual reserved keys (do not rebind without care):
+#   Ctrl+Q   quit (App default, priority)
+#   Ctrl+C   copy text / help-quit (App + Screen default)
+#   Ctrl+P   command palette (App.COMMAND_PALETTE_BINDING)
+#   Tab      focus next widget (Screen default)
+#   Shift+Tab focus previous widget (Screen default)
+#   Ctrl+I   alias for Tab (terminal limitation)
+#   Ctrl+J   alias for Enter (terminal limitation)
+#   Ctrl+M   alias for Enter (terminal limitation)
+# -----------------------------------------------------------------------
 
 HELP_CONTENT = """\
 NAVIGATION
   Arrow keys              Move cursor (clears selection)
   Shift+Arrow             Extend selection
-  Shift+Home/End          Extend selection to line start/end
-  Shift+Ctrl+Home/End     Extend selection to file start/end
+  Shift+Home/End          Extend to line start/end
+  Shift+Ctrl+Home/End     Extend to file start/end
   Ctrl+Left/Right         Jump word
   Home / End              Line start / end
   Ctrl+Home/End           Top / bottom of file
@@ -173,49 +209,109 @@ EDITING
   Enter                   New line (hard carriage return)
 
 DELETION
-  Backspace               Delete char before cursor (or selection)
-  Delete                  Delete char at cursor (or selection)
+  Backspace               Delete before cursor (or selection)
+  Delete                  Delete at cursor (or selection)
   Shift+Delete            Delete to end of line
   Ctrl+Z                  Undo
   Ctrl+Shift+Delete       Delete to end of file
 
 BLOCK OPERATIONS
-  Ctrl+X                  Cut selection (or current line) to clipboard
-  Ctrl+C                  Copy selection (or current line) to clipboard
-  Ctrl+V                  Paste clipboard at cursor (replaces selection)
+  Ctrl+X                  Cut selection (or line) to clipboard
+  Ctrl+C                  Copy selection (or line) to clipboard
+  Ctrl+V                  Paste clipboard (replaces selection)
   Alt+W                   Word count (selection or whole file)
-  Alt+A                   Alphabetize selected lines (or all lines)
+  Alt+A                   Alphabetize selected lines (or all)
 
 SEARCH & REPLACE
   Ctrl+F                  Find (prompt for search string)
   F3                      Find next occurrence
   Alt+H                   Set replacement string
-  Alt+N                   Replace current occurrence, find next
+  Alt+N                   Replace current, find next
   Alt+R                   Global replace to end of file
 
-INLINE FORMATTING (markers visible in editor, invisible when printed)
-  Ctrl+B                  Bold toggle          ← marker, bold text
-  Ctrl+U                  Underline toggle     ▄ marker, inverse-video text
-  Ctrl+G                  Elongated toggle     E marker, dim text
-  Ctrl+[                  Superscript toggle   ↑ marker, bright text
-  Ctrl+]                  Subscript toggle     ↓ marker, bright text
-  Ctrl+E                  Center line          ↔ marker at line start
-  Ctrl+R                  Flush right          →→ marker at line start
+INLINE FORMATTING (SFW files only)
+  Ctrl+B                  Bold toggle          ← marker
+  Ctrl+U                  Underline toggle     ▄ marker
+  Ctrl+G                  Elongated toggle     E marker
+  Ctrl+[                  Superscript toggle   ↑ marker
+  Ctrl+]                  Subscript toggle     ↓ marker
+  Ctrl+E                  Center line          ↔ marker
+  Ctrl+R                  Flush right          →→ marker
   Ctrl+M                  Paragraph indent     ¶ marker
   Alt+M                   Mail merge field     @ marker
 
-DOCUMENT STRUCTURE
-  Ctrl+Shift+H            Insert header line   (H: marker, own line)
-  Ctrl+Shift+F            Insert footer line   (F: marker, own line)
-  Ctrl+Shift+S            Insert section heading  (H + level 1-9)
-  Ctrl+Shift+E            Page eject / hard page break  (↡ marker)
-  Ctrl+Shift+C            Chain print file     (» marker + filename)
-  Alt+F                   Form printing blank  (_ marker, prompts at print)
+DOCUMENT STRUCTURE (SFW files only)
+  Ctrl+Shift+H            Insert header line
+  Ctrl+Shift+F            Insert footer line
+  Ctrl+Shift+S            Section heading (level 1-9)
+  Ctrl+Shift+E            Page eject / hard break
+  Ctrl+Shift+C            Chain print file
+  Alt+F                   Form printing blank
 
 OTHER
   Ctrl+P                  Print / Export menu
-  F1 / ?                  Show this help screen
-  Escape                  Return to Main Menu\
+  Ctrl+Backslash          Run macro (.BAS file)
+  F1                      Show this help screen
+  Escape                  Return to Main Menu
+
+TEXTUAL FRAMEWORK (reserved)
+  Ctrl+Q                  Quit application
+  Ctrl+C                  Copy text (also editor copy)
+  Ctrl+P                  Command palette (overridden)
+  Tab/Shift+Tab           Focus widgets (overridden)\
+"""
+
+HELP_CONTENT_PLAIN = """\
+NAVIGATION
+  Arrow keys              Move cursor (clears selection)
+  Shift+Arrow             Extend selection
+  Shift+Home/End          Extend to line start/end
+  Shift+Ctrl+Home/End     Extend to file start/end
+  Ctrl+Left/Right         Jump word
+  Home / End              Line start / end
+  Ctrl+Home/End           Top / bottom of file
+  Page Up/Down            Scroll page
+  Tab                     Jump to next tab stop
+  Ctrl+T                  Toggle tab stop at cursor column
+  Ctrl+Shift+T            Clear all tab stops
+
+EDITING
+  Insert                  Toggle Insert / Type-over mode
+  Caps Lock               Toggle Uppercase / Lowercase mode
+  Shift+F3                Toggle case of character at cursor
+  Enter                   New line
+
+DELETION
+  Backspace               Delete before cursor (or selection)
+  Delete                  Delete at cursor (or selection)
+  Shift+Delete            Delete to end of line
+  Ctrl+Z                  Undo
+  Ctrl+Shift+Delete       Delete to end of file
+
+BLOCK OPERATIONS
+  Ctrl+X                  Cut selection (or line) to clipboard
+  Ctrl+C                  Copy selection (or line) to clipboard
+  Ctrl+V                  Paste clipboard (replaces selection)
+  Alt+W                   Word count (selection or whole file)
+  Alt+A                   Alphabetize selected lines (or all)
+
+SEARCH & REPLACE
+  Ctrl+F                  Find (prompt for search string)
+  F3                      Find next occurrence
+  Alt+H                   Set replacement string
+  Alt+N                   Replace current, find next
+  Alt+R                   Global replace to end of file
+
+OTHER
+  Ctrl+P                  Print / Export menu
+  Ctrl+Backslash          Run macro (.BAS file)
+  F1                      Show this help screen
+  Escape                  Return to previous screen
+
+TEXTUAL FRAMEWORK (reserved)
+  Ctrl+Q                  Quit application
+  Ctrl+C                  Copy text (also editor copy)
+  Ctrl+P                  Command palette (overridden)\
 """
 
 # Default tab stop every 5 columns (16 stops shown in header)
@@ -263,12 +359,23 @@ def _selection_range(
 class HelpScreen(ModalScreen):
     """Full key-command reference, shown as a modal overlay."""
 
+    CSS = HELP_CSS
+
+    def __init__(
+        self,
+        title: str = "=== SAFARI WRITER — KEY COMMANDS ===",
+        content: str = "",
+    ) -> None:
+        super().__init__()
+        self._title = title
+        self._content = content or HELP_CONTENT
+
     def compose(self) -> ComposeResult:
         from textual.containers import Container
 
         with Container(id="help-dialog"):
-            yield Static("=== SAFARI WRITER — KEY COMMANDS ===", id="help-title")
-            yield Static(HELP_CONTENT, id="help-content")
+            yield Static(self._title, id="help-title")
+            yield Static(self._content, id="help-content")
             yield Static("Press any key to close", id="help-footer")
 
     def on_key(self, event: events.Key) -> None:
@@ -635,9 +742,17 @@ class EditorArea(Widget, can_focus=True):
         key = event.key.lower()
         handled = True
 
-        # Help
+        # Help — show context-appropriate key reference
         if key == "f1":
-            self.app.push_screen(HelpScreen())
+            if self.state.allows_formatting:
+                self.app.push_screen(HelpScreen())
+            else:
+                self.app.push_screen(
+                    HelpScreen(
+                        title="=== SAFARI WRITER — KEY COMMANDS ===",
+                        content=HELP_CONTENT_PLAIN,
+                    )
+                )
 
         # --- Selection-extending navigation ---
         elif key == "shift+left":
@@ -814,10 +929,17 @@ class EditorArea(Widget, can_focus=True):
         elif key == "ctrl+p":
             self._app_host()._action_print()
 
-        # Exit to main menu
+        # Macro runner — Ctrl+\
+        elif key == "ctrl+backslash":
+            self._run_macro()
+
+        # Exit — return to Fed screen if composing, else main menu
         elif key == "escape":
             self._clear_selection()
-            self.app.pop_screen()
+            if hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active:  # type: ignore[attr-defined]
+                self.app.finish_fed_compose()  # type: ignore[attr-defined]
+            else:
+                self.app.pop_screen()
 
         # Printable characters
         elif event.character and event.character.isprintable():
@@ -1457,6 +1579,64 @@ class EditorArea(Widget, can_focus=True):
             s.cursor_col = 0
         s.modified = True
 
+    def _run_macro(self) -> None:
+        """Open the macro picker and run the selected .BAS file."""
+        from safari_writer.screens.macro_picker import MacroPickerScreen
+        from safari_basic.runner import MacroRunner
+
+        s = self.state
+        sel_start = s.selection_anchor
+        sel_end = (s.cursor_row, s.cursor_col) if sel_start is not None else None
+
+        context = MacroRunner.build_context(
+            document_lines=list(s.buffer),
+            cursor_row=s.cursor_row,
+            cursor_col=s.cursor_col,
+            selection_start=sel_start,
+            selection_end=sel_end,
+            clipboard=s.clipboard,
+            current_post=None,
+        )
+
+        def _on_picked(path: object) -> None:
+            from pathlib import Path as _Path
+            if not isinstance(path, _Path):
+                self._set_screen_message("Macro cancelled")
+                return
+            output, error = MacroRunner.run(path, context)
+            if error:
+                self._set_screen_message(error)
+                return
+            if not output:
+                self._set_screen_message(f"Macro ran: {path.stem} (no output)")
+                return
+            # Insert output at cursor position (same logic as _paste for multi-line)
+            self._push_undo("macro")
+            if self._has_selection():
+                self._delete_selection()
+            row, col = s.cursor_row, s.cursor_col
+            lines = output.split("\n")
+            if len(lines) == 1:
+                line = s.buffer[row]
+                s.buffer[row] = line[:col] + lines[0] + line[col:]
+                s.cursor_col = col + len(lines[0])
+            else:
+                line = s.buffer[row]
+                before = line[:col]
+                after = line[col:]
+                s.buffer[row] = before + lines[0]
+                for i, ln in enumerate(lines[1:], start=1):
+                    s.buffer.insert(row + i, ln)
+                s.buffer[row + len(lines) - 1] += after
+                s.cursor_row = row + len(lines) - 1
+                s.cursor_col = len(lines[-1])
+            s.modified = True
+            self._set_screen_message(f"Macro: {path.stem} — {len(lines)} line(s) inserted")
+            self.refresh()
+            self._update_status()
+
+        self.app.push_screen(MacroPickerScreen(), _on_picked)
+
     def _update_status(self) -> None:
         self._screen_host().update_status()
 
@@ -1472,10 +1652,20 @@ class EditorScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Static(self._tab_bar_text(), id="tab-bar")
         yield EditorArea(self.state)
+        fed_active = (
+            hasattr(self.app, "_fed_compose_active")
+            and self.app._fed_compose_active  # type: ignore[attr-defined]
+        )
+        if fed_active:
+            help_bar = HELP_TEXT_FED
+        elif not self.state.allows_formatting:
+            help_bar = HELP_TEXT_PLAIN
+        else:
+            help_bar = HELP_TEXT
         with Container(id="editor-footer"):
             yield Static(self._message or "Welcome to Safari Writer", id="message-bar")
             yield Static(self._status_text(), id="status-bar")
-            yield Static(HELP_TEXT, id="help-bar")
+            yield Static(help_bar, id="help-bar")
 
     def on_mount(self) -> None:
         self.query_one(EditorArea).focus()
@@ -1511,5 +1701,3 @@ class EditorScreen(Screen):
     def update_tab_bar(self) -> None:
         if self.is_mounted:
             self.query_one("#tab-bar", Static).update(self._tab_bar_text())
-
-

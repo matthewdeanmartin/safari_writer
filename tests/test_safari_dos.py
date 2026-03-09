@@ -218,3 +218,20 @@ def test_main_launches_writer_when_app_requests_handoff(monkeypatch, tmp_path):
 
     assert exit_code == 0
     assert launched == [["tui", "edit", "--file", str(document)]]
+
+
+def test_dos_help_screen_is_modal():
+    """Safari DOS help screen is a ModalScreen with full key reference."""
+    from safari_dos.screens import SafariDosHelpScreen, DOS_HELP_CONTENT
+
+    screen = SafariDosHelpScreen()
+    assert isinstance(screen, SafariDosHelpScreen)
+    assert "FILE BROWSER" in DOS_HELP_CONTENT
+    assert "MAIN MENU" in DOS_HELP_CONTENT
+    assert "Ctrl+Q" in DOS_HELP_CONTENT
+
+
+def test_dos_browser_has_f1_binding():
+    """The browser screen has an F1 binding for help."""
+    binding_keys = [b.key for b in SafariDosBrowserScreen.BINDINGS]
+    assert "f1" in binding_keys

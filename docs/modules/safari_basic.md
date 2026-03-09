@@ -24,3 +24,12 @@ Safari Basic is a modern REPL and interpreter for a subset of the classic Atari 
 50 PRINT "HELLO, ";NAME$
 60 GOTO 20
 ```
+
+## Using Safari Basic as a Macro System
+
+Safari Basic is also the macro engine for Safari Writer and Safari Fed. You can write `.BAS` files that read document and post context, then `PRINT` text that gets inserted at the cursor or saved as a draft.
+
+- **Editor:** Press **Ctrl+Backslash** to open the macro picker.
+- **Safari Fed:** Press **~** to run a macro against the current post (output saved as a draft).
+
+See the full how-to guide: [docs/usage/macros.md](../usage/macros.md)

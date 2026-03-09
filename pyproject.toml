@@ -1,6 +1,6 @@
 [project]
 name = "safari-writer"
-version = "0.1.1"
+version = "0.1.2"
 description = "A UI-compatible clone of AtariWriter, built with Textual"
 requires-python = ">=3.10"
 authors = [
@@ -24,6 +24,8 @@ dependencies = [
     "textual>=1.0.0",
     "pyenchant>=3.2.0",
     "pygments>=2.17.0",
+    "mastodon-py>=2.1.4",
+    "python-dotenv>=1.0",
 ]
 
 [project.scripts]
@@ -31,6 +33,8 @@ safari-writer = "safari_writer.main:main"
 safari-dos = "safari_dos.main:main"
 safari-chat = "safari_chat.main:main"
 safari-base = "safari_base.main:main"
+safari-fed = "safari_fed.main:main"
+safari-repl = "safari_repl.main:main"
 
 
 [project.urls]
@@ -43,7 +47,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["safari_writer", "safari_dos", "safari_chat", "safari_base"]
+packages = ["safari_writer", "safari_dos", "safari_chat", "safari_base", "safari_fed", "safari_basic", "safari_repl"]
 include = [
     "safari_writer/*.sfw",
     "safari_writer/py.typed",
@@ -51,6 +55,8 @@ include = [
     "safari_chat/default_help.md",
     "safari_chat/py.typed",
     "safari_base/py.typed",
+    "safari_fed/py.typed",
+    "safari_repl/py.typed",
     "/README.md", "LICENSE",
 ]
 
@@ -69,6 +75,7 @@ dev = [
     "tox>=4.0.0",
     "hatch",
     "types-pygments>=2.19.0.20251121",
+    "pytest-cov>=7.0.0",
 ]
 
 [tool.mypy]
