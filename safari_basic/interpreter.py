@@ -68,6 +68,7 @@ class SafariBasic:
         self.in_stream = in_stream or sys.stdin
         self.files: Dict[int, TextIO] = {}
         self.tracing = False
+        self.trace_vars = False
         self.reset()
 
     def reset(self):
@@ -197,7 +198,13 @@ class SafariBasic:
                 while self.stmt_idx < len(statements):
                     stmt = statements[self.stmt_idx].strip()
                     if stmt:
+                        vars_before = dict(self.vars) if self.trace_vars else None
                         jumped = self._execute_statement(stmt)
+                        if self.trace_vars and vars_before is not None:
+                            for k, v in self.vars.items():
+                                if k not in vars_before or vars_before[k] != v:
+                                    val_str = f'"{v}"' if isinstance(v, str) else (str(int(v)) if isinstance(v, float) and v == int(v) else str(v))
+                                    self.print_out(f"  {k} = {val_str}")
                         if self.halted or self.stopped or jumped:
                             break
                     self.stmt_idx += 1
@@ -336,10 +343,14 @@ class SafariBasic:
             self.stopped = True
             return False
         if scanner.consume_keyword("TRON"):
+            scanner.skip_spaces()
+            if scanner.consume_keyword("VARS"):
+                self.trace_vars = True
             self.tracing = True
             return False
         if scanner.consume_keyword("TROFF"):
             self.tracing = False
+            self.trace_vars = False
             return False
         if scanner.consume_keyword("OPEN"):
             self._stmt_open(scanner)

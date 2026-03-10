@@ -20,9 +20,10 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import RichLog, Static
 
-from safari_basic.atari_basic import AtariBasic, BasicError
+from safari_basic.interpreter import BasicError
+from safari_basic.repl import SafariREPL
 from safari_repl.state import ReplState
 
 __all__ = [
@@ -97,7 +98,6 @@ ReplMainMenuScreen {
     height: 1fr;
     padding: 0 1;
     color: $foreground;
-    overflow-y: auto;
 }
 
 #repl-input-row {
@@ -197,12 +197,12 @@ class ReplEditorScreen(Screen):
     def __init__(self, state: ReplState) -> None:
         super().__init__()
         self._state = state
-        self._interp = AtariBasic(out_stream=io.StringIO())
-        self._buf = cast(io.StringIO, self._interp.out_stream)
+        self._buf = io.StringIO()
+        self._repl = SafariREPL(out_stream=self._buf)
         self._input_buffer = ""
-        self._output_lines: list[str] = list(state.output_lines)
         self._history_cursor = -1  # -1 means at the bottom (new input)
         self._temp_input = "" # Store what user typed before browsing history
+        self._pending_output: list[str] = list(state.output_lines)
 
         # If a file is already loaded, load its program lines into the interpreter
         if state.loaded_path and state.loaded_path.exists():
@@ -212,17 +212,20 @@ class ReplEditorScreen(Screen):
         try:
             code = path.read_text(encoding="utf-8")
         except OSError as exc:
-            self._append_output(f"ERROR: Cannot read {path.name}: {exc}")
+            self._pending_output.append(f"ERROR: Cannot read {path.name}: {exc}")
             return
-        self._interp.reset()
+        self._repl.interpreter.reset()
         self._buf = io.StringIO()
-        self._interp.out_stream = self._buf
+        self._repl.interpreter.out_stream = self._buf
+        self._repl.out_stream = self._buf
         for raw in code.splitlines():
             stripped = raw.strip()
             if stripped:
-                self._interp.execute_repl_line(stripped)
-        self._append_output(f"Loaded: {path.name}")
-        self._append_output(f"{len(self._interp.line_order)} line(s) in program.")
+                self._repl.interpreter.add_program_line(stripped)
+        self._repl.current_filename = str(path)
+        self._repl.modified = False
+        self._pending_output.append(f"Loaded: {path.name}")
+        self._pending_output.append(f"{len(self._repl.interpreter.line_order)} line(s) in program.")
 
     def compose(self) -> ComposeResult:
         with Container(id="repl-container"):
@@ -232,8 +235,10 @@ class ReplEditorScreen(Screen):
             with Container(id="repl-header"):
                 yield Static("SAFARI REPL  —  Atari BASIC", id="repl-title")
                 yield Static(f"File: {file_label}", id="repl-file")
-            yield Static(
-                self._render_output(),
+            yield RichLog(
+                highlight=False,
+                markup=False,
+                auto_scroll=True,
                 id="repl-output",
             )
             with Container(id="repl-input-row"):
@@ -241,21 +246,20 @@ class ReplEditorScreen(Screen):
                 yield Static(self._render_input(), id="repl-input-line")
             yield Static(self._render_status(), id="repl-footer")
 
-    def _render_output(self) -> str:
-        lines = self._output_lines[-200:]  # cap at 200 lines shown
-        return "\n".join(lines) if lines else ""
+    def on_mount(self) -> None:
+        log = self.query_one("#repl-output", RichLog)
+        for line in self._pending_output:
+            log.write(line)
+        self._pending_output.clear()
 
     def _render_input(self) -> str:
         return f"> {self._input_buffer}[reverse] [/reverse]"
 
     def _render_status(self) -> str:
-        line_count = len(self._interp.line_order)
+        line_count = len(self._repl.interpreter.line_order)
         file_name = self._state.loaded_path.name if self._state.loaded_path else "Untitled"
-        # We don't have a reliable "dirty" flag yet in the basic shim, but we can show line count
-        return f" [{file_name}]  [{line_count} lines]  Esc back  F2 LIST  F5 RUN  F9 Writer"
-
-    def _refresh_output(self) -> None:
-        self.query_one("#repl-output", Static).update(self._render_output())
+        modified = " [modified]" if self._repl.modified else ""
+        return f" [{file_name}]{modified}  [{line_count} lines]  Esc back  F2 LIST  F5 RUN  F9 Writer"
 
     def _refresh_input(self) -> None:
         self.query_one("#repl-input-line", Static).update(self._render_input())
@@ -263,9 +267,10 @@ class ReplEditorScreen(Screen):
         self.query_one("#repl-footer", Static).update(self._render_status())
 
     def _append_output(self, text: str) -> None:
+        log = self.query_one("#repl-output", RichLog)
         for line in text.splitlines():
-            self._output_lines.append(line)
-        self._state.output_lines = list(self._output_lines)
+            log.write(line)
+            self._state.output_lines.append(line)
 
     def _flush_interp_output(self) -> None:
         text = self._buf.getvalue()
@@ -273,14 +278,18 @@ class ReplEditorScreen(Screen):
             self._append_output(text)
         # Reset buffer
         self._buf = io.StringIO()
-        self._interp.out_stream = self._buf
+        self._repl.interpreter.out_stream = self._buf
+        self._repl.out_stream = self._buf
 
     def _execute_line(self, line: str) -> None:
         self._append_output(f"> {line}")
         try:
-            self._interp.execute_repl_line(line)
-        except BasicError as exc:
-            self._append_output(f"ERROR: {exc}")
+            result = self._repl.process_line(line)
+            if not result:
+                # BYE/EXIT/QUIT — go back to menu
+                self._flush_interp_output()
+                self.action_go_back()
+                return
         except Exception as exc:  # noqa: BLE001
             self._append_output(f"ERROR: {exc}")
         self._flush_interp_output()
@@ -296,7 +305,6 @@ class ReplEditorScreen(Screen):
                 if not self._state.history or self._state.history[-1] != line:
                     self._state.history.append(line)
                 self._execute_line(line)
-                self._refresh_output()
             self._refresh_input()
             event.stop()
         elif event.key == "up":
@@ -335,18 +343,15 @@ class ReplEditorScreen(Screen):
 
     def action_action_list(self) -> None:
         self._execute_line("LIST")
-        self._refresh_output()
         self._refresh_input()
 
     def action_action_run(self) -> None:
         self._execute_line("RUN")
-        self._refresh_output()
         self._refresh_input()
 
     def action_action_open_in_writer(self) -> None:
         if self._state.loaded_path is None:
             self._append_output("No .BAS file loaded. Use Load from main menu.")
-            self._refresh_output()
             return
         app = cast("SafariReplAppProtocol", self.app)
         app.request_writer_launch(self._state.loaded_path)
