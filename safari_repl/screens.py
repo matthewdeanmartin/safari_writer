@@ -201,6 +201,8 @@ class ReplEditorScreen(Screen):
         self._buf = cast(io.StringIO, self._interp.out_stream)
         self._input_buffer = ""
         self._output_lines: list[str] = list(state.output_lines)
+        self._history_cursor = -1  # -1 means at the bottom (new input)
+        self._temp_input = "" # Store what user typed before browsing history
 
         # If a file is already loaded, load its program lines into the interpreter
         if state.loaded_path and state.loaded_path.exists():
@@ -237,10 +239,7 @@ class ReplEditorScreen(Screen):
             with Container(id="repl-input-row"):
                 yield Static("READY", id="repl-prompt-label")
                 yield Static(self._render_input(), id="repl-input-line")
-            yield Static(
-                " Esc back  F2 LIST  F5 RUN  F9 Edit in Writer",
-                id="repl-footer",
-            )
+            yield Static(self._render_status(), id="repl-footer")
 
     def _render_output(self) -> str:
         lines = self._output_lines[-200:]  # cap at 200 lines shown
@@ -249,11 +248,19 @@ class ReplEditorScreen(Screen):
     def _render_input(self) -> str:
         return f"> {self._input_buffer}[reverse] [/reverse]"
 
+    def _render_status(self) -> str:
+        line_count = len(self._interp.line_order)
+        file_name = self._state.loaded_path.name if self._state.loaded_path else "Untitled"
+        # We don't have a reliable "dirty" flag yet in the basic shim, but we can show line count
+        return f" [{file_name}]  [{line_count} lines]  Esc back  F2 LIST  F5 RUN  F9 Writer"
+
     def _refresh_output(self) -> None:
         self.query_one("#repl-output", Static).update(self._render_output())
 
     def _refresh_input(self) -> None:
         self.query_one("#repl-input-line", Static).update(self._render_input())
+        # Also refresh footer for status updates
+        self.query_one("#repl-footer", Static).update(self._render_status())
 
     def _append_output(self, text: str) -> None:
         for line in text.splitlines():
@@ -282,18 +289,44 @@ class ReplEditorScreen(Screen):
         if event.key == "enter":
             line = self._input_buffer.strip()
             self._input_buffer = ""
+            self._history_cursor = -1
+            self._temp_input = ""
             if line:
-                self._state.history.append(line)
+                # Only add to history if it's different from the last entry
+                if not self._state.history or self._state.history[-1] != line:
+                    self._state.history.append(line)
                 self._execute_line(line)
                 self._refresh_output()
             self._refresh_input()
             event.stop()
+        elif event.key == "up":
+            if self._state.history:
+                if self._history_cursor == -1:
+                    self._temp_input = self._input_buffer
+                    self._history_cursor = len(self._state.history) - 1
+                else:
+                    self._history_cursor = max(0, self._history_cursor - 1)
+                self._input_buffer = self._state.history[self._history_cursor]
+                self._refresh_input()
+            event.stop()
+        elif event.key == "down":
+            if self._history_cursor != -1:
+                self._history_cursor += 1
+                if self._history_cursor >= len(self._state.history):
+                    self._history_cursor = -1
+                    self._input_buffer = self._temp_input
+                else:
+                    self._input_buffer = self._state.history[self._history_cursor]
+                self._refresh_input()
+            event.stop()
         elif event.key == "backspace":
             self._input_buffer = self._input_buffer[:-1]
+            self._history_cursor = -1 # Editing breaks history link
             self._refresh_input()
             event.stop()
         elif event.character and event.character.isprintable():
             self._input_buffer += event.character
+            self._history_cursor = -1 # Editing breaks history link
             self._refresh_input()
             event.stop()
 

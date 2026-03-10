@@ -26,6 +26,7 @@ dependencies = [
     "pygments>=2.17.0",
     "mastodon-py>=2.1.4",
     "python-dotenv>=1.0",
+    "send2trash>=2.1.0",
 ]
 
 [project.scripts]

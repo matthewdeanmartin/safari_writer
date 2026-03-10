@@ -9,11 +9,10 @@ import os
 from pathlib import Path
 import shutil
 import stat
-from typing import Any
-from uuid import uuid4
 import zipfile
 
 __all__ = [
+    "CODE_EXTENSIONS",
     "DeviceLocation",
     "DirectoryEntry",
     "GarbageEntry",
@@ -23,6 +22,7 @@ __all__ = [
     "duplicate_path",
     "format_timestamp",
     "get_entry_info",
+    "get_preview_syntax",
     "get_preview_text",
     "list_favorites",
     "list_directory",
@@ -40,6 +40,9 @@ __all__ = [
     "unzip_path",
     "zip_paths",
 ]
+
+# GarbageEntry is kept for API compatibility but items are managed by the OS trash.
+# list_garbage() always returns [] and restore_from_garbage() is not supported.
 
 SORT_FIELDS = ("name", "date", "size", "type")
 
@@ -87,18 +90,6 @@ def _support_root() -> Path:
     return Path.home() / ".safari_dos"
 
 
-def _garbage_root() -> Path:
-    return _support_root() / "garbage"
-
-
-def _garbage_items_dir() -> Path:
-    return _garbage_root() / "items"
-
-
-def _garbage_index_path() -> Path:
-    return _garbage_root() / "index.json"
-
-
 def _favorites_path() -> Path:
     return _support_root() / "favorites.json"
 
@@ -109,30 +100,6 @@ def _recent_locations_path() -> Path:
 
 def _recent_documents_path() -> Path:
     return _support_root() / "recent_documents.json"
-
-
-def _ensure_garbage_store() -> None:
-    _garbage_items_dir().mkdir(parents=True, exist_ok=True)
-    index_path = _garbage_index_path()
-    if not index_path.exists():
-        index_path.write_text("[]", encoding="utf-8")
-
-
-def _load_garbage_index() -> list[dict[str, Any]]:
-    _ensure_garbage_store()
-    raw = _garbage_index_path().read_text(encoding="utf-8")
-    payload = json.loads(raw)
-    if not isinstance(payload, list):
-        raise ValueError("Garbage index is invalid")
-    return payload
-
-
-def _save_garbage_index(items: list[dict[str, Any]]) -> None:
-    _ensure_garbage_store()
-    _garbage_index_path().write_text(
-        json.dumps(items, indent=2, sort_keys=True),
-        encoding="utf-8",
-    )
 
 
 def _load_path_list(path: Path) -> list[Path]:
@@ -426,85 +393,34 @@ def move_paths(paths: list[Path], destination_dir: Path) -> list[Path]:
 
 
 def move_to_garbage(path: Path) -> GarbageEntry:
-    """Move an item into the Safari DOS garbage store."""
+    """Send an item to the OS trash / recycling bin via send2trash."""
 
     if not path.exists():
         raise FileNotFoundError(f"Path not found: {path}")
-    _ensure_garbage_store()
-
-    item_id = uuid4().hex
-    item_dir = _garbage_items_dir() / item_id
-    item_dir.mkdir(parents=True, exist_ok=False)
-    stored_path = item_dir / path.name
-    shutil.move(str(path), str(stored_path))
+    from send2trash import send2trash
 
     deleted_at = datetime.now()
-    record = {
-        "deleted_at": deleted_at.isoformat(),
-        "id": item_id,
-        "is_dir": stored_path.is_dir(),
-        "name": path.name,
-        "original_path": str(path),
-        "stored_path": str(stored_path),
-    }
-    items = _load_garbage_index()
-    items.append(record)
-    _save_garbage_index(items)
+    is_dir = path.is_dir()
+    send2trash(str(path))
     return GarbageEntry(
-        item_id=item_id,
+        item_id="",
         name=path.name,
-        stored_path=stored_path,
+        stored_path=path,
         original_path=path,
         deleted_at=deleted_at,
-        is_dir=stored_path.is_dir(),
+        is_dir=is_dir,
     )
 
 
 def list_garbage() -> list[GarbageEntry]:
-    """Return items currently stored in Safari DOS garbage."""
+    """Return items in the OS trash. Not supported — always returns empty list."""
 
-    entries: list[GarbageEntry] = []
-    for item in _load_garbage_index():
-        stored_path = Path(item["stored_path"])
-        if not stored_path.exists():
-            continue
-        entries.append(
-            GarbageEntry(
-                item_id=str(item["id"]),
-                name=str(item["name"]),
-                stored_path=stored_path,
-                original_path=Path(str(item["original_path"])),
-                deleted_at=datetime.fromisoformat(str(item["deleted_at"])),
-                is_dir=bool(item["is_dir"]),
-            )
-        )
-    entries.sort(key=lambda entry: entry.deleted_at, reverse=True)
-    return entries
+    return []
 
 
 def restore_from_garbage(item_id: str, destination: Path | None = None) -> Path:
-    """Restore a garbage item to its original or alternate location."""
+    """Restore a garbage item. Not supported when using the OS trash."""
 
-    items = _load_garbage_index()
-    for index, item in enumerate(items):
-        if item["id"] != item_id:
-            continue
-        stored_path = Path(str(item["stored_path"]))
-        target = (
-            Path(destination)
-            if destination is not None
-            else Path(str(item["original_path"]))
-        )
-        if target.exists():
-            raise FileExistsError(f"Name already exists: {target}")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        restored = Path(shutil.move(str(stored_path), str(target)))
-        item_dir = stored_path.parent
-        if item_dir.exists():
-            item_dir.rmdir()
-        items.pop(index)
-        _save_garbage_index(items)
-        return restored
     raise FileNotFoundError(f"Garbage item not found: {item_id}")
 
 
@@ -522,8 +438,11 @@ def get_entry_info(path: Path) -> str:
         f"Protected: {'Yes' if _is_protected(path) else 'No'}",
     ]
     if path.is_dir():
-        item_count = sum(1 for _ in path.iterdir())
-        lines.append(f"Items: {item_count}")
+        try:
+            item_count = sum(1 for _ in path.iterdir())
+            lines.append(f"Items: {item_count}")
+        except PermissionError:
+            lines.append("Items: (access denied)")
     else:
         lines.append(f"Size: {item_stat.st_size:,} bytes")
     return "\n".join(lines)
@@ -591,6 +510,118 @@ def discover_locations(current_path: Path | None = None) -> list[DeviceLocation]
     return result
 
 
+CODE_EXTENSIONS: frozenset[str] = frozenset(
+    {
+        # BASIC variants
+        ".bas",
+        ".vb",
+        ".vbs",
+        # C family
+        ".c",
+        ".h",
+        ".cpp",
+        ".cc",
+        ".cxx",
+        ".hpp",
+        ".hxx",
+        ".cs",
+        # JVM
+        ".java",
+        ".kt",
+        ".kts",
+        ".groovy",
+        ".gradle",
+        ".scala",
+        # Web
+        ".js",
+        ".mjs",
+        ".cjs",
+        ".jsx",
+        ".ts",
+        ".tsx",
+        ".html",
+        ".htm",
+        ".css",
+        ".scss",
+        ".sass",
+        ".vue",
+        ".coffee",
+        # Scripting
+        ".py",
+        ".rb",
+        ".pl",
+        ".pm",
+        ".php",
+        ".lua",
+        ".tcl",
+        # Shell
+        ".sh",
+        ".bash",
+        ".zsh",
+        ".fish",
+        ".ps1",
+        ".bat",
+        ".cmd",
+        # Systems
+        ".rs",
+        ".go",
+        ".d",
+        ".nim",
+        ".zig",
+        ".v",
+        # Assembly
+        ".asm",
+        ".s",
+        # Functional / academic
+        ".hs",
+        ".lhs",
+        ".ml",
+        ".mli",
+        ".fs",
+        ".fsx",
+        ".fsi",
+        ".clj",
+        ".cljs",
+        ".lisp",
+        ".scm",
+        ".rkt",
+        ".ex",
+        ".exs",
+        ".erl",
+        ".hrl",
+        # Mobile / other
+        ".swift",
+        ".dart",
+        ".m",
+        ".mm",
+        # Data science
+        ".r",
+        ".jl",
+        ".f",
+        ".f90",
+        ".for",
+        # Infrastructure / config-as-code
+        ".tf",
+        ".hcl",
+        # Data / markup (preview-worthy as code)
+        ".json",
+        ".toml",
+        ".yaml",
+        ".yml",
+        ".xml",
+        ".sql",
+        # Misc text formats already previewed
+        ".txt",
+        ".md",
+        ".rst",
+        ".ini",
+        ".cfg",
+        ".conf",
+        ".sfw",
+    }
+)
+
+
 def get_preview_text(path: Path, limit_lines: int = 25) -> str:
     """Read the first few lines of a file for preview."""
 
@@ -608,6 +639,40 @@ def get_preview_text(path: Path, limit_lines: int = 25) -> str:
             return "\n".join(lines)
     except Exception as exc:
         return f"Error reading preview: {exc}"
+
+
+def get_preview_syntax(path: Path, limit_lines: int = 25) -> object:
+    """Return a Rich Syntax renderable for ``path``, or a plain string on failure.
+
+    Falls back to plain text for files without a recognised Pygments lexer, and
+    returns a plain error string if the file cannot be read.
+    """
+
+    text = get_preview_text(path, limit_lines=limit_lines)
+    if text.startswith("Error reading preview:") or not text:
+        return text
+
+    from rich.syntax import Syntax
+
+    try:
+        from pygments.lexers import get_lexer_for_filename
+        from pygments.util import ClassNotFound
+
+        try:
+            get_lexer_for_filename(path.name)
+            lexer = path.suffix.lstrip(".") or "text"
+        except ClassNotFound:
+            lexer = "text"
+    except ImportError:
+        lexer = "text"
+
+    return Syntax(
+        text,
+        lexer,
+        theme="monokai",
+        line_numbers=True,
+        word_wrap=False,
+    )
 
 
 def zip_paths(paths: list[Path], archive_path: Path, mode: str = "w") -> Path:

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import io
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from safari_basic.atari_basic import AtariBasic, BasicError
-from safari_basic.context import MacroContext
+from safari_basic.interpreter import SafariBasic, BasicError
+if TYPE_CHECKING:
+    from safari_basic.context import MacroContext
 
 __all__ = ["MacroRunner", "run_macro"]
 
@@ -30,12 +32,12 @@ def run_macro(
 
     # Capture PRINT output
     buf = io.StringIO()
-    interp = AtariBasic(out_stream=buf)
+    interp = SafariBasic(out_stream=buf)
 
-    # Load program lines without resetting (so injected vars survive)
+    # Load program lines
     interp.reset()
     for raw in code.splitlines():
-        interp.execute_repl_line(raw.strip())
+        interp.add_program_line(raw.strip())
 
     # Inject context variables after reset so they aren't cleared
     variables = context.build_variable_map()
@@ -45,7 +47,7 @@ def run_macro(
         except Exception:
             pass  # skip variables the interpreter can't handle
 
-    # Pre-inject document lines as DOC1$ … DOC200$ (pad with "" so all slots exist)
+    # Pre-inject document lines as DOC1$ … DOC200$
     doc_lines = context.document_lines[:_MAX_DOC_LINES]
     for i in range(1, _MAX_DOC_LINES + 1):
         line = doc_lines[i - 1] if i <= len(doc_lines) else ""
@@ -62,12 +64,7 @@ def run_macro(
             pass
 
     try:
-        # Start execution directly without _clear_vars so injected vars survive.
-        interp.halted = False
-        interp.stopped = False
-        interp.pc_idx = 0
-        interp.stmt_idx = 0
-        interp._run_loop()
+        interp.run_program()
     except BasicError as exc:
         return "", f"MACRO ERROR: {exc}"
     except Exception as exc:  # noqa: BLE001
@@ -94,6 +91,7 @@ class MacroRunner:
         clipboard: str = "",
         current_post: object | None = None,
     ) -> MacroContext:
+        from safari_basic.context import MacroContext
         return MacroContext(
             document_lines=list(document_lines),
             cursor_row=cursor_row,

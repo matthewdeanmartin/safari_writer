@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import safari_writer.locale_info as _locale_info
 from textual.app import ComposeResult
+from textual.containers import Container
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
@@ -80,8 +81,6 @@ class PrintScreen(ModalScreen[str | None]):
     CSS = PRINT_CSS
 
     def compose(self) -> ComposeResult:
-        from textual.containers import Container
-
         with Container(id="print-dialog"):
             yield Static(_("*** PRINT / EXPORT ***"), id="print-title")
             yield Static("[bold underline]A[/]  ANSI Preview", classes="print-option")
@@ -214,6 +213,134 @@ class PrintPreviewScreen(Screen):
 
     def on_resize(self) -> None:
         self._update_view()
+
+
+# -----------------------------------------------------------------------
+# Toot / Mastodon preview + confirm screen
+# -----------------------------------------------------------------------
+
+TOOT_PREVIEW_CSS = """
+TootPreviewScreen {
+    background: $surface;
+}
+
+#toot-header {
+    dock: top;
+    height: 1;
+    background: $primary;
+    color: $text;
+    padding: 0 1;
+}
+
+#toot-footer {
+    dock: bottom;
+    height: 1;
+    background: $primary;
+    color: $text;
+    padding: 0 1;
+}
+
+#toot-top {
+    height: 1fr;
+    border-bottom: solid $accent;
+    overflow-y: auto;
+    padding: 1 2;
+}
+
+#toot-bottom {
+    height: 1fr;
+    overflow-y: auto;
+    padding: 1 2;
+}
+"""
+
+_TOOT_CHAR_LIMIT = 500
+
+
+class TootPreviewScreen(Screen):
+    """Full-screen preview of the toot before sending.
+
+    Top half: the toot text with character count and active account.
+    Bottom half: spell-check results.
+    Enter or O to send; Esc or Q to cancel.
+    """
+
+    CSS = TOOT_PREVIEW_CSS
+
+    def __init__(self, text: str, account_label: str, doc_language: str | None) -> None:
+        super().__init__()
+        self._text = text
+        self._account_label = account_label
+        self._doc_language = doc_language
+
+    def compose(self) -> ComposeResult:
+        char_count = len(self._text)
+        over = char_count - _TOOT_CHAR_LIMIT
+        count_label = (
+            f"[bold red]{char_count}/{_TOOT_CHAR_LIMIT} OVER {over}[/]"
+            if over > 0
+            else f"{char_count}/{_TOOT_CHAR_LIMIT}"
+        )
+        yield Static(
+            f" TOOT PREVIEW — Account: {self._account_label}  |  {count_label}",
+            id="toot-header",
+        )
+        yield Container(
+            Static(self._text, id="toot-text"),
+            id="toot-top",
+        )
+        yield Container(
+            Static("", id="toot-spell"),
+            id="toot-bottom",
+        )
+        yield Static(
+            " Enter/O=Send  Esc/Q=Cancel",
+            id="toot-footer",
+        )
+
+    def on_mount(self) -> None:
+        self._run_spellcheck()
+
+    def _run_spellcheck(self) -> None:
+        from safari_writer.proofing import make_checker, extract_words, check_word
+
+        checker = make_checker(self._doc_language)
+        lines = self._text.splitlines()
+        words = extract_words(lines)
+        bad: list[str] = []
+        for _row, _col, word in words:
+            if not check_word(word, checker, set(), set()):
+                bad.append(word)
+
+        spell_widget = self.query_one("#toot-spell", Static)
+        if checker is None:
+            spell_widget.update(
+                "[dim]Spell checker not available (install pyenchant)[/dim]"
+            )
+            return
+        if not bad:
+            spell_widget.update("[green]No spelling errors found.[/green]")
+            return
+
+        # Deduplicate preserving order
+        seen: set[str] = set()
+        unique: list[str] = []
+        for w in bad:
+            if w.lower() not in seen:
+                seen.add(w.lower())
+                unique.append(w)
+
+        lines_out = ["[bold]Possible spelling errors:[/bold]", ""]
+        for word in unique:
+            lines_out.append(f"  [red]{word}[/red]")
+        spell_widget.update("\n".join(lines_out))
+
+    def on_key(self, event: events.Key) -> None:
+        if event.key in ("enter", "o"):
+            self.dismiss(True)
+        elif event.key in ("escape", "q"):
+            self.dismiss(False)
+        event.stop()
 
 
 # -----------------------------------------------------------------------

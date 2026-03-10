@@ -22,13 +22,19 @@ from safari_writer.screens.index_screen import (
     DrivePickerScreen,
     _find_external_drives,
 )
-from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen
+from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen, TootPreviewScreen
 from safari_writer.screens.style_switcher import StyleSwitcherScreen
 from safari_writer.screens.doctor import DoctorScreen
 from safari_writer.document_io import load_demo_document_buffer, load_demo_mail_merge_db, load_document_buffer, load_sfw_language, serialize_document_buffer
 from safari_writer.file_types import StorageMode, resolve_file_profile
 from safari_writer.format_codec import strip_controls, has_controls, is_sfw
 from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
+from safari_writer.autosave import (
+    BACKUP_INTERVAL_SECONDS,
+    write_backup,
+    delete_backup,
+)
+from safari_writer.screens.backup_screen import BackupScreen
 from safari_dos.screens import (
     SafariDosBrowserScreen,
     SafariDosDevicesScreen,
@@ -82,6 +88,7 @@ class SafariWriterApp(App):
         self.fed_state: SafariFedState | None = None
         self.repl_state: ReplState | None = None
         self._fed_compose_active: bool = False
+        self._last_backup_path: Path | None = None
 
     def on_mount(self) -> None:
         # Register all themes
@@ -97,6 +104,7 @@ class SafariWriterApp(App):
 
         self.push_screen(MainMenuScreen())
         self._apply_startup_request()
+        self.set_interval(BACKUP_INTERVAL_SECONDS, self._do_autosave)
 
     def _apply_startup_request(self) -> None:
         request = self.startup_request
@@ -189,6 +197,8 @@ class SafariWriterApp(App):
             self.push_screen(GlobalFormatScreen(self.state.fmt, state=self.state))
         elif action == "mail_merge":
             self.push_screen(MailMergeScreen(self.state))
+        elif action == "backup_restore":
+            self._action_backup_restore()
         elif action == "index1":
             self.push_screen(IndexScreen(Path.cwd(), label=_("Current Folder")))
         elif action == "index2":
@@ -224,6 +234,59 @@ class SafariWriterApp(App):
             self.push_screen(DoctorScreen(doc_language=self.state.doc_language))
         elif action == "quit":
             self._action_quit()
+
+    # ------------------------------------------------------------------
+    # Autosave / backup
+    # ------------------------------------------------------------------
+
+    def _do_autosave(self) -> None:
+        """Periodic backup — only fires when there is modified content."""
+        if not self.state.modified:
+            return
+        try:
+            new_path = write_backup(self.state)
+        except OSError:
+            return
+        if new_path is None:
+            return
+        # Clean up the previous backup for this session now that we have a newer one
+        if self._last_backup_path and self._last_backup_path != new_path:
+            delete_backup(self._last_backup_path)
+        self._last_backup_path = new_path
+
+    def _clear_session_backup(self) -> None:
+        """Remove the in-session backup once the user has saved or discarded it."""
+        if self._last_backup_path:
+            delete_backup(self._last_backup_path)
+            self._last_backup_path = None
+
+    def _action_backup_restore(self) -> None:
+        self.push_screen(
+            BackupScreen(on_resume=self._on_backup_resume),
+        )
+
+    def _on_backup_resume(self, backup_path: Path, original_filename: str) -> None:
+        """Load a backup into the editor for continued editing."""
+        try:
+            text = backup_path.read_text(encoding="utf-8")
+            self.state.buffer = text.split("\n") if text else [""]
+        except OSError as e:
+            self.set_message(f"Backup load error: {e}")
+            return
+        self.state.cursor_row = 0
+        self.state.cursor_col = 0
+        # Keep original filename hint but mark as unsaved (user must save somewhere new)
+        self.state.filename = ""
+        self.state.modified = True
+        self.state.clear_undo()
+        hint = Path(original_filename).name if original_filename else backup_path.stem
+        self.set_message(f"Restored backup: {hint}  — use Save As to keep it")
+        # Pop the backup screen, then open editor
+        try:
+            self.pop_screen()
+        except Exception:
+            pass
+        self._open_editor()
 
     def _action_print(self) -> None:
         self.push_screen(PrintScreen(), callback=self._on_print_choice)
@@ -322,6 +385,16 @@ class SafariWriterApp(App):
 
     def _action_quit(self) -> None:
         if self.state.modified:
+            # Write a final backup before asking — so if the user chooses to
+            # quit, the work is safely in the backup store for later recovery.
+            try:
+                new_path = write_backup(self.state)
+                if new_path:
+                    if self._last_backup_path and self._last_backup_path != new_path:
+                        delete_backup(self._last_backup_path)
+                    self._last_backup_path = new_path
+            except OSError:
+                pass
             self.push_screen(
                 ConfirmScreen(_("Unsaved changes will be lost. Quit?")),
                 callback=self._on_quit_confirm,
@@ -466,6 +539,8 @@ class SafariWriterApp(App):
                 self.set_message(f"Saved [{storage}]: {target_path}")
             self._remember_safari_dos_path(target_path.parent)
             record_recent_document(target_path)
+            # Clean up any session backup — document is safely saved
+            self._clear_session_backup()
             # Update editor highlighter if the editor screen is active
             self._update_editor_highlighter()
         except OSError as e:
@@ -675,7 +750,7 @@ class SafariWriterApp(App):
         self.pop_screen()
 
     def post_to_mastodon(self) -> None:
-        """Post the current editor buffer to Mastodon via the active Fed client."""
+        """Show a toot preview screen before posting to Mastodon."""
         if self.fed_state is None:
             self.set_message(_("No Safari Fed session active"))
             return
@@ -683,11 +758,24 @@ class SafariWriterApp(App):
         if not text:
             self.set_message(_("Cannot post an empty document"))
             return
-        # Use fed state's compose flow
+        account_label = getattr(self.fed_state, "account_label", "unknown")
+        self.push_screen(
+            TootPreviewScreen(text, account_label, self.state.doc_language),
+            callback=self._on_toot_confirm,
+        )
+
+    def _on_toot_confirm(self, confirmed: bool) -> None:
+        """Actually send the toot after the user confirms from the preview screen."""
+        if not confirmed:
+            self.set_message(_("Toot cancelled"))
+            return
+        if self.fed_state is None:
+            self.set_message(_("No Safari Fed session active"))
+            return
+        text = "\n".join(self.state.buffer).strip()
         self.fed_state.compose_lines = text.splitlines()
         message = self.fed_state.send_compose_post()
         self._fed_compose_active = False
-        # Pop editor, return to fed screen
         self.pop_screen()
         self.set_message(message)
 

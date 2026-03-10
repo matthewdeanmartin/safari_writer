@@ -38,6 +38,7 @@ _COL1_DEFS = [
 _COL2_DEFS = [
     ("1", "Index Current Folder", "index1"),
     ("2", "Index External Drive", "index2"),
+    ("K", "Backup & Restore", "backup_restore"),
     ("L", "Load File", "load"),
     ("S", "Save File", "save"),
     ("A", "Save As...", "save_as"),
@@ -165,6 +166,7 @@ class MainMenuScreen(Screen):
         Binding("m", "menu_action('mail_merge')", "Mail Merge", show=False),
         Binding("1", "menu_action('index1')", "Index Current Folder", show=False),
         Binding("2", "menu_action('index2')", "Index External Drive", show=False),
+        Binding("k", "menu_action('backup_restore')", "Backup & Restore", show=False),
         Binding("l", "menu_action('load')", "Load File", show=False),
         Binding("s", "menu_action('save')", "Save File", show=False),
         Binding("a", "menu_action('save_as')", "Save As", show=False),

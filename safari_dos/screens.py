@@ -25,18 +25,17 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 
 from safari_dos.services import (
+    CODE_EXTENSIONS,
     DirectoryEntry,
-    GarbageEntry,
     copy_paths,
     create_folder,
     discover_locations,
     duplicate_path,
     format_timestamp,
     get_entry_info,
-    get_preview_text,
+    get_preview_syntax,
     list_favorites,
     list_directory,
-    list_garbage,
     list_recent_documents,
     list_recent_locations,
     move_paths,
@@ -44,7 +43,6 @@ from safari_dos.services import (
     record_recent_document,
     record_recent_location,
     rename_path,
-    restore_from_garbage,
     set_protected,
     toggle_favorite,
     unzip_path,
@@ -582,19 +580,39 @@ class SafariDosBrowserScreen(Screen):
 
     def refresh_listing(self) -> None:
         try:
-            self._entries = list_directory(
+            entries = list_directory(
                 self._state.current_path,
                 show_hidden=self._state.show_hidden,
                 filter_text=self._state.filter_text,
                 sort_field=self._state.sort_field,
                 ascending=self._state.ascending,
             )
-            self._selected_index = min(
-                self._selected_index, max(len(self._entries) - 1, 0)
-            )
         except (FileNotFoundError, NotADirectoryError, OSError, ValueError) as exc:
             self.set_message(str(exc))
             self._entries = []
+            self._refresh_view()
+            return
+        parent = self._state.current_path.parent
+        if parent != self._state.current_path:
+            from datetime import datetime
+
+            parent_entry = DirectoryEntry(
+                path=parent,
+                name="..",
+                kind="<DIR>",
+                size_bytes=None,
+                modified_at=datetime.fromtimestamp(parent.stat().st_mtime),
+                protected=False,
+                hidden=False,
+                is_dir=True,
+                is_link=False,
+            )
+            self._entries = [parent_entry] + entries
+        else:
+            self._entries = entries
+        self._selected_index = min(
+            self._selected_index, max(len(self._entries) - 1, 0)
+        )
         self._refresh_view()
 
     def _selected_entry(self) -> DirectoryEntry | None:
@@ -666,13 +684,11 @@ class SafariDosBrowserScreen(Screen):
                     content = get_entry_info(entry.path)
                 else:
                     title = f"FILE: {entry.name}"
-                    # Try text preview for common extensions
                     ext = entry.path.suffix.lower()
-                    if ext in {".txt", ".sfw", ".md", ".py", ".json", ".ini"}:
-                        content = get_preview_text(entry.path)
-                    elif ext in {".png", ".jpg", ".jpeg", ".bmp", ".gif"}:
-                        # For now, just show metadata for images
-                        content = f"[Image File]\n\n{get_entry_info(entry.path)}"
+                    if ext in {".png", ".jpg", ".jpeg", ".bmp", ".gif"}:
+                        content: object = f"[Image File]\n\n{get_entry_info(entry.path)}"
+                    elif ext in CODE_EXTENSIONS:
+                        content = get_preview_syntax(entry.path)
                     else:
                         content = get_entry_info(entry.path)
 
@@ -784,6 +800,7 @@ class SafariDosBrowserScreen(Screen):
         if entry.is_dir:
             self._state.current_path = entry.path
             self._state.selected_names.clear()
+            self._selected_index = 0
             self._sync_recent_locations()
             self.set_message(f"Entered {entry.name}")
             self.refresh_listing()
@@ -1276,85 +1293,28 @@ class SafariDosDevicesScreen(ModalScreen[Path | None]):
 
 
 class SafariDosGarbageScreen(ModalScreen[Path | None]):
-    """Browse and restore garbage-managed items."""
+    """Inform the user that deleted items are in the OS trash / recycling bin."""
 
     CSS = DOS_CSS
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._entries: list[GarbageEntry] = []
-        self._selected = 0
-        self._message = "Ready"
 
     def compose(self) -> ComposeResult:
         with Container(id="dos-container"):
             with Container(id="dos-header"):
                 yield Static("*** GARBAGE ***", id="dos-title")
-                yield Static("Restore discarded items", id="dos-path")
-                yield Static(
-                    "NAME                         DELETED            ORIGINAL",
-                    id="dos-columns",
-                )
-            yield Static("", id="dos-body")
+                yield Static("Items sent to OS trash", id="dos-path")
+                yield Static("", id="dos-columns")
+            yield Static(
+                "Deleted files are in your OS trash / recycling bin.\n"
+                "Use your system file manager to browse or restore them.",
+                id="dos-body",
+            )
             with Container(id="dos-footer"):
                 yield Static("", id="dos-status")
-                yield Static(
-                    "Enter=restore  A=alternate restore  Esc=cancel", id="dos-help"
-                )
-
-    def on_mount(self) -> None:
-        self._refresh()
-
-    def _refresh(self) -> None:
-        self._entries = list_garbage()
-        lines: list[str] = []
-        for index, entry in enumerate(self._entries):
-            line = (
-                f"{entry.name[:28]:<28} {format_timestamp(entry.deleted_at):<17} "
-                f"{str(entry.original_path)[:30]}"
-            )
-            if index == self._selected:
-                line = f"[reverse]{line}[/reverse]"
-            lines.append(line)
-        self.query_one("#dos-body", Static).update(
-            "\n".join(lines) if lines else "<empty>"
-        )
-        self.query_one("#dos-status", Static).update(self._message)
+                yield Static("Esc=close", id="dos-help")
 
     def on_key(self, event: events.Key) -> None:
-        if event.key == "escape":
-            self.dismiss(None)
-        elif event.key == "up" and self._selected > 0:
-            self._selected -= 1
-            self._refresh()
-        elif event.key == "down" and self._selected < len(self._entries) - 1:
-            self._selected += 1
-            self._refresh()
-        elif event.key == "enter":
-            self._restore_selected(None)
-        elif event.key == "a" and self._entries:
-            entry = self._entries[self._selected]
-            self.app.push_screen(
-                InputScreen("Restore To", str(entry.original_path)),
-                callback=lambda value: self._restore_selected(value),
-            )
+        self.dismiss(None)
         event.stop()
-
-    def _restore_selected(self, destination: str | None) -> None:
-        if not self._entries:
-            self.dismiss(None)
-            return
-        entry = self._entries[self._selected]
-        try:
-            restored = restore_from_garbage(
-                entry.item_id,
-                Path(destination) if destination else None,
-            )
-        except (FileExistsError, FileNotFoundError, OSError, ValueError) as exc:
-            self._message = str(exc)
-            self._refresh()
-            return
-        self.dismiss(restored)
 
 
 DOS_HELP_CONTENT = """\

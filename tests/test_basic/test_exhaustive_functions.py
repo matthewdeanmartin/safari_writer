@@ -1,6 +1,6 @@
 import unittest
 import math
-from atari_basic import AtariBasic
+from safari_basic.atari_basic import AtariBasic
 
 class TestExhaustiveFunctions(unittest.TestCase):
     def setUp(self):

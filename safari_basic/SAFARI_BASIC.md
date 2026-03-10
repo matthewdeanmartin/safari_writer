@@ -1,12 +1,12 @@
-# Atari BASIC (Modern REPL Subset) — Compact Specification
+# Safari Basic (Modern REPL Subset) — Compact Specification
 
 ## 1. Scope
 
-This document specifies a modern implementation of **Atari BASIC for the 8-bit family**, focused on the distinctive **language and REPL behavior** rather than original hardware integration.
+This document specifies a modern implementation of **Safari Basic for the 8-bit family**, focused on the distinctive **language and REPL behavior** rather than original hardware integration.
 
 This specification:
 
-* targets the **latest 8-bit Atari BASIC lineage**, not ST BASIC
+* targets the **latest 8-bit Safari Basic lineage**, not ST BASIC
 * preserves distinctive source-level behavior where practical
 * excludes hardware-specific facilities such as graphics, `PEEK`, `POKE`, `USR`, and device/tape I/O
 * uses **ASCII** source text
@@ -107,7 +107,7 @@ The implementation shall use the **maximum practical precision** provided by the
 
 Strings are sequences of characters.
 
-To preserve Atari BASIC source behavior, string variables must be explicitly dimensioned before assignment.
+To preserve Safari Basic source behavior, string variables must be explicitly dimensioned before assignment.
 
 Example:
 
@@ -408,7 +408,7 @@ A conforming implementation should preserve these Atari-BASIC-like traits:
 8. **`LIST` as a first-class REPL/program editing command**
 9. **Variable-valued `GOTO` targets**
 
-These are the main source-visible features that make Atari BASIC feel like Atari BASIC in a modern implementation.
+These are the main source-visible features that make Safari Basic feel like Safari Basic in a modern implementation.
 
 ---
 

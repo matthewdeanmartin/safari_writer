@@ -461,7 +461,7 @@ def test_writer_open_fed_compose_reply_includes_context(monkeypatch):
 
 
 def test_writer_post_to_mastodon_sends_buffer(monkeypatch):
-    """Post to Mastodon uses the editor buffer content."""
+    """Confirming the toot preview sends the buffer content."""
     app = SafariWriterApp()
     app.fed_state = build_demo_state()
     app._fed_compose_active = True
@@ -472,11 +472,31 @@ def test_writer_post_to_mastodon_sends_buffer(monkeypatch):
     monkeypatch.setattr(app, "pop_screen", lambda: popped.append(True))
     monkeypatch.setattr(app, "set_message", lambda msg: messages.append(msg))
 
-    app.post_to_mastodon()
+    # post_to_mastodon now opens a preview screen; simulate confirming it
+    app._on_toot_confirm(True)
 
     assert popped == [True]
     assert app._fed_compose_active is False
     assert any("queued locally" in m.lower() or "posted" in m.lower() for m in messages)
+
+
+def test_writer_post_to_mastodon_cancel(monkeypatch):
+    """Cancelling the toot preview does not send."""
+    app = SafariWriterApp()
+    app.fed_state = build_demo_state()
+    app._fed_compose_active = True
+    app.state.buffer = ["Hello Mastodon!"]
+    popped: list[bool] = []
+    messages: list[str] = []
+
+    monkeypatch.setattr(app, "pop_screen", lambda: popped.append(True))
+    monkeypatch.setattr(app, "set_message", lambda msg: messages.append(msg))
+
+    app._on_toot_confirm(False)
+
+    assert popped == []
+    assert app._fed_compose_active is True  # unchanged
+    assert any("cancel" in m.lower() for m in messages)
 
 
 def test_writer_finish_fed_compose_returns_to_fed(monkeypatch):
