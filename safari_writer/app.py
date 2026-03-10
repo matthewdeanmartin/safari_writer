@@ -1,4 +1,7 @@
 """Safari Writer Textual application."""
+from __future__ import annotations
+
+from typing import Any
 
 from pathlib import Path
 
@@ -699,7 +702,7 @@ class SafariWriterApp(App):
             session = mail_merge_to_session(merge_db)
         else:
             session = ensure_base_database()
-        self._base_session = session
+        self._base_session: Any = session
         self._base_original_merge = merge_db
         self.push_screen(
             SafariBaseScreen(session),
