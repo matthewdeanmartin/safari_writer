@@ -252,14 +252,20 @@ class ReplEditorScreen(Screen):
             log.write(line)
         self._pending_output.clear()
 
+    @staticmethod
+    def _escape_markup(text: str) -> str:
+        """Escape Rich markup brackets in plain text."""
+        return text.replace("[", "\\[")
+
     def _render_input(self) -> str:
-        return f"> {self._input_buffer}[reverse] [/reverse]"
+        safe = self._escape_markup(self._input_buffer)
+        return f"> {safe}[reverse] [/reverse]"
 
     def _render_status(self) -> str:
         line_count = len(self._repl.interpreter.line_order)
         file_name = self._state.loaded_path.name if self._state.loaded_path else "Untitled"
-        modified = " [modified]" if self._repl.modified else ""
-        return f" [{file_name}]{modified}  [{line_count} lines]  Esc back  F2 LIST  F5 RUN  F9 Writer"
+        modified = " *" if self._repl.modified else ""
+        return f" {file_name}{modified}  {line_count} lines  Esc back  F2 LIST  F5 RUN  F9 Writer"
 
     def _refresh_input(self) -> None:
         self.query_one("#repl-input-line", Static).update(self._render_input())
