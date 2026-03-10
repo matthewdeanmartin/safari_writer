@@ -45,6 +45,31 @@ Fax: \@14
 
 \UNotes:\U \@15
 
+\S1Macros — Safari Basic
+Safari Writer ships with built-in macros you can run at any time.
+Press Ctrl+Backslash to open the macro picker, then choose a macro with the arrow keys and press Enter.
+Each macro is a small Atari BASIC program that inserts text at the cursor position.
+\E
+\S2Built-in Macros
+The following macros are bundled with Safari Writer and ready to use:
+
+\Bdivider\B — inserts a decorative separator line
+\Bdatestamp\B — inserts a dated separator (use in notes or logs)
+\Bdoc_stats\B — prints line count and cursor position
+\Blorem\B — inserts a Lorem Ipsum placeholder paragraph
+\Bsignature\B — inserts a formal letter closing block
+\Bletter_header\B — inserts a full formal letter header with placeholders
+\Bmeeting_header\B — inserts a meeting notes template with agenda and action items
+\Btodo_item\B — inserts a blank to-do checklist item
+\Bclipboard_paste\B — pastes clipboard text as a quoted block
+\Bword_count\B — prints an approximate non-blank line count
+
+\S2Try It Here
+Place your cursor on the line below and press Ctrl+Backslash to run a macro.
+The output will be inserted directly at the cursor.
+
+[run a macro here]
+
 \S1Second Page
 Try typing below, then use Esc to return to the Main Menu when you are done exploring.
 

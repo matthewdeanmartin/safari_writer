@@ -45,8 +45,10 @@ def run_macro(
         except Exception:
             pass  # skip variables the interpreter can't handle
 
-    # Pre-inject document lines as DOC1$ … DOC200$
-    for i, line in enumerate(context.document_lines[:_MAX_DOC_LINES], start=1):
+    # Pre-inject document lines as DOC1$ … DOC200$ (pad with "" so all slots exist)
+    doc_lines = context.document_lines[:_MAX_DOC_LINES]
+    for i in range(1, _MAX_DOC_LINES + 1):
+        line = doc_lines[i - 1] if i <= len(doc_lines) else ""
         try:
             interp.inject_variable(f"DOC{i}$", line)
         except Exception:

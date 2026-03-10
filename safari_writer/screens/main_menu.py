@@ -49,6 +49,7 @@ _COL2_DEFS = [
 # Column 3: tools & extras (separator + special items)
 _COL3_DEFS = [
     ("O", "Open Safari DOS", "safari_dos"),
+    ("B", "Base (Address Book)", "safari_base"),
     ("H", "Help Chat", "safari_chat"),
     ("N", "Net Safari Fed", "safari_fed"),
     ("R", "Run Safari REPL", "safari_repl"),
@@ -171,6 +172,7 @@ class MainMenuScreen(Screen):
         Binding("f", "menu_action('new_folder')", "New Folder", show=False),
         Binding("q", "menu_action('quit')", "Quit", show=False),
         Binding("o", "menu_action('safari_dos')", "Open Safari DOS", show=False),
+        Binding("b", "menu_action('safari_base')", "Base (Address Book)", show=False),
         Binding("h", "menu_action('safari_chat')", "Help Chat", show=False),
         Binding("n", "menu_action('safari_fed')", "Open Safari Fed", show=False),
         Binding("r", "menu_action('safari_repl')", "Run Safari REPL", show=False),

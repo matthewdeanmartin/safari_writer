@@ -428,6 +428,7 @@ class EditorArea(Widget, can_focus=True):
         self._input_buffer = ""
         self._highlighter = create_highlighter(state.file_profile)
         self._last_undo_action: str = ""
+        self._scroll_offset: int = 0
 
     def update_highlighter(self) -> None:
         """Re-create the highlighter when the file profile changes."""
@@ -537,6 +538,16 @@ class EditorArea(Widget, can_focus=True):
         else:
             start = end = None
 
+        try:
+            visible_h = self.size.height if self.size.height else 0
+        except (AttributeError, Exception):
+            visible_h = 0
+        if visible_h <= 0:
+            # Not mounted or zero height — render entire buffer (tests, etc.)
+            visible_h = len(s.buffer)
+        first = getattr(self, "_scroll_offset", 0)
+        last = min(len(s.buffer), first + visible_h)
+
         # For non-SFW files with syntax highlighting, get highlighted lines
         use_syntax_hl = (
             s.file_profile.highlight_profile != HighlightProfile.SAFARI_WRITER
@@ -548,7 +559,8 @@ class EditorArea(Widget, can_focus=True):
         else:
             highlighted = None
 
-        # Carry toggle state across lines (bold/underline/etc. can span lines)
+        # Carry toggle state across lines before the visible window so
+        # format toggles (bold, underline, etc.) are correct at *first*.
         fmt_state: dict[str, bool] = {
             CTRL_BOLD: False,
             CTRL_UNDERLINE: False,
@@ -556,9 +568,14 @@ class EditorArea(Widget, can_focus=True):
             CTRL_SUPER: False,
             CTRL_SUB: False,
         }
+        for row in range(first):
+            for ch in s.buffer[row]:
+                if ch in TOGGLE_MARKERS:
+                    fmt_state[ch] = not fmt_state[ch]
 
-        lines = []
-        for row, line in enumerate(s.buffer):
+        lines: list[str] = []
+        for row in range(first, last):
+            line = s.buffer[row]
             hl_text = (
                 highlighted[row] if highlighted and row < len(highlighted) else None
             )
@@ -962,6 +979,7 @@ class EditorArea(Widget, can_focus=True):
         if handled:
             event.stop()
             self.refresh()
+            self._scroll_to_cursor()
             self._update_status()
 
     def on_paste(self, event: events.Paste) -> None:
@@ -976,6 +994,7 @@ class EditorArea(Widget, can_focus=True):
         # Paste from our internal clipboard instead.
         self._paste()
         self.refresh()
+        self._scroll_to_cursor()
         self._update_status()
 
     # ------------------------------------------------------------------
@@ -1641,6 +1660,25 @@ class EditorArea(Widget, can_focus=True):
             self._update_status()
 
         self.app.push_screen(MacroPickerScreen(), _on_picked)
+
+    def _scroll_to_cursor(self) -> None:
+        """Adjust ``_scroll_offset`` so the cursor row is visible.
+
+        Textual's ``scroll_to()`` has no effect on a plain ``Widget`` that
+        uses ``render()`` with ``height: 1fr``.  Instead we manage our own
+        ``_scroll_offset`` and only render the visible slice of the buffer
+        inside ``render()`` — the same technique the ANSI preview uses.
+        """
+        try:
+            visible_h = self.size.height if self.size.height else 24
+        except (AttributeError, Exception):
+            visible_h = 24
+        row = self.state.cursor_row
+        offset = getattr(self, "_scroll_offset", 0)
+        if row >= offset + visible_h:
+            self._scroll_offset = row - visible_h + 1
+        elif row < offset:
+            self._scroll_offset = row
 
     def _update_status(self) -> None:
         self._screen_host().update_status()

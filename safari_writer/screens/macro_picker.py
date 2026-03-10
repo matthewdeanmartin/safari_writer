@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from importlib.resources import files
 from pathlib import Path
 
 from textual import events
@@ -11,7 +12,20 @@ from textual.containers import Container
 from textual.screen import ModalScreen
 from textual.widgets import Static
 
-__all__ = ["MacroPickerScreen", "default_macros_dir"]
+__all__ = ["MacroPickerScreen", "bundled_macros_dir", "default_macros_dir"]
+
+
+def bundled_macros_dir() -> Path | None:
+    """Return the path to the package-bundled macros directory, or None."""
+    try:
+        ref = files("safari_writer").joinpath("macros")
+        # importlib.resources traversable → convert to Path
+        p = Path(str(ref))
+        if p.is_dir():
+            return p
+    except Exception:
+        pass
+    return None
 
 _PICKER_CSS = """
 MacroPickerScreen {
@@ -76,6 +90,23 @@ def _list_macros(directory: Path) -> list[Path]:
         return []
 
 
+def _merged_macros(user_dir: Path) -> list[Path]:
+    """Return bundled macros + user macros, user macros shadow same stem."""
+    bundled: dict[str, Path] = {}
+    bd = bundled_macros_dir()
+    if bd is not None:
+        for p in _list_macros(bd):
+            bundled[p.stem.lower()] = p
+
+    user: dict[str, Path] = {}
+    for p in _list_macros(user_dir):
+        user[p.stem.lower()] = p
+
+    # Merge: user overrides bundled; sort alphabetically
+    merged = {**bundled, **user}
+    return sorted(merged.values(), key=lambda p: p.stem.lower())
+
+
 class MacroPickerScreen(ModalScreen[Path | None]):
     """Modal list of .BAS files from the macros directory."""
 
@@ -84,7 +115,7 @@ class MacroPickerScreen(ModalScreen[Path | None]):
     def __init__(self, macros_dir: Path | None = None) -> None:
         super().__init__()
         self._dir = macros_dir or default_macros_dir()
-        self._macros: list[Path] = _list_macros(self._dir)
+        self._macros: list[Path] = _merged_macros(self._dir)
         self._index = 0
 
     def compose(self) -> ComposeResult:

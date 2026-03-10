@@ -31,6 +31,30 @@ else:
 TARGET_WIDTH = 100
 TARGET_HEIGHT = 34
 
+# ASSIST menu categories — modeled after dBASE III Plus
+_ASSIST_CATEGORIES: list[tuple[str, list[tuple[str, str]]]] = [
+    ("Set Up", [
+        ("Browse", "BROWSE"),
+        ("Tables", "TABLES"),
+        ("Use <table>", "USE"),
+    ]),
+    ("Update", [
+        ("Append", "APPEND"),
+        ("Edit", "EDIT"),
+        ("Delete", "DELETE"),
+    ]),
+    ("Retrieve", [
+        ("List", "LIST"),
+        ("Display", "DISPLAY"),
+        ("Structure", "STRUCTURE"),
+    ]),
+    ("Tools", [
+        ("Commands", "COMMANDS"),
+        ("Help", "HELP"),
+        ("Quit", "QUIT"),
+    ]),
+]
+
 
 def clamp_shell_dimension(available: int, target: int) -> int:
     """Clamp shell size to the live terminal while preserving a target size ceiling."""
@@ -117,6 +141,8 @@ class SafariBaseScreen(Screen[None]):
         self._append_field_cursor = 0
         self._report_title = "COMMAND OUTPUT"
         self._report_lines: list[str] = []
+        self._assist_category = 0
+        self._assist_item = 0
 
     def compose(self) -> ComposeResult:
         with Container(id="base-root"):
@@ -151,8 +177,10 @@ class SafariBaseScreen(Screen[None]):
         )
         if self._view_mode == "append" and self._handle_append_key(key, event.character):
             return
+        if self._view_mode == "assist" and self._handle_assist_key(key):
+            return
         if key == "ctrl+q":
-            self.app.exit()
+            self._quit_base()
             return
         if key == "f1":
             self._show_help()
@@ -361,8 +389,79 @@ class SafariBaseScreen(Screen[None]):
             return True
         return False
 
+    def _handle_assist_key(self, key: str) -> bool:
+        if key == "escape":
+            self._view_mode = "browse"
+            self._message = "Ready"
+            self._refresh()
+            return True
+        if key == "left":
+            self._assist_category = max(0, self._assist_category - 1)
+            self._assist_item = 0
+            self._refresh()
+            return True
+        if key == "right":
+            self._assist_category = min(
+                len(_ASSIST_CATEGORIES) - 1, self._assist_category + 1
+            )
+            self._assist_item = 0
+            self._refresh()
+            return True
+        if key == "up":
+            self._assist_item = max(0, self._assist_item - 1)
+            self._refresh()
+            return True
+        if key == "down":
+            items = _ASSIST_CATEGORIES[self._assist_category][1]
+            self._assist_item = min(len(items) - 1, self._assist_item + 1)
+            self._refresh()
+            return True
+        if key == "enter":
+            items = _ASSIST_CATEGORIES[self._assist_category][1]
+            _label, command = items[self._assist_item]
+            self._view_mode = "browse"
+            if command == "USE":
+                # Show table picker via a report listing
+                self._show_tables()
+                self._message = "Type USE <table> at the prompt to switch tables"
+            else:
+                self._run_command(command)
+            self._refresh()
+            return True
+        return False
+
+    def _render_assist(self) -> str:
+        cat_width = 14
+        lines: list[str] = []
+        # Header row of category names
+        header_parts: list[str] = []
+        for idx, (cat_name, _items) in enumerate(_ASSIST_CATEGORIES):
+            if idx == self._assist_category:
+                header_parts.append(f"[{cat_name.center(cat_width - 2)}]")
+            else:
+                header_parts.append(cat_name.center(cat_width))
+        lines.append(" ".join(header_parts))
+        lines.append("-" * (cat_width * len(_ASSIST_CATEGORIES) + len(_ASSIST_CATEGORIES) - 1))
+
+        # Items for current category
+        _cat_name, items = _ASSIST_CATEGORIES[self._assist_category]
+        for idx, (label, _cmd) in enumerate(items):
+            marker = ">" if idx == self._assist_item else " "
+            lines.append(f" {marker} {label}")
+
+        lines.extend([
+            "",
+            " Left/Right select category    Up/Down select item",
+            " Enter execute                  Esc cancel",
+        ])
+        return "\n".join(lines)
+
     def _show_assist(self) -> None:
-        self._show_not_implemented("ASSIST menu")
+        self._view_mode = "assist"
+        self._assist_category = 0
+        self._assist_item = 0
+        self._message = "ASSIST — use arrow keys to navigate, Enter to select"
+        self._refresh()
 
     def _is_caps_toggle_key(self, key: str) -> bool:
         return key in {"caps_lock", "capslock", "ctrl+l", "f9"}
@@ -547,6 +646,13 @@ class SafariBaseScreen(Screen[None]):
     def _visible_rows(self) -> int:
         return max(4, self._shell_height() - 8)
 
+    def _quit_base(self) -> None:
+        """Pop back to parent screen if embedded, otherwise exit the app."""
+        if len(self.app.screen_stack) > 1:
+            self.dismiss(None)
+        else:
+            self.app.exit()
+
     def _show_help(self) -> None:
         self._view_mode = "help"
         self._message = "Showing startup help"
@@ -646,7 +752,7 @@ class SafariBaseScreen(Screen[None]):
             )
             return
         if verb == "QUIT":
-            self.app.exit()
+            self._quit_base()
             return
         if verb == "USE":
             table_name = args
@@ -789,6 +895,8 @@ class SafariBaseScreen(Screen[None]):
             return self._render_browse()
         if self._view_mode == "append":
             return self._render_append()
+        if self._view_mode == "assist":
+            return self._render_assist()
         if self._view_mode == "tables":
             return self._render_tables()
         if self._view_mode == "structure":

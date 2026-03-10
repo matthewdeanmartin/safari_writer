@@ -49,9 +49,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["safari_writer", "safari_dos", "safari_chat", "safari_base", "safari_fed", "safari_basic", "safari_repl"]
 include = [
+    "safari_writer/locales/LC_MESSAGES/*.mo",
+    "safari_writer/locales/LC_MESSAGES/*.po",
     "safari_writer/*.sfw",
     "safari_writer/*.json",
     "safari_writer/locales/**/*.mo",
+    "safari_writer/macros/*.bas",
     "safari_writer/py.typed",
     "safari_dos/py.typed",
     "safari_chat/default_help.md",

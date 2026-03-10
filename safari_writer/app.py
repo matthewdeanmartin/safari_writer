@@ -190,6 +190,8 @@ class SafariWriterApp(App):
             self.push_screen(IndexScreen(Path.cwd(), label=_("Current Folder")))
         elif action == "index2":
             self._action_index_external()
+        elif action == "safari_base":
+            self._action_safari_base()
         elif action == "safari_dos":
             self._action_safari_dos()
         elif action == "safari_chat":
@@ -685,6 +687,35 @@ class SafariWriterApp(App):
         # Pop editor, return to fed screen
         self.pop_screen()
         self.set_message(message)
+
+    def _action_safari_base(self) -> None:
+        """Open Safari Base with the current mail-merge data."""
+        from safari_base.bridge import mail_merge_to_session
+        from safari_base.database import ensure_database as ensure_base_database
+        from safari_base.screen import SafariBaseScreen
+
+        merge_db = self.state.mail_merge_db
+        if merge_db is not None:
+            session = mail_merge_to_session(merge_db)
+        else:
+            session = ensure_base_database()
+        self._base_session = session
+        self._base_original_merge = merge_db
+        self.push_screen(
+            SafariBaseScreen(session),
+            callback=self._on_safari_base_dismiss,
+        )
+
+    def _on_safari_base_dismiss(self, _result: object) -> None:
+        """Sync Safari Base edits back to mail-merge state on dismiss."""
+        from safari_base.bridge import session_to_mail_merge
+
+        session = getattr(self, "_base_session", None)
+        original = getattr(self, "_base_original_merge", None)
+        if session is not None:
+            self.state.mail_merge_db = session_to_mail_merge(session, original)
+        self._base_session = None
+        self._base_original_merge = None
 
     def _action_safari_dos(self) -> None:
         if self._last_safari_dos_path.exists():

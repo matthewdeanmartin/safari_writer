@@ -130,14 +130,21 @@ def test_function_keys_are_wired():
             screen = app.screen
             assert isinstance(screen, SafariBaseScreen)
             assert (
-                "ASSIST menu not implemented yet"
+                "ASSIST"
                 in screen.query_one("#status-bar", Static).content
             )
+            # ASSIST menu should show categories in the workspace
+            assert (
+                "Set Up"
+                in screen.query_one("#workspace-body", Static).content
+            )
+            await pilot.press("escape")  # dismiss ASSIST
             await pilot.press("f2")
             assert (
-                "ASSIST menu not implemented yet"
+                "ASSIST"
                 in screen.query_one("#status-bar", Static).content
             )
+            await pilot.press("escape")  # dismiss ASSIST from f2
             await pilot.press("f6")
             assert (
                 "Field      Type" in screen.query_one("#workspace-body", Static).content
@@ -262,5 +269,83 @@ def test_command_abbreviations_and_reports_work():
 
             await pilot.press("b", "r", "o", "w", "enter")
             assert "LAST" in app.screen.query_one("#workspace-body", Static).content
+
+    asyncio.run(run())
+
+
+def test_bridge_mail_merge_to_session_roundtrip():
+    from safari_base.bridge import mail_merge_to_session, session_to_mail_merge
+    from safari_writer.mail_merge_db import FieldDef, MailMergeDB
+
+    db = MailMergeDB(
+        fields=[FieldDef("Last Name", 20), FieldDef("First Name", 20)],
+        records=[["Smith", "John"], ["Doe", "Jane"]],
+        filename="test.json",
+    )
+
+    session = mail_merge_to_session(db)
+    assert session.record_count() == 2
+    assert session.current_columns()[:2] == ["LAST", "FIRST"]
+
+    roundtrip = session_to_mail_merge(session, original=db)
+    assert len(roundtrip.fields) == 2
+    assert roundtrip.fields[0].name == "Last Name"
+    assert roundtrip.fields[1].name == "First Name"
+    assert len(roundtrip.records) == 2
+    assert roundtrip.records[0] == ["Smith", "John"]
+    assert roundtrip.records[1] == ["Doe", "Jane"]
+    assert roundtrip.filename == "test.json"
+
+
+def test_bridge_session_to_mail_merge_without_original():
+    from safari_base.bridge import mail_merge_to_session, session_to_mail_merge
+    from safari_writer.mail_merge_db import FieldDef, MailMergeDB
+
+    db = MailMergeDB(
+        fields=[FieldDef("Last Name", 20), FieldDef("First Name", 20)],
+        records=[["Alpha", "Beta"]],
+    )
+    session = mail_merge_to_session(db)
+    result = session_to_mail_merge(session, original=None)
+    assert result.fields[0].name == "LAST"
+    assert result.fields[1].name == "FIRST"
+    assert result.records == [["Alpha", "Beta"]]
+
+
+def test_bridge_append_in_session_reflects_in_roundtrip():
+    from safari_base.bridge import mail_merge_to_session, session_to_mail_merge
+    from safari_writer.mail_merge_db import FieldDef, MailMergeDB
+
+    db = MailMergeDB(
+        fields=[FieldDef("Last Name", 20), FieldDef("First Name", 20)],
+        records=[],
+    )
+    session = mail_merge_to_session(db)
+    session.append_record(["New", "Person"])
+    result = session_to_mail_merge(session, original=db)
+    assert len(result.records) == 1
+    assert result.records[0] == ["New", "Person"]
+
+
+def test_assist_menu_navigation():
+    async def run() -> None:
+        app = SafariBaseApp()
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("f10")
+            screen = app.screen
+            assert isinstance(screen, SafariBaseScreen)
+            body = screen.query_one("#workspace-body", Static).content
+            assert "Set Up" in body
+            assert "Browse" in body
+
+            # Navigate right to "Update" category
+            await pilot.press("right")
+            body = screen.query_one("#workspace-body", Static).content
+            assert "Append" in body
+
+            # Select Append via Enter
+            await pilot.press("enter")
+            assert screen._view_mode == "append"
 
     asyncio.run(run())

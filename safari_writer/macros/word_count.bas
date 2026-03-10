@@ -1,0 +1,6 @@
+10 REM Estimate word count from first 10 document lines (avg 6 chars/word)
+20 LET W = INT(LEN(DOC1$) / 6) + INT(LEN(DOC2$) / 6) + INT(LEN(DOC3$) / 6)
+30 LET W = W + INT(LEN(DOC4$) / 6) + INT(LEN(DOC5$) / 6) + INT(LEN(DOC6$) / 6)
+40 LET W = W + INT(LEN(DOC7$) / 6) + INT(LEN(DOC8$) / 6) + INT(LEN(DOC9$) / 6)
+50 LET W = W + INT(LEN(DOC10$) / 6)
+60 PRINT "~Words (lines 1-10): "; STR$(W); "    Total lines: "; STR$(DOCLINES)

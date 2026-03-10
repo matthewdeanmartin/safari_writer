@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -64,6 +65,7 @@ class MacroContext:
           CURSORCOL   — cursor column (1-based)
           SELCOUNT    — number of selected lines
           CLIPBOARD$  — clipboard text
+          TODAY$      — current date (e.g. "March 09, 2026")
           PAUTHOR$    — post author name
           PHANDLE$    — post @handle
           PDATE$      — post date string
@@ -76,12 +78,14 @@ class MacroContext:
           SEL1$ … SELN$      — selected lines (injected by runner)
         """
         doc = self.document_lines
+        today = datetime.date.today().strftime("%B %d, %Y")
         m: dict[str, object] = {
             "DOCLINES": float(len(doc)),
             "CURSORROW": float(self.cursor_row + 1),  # 1-based for BASIC
             "CURSORCOL": float(self.cursor_col + 1),
             "SELCOUNT": float(len(self.selected_lines())),
             "CLIPBOARD$": self.clipboard,
+            "TODAY$": today,
         }
 
         post = self.current_post
