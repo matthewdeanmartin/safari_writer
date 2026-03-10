@@ -13,6 +13,7 @@ from textual.screen import Screen
 from textual.widgets import Static
 
 from safari_base.database import BaseSession, DEFAULT_ADDRESS_SCHEMA
+from safari_base.program_editor import ProgramEditorScreen
 
 __all__ = ["SCREEN_CSS", "SafariBaseScreen", "clamp_shell_dimension"]
 
@@ -665,6 +666,35 @@ class SafariBaseScreen(Screen[None]):
         self._message = message
         self._refresh()
 
+    def _open_program_editor(self, filename: str) -> None:
+        """Open the program editor for a .prg file."""
+        if not filename:
+            self._message = "MODIFY COMMAND requires a filename"
+            self._refresh()
+            return
+        # Resolve the file path — add .prg if no extension
+        name = filename.strip().strip('"').strip("'")
+        if "." not in name:
+            name += ".prg"
+        # Use the database directory or current working directory
+        if self.session.database_path is not None:
+            work_dir = self.session.database_path.parent
+        else:
+            work_dir = Path.cwd()
+        file_path = work_dir / name
+
+        def on_editor_dismiss(saved: bool) -> None:
+            if saved:
+                self._message = f"Saved {file_path.name}"
+            else:
+                self._message = f"Closed {file_path.name}"
+            self._refresh()
+
+        self.app.push_screen(
+            ProgramEditorScreen(file_path, work_dir=work_dir),
+            callback=on_editor_dismiss,
+        )
+
     def _show_not_implemented(self, feature: str) -> None:
         self._message = f"{feature} not implemented yet"
         _log.debug("not-implemented feature=%s", feature)
@@ -724,6 +754,9 @@ class SafariBaseScreen(Screen[None]):
             return
         if verb == "APPEND":
             self._start_append()
+            return
+        if verb == "MODIFY_COMMAND":
+            self._open_program_editor(args)
             return
         if verb == "EDIT":
             self._show_not_implemented("Edit form")
@@ -788,6 +821,16 @@ class SafariBaseScreen(Screen[None]):
         if raw_verb == "DISPLAY" and args.upper() in {"STRUCT", "STRUCTURE"}:
             return "STRUCTURE", ""
 
+        # MODIFY COMMAND <file> — program editor
+        if raw_verb in {"MODI", "MODIFY"} and args:
+            args_parts = args.split(None, 1)
+            sub = args_parts[0].upper()
+            if sub in {"COMM", "COMMAND"}:
+                file_arg = args_parts[1].strip() if len(args_parts) > 1 else ""
+                return "MODIFY_COMMAND", file_arg
+            if sub in {"STRU", "STRUCTURE"}:
+                return "STRUCTURE", ""
+
         verb_map = {
             "APP": "APPEND",
             "APPE": "APPEND",
@@ -832,6 +875,7 @@ class SafariBaseScreen(Screen[None]):
             "  BROWSE, LIST, DISPLAY",
             "  TABLES, USE <table>, STRUCT",
             "  APPEND, EDIT, DELETE, ASSIST",
+            "  MODIFY COMMAND <file>  Edit a .prg file",
             "  QUIT",
         ]
 

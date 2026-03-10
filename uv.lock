@@ -8,6 +8,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "aenum"
+version = "3.1.16"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/7a/61ed58e8be9e30c3fe518899cc78c284896d246d51381bab59b5db11e1f3/aenum-3.1.16.tar.gz", hash = "sha256:bfaf9589bdb418ee3a986d85750c7318d9d2839c1b1a1d6fe8fc53ec201cf140", size = 137693, upload-time = "2026-01-12T22:34:38.819Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e3/52/6ad8f63ec8da1bf40f96996d25d5b650fdd38f5975f8c813732c47388f18/aenum-3.1.16-py3-none-any.whl", hash = "sha256:9035092855a98e41b66e3d0998bd7b96280e85ceb3a04cc035636138a1943eaf", size = 165627, upload-time = "2025-04-25T03:17:58.89Z" },
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -675,6 +684,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/3e/5d/c4da701939eeee699566a6c1367427ab91a8b7088cc2328c09dbee940415/cryptography-46.0.5-pp311-pypy311_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:2ae6971afd6246710480e3f15824ed3029a60fc16991db250034efd0b9fb4356", size = 4381786, upload-time = "2026-02-10T19:18:24.529Z" },
     { url = "https://files.pythonhosted.org/packages/ac/97/a538654732974a94ff96c1db621fa464f455c02d4bb7d2652f4edc21d600/cryptography-46.0.5-pp311-pypy311_pp73-manylinux_2_34_aarch64.whl", hash = "sha256:d861ee9e76ace6cf36a6a89b959ec08e7bc2493ee39d07ffe5acb23ef46d27da", size = 4217990, upload-time = "2026-02-10T19:18:25.957Z" },
     { url = "https://files.pythonhosted.org/packages/ae/11/7e500d2dd3ba891197b9efd2da5454b74336d64a7cc419aa7327ab74e5f6/cryptography-46.0.5-pp311-pypy311_pp73-manylinux_2_34_x86_64.whl", hash = "sha256:2b7a67c9cd56372f3249b39699f2ad479f6991e62ea15800973b956f4b73e257", size = 4381252, upload-time = "2026-02-10T19:18:27.496Z" },
+]
+
+[[package]]
+name = "dbf"
+version = "0.99.11"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aenum" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0d/8e/ea5c3caa47a708f2a69cd2b8228bd590c592e2edf6f810b30d42d1e9435b/dbf-0.99.11.tar.gz", hash = "sha256:2169c05252c0efbe897f346f0683326ec25854beab1d0c6430df6e903a57b315", size = 104747, upload-time = "2025-09-02T20:07:49.156Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ab/95/d42256fd40584bf62a83ac8d9fb34d0a130c01dad4b0bc345f7fe0798748/dbf-0.99.11-py3-none-any.whl", hash = "sha256:0caeaeee80c486b7422a6e25cdc7da61dd0007fe652a005b2bdf1b1dd0b18e00", size = 110038, upload-time = "2025-09-02T20:07:45.397Z" },
 ]
 
 [[package]]
@@ -1968,6 +1989,7 @@ name = "safari-writer"
 version = "0.1.2"
 source = { editable = "." }
 dependencies = [
+    { name = "dbf" },
     { name = "httpx" },
     { name = "mastodon-py" },
     { name = "pyenchant" },
@@ -1993,6 +2015,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "dbf", specifier = ">=0.99.11" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "mastodon-py", specifier = ">=2.1.4" },
     { name = "pyenchant", specifier = ">=3.2.0" },

@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2026-03-09
 
 ### Added
-- Internationalization
-- Some edit time macros bundle with app.
+- Reader
+- Improved Repl
 
 ## Fixed
 - Editor scrolls
@@ -20,8 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Safari Fed, a mastodon client.
 - Improved docs
 - Improve more consistent F1 styling
-- Started Macros
+- Internationalization
+- Some edit time macros bundle with app.
 - Started BASIC REPL
+
 
 ## [0.1.1] - 2026-03-08
 
