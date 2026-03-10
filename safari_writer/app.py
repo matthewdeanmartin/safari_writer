@@ -58,6 +58,8 @@ from safari_fed.screens import SafariFedMainScreen
 from safari_fed.state import SafariFedState
 from safari_repl.screens import ReplMainMenuScreen, ReplEditorScreen
 from safari_repl.state import ReplState
+from safari_reader.screens import SafariReaderMainMenuScreen
+from safari_reader.state import SafariReaderState
 
 __all__ = ["SafariWriterApp"]
 
@@ -87,6 +89,7 @@ class SafariWriterApp(App):
         self.dos_state: SafariDosState | None = None
         self.fed_state: SafariFedState | None = None
         self.repl_state: ReplState | None = None
+        self.reader_state: SafariReaderState | None = None
         self._fed_compose_active: bool = False
         self._last_backup_path: Path | None = None
 
@@ -148,11 +151,12 @@ class SafariWriterApp(App):
                 self._action_print()
             return
         if destination == "index_current":
-            directory = request.index_path or Path.cwd()
-            self.push_screen(IndexScreen(directory, label=_("Current Folder")))
+            start = (request.index_path or Path.cwd()).resolve()
+            self.dos_state = self._build_safari_dos_state(start)
+            self.push_screen(SafariDosBrowserScreen(self.dos_state))
             return
         if destination == "index_external":
-            self._action_index_external()
+            self._action_index_external_via_safari_dos()
             return
         if destination == "safari_dos":
             start_path = request.safari_dos_path or Path.cwd()
@@ -168,6 +172,9 @@ class SafariWriterApp(App):
             return
         if destination == "safari_repl":
             self._action_safari_repl(request.safari_repl_path)
+            return
+        if destination == "safari_reader":
+            self._action_safari_reader()
             return
 
     def _set_initial_cursor(self, line: int | None, column: int | None) -> None:
@@ -200,9 +207,9 @@ class SafariWriterApp(App):
         elif action == "backup_restore":
             self._action_backup_restore()
         elif action == "index1":
-            self.push_screen(IndexScreen(Path.cwd(), label=_("Current Folder")))
+            self._action_index_via_safari_dos()
         elif action == "index2":
-            self._action_index_external()
+            self._action_index_external_via_safari_dos()
         elif action == "safari_base":
             self._action_safari_base()
         elif action == "safari_dos":
@@ -213,6 +220,8 @@ class SafariWriterApp(App):
             self._action_safari_fed()
         elif action == "safari_repl":
             self._action_safari_repl()
+        elif action == "safari_reader":
+            self._action_safari_reader()
         elif action == "load":
             self._action_load_via_safari_dos()
         elif action == "save":
@@ -582,6 +591,22 @@ class SafariWriterApp(App):
         except OSError as e:
             self.set_message(f"Folder error: {e}")
 
+    def _action_index_via_safari_dos(self) -> None:
+        """Open the safari_dos folder browser for 'Index Current Folder'."""
+        start_path = self._picker_start_path()
+        self.dos_state = self._build_safari_dos_state(start_path)
+        self.push_screen(SafariDosBrowserScreen(self.dos_state))
+
+    def _action_index_external_via_safari_dos(self) -> None:
+        """Open the safari_dos devices screen for 'Index External Drive'."""
+        self.dos_state = self._build_safari_dos_state(Path.cwd())
+        self.push_screen(
+            SafariDosDevicesScreen(self.dos_state),
+            callback=self._on_choose_device,
+        )
+
+    # DEPRECATED: IndexScreen / DrivePickerScreen used to handle index1/index2.
+    # Safari DOS browser is now the preferred folder browser for these actions.
     def _action_index_external(self) -> None:
         drives = _find_external_drives()
         if not drives:
@@ -638,6 +663,17 @@ class SafariWriterApp(App):
 
     def quit_fed(self) -> None:
         """Called by SafariFedMainScreen to return to the writer menu."""
+        self.pop_screen()
+
+    def _action_safari_reader(self) -> None:
+        if self.reader_state is None:
+            self.reader_state = SafariReaderState()
+        from safari_reader.services import load_library
+        load_library(self.reader_state)
+        self.push_screen(SafariReaderMainMenuScreen(self.reader_state))
+
+    def quit_reader(self) -> None:
+        """Called by SafariReaderMainMenuScreen to return to the writer menu."""
         self.pop_screen()
 
     def _action_safari_repl(self, bas_path: Path | None = None) -> None:

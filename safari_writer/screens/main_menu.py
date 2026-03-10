@@ -54,6 +54,7 @@ _COL3_DEFS = [
     ("H", "Help Chat", "safari_chat"),
     ("N", "Net Safari Fed", "safari_fed"),
     ("R", "Run Safari REPL", "safari_repl"),
+    ("I", "lIbrary Reader", "safari_reader"),
     ("X", "Style Switcher", "style_switcher"),
     ("T", "Try Demo Mode", "demo"),
 ]
@@ -178,6 +179,7 @@ class MainMenuScreen(Screen):
         Binding("h", "menu_action('safari_chat')", "Help Chat", show=False),
         Binding("n", "menu_action('safari_fed')", "Open Safari Fed", show=False),
         Binding("r", "menu_action('safari_repl')", "Run Safari REPL", show=False),
+        Binding("i", "menu_action('safari_reader')", "Library Reader", show=False),
         Binding("x", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("t", "menu_action('demo')", "Try Demo Mode", show=False),
         Binding("question_mark", "menu_action('doctor')", "Doctor", show=False),

@@ -1,4 +1,10 @@
-"""Index screen — directory listing in AtariWriter 80 style."""
+"""Index screen — directory listing in AtariWriter 80 style.
+
+DEPRECATED: IndexScreen and DrivePickerScreen are superseded by
+safari_dos.screens.SafariDosBrowserScreen / SafariDosDevicesScreen, which
+provide a richer folder-browsing experience.  The classes below are kept for
+reference but are no longer used by the main menu actions (index1 / index2).
+"""
 
 import platform
 from pathlib import Path
@@ -118,7 +124,11 @@ IndexScreen, DrivePickerScreen {
 
 
 class IndexScreen(Screen):
-    """Display directory contents in AtariWriter 80 style."""
+    """Display directory contents in AtariWriter 80 style.
+
+    .. deprecated::
+        Use ``safari_dos.screens.SafariDosBrowserScreen`` instead.
+    """
 
     CSS = INDEX_CSS
 
@@ -311,7 +321,11 @@ class IndexScreen(Screen):
 
 
 class DrivePickerScreen(Screen):
-    """When multiple external drives are found, let the user pick one."""
+    """When multiple external drives are found, let the user pick one.
+
+    .. deprecated::
+        Use ``safari_dos.screens.SafariDosDevicesScreen`` instead.
+    """
 
     CSS = INDEX_CSS
 

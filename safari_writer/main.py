@@ -180,6 +180,11 @@ def build_parser() -> argparse.ArgumentParser:
     tui_safari_repl.add_argument("--file", help="Load a .BAS file on startup.")
     tui_safari_repl.set_defaults(handler=_handle_tui_command)
 
+    tui_safari_reader = tui_subparsers.add_parser(
+        "safari-reader", help="Open Safari Reader inside Safari Writer."
+    )
+    tui_safari_reader.set_defaults(handler=_handle_tui_command)
+
     export_parser = subparsers.add_parser(
         "export", help="Run headless export commands."
     )
@@ -506,6 +511,8 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
             destination="safari_repl",
             safari_repl_path=Path(args.file).resolve() if args.file else None,
         )
+    if command == "safari-reader":
+        return StartupRequest(destination="safari_reader")
     raise ValueError(f"Unsupported TUI destination: {command}")
 
 
