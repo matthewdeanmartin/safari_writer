@@ -47,7 +47,7 @@ PrintScreen {
 
 #print-dialog {
     width: 44;
-    height: 14;
+    height: 16;
     border: solid $primary;
     background: $surface;
     padding: 1 2;
@@ -95,6 +95,10 @@ class PrintScreen(ModalScreen[str | None]):
                 "[bold underline]T[/]  Post to Mastodon (Toot)",
                 classes="print-option",
             )
+            yield Static(
+                "[bold underline]G[/]  Git Publish (commit & push)",
+                classes="print-option",
+            )
             yield Static("R=Return  Esc=Cancel", id="print-hint")
 
     def on_key(self, event: events.Key) -> None:
@@ -106,6 +110,8 @@ class PrintScreen(ModalScreen[str | None]):
             self.dismiss("postscript")
         elif event.key == "t":
             self.dismiss("mastodon")
+        elif event.key == "g":
+            self.dismiss("git")
         elif event.key in ("escape", "r"):
             self.dismiss(None)
         event.stop()
@@ -241,16 +247,17 @@ TootPreviewScreen {
 }
 
 #toot-top {
-    height: 1fr;
+    height: 2fr;
     border-bottom: solid $accent;
     overflow-y: auto;
-    padding: 1 2;
+    padding: 1 4;
+    max-width: 80;
 }
 
 #toot-bottom {
     height: 1fr;
     overflow-y: auto;
-    padding: 1 2;
+    padding: 1 4;
 }
 """
 
@@ -267,11 +274,18 @@ class TootPreviewScreen(Screen):
 
     CSS = TOOT_PREVIEW_CSS
 
-    def __init__(self, text: str, account_label: str, doc_language: str | None) -> None:
+    def __init__(
+        self,
+        text: str,
+        account_label: str,
+        doc_language: str | None,
+        doc_name: str = "",
+    ) -> None:
         super().__init__()
         self._text = text
         self._account_label = account_label
         self._doc_language = doc_language
+        self._doc_name = doc_name
 
     def compose(self) -> ComposeResult:
         char_count = len(self._text)
@@ -281,8 +295,9 @@ class TootPreviewScreen(Screen):
             if over > 0
             else f"{char_count}/{_TOOT_CHAR_LIMIT}"
         )
+        doc_part = f"  Doc: {self._doc_name}" if self._doc_name else ""
         yield Static(
-            f" TOOT PREVIEW — Account: {self._account_label}  |  {count_label}",
+            f" POSTING AS: {self._account_label}{doc_part}  |  {count_label}",
             id="toot-header",
         )
         yield Container(
@@ -290,11 +305,11 @@ class TootPreviewScreen(Screen):
             id="toot-top",
         )
         yield Container(
-            Static("", id="toot-spell"),
+            Static("Checking spelling...", id="toot-spell"),
             id="toot-bottom",
         )
         yield Static(
-            " Enter/O=Send  Esc/Q=Cancel",
+            f" Posting as: {self._account_label}  |  Enter/O=Send  Esc/Q=Cancel",
             id="toot-footer",
         )
 

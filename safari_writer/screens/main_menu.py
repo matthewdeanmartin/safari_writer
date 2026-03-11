@@ -238,15 +238,52 @@ class MainMenuScreen(Screen):
 
     def _context_text(self) -> str:
         from safari_writer.locale_info import LANGUAGE
+        from pathlib import Path
 
         state = self.app.state  # type: ignore[attr-defined]
-        edit_file = self._display_name(state.filename, _("(new document)"))
+
+        # Document name: title > filename leaf > "(new document)"
+        if state.doc_title:
+            edit_file = state.doc_title
+        else:
+            edit_file = self._display_name(state.filename, _("(new document)"))
+
         merge_filename = (
             state.mail_merge_db.filename if state.mail_merge_db is not None else ""
         )
         merge_file = self._display_name(merge_filename, _("(no merge data)"))
         lang = state.doc_language or LANGUAGE
-        return f" Edit: {edit_file}   Merge: {merge_file}   Lang: {lang}"
+
+        parts = [
+            f"Edit: {edit_file}",
+            f"Merge: {merge_file}",
+            f"Lang: {lang}",
+        ]
+
+        # Mastodon account from Safari Fed state
+        fed_state = getattr(self.app, "fed_state", None)
+        if fed_state is not None:
+            parts.append(f"Masto: {fed_state.account_label}")
+
+        # Git folder indicator
+        doc_path = state.filename
+        if doc_path:
+            folder = Path(doc_path).resolve().parent
+        else:
+            folder = Path.cwd()
+        if (folder / ".git").exists() or any(
+            (folder / (".git")).exists()
+            for folder in [folder] + list(folder.parents)[:3]
+        ):
+            # Find the git root name
+            git_root = folder
+            for candidate in [folder] + list(folder.parents)[:4]:
+                if (candidate / ".git").exists():
+                    git_root = candidate
+                    break
+            parts.append(f"Git: {git_root.name}")
+
+        return " " + "   ".join(parts)
 
     def _display_name(self, filename: str, empty_label: str) -> str:
         if not filename:

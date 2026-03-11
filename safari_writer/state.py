@@ -77,6 +77,8 @@ class AppState:
     mail_merge_db: MailMergeDB | None = None
     # Document language for spellcheck (i18n Level 1)
     doc_language: str = ""
+    # Document title (display name without filesystem save)
+    doc_title: str = ""
     # File type awareness (spec 10)
     file_profile: FileProfile = field(
         default_factory=lambda: resolve_file_profile("untitled.sfw")

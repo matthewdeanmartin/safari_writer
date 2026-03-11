@@ -145,7 +145,11 @@ def test_build_fed_state_uses_demo_posts_only_without_accounts(monkeypatch):
     assert state.account_label == "Demo packet"
 
 
-def test_build_fed_state_starts_configured_account_empty_before_sync():
+def test_build_fed_state_starts_configured_account_empty_before_sync(monkeypatch):
+    import safari_fed.app as fed_app
+
+    monkeypatch.setattr(fed_app, "_load_fed_cache", lambda: {})
+
     class FakeClient:
         def __init__(self, label: str) -> None:
             self.identity = type("Identity", (), {"label": label})()
@@ -312,7 +316,7 @@ def test_state_switches_between_account_sessions():
 
 def test_screen_css_uses_roomier_layout():
     assert "min-width: 140;" in SafariFedMainScreen.CSS
-    assert "width: 82;" in SafariFedMainScreen.CSS
+    assert "width: 100;" in SafariFedMainScreen.CSS
 
 
 def test_default_mount_renders_safari_fed_shell():
@@ -475,7 +479,8 @@ def test_writer_post_to_mastodon_sends_buffer(monkeypatch):
     # post_to_mastodon now opens a preview screen; simulate confirming it
     app._on_toot_confirm(True)
 
-    assert popped == [True]
+    # pop_screen is no longer called from _on_toot_confirm (screen dismissed via callback)
+    assert popped == []
     assert app._fed_compose_active is False
     assert any("queued locally" in m.lower() or "posted" in m.lower() for m in messages)
 

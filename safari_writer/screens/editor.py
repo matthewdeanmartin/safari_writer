@@ -425,6 +425,7 @@ class EditorArea(Widget, can_focus=True):
         self._replace_active = False
         self._heading_active = False
         self._chain_active = False
+        self._title_active = False
         self._input_buffer = ""
         self._highlighter = create_highlighter(state.file_profile)
         self._last_undo_action: str = ""
@@ -756,6 +757,7 @@ class EditorArea(Widget, can_focus=True):
             or self._replace_active
             or self._heading_active
             or self._chain_active
+            or self._title_active
         ):
             self._handle_prompt_key(event)
             return
@@ -947,6 +949,10 @@ class EditorArea(Widget, can_focus=True):
         elif key == "ctrl+shift+c":
             self._prompt_chain()
 
+        # Document title (display name without filesystem save)
+        elif key == "ctrl+shift+n":
+            self._prompt_title()
+
         # Print / Export — delegate to app-level handler
         elif key == "ctrl+p":
             self._app_host()._action_print()
@@ -1019,6 +1025,7 @@ class EditorArea(Widget, can_focus=True):
             self._replace_active = False
             self._heading_active = False
             self._chain_active = False
+            self._title_active = False
             self._input_buffer = ""
             self._set_screen_message(_("Cancelled"))
             event.stop()
@@ -1066,11 +1073,18 @@ class EditorArea(Widget, can_focus=True):
                     self._set_screen_message(f"Chain: {filename}")
                 else:
                     self._set_screen_message(_("Cancelled"))
+            elif self._title_active:
+                self._title_active = False
+                title = self._input_buffer.strip()
+                self.state.doc_title = title
+                self._screen_host().update_status()
+                label = title if title else "(cleared)"
+                self._set_screen_message(f"Document title set: {label}")
         elif key == "backspace":
             self._input_buffer = self._input_buffer[:-1]
             self._set_screen_message(self._current_prompt() + self._input_buffer + "█")
         elif event.character and event.character.isprintable():
-            max_len = 1 if self._heading_active else 37
+            max_len = 1 if self._heading_active else (60 if self._title_active else 37)
             if len(self._input_buffer) < max_len:
                 self._input_buffer += event.character
                 self._set_screen_message(
@@ -1089,6 +1103,8 @@ class EditorArea(Widget, can_focus=True):
             return "Heading level (1-9): "
         if self._chain_active:
             return "Chain to file: "
+        if self._title_active:
+            return "Document title: "
         return ""
 
     # ------------------------------------------------------------------
@@ -1418,6 +1434,13 @@ class EditorArea(Widget, can_focus=True):
         self._chain_active = True
         self._input_buffer = ""
 
+    def _prompt_title(self) -> None:
+        """Prompt for a document display title (stored without filesystem save)."""
+        current = self.state.doc_title or ""
+        self._set_screen_message(f"Document title: {current}█")
+        self._title_active = True
+        self._input_buffer = current
+
     def _backspace(self) -> None:
         s = self.state
         row, col = s.cursor_row, s.cursor_col
@@ -1716,6 +1739,7 @@ class EditorScreen(Screen):
 
     def _status_text(self) -> str:
         from safari_writer.locale_info import LANGUAGE
+        from safari_writer.path_utils import leaf_name
 
         s = self.state
         mode = "Insert" if s.insert_mode else "Type-over"
@@ -1723,7 +1747,33 @@ class EditorScreen(Screen):
         storage = "SFW" if s.storage_mode == StorageMode.FORMATTED else "PLAIN"
         profile_name = s.file_profile.display_name
         lang = s.doc_language or LANGUAGE
-        return f" Bytes Free: {s.bytes_free:,}   [{mode}]   [{caps}]   [{storage}]   [{profile_name}]   [{lang}]"
+
+        # Document name: title > filename leaf > "(new)"
+        if s.doc_title:
+            doc_name = s.doc_title
+        elif s.filename:
+            doc_name = leaf_name(s.filename)
+        else:
+            doc_name = "(new)"
+
+        # Mastodon account from Safari Fed state
+        try:
+            fed_state = getattr(self.app, "fed_state", None)
+        except Exception:
+            fed_state = None
+        acct_label = fed_state.account_label if fed_state is not None else ""
+
+        parts = [
+            f" [{doc_name}]",
+            f"[{mode}]",
+            f"[{caps}]",
+            f"[{storage}]",
+            f"[{profile_name}]",
+            f"[{lang}]",
+        ]
+        if acct_label:
+            parts.append(f"[Masto: {acct_label}]")
+        return "   ".join(parts)
 
     def _tab_bar_text(self) -> str:
         try:

@@ -23,6 +23,7 @@ from safari_writer.screens.index_screen import (
     _find_external_drives,
 )
 from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen, TootPreviewScreen
+from safari_writer.screens.git_screen import GitPublishScreen
 from safari_writer.screens.style_switcher import StyleSwitcherScreen
 from safari_writer.screens.doctor import DoctorScreen
 from safari_writer.document_io import load_demo_document_buffer, load_demo_mail_merge_db, load_document_buffer, load_sfw_language, serialize_document_buffer
@@ -301,7 +302,9 @@ class SafariWriterApp(App):
         self.push_screen(PrintScreen(), callback=self._on_print_choice)
 
     def _on_print_choice(self, choice: str | None) -> None:
-        if choice == "ansi":
+        if choice == "git":
+            self.push_screen(GitPublishScreen(document_path=self.state.filename or ""))
+        elif choice == "ansi":
             self.push_screen(PrintPreviewScreen(self.state))
         elif choice == "markdown":
             base = self.state.filename
@@ -795,8 +798,13 @@ class SafariWriterApp(App):
             self.set_message(_("Cannot post an empty document"))
             return
         account_label = getattr(self.fed_state, "account_label", "unknown")
+        from safari_writer.path_utils import leaf_name
+        doc_name = (
+            self.state.doc_title
+            or (leaf_name(self.state.filename) if self.state.filename else "")
+        )
         self.push_screen(
-            TootPreviewScreen(text, account_label, self.state.doc_language),
+            TootPreviewScreen(text, account_label, self.state.doc_language, doc_name=doc_name),
             callback=self._on_toot_confirm,
         )
 
@@ -812,7 +820,6 @@ class SafariWriterApp(App):
         self.fed_state.compose_lines = text.splitlines()
         message = self.fed_state.send_compose_post()
         self._fed_compose_active = False
-        self.pop_screen()
         self.set_message(message)
 
     def _action_safari_base(self) -> None:

@@ -36,6 +36,7 @@ def make_editor(text: str = "") -> EditorArea:
         ed._replace_active = False
         ed._heading_active = False
         ed._chain_active = False
+        ed._title_active = False
         ed._input_buffer = ""
         ed._last_undo_action = ""
     return ed
@@ -365,13 +366,9 @@ class TestEditorFooter:
     def test_status_bar_shows_full_editor_status(self):
         state = AppState(filename="draft.sfw", insert_mode=False, caps_mode=True)
         screen = EditorScreen(state)
+        text = screen._status_text()
 
-        with patch.object(
-            AppState, "bytes_free", new_callable=PropertyMock, return_value=43210
-        ):
-            text = screen._status_text()
-
-        assert "Bytes Free: 43,210" in text
+        assert "[draft.sfw]" in text
         assert "[Type-over]" in text
         assert "[Uppercase]" in text
         assert "[SFW]" in text

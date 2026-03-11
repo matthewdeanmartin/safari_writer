@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from textwrap import shorten, wrap
 
-from textual import events
+from textual import events, work
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal
 from textual.screen import ModalScreen, Screen
+from textual.timer import Timer
 from textual.widgets import Static
 
 from safari_fed.state import (
@@ -151,8 +152,8 @@ SafariFedMainScreen {
 }
 
 #fed-sidebar {
-    width: 82;
-    min-width: 76;
+    width: 100;
+    min-width: 90;
     height: 1fr;
     border-right: solid $accent;
     layout: vertical;
@@ -196,6 +197,9 @@ SafariFedMainScreen {
 """
 
 
+_SPINNER_FRAMES = ("⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏")
+
+
 class SafariFedMainScreen(Screen[None]):
     """Single-screen retro fediverse shell."""
 
@@ -204,6 +208,9 @@ class SafariFedMainScreen(Screen[None]):
     def __init__(self, state: SafariFedState) -> None:
         super().__init__()
         self.state = state
+        self._spinner_frame: int = 0
+        self._spinner_active: bool = False
+        self._spinner_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
         yield Static("", id="fed-title")
@@ -222,6 +229,30 @@ class SafariFedMainScreen(Screen[None]):
     def on_mount(self) -> None:
         self._refresh()
 
+    def _start_spinner(self) -> None:
+        if self._spinner_active:
+            return
+        self._spinner_active = True
+        self._spinner_frame = 0
+        self._spinner_timer = self.set_interval(0.1, self._tick_spinner)
+
+    def _stop_spinner(self) -> None:
+        self._spinner_active = False
+        if self._spinner_timer is not None:
+            self._spinner_timer.stop()
+            self._spinner_timer = None
+        self._refresh_title()
+
+    def _tick_spinner(self) -> None:
+        self._spinner_frame = (self._spinner_frame + 1) % len(_SPINNER_FRAMES)
+        self._refresh_title()
+
+    def _refresh_title(self) -> None:
+        try:
+            self.query_one("#fed-title", Static).update(self._render_title())
+        except Exception:
+            pass
+
     def set_message(self, message: str) -> None:
         """Update the status message."""
 
@@ -238,10 +269,12 @@ class SafariFedMainScreen(Screen[None]):
         if key == "a":
             self.set_message(self.state.cycle_account(1))
             self._refresh()
+            self._persist_state()
             return
         if key.isdigit() and key != "0":
             self.set_message(self.state.select_account_by_number(int(key)))
             self._refresh()
+            self._persist_state()
             return
         if key in {"up", "k"}:
             self.state.move_selection(-1)
@@ -345,8 +378,7 @@ class SafariFedMainScreen(Screen[None]):
             self._refresh()
             return
         if key == "u":
-            self.set_message(self.state.sync_from_api())
-            self._refresh()
+            self._sync_in_background()
             return
         if key == "w":
             self._open_in_writer()
@@ -482,7 +514,38 @@ class SafariFedMainScreen(Screen[None]):
         else:
             self.set_message("Writer handoff unavailable")
 
+    def _sync_in_background(self) -> None:
+        """Start a Mastodon sync in a worker thread with a spinner indicator."""
+        if self._spinner_active:
+            self.set_message("Sync already in progress…")
+            return
+        self._start_spinner()
+        self.set_message("Syncing…")
+        self._do_sync_worker()
+
+    @work(thread=True, exclusive=True)
+    def _do_sync_worker(self) -> None:
+        """Worker: runs sync off the main thread, then posts result back."""
+        message = self.state.sync_from_api()
+        self.app.call_from_thread(self._on_sync_done, message)
+
+    def _on_sync_done(self, message: str) -> None:
+        """Called on the main thread after sync completes."""
+        self._stop_spinner()
+        self.set_message(message)
+        self._refresh()
+        self._persist_state()
+
+    def _persist_state(self) -> None:
+        """Persist account selection and cached posts to disk."""
+        try:
+            from safari_fed.app import persist_fed_state
+            persist_fed_state(self.state)
+        except Exception:
+            pass
+
     def _quit_fed(self) -> None:
+        self._persist_state()
         if hasattr(self.app, "quit_fed"):
             self.app.quit_fed()  # type: ignore[attr-defined]
         else:
@@ -509,8 +572,9 @@ class SafariFedMainScreen(Screen[None]):
         )
 
     def _render_title(self) -> str:
+        spinner = f"{_SPINNER_FRAMES[self._spinner_frame]} " if self._spinner_active else " "
         return (
-            f" SAFARI-FED  {self.state.current_folder}  "
+            f"{spinner}SAFARI-FED  {self.state.current_folder}  "
             f"{self.state.unread_total()} unread  "
             f"{self.state.mention_total()} mentions  "
             f"acct={self.state.account_label}  "
@@ -544,16 +608,18 @@ class SafariFedMainScreen(Screen[None]):
         posts = self.state.visible_posts()
         if not posts:
             return "No posts in this folder."
+        # col layout: cursor(1) idx(2) sp flag(1) sp author(42) sp age(6) sp bst(3) sp fav(3) sp preview
+        hdr_author = f"{'Author/Handle':<42}"
         lines = [
-            "#  F  Author/Handle               Age    Bst Fav Preview",
-            "-" * 74,
+            f" # F {hdr_author} Age    Bst Fav Preview",
+            "-" * 92,
         ]
         for index, post in enumerate(posts, start=1):
             cursor = ">" if index - 1 == self.state.selected_index else " "
-            author = self._clip(f"{post.author} {post.handle}", 28)
-            preview = self._clip(post.preview_text, 34)
+            author = self._clip(f"{post.author} {post.handle}", 42)
+            preview = self._clip(post.preview_text, 26)
             lines.append(
-                f"{cursor}{index:>2} {self._flag(post):<2} {author:<28} "
+                f"{cursor}{index:>2} {self._flag(post):<1} {author:<42} "
                 f"{post.age:<6} {post.boosts:>3} {post.favourites:>3} {preview}"
             )
         return "\n".join(lines)
@@ -587,9 +653,9 @@ class SafariFedMainScreen(Screen[None]):
             f"Visibility: {post.visibility}",
             f"Flags: {', '.join(post.flags) if post.flags else 'none'}",
             f"Tags: {' '.join(post.tags) if post.tags else '(none)'}",
-            "-" * 58,
+            "-" * 86,
         ]
-        lines.extend(self._wrap_block(post.content_lines, width=58, limit=12))
+        lines.extend(self._wrap_block(post.content_lines, width=86, limit=16))
         if post.attachments:
             lines.append("")
             lines.extend(post.attachments)
@@ -602,12 +668,12 @@ class SafariFedMainScreen(Screen[None]):
             f"Posted:   {post.posted_at}",
             f"CW:       {post.cw}",
             f"Tags:     {' '.join(post.tags) if post.tags else 'none'}",
-            "-" * 58,
+            "-" * 86,
         ]
-        lines.extend(self._wrap_block(post.content_lines, width=58, limit=18))
+        lines.extend(self._wrap_block(post.content_lines, width=86, limit=24))
         lines.extend(
             [
-                "-" * 58,
+                "-" * 86,
                 f"Replies: {post.replies}   Boosts: {post.boosts}   Favourites: {post.favourites}",
             ]
         )
