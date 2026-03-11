@@ -22,3 +22,5 @@ Press **P** from the Main Menu or **Ctrl + P** in the editor.
 - **ANSI Preview** — See how your document looks with margins and formatting.
 - **Export to Markdown** — Save as a `.md` file for modern use.
 - **Export to PostScript** — Save as a `.ps` file for high-quality printing.
+- **Post to Mastodon** — Send the document as a toot via Safari Fed. See [Posting to Mastodon](mastodon.md).
+- **Git Publish** — Commit and push to a git remote (e.g. a Pelican blog). See [Blog Publishing with Git](blog_publishing.md).

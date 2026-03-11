@@ -13,17 +13,12 @@ pipx install safari-writer
 You can run the main editor or the companion tools directly:
 
 ```bash
-# Start the word processor
-safari-writer
-
-# Start the file manager
-safari-dos
-
-# Start the help assistant
-safari-chat
-
-# Start the Mastodon client
-safari-fed
+safari-writer # Word processor 
+safari-dos # File browser/manager
+safari-chat # Eliza style help chat bot
+safari-fed # Mastodon client
+safari-base  # xbase clone
+safari-repl # BASIC repl
 ```
 
 Follow the menus. 
@@ -41,6 +36,20 @@ Follow the menus.
 - **Safari Chat**: A "Clippy" style helper based on ELIZA. It answers your questions using the help docs and offers emotional support—no LLMs involved.
 - **Safari Base**: An alternative UI for the mail merge data files (currently in extreme beta).
 - **Safari Fed**: A calm, keyboard-driven Mastodon client styled after Pine and retro BBS readers. Queue-based reading, folder metaphors, thread view, and a direct handoff to Safari Writer.
+- **Safari BASIC**: Atari BASIC compatible BASIC for macros
+
+## Current Limitations
+
+- Doesn't support original binary AtariWriter files
+- Keybindings still evolving.
+
+## Trademarks and stuff
+
+I have no relationship to Atari. This is Safari Writer and has no relationship to Atari.
+
+License is MIT.
+
+Dual licensed with a Shareware license. Dual meaning, you pick which of the two you want to govern our relationship.
 
 ## Languages / Internationalization
 
@@ -71,14 +80,3 @@ set SAFARI_LOCALE=eo && safari-writer
 ```
 
 You can use a bare language code (`eo`) or a full IETF tag (`eo_EO`). If no catalog exists for the full tag, the bare code is tried automatically. If neither is found, the app falls back to English.
-
-## Roadmap
-
-- **Safari Basic**: An Atari BASIC subset REPL.
-- Maybe support for the old binary format of Atari Writer files. 
-
-## Trademarks and stuff
-
-I have no relationship to Atari. This is Safari Writer and has no relationship to Atari.
-
-License is MIT.

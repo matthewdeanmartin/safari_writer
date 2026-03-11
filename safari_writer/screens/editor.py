@@ -167,16 +167,16 @@ HelpScreen {
 """
 
 HELP_TEXT = (
-    "^X Cut  ^C Copy  ^V Paste  ^F Find  ^B Bold  ^U Underline  "
+    "^X Cut  ^C Copy  ^V Paste  ^F Find  ^S Save  ^B Bold  ^U Underline  "
     "^E Center  ^G Elongate  F1 Help  Esc Menu"
 )
 HELP_TEXT_PLAIN = (
     "^X Cut  ^C Copy  ^V Paste  ^F Find  ^Z Undo  "
-    "^P Print/Export  F1 Help  Esc Menu"
+    "^S Save  ^P Print/Export  F1 Help  Esc Menu"
 )
 HELP_TEXT_FED = (
     "^X Cut  ^C Copy  ^V Paste  ^F Find  ^Z Undo  "
-    "^P Post/Export  F1 Help  Esc Cancel"
+    "^S Save  ^P Post/Export  F1 Help  Esc Cancel"
 )
 EDITOR_RESERVED_LINES = 4
 
@@ -952,6 +952,10 @@ class EditorArea(Widget, can_focus=True):
         # Document title (display name without filesystem save)
         elif key == "ctrl+shift+n":
             self._prompt_title()
+
+        # Save — delegate to app-level save handler
+        elif key == "ctrl+s":
+            self._app_host()._action_save_via_safari_dos()
 
         # Print / Export — delegate to app-level handler
         elif key == "ctrl+p":
