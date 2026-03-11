@@ -264,7 +264,7 @@ TootPreviewScreen {
 _TOOT_CHAR_LIMIT = 500
 
 
-class TootPreviewScreen(Screen):
+class TootPreviewScreen(ModalScreen[bool]):
     """Full-screen preview of the toot before sending.
 
     Top half: the toot text with character count and active account.

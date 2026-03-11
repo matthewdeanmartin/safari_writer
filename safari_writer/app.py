@@ -808,7 +808,7 @@ class SafariWriterApp(App):
             callback=self._on_toot_confirm,
         )
 
-    def _on_toot_confirm(self, confirmed: bool) -> None:
+    def _on_toot_confirm(self, confirmed: bool | None) -> None:
         """Actually send the toot after the user confirms from the preview screen."""
         if not confirmed:
             self.set_message(_("Toot cancelled"))

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional, Protocol, Sequence, cast
 
 from textual import events
 from textual.app import ComposeResult
@@ -254,12 +253,15 @@ def _git_status(repo_path: Path) -> str:
         return f"[red]Error: {exc}[/red]"
 
 
-def _remote_url(repo: object) -> str:
+class _GitRemoteLike(Protocol):
+    url: str
+
+
+def _remote_url(repo: Any) -> str:
     try:
-        import git  # type: ignore[import]
-        r = repo  # type: ignore[assignment]
-        if r.remotes:  # type: ignore[union-attr]
-            return r.remotes[0].url  # type: ignore[union-attr]
+        remotes = cast(Sequence[_GitRemoteLike], repo.remotes)
+        if remotes:
+            return remotes[0].url
         return "(no remote)"
     except Exception:
         return "(unknown)"
@@ -327,7 +329,13 @@ def _git_log(repo_path: Path, count: int = 20) -> str:
         lines: list[str] = []
         for commit in list(repo.iter_commits(max_count=count)):
             sha = commit.hexsha[:7]
-            msg = commit.message.split("\n")[0][:50]
+            raw_message = commit.message
+            message = (
+                raw_message.decode("utf-8", errors="replace")
+                if isinstance(raw_message, bytes)
+                else raw_message
+            )
+            msg = message.split("\n")[0][:50]
             date = commit.committed_datetime.strftime("%m/%d %H:%M")
             lines.append(f"[dim]{sha}[/dim] [cyan]{date}[/cyan]\n  {msg}")
         return "\n".join(lines) if lines else "(no commits)"
