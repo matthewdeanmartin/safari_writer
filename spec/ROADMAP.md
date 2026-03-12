@@ -1,9 +1,13 @@
 # Roadmap
 
-- dBase III style table manager
-- Eliza style help Bot
-- better print support
-- Atari style font
-- Syntax highlighting
-- No formatting codes mode
-- English syntax highligting
+- Slides. PPT but as if Atari did it.
+- Image viewer with 2600, 800 styles.
+- Basic macros that drive the app
+- ASM syntax as alternate language
+- dBase III style table manager- doing!
+- Eliza style help Bot- doing!
+- better print support, e.g. pdf, latex. Generation.
+- Atari style font. TODO
+- Syntax highlighting. In progress!
+- No formatting codes mode. Markdown
+- English syntax highligting. Not started?

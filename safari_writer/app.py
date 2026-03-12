@@ -1,4 +1,5 @@
 """Safari Writer Textual application."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -22,11 +23,21 @@ from safari_writer.screens.index_screen import (
     DrivePickerScreen,
     _find_external_drives,
 )
-from safari_writer.screens.print_screen import PrintScreen, PrintPreviewScreen, TootPreviewScreen
+from safari_writer.screens.print_screen import (
+    PrintScreen,
+    PrintPreviewScreen,
+    TootPreviewScreen,
+)
 from safari_writer.screens.git_screen import GitPublishScreen
 from safari_writer.screens.style_switcher import StyleSwitcherScreen
 from safari_writer.screens.doctor import DoctorScreen
-from safari_writer.document_io import load_demo_document_buffer, load_demo_mail_merge_db, load_document_buffer, load_sfw_language, serialize_document_buffer
+from safari_writer.document_io import (
+    load_demo_document_buffer,
+    load_demo_mail_merge_db,
+    load_document_buffer,
+    load_sfw_language,
+    serialize_document_buffer,
+)
 from safari_writer.file_types import StorageMode, resolve_file_profile
 from safari_writer.format_codec import strip_controls, has_controls, is_sfw
 from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
@@ -332,6 +343,18 @@ class SafariWriterApp(App):
                 FilePromptScreen("Export PostScript to", base),
                 callback=self._on_export_ps,
             )
+        elif choice == "pdf":
+            base = self.state.filename
+            if base and "." in base:
+                base = base.rsplit(".", 1)[0] + ".pdf"
+            elif base:
+                base += ".pdf"
+            else:
+                base = "document.pdf"
+            self.push_screen(
+                FilePromptScreen("Export PDF to", base),
+                callback=self._on_export_pdf,
+            )
 
     def _on_export_md(self, filename: str | None) -> None:
         if not filename:
@@ -358,6 +381,20 @@ class SafariWriterApp(App):
             )
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported PostScript: {filename}")
+        except OSError as e:
+            self.set_message(f"Export error: {e}")
+
+    def _on_export_pdf(self, filename: str | None) -> None:
+        if not filename:
+            return
+        try:
+            from safari_writer.export_pdf import export_pdf
+
+            pdf_bytes = export_pdf(
+                self.state.buffer, self.state.fmt, self.state.mail_merge_db
+            )
+            Path(filename).write_bytes(pdf_bytes)
+            self.set_message(f"Exported PDF: {filename}")
         except OSError as e:
             self.set_message(f"Export error: {e}")
 
@@ -672,6 +709,7 @@ class SafariWriterApp(App):
         if self.reader_state is None:
             self.reader_state = SafariReaderState()
         from safari_reader.services import load_library
+
         load_library(self.reader_state)
         self.push_screen(SafariReaderMainMenuScreen(self.reader_state))
 
@@ -780,7 +818,9 @@ class SafariWriterApp(App):
         self.state.file_profile = resolve_file_profile(f"{title}.md")
         self.state.clear_undo()
         self._fed_compose_active = True
-        self.set_message(f"Compose: {title}  |  Ctrl+P to Post/Export  |  Esc to cancel")
+        self.set_message(
+            f"Compose: {title}  |  Ctrl+P to Post/Export  |  Esc to cancel"
+        )
         self._open_editor()
 
     def finish_fed_compose(self) -> None:
@@ -799,12 +839,14 @@ class SafariWriterApp(App):
             return
         account_label = getattr(self.fed_state, "account_label", "unknown")
         from safari_writer.path_utils import leaf_name
-        doc_name = (
-            self.state.doc_title
-            or (leaf_name(self.state.filename) if self.state.filename else "")
+
+        doc_name = self.state.doc_title or (
+            leaf_name(self.state.filename) if self.state.filename else ""
         )
         self.push_screen(
-            TootPreviewScreen(text, account_label, self.state.doc_language, doc_name=doc_name),
+            TootPreviewScreen(
+                text, account_label, self.state.doc_language, doc_name=doc_name
+            ),
             callback=self._on_toot_confirm,
         )
 

@@ -8,14 +8,16 @@ from safari_base.lang.types import (
     AppendBlankStmt, AppendFromStmt, AssignStmt, AverageStmt, BinOp,
     CdStmt, CloseStmt, CommentStmt, ContinueStmt, CopyFileStmt,
     CopyStructureStmt, CountStmt, CreateFromStmt, CreateTableStmt,
-    DeleteStmt, DirStmt, DisplayStructureStmt, DoCaseStmt, DoProgramStmt,
-    DoWhileStmt, EraseStmt, ExitStmt, Expr, FieldRef, ForStmt, FuncCall,
-    GoStmt, Ident, IfStmt, IndexOnStmt, ListStmt, LocateStmt, LogicalLit,
-    LoopStmt, MdStmt, NumberLit, PackStmt, PrintStmt, QuitStmt, RdStmt,
-    RecallStmt, RenameStmt, ReplaceStmt, ReturnStmt, ScanStmt, SeekStmt,
-    SelectStmt, SetDefaultStmt, SetDeletedStmt, SetFilterStmt, SetOrderStmt,
-    SetStmt, SkipStmt, Stmt, StoreStmt, StringLit, SumStmt, Token,
-    TokenType, UnaryOp, UseStmt, ZapStmt,
+    DefFnStmt, DeleteStmt, DimHashStmt, DirStmt, DisplayStructureStmt,
+    DoCaseStmt, DoProgramStmt, DoWhileStmt, EraseStmt, ExitStmt, Expr,
+    FieldRef, ForEachStmt, ForStmt, FuncCall, FuncDefStmt, GoStmt,
+    HashAccessExpr, HashAssignStmt, Ident, IfStmt, IndexOnStmt, ListStmt,
+    LocateStmt, LogicalLit, LoopStmt, MdStmt, NumberLit, PackStmt,
+    PrintStmt, ProcCallStmt, ProcDefStmt, QuitStmt, RdStmt, RecallStmt,
+    RenameStmt, ReplaceStmt, ReturnStmt, ScanStmt, SeekStmt, SelectStmt,
+    SetDefaultStmt, SetDeletedStmt, SetFilterStmt, SetOrderStmt, SetStmt,
+    SkipStmt, Stmt, StoreStmt, StringLit, SumStmt, Token, TokenType,
+    UnaryOp, UseStmt, ZapStmt,
 )
 
 
@@ -189,17 +191,29 @@ class Parser:
             return expr
 
         if tok.type in (TokenType.IDENT, TokenType.KEYWORD):
-            name = self._advance().value
-            # Check for function call
-            if self._peek().type == TokenType.LPAREN:
-                self._advance()  # consume (
+            # Handle FN name(args) — DEF FN call syntax
+            if tok.type == TokenType.KEYWORD and tok.value.upper() == "FN":
+                self._advance()  # consume FN
+                fn_name = self._read_ident_or_string().upper()
+                self._expect(TokenType.LPAREN)
                 args: list[Expr] = []
                 if self._peek().type != TokenType.RPAREN:
                     args.append(self._parse_expr())
                     while self._match_type(TokenType.COMMA):
                         args.append(self._parse_expr())
                 self._expect(TokenType.RPAREN)
-                return FuncCall(name.upper(), args)
+                return FuncCall("FN_" + fn_name, args)
+            name = self._advance().value
+            # Check for function call
+            if self._peek().type == TokenType.LPAREN:
+                self._advance()  # consume (
+                args2: list[Expr] = []
+                if self._peek().type != TokenType.RPAREN:
+                    args2.append(self._parse_expr())
+                    while self._match_type(TokenType.COMMA):
+                        args2.append(self._parse_expr())
+                self._expect(TokenType.RPAREN)
+                return FuncCall(name.upper(), args2)
             # Check for alias->field
             if self._peek().type == TokenType.ARROW:
                 self._advance()  # consume ->
@@ -325,12 +339,16 @@ class Parser:
             return self._parse_sum(line)
         if kw == "AVERAGE":
             return self._parse_average(line)
+        if kw == "DIM":
+            return self._parse_dim(line)
+        if kw == "PRINT":
+            return self._parse_print(line)
         if kw == "IF":
             return self._parse_if(line)
         if kw == "DO":
             return self._parse_do(line)
         if kw == "FOR":
-            return self._parse_for(line)
+            return self._parse_for_or_foreach(line)
         if kw == "SCAN":
             return self._parse_scan(line)
         if kw == "RETURN":
@@ -359,6 +377,18 @@ class Parser:
             return self._parse_md(line)
         if kw == "RD":
             return self._parse_rd(line)
+        if kw == "FUNC":
+            return self._parse_func_def(line)
+        if kw == "PROC":
+            return self._parse_proc_def(line)
+        if kw == "DEF":
+            return self._parse_def_fn(line)
+        # END FUNC / END PROC are consumed by their parent parsers;
+        # if we see a bare END here, skip it
+        if kw == "END":
+            self._advance()
+            self._skip_to_eol()
+            return None
 
         # Unknown keyword — consume the line
         self._advance()
@@ -366,13 +396,36 @@ class Parser:
         raise ParseError(f"Unknown command: {kw} {rest}", line_number=line)
 
     def _parse_ident_statement(self, line: int) -> Stmt:
-        """Parse a statement starting with an identifier (assignment)."""
+        """Parse a statement starting with an identifier (assignment, hash assign, or proc call)."""
         name = self._advance().value
         if self._match_type(TokenType.EQ):
             expr = self._parse_expr()
             self._skip_to_eol()
             return AssignStmt(var=name, expr=expr, line=line)
-        raise ParseError(f"Expected '=' after '{name}'", line_number=line)
+        # NAME(expr) = expr  (hash assignment)  OR  NAME(args) (proc call)
+        if self._peek().type == TokenType.LPAREN:
+            self._advance()  # consume (
+            args: list[Expr] = []
+            if self._peek().type != TokenType.RPAREN:
+                args.append(self._parse_expr())
+                while self._match_type(TokenType.COMMA):
+                    args.append(self._parse_expr())
+            self._expect(TokenType.RPAREN)
+            # Hash assignment: NAME(key) = expr
+            if self._peek().type == TokenType.EQ:
+                self._advance()  # consume =
+                if len(args) != 1:
+                    raise ParseError(
+                        f"Hash assignment requires exactly 1 key, got {len(args)}",
+                        line_number=line,
+                    )
+                val_expr = self._parse_expr()
+                self._skip_to_eol()
+                return HashAssignStmt(name=name.upper(), key=args[0], expr=val_expr, line=line)
+            # Procedure call
+            self._skip_to_eol()
+            return ProcCallStmt(name=name.upper(), args=args, line=line)
+        raise ParseError(f"Expected '=' or '(' after '{name}'", line_number=line)
 
     def _skip_to_eol(self) -> None:
         """Skip to end of current statement (newline or EOF)."""
@@ -776,8 +829,38 @@ class Parser:
         self._skip_to_eol()
         return DoWhileStmt(condition=condition, body=body, line=line)
 
-    def _parse_for(self, line: int) -> ForStmt:
+    def _parse_dim(self, line: int) -> DimHashStmt:
+        """Parse DIM FOO{}"""
+        self._advance()  # consume DIM
+        name = self._read_ident_or_string().upper()
+        self._expect(TokenType.LBRACE)
+        self._expect(TokenType.RBRACE)
+        self._skip_to_eol()
+        return DimHashStmt(name=name, line=line)
+
+    def _parse_for_or_foreach(self, line: int) -> ForStmt | ForEachStmt:
+        """Parse FOR ... or FOR EACH ..."""
         self._advance()  # consume FOR
+        # Check for FOR EACH
+        if self._match_keyword("EACH"):
+            return self._parse_for_each(line)
+        return self._parse_for_body(line)
+
+    def _parse_for_each(self, line: int) -> ForEachStmt:
+        """Parse FOR EACH var IN hashname ... NEXT"""
+        var = self._read_ident_or_string()
+        self._expect(TokenType.KEYWORD, "IN")
+        hashmap = self._read_ident_or_string().upper()
+        self._skip_to_eol()
+        self._skip_newlines()
+        body = self._parse_block("ENDFOR", "NEXT")
+        if self._match_keyword("ENDFOR") or self._match_keyword("NEXT"):
+            pass
+        self._skip_to_eol()
+        return ForEachStmt(var=var, hashmap=hashmap, body=body, line=line)
+
+    def _parse_for_body(self, line: int) -> ForStmt:
+        # FOR already consumed by _parse_for_or_foreach
         var = self._read_ident_or_string()
         self._expect(TokenType.EQ)
         start = self._parse_expr()
@@ -852,6 +935,56 @@ class Parser:
         dirname = self._read_ident_or_string()
         self._skip_to_eol()
         return RdStmt(dirname=dirname, line=line)
+
+    def _parse_param_list(self) -> list[str]:
+        """Parse (A, B, C) parameter list, return list of names."""
+        params: list[str] = []
+        self._expect(TokenType.LPAREN)
+        if self._peek().type != TokenType.RPAREN:
+            params.append(self._read_ident_or_string())
+            while self._match_type(TokenType.COMMA):
+                params.append(self._read_ident_or_string())
+        self._expect(TokenType.RPAREN)
+        return params
+
+    def _parse_func_def(self, line: int) -> FuncDefStmt:
+        """Parse FUNC name(params) ... END FUNC"""
+        self._advance()  # consume FUNC
+        name = self._read_ident_or_string().upper()
+        params = self._parse_param_list()
+        self._skip_to_eol()
+        self._skip_newlines()
+        body = self._parse_block("END")
+        # Expect END FUNC
+        self._expect(TokenType.KEYWORD, "END")
+        self._expect(TokenType.KEYWORD, "FUNC")
+        self._skip_to_eol()
+        return FuncDefStmt(name=name, params=params, body=body, line=line)
+
+    def _parse_proc_def(self, line: int) -> ProcDefStmt:
+        """Parse PROC name(params) ... END PROC"""
+        self._advance()  # consume PROC
+        name = self._read_ident_or_string().upper()
+        params = self._parse_param_list()
+        self._skip_to_eol()
+        self._skip_newlines()
+        body = self._parse_block("END")
+        # Expect END PROC
+        self._expect(TokenType.KEYWORD, "END")
+        self._expect(TokenType.KEYWORD, "PROC")
+        self._skip_to_eol()
+        return ProcDefStmt(name=name, params=params, body=body, line=line)
+
+    def _parse_def_fn(self, line: int) -> DefFnStmt:
+        """Parse DEF FN name(params) = expr"""
+        self._advance()  # consume DEF
+        self._expect(TokenType.KEYWORD, "FN")
+        name = self._read_ident_or_string().upper()
+        params = self._parse_param_list()
+        self._expect(TokenType.EQ)
+        expr = self._parse_expr()
+        self._skip_to_eol()
+        return DefFnStmt(name=name, params=params, expr=expr, line=line)
 
     def _parse_block(self, *terminators: str) -> list[Stmt]:
         """Parse statements until we see one of the terminator keywords."""

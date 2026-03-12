@@ -19,6 +19,7 @@ import safari_writer.locale_info as _locale_info
 def _(s: str) -> str:
     return _locale_info.get_translation().gettext(s)
 
+
 _DOCTOR_CSS = """
 DoctorScreen {
     align: center middle;
@@ -179,8 +180,12 @@ def gather_doctor_info(doc_language: str = "") -> str:
     # -- Environment hints --
     lines.append("[bold]Environment[/]")
     env_vars = [
-        "TERM", "COLORTERM", "LANG", "LC_ALL",
-        "MASTODON_BASE_URL", "MASTODON_ACCESS_TOKEN",
+        "TERM",
+        "COLORTERM",
+        "LANG",
+        "LC_ALL",
+        "MASTODON_BASE_URL",
+        "MASTODON_ACCESS_TOKEN",
     ]
     for var in env_vars:
         val = os.environ.get(var)
@@ -203,7 +208,9 @@ class DoctorScreen(Screen):
     def compose(self) -> ComposeResult:
         with Container(id="doc-outer"):
             yield Static(_("*** SAFARI WRITER — DOCTOR ***"), id="doc-title")
-            yield Static(gather_doctor_info(doc_language=self._doc_language), id="doc-body")
+            yield Static(
+                gather_doctor_info(doc_language=self._doc_language), id="doc-body"
+            )
             yield Static(
                 " Esc Return to menu",
                 id="doc-help",

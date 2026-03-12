@@ -32,15 +32,27 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 _LCID_MAP: dict[int, str] = {
-    0x0409: "en_US", 0x0809: "en_GB", 0x0C09: "en_AU", 0x1009: "en_CA",
-    0x0407: "de_DE", 0x0807: "de_CH", 0x0C07: "de_AT",
-    0x040C: "fr_FR", 0x080C: "fr_BE", 0x0C0C: "fr_CA",
+    0x0409: "en_US",
+    0x0809: "en_GB",
+    0x0C09: "en_AU",
+    0x1009: "en_CA",
+    0x0407: "de_DE",
+    0x0807: "de_CH",
+    0x0C07: "de_AT",
+    0x040C: "fr_FR",
+    0x080C: "fr_BE",
+    0x0C0C: "fr_CA",
     0x0410: "it_IT",
-    0x0C0A: "es_ES", 0x080A: "es_MX", 0x2C0A: "es_AR",
-    0x0416: "pt_BR", 0x0816: "pt_PT",
-    0x0413: "nl_NL", 0x0813: "nl_BE",
+    0x0C0A: "es_ES",
+    0x080A: "es_MX",
+    0x2C0A: "es_AR",
+    0x0416: "pt_BR",
+    0x0816: "pt_PT",
+    0x0413: "nl_NL",
+    0x0813: "nl_BE",
     0x041D: "sv_SE",
-    0x0414: "nb_NO", 0x0814: "nn_NO",
+    0x0414: "nb_NO",
+    0x0814: "nn_NO",
     0x0406: "da_DK",
     0x040B: "fi_FI",
     0x0415: "pl_PL",
@@ -51,7 +63,8 @@ _LCID_MAP: dict[int, str] = {
     0x0422: "uk_UA",
     0x0411: "ja_JP",
     0x0412: "ko_KR",
-    0x0804: "zh_CN", 0x0404: "zh_TW",
+    0x0804: "zh_CN",
+    0x0404: "zh_TW",
     0x0401: "ar_SA",
     0x040D: "he_IL",
     0x041E: "th_TH",
@@ -85,6 +98,7 @@ def _detect_os_locale() -> str:
     if system == "Windows":
         try:
             import ctypes
+
             lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()  # type: ignore[attr-defined]
             if lcid in _LCID_MAP:
                 return _LCID_MAP[lcid]
@@ -95,9 +109,12 @@ def _detect_os_locale() -> str:
     if system == "Darwin":
         try:
             import subprocess
+
             result = subprocess.run(
                 ["defaults", "read", ".GlobalPreferences", "AppleLanguages"],
-                capture_output=True, text=True, timeout=2,
+                capture_output=True,
+                text=True,
+                timeout=2,
             )
             if result.returncode == 0:
                 # Parse plist-style array: first entry like "en-US"
@@ -285,10 +302,12 @@ def get_translation(lang: str | None = None) -> _gettext_mod.NullTranslations:
 # Level 1: available spell-check languages
 # ---------------------------------------------------------------------------
 
+
 def available_languages() -> list[str]:
     """Return language tags for all installed enchant dictionaries."""
     try:
         import enchant
+
         return sorted(enchant.list_languages())
     except Exception:
         return []

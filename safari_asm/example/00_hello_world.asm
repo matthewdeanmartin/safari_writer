@@ -1,0 +1,5 @@
+.TEXT
+MAIN:
+    LDA #"HELLO FROM SAFARI ASM"
+    OUTLN A
+    HALT

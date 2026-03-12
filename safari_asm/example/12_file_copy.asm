@@ -1,0 +1,42 @@
+.DATA
+SRC: .VAR
+DST: .VAR
+
+.TEXT
+MAIN:
+    ARG A, #0
+    BEQ USAGE
+    STA SRC
+
+    ARG A, #1
+    BEQ USAGE
+    STA DST
+
+    OPEN IN, SRC, #"r"
+    BERR FAILSRC
+    OPEN OUT, DST, #"w"
+    BERR FAILDST
+
+COPYLOOP:
+    READLN A, IN
+    BEQ DONE
+    WRITELN OUT, A
+    JMP COPYLOOP
+
+DONE:
+    CLOSE IN
+    CLOSE OUT
+    HALT
+
+FAILSRC:
+    ERRLN #"CANNOT OPEN SOURCE FILE"
+    HALT
+
+FAILDST:
+    ERRLN #"CANNOT OPEN DESTINATION FILE"
+    CLOSE IN
+    HALT
+
+USAGE:
+    ERRLN #"USAGE: safari-asm 12_file_copy.asm -- <SRC> <DST>"
+    HALT

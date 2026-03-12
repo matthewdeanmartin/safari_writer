@@ -1,0 +1,17 @@
+.DATA
+NAME:   .VAR
+PROMPT: .CONST "ENTER YOUR NAME: "
+
+.TEXT
+MAIN:
+    LDA PROMPT
+    OUT A
+    INP A
+    TRIM A
+    STA NAME
+
+    LDA #"HELLO, "
+    CAT A, NAME
+    CAT A, #"!"
+    OUTLN A
+    HALT

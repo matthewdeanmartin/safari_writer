@@ -323,11 +323,15 @@ class GlobalFormatScreen(Screen):
         self._editing_key = "K"
         self._input_buf = ""
         if self._lang_row is not None:
-            self._lang_row.refresh_lang(self._state.doc_language if self._state else "", editing=True)  # type: ignore[union-attr]
+            self._lang_row.refresh_lang(
+                self._state.doc_language if self._state else "", editing=True
+            )  # type: ignore[union-attr]
         from safari_writer.locale_info import LOCALE, available_languages
 
         langs = available_languages()
-        hint = f"Available: {', '.join(langs)}" if langs else "No dictionaries installed"
+        hint = (
+            f"Available: {', '.join(langs)}" if langs else "No dictionaries installed"
+        )
         self.set_message(
             f"Language (current: {self._state.doc_language or LOCALE}): "  # type: ignore[union-attr]
             f"type tag or Enter=(auto). {hint}"
@@ -337,7 +341,9 @@ class GlobalFormatScreen(Screen):
         if key == "escape":
             self._editing_key = None
             if self._lang_row is not None:
-                self._lang_row.refresh_lang(self._state.doc_language if self._state else "")  # type: ignore[union-attr]
+                self._lang_row.refresh_lang(
+                    self._state.doc_language if self._state else ""
+                )  # type: ignore[union-attr]
             self.set_message(_("Edit cancelled."))
         elif key == "enter":
             new_lang = self._input_buf.strip()
@@ -367,7 +373,9 @@ class GlobalFormatScreen(Screen):
             if self._editing_key == "K":
                 self._editing_key = None
                 if self._lang_row is not None:
-                    self._lang_row.refresh_lang(self._state.doc_language if self._state else "")  # type: ignore[union-attr]
+                    self._lang_row.refresh_lang(
+                        self._state.doc_language if self._state else ""
+                    )  # type: ignore[union-attr]
                 self.set_message(_("Edit cancelled."))
             else:
                 param = KEY_TO_PARAM[self._editing_key]

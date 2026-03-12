@@ -1,0 +1,13 @@
+.TEXT
+MAIN:
+    ENV X, #"SAFARI_ASM_DEMO"
+    BEQ MISSING
+
+    LDA #"ENV="
+    CAT A, X
+    OUTLN A
+    HALT
+
+MISSING:
+    ERRLN #"SAFARI_ASM_DEMO IS NOT SET"
+    HALT

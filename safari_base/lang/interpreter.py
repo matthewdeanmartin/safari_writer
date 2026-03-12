@@ -22,15 +22,16 @@ from safari_base.lang.types import (
     AppendBlankStmt, AppendFromStmt, AssignStmt, AverageStmt, BinOp,
     CdStmt, CloseStmt, CommandResult, CommentStmt, ContinueStmt,
     CopyFileStmt, CopyStructureStmt, CountStmt, CreateFromStmt,
-    CreateTableStmt, DeleteStmt, DirStmt, DisplayStructureStmt,
-    DoCaseStmt, DoProgramStmt, DoWhileStmt, EraseStmt, ExitStmt,
-    Expr, FieldRef, ForStmt, FuncCall, GoStmt, Ident, IfStmt,
+    CreateTableStmt, DefFnStmt, DeleteStmt, DimHashStmt, DirStmt,
+    DisplayStructureStmt, DoCaseStmt, DoProgramStmt, DoWhileStmt,
+    EraseStmt, ExitStmt, Expr, FieldRef, ForEachStmt, ForStmt,
+    FuncCall, FuncDefStmt, GoStmt, HashAssignStmt, Ident, IfStmt,
     IndexOnStmt, ListStmt, LocateStmt, LogicalLit, LoopStmt, MdStmt,
-    NumberLit, PackStmt, PrintStmt, QuitStmt, RdStmt, RecallStmt,
-    RenameStmt, ReplaceStmt, ReturnStmt, ScanStmt, SeekStmt,
-    SelectStmt, SetDefaultStmt, SetDeletedStmt, SetFilterStmt,
-    SetOrderStmt, SetStmt, SkipStmt, Stmt, StoreStmt, StringLit,
-    SumStmt, UnaryOp, UseStmt, ZapStmt,
+    NumberLit, PackStmt, PrintStmt, ProcCallStmt, ProcDefStmt,
+    QuitStmt, RdStmt, RecallStmt, RenameStmt, ReplaceStmt,
+    ReturnStmt, ScanStmt, SeekStmt, SelectStmt, SetDefaultStmt,
+    SetDeletedStmt, SetFilterStmt, SetOrderStmt, SetStmt, SkipStmt,
+    Stmt, StoreStmt, StringLit, SumStmt, UnaryOp, UseStmt, ZapStmt,
 )
 
 
@@ -211,6 +212,20 @@ class Interpreter:
             return self._exec_seek(stmt)
         if isinstance(stmt, CommentStmt):
             return CommandResult()
+        if isinstance(stmt, FuncDefStmt):
+            return self._exec_func_def(stmt)
+        if isinstance(stmt, ProcDefStmt):
+            return self._exec_proc_def(stmt)
+        if isinstance(stmt, DefFnStmt):
+            return self._exec_def_fn(stmt)
+        if isinstance(stmt, ProcCallStmt):
+            return self._exec_proc_call(stmt)
+        if isinstance(stmt, DimHashStmt):
+            return self._exec_dim_hash(stmt)
+        if isinstance(stmt, HashAssignStmt):
+            return self._exec_hash_assign(stmt)
+        if isinstance(stmt, ForEachStmt):
+            return self._exec_for_each(stmt)
 
         return CommandResult(success=False, message=f"Unhandled statement: {type(stmt).__name__}")
 
@@ -228,7 +243,21 @@ class Interpreter:
         if isinstance(expr, FieldRef):
             return self._resolve_field_ref(expr.alias, expr.field_name)
         if isinstance(expr, FuncCall):
+            # Check for hashmap access: NAME(key) where NAME is a dict variable
+            name_upper = expr.name.upper()
+            if name_upper in self.env.variables and isinstance(self.env.variables[name_upper], dict):
+                if len(expr.args) != 1:
+                    raise DBaseError(f"Hash access {expr.name}() requires exactly 1 key")
+                key = str(self._eval(expr.args[0]))
+                hmap = self.env.variables[name_upper]
+                if key not in hmap:
+                    raise DBaseError(f"Key not found in {expr.name}: {key}")
+                return hmap[key]
             args = [self._eval(a) for a in expr.args]
+            # Check user-defined functions first
+            user_fn = self.env.get_user_func(expr.name)
+            if user_fn is not None:
+                return self._call_user_func(user_fn, args)
             return call_function(expr.name, args, self.env)
         if isinstance(expr, BinOp):
             return self._eval_binop(expr)
@@ -735,6 +764,103 @@ class Interpreter:
     def _exec_return(self, stmt: ReturnStmt) -> CommandResult:
         val = self._eval(stmt.expr) if stmt.expr else None
         raise _ReturnSignal(val)
+
+    # -- User-defined functions/procedures -----------------------------------
+
+    def _exec_func_def(self, stmt: FuncDefStmt) -> CommandResult:
+        self.env.define_user_func(stmt.name, stmt)
+        return CommandResult(message=f"Function {stmt.name} defined")
+
+    def _exec_proc_def(self, stmt: ProcDefStmt) -> CommandResult:
+        self.env.define_user_func(stmt.name, stmt)
+        return CommandResult(message=f"Procedure {stmt.name} defined")
+
+    def _exec_def_fn(self, stmt: DefFnStmt) -> CommandResult:
+        # Store with FN_ prefix to match the parser's FN call convention
+        self.env.define_user_func("FN_" + stmt.name, stmt)
+        return CommandResult(message=f"FN {stmt.name} defined")
+
+    def _exec_proc_call(self, stmt: ProcCallStmt) -> CommandResult:
+        args = [self._eval(a) for a in stmt.args]
+        user_fn = self.env.get_user_func(stmt.name)
+        if user_fn is None:
+            raise DBaseError(f"Undefined procedure: {stmt.name}")
+        self._call_user_func(user_fn, args)
+        return CommandResult()
+
+    def _call_user_func(self, defn: FuncDefStmt | ProcDefStmt | DefFnStmt, args: list[Any]) -> Any:
+        """Execute a user-defined function/procedure and return the result."""
+        params = defn.params
+        if len(args) != len(params):
+            raise DBaseError(
+                f"{defn.name}() expects {len(params)} argument(s), got {len(args)}"
+            )
+
+        # Save existing variables that will be shadowed by params
+        saved: dict[str, Any] = {}
+        for i, p in enumerate(params):
+            key = p.upper()
+            if key in self.env.variables:
+                saved[key] = self.env.variables[key]
+            self.env.variables[key] = args[i]
+
+        try:
+            if isinstance(defn, DefFnStmt):
+                # One-liner: just evaluate the expression
+                result = self._eval(defn.expr)
+            else:
+                # Multi-line body
+                result = None
+                try:
+                    for s in defn.body:
+                        self._exec_stmt(s)
+                except _ReturnSignal as ret:
+                    result = ret.value
+            return result
+        finally:
+            # Restore saved variables, remove params that weren't previously defined
+            for p in params:
+                key = p.upper()
+                if key in saved:
+                    self.env.variables[key] = saved[key]
+                else:
+                    self.env.variables.pop(key, None)
+
+    # -- Hashmaps ------------------------------------------------------------
+
+    def _exec_dim_hash(self, stmt: DimHashStmt) -> CommandResult:
+        self.env.set_var(stmt.name, {})
+        return CommandResult(message=f"Hash {stmt.name} created")
+
+    def _exec_hash_assign(self, stmt: HashAssignStmt) -> CommandResult:
+        name_upper = stmt.name.upper()
+        if name_upper not in self.env.variables or not isinstance(self.env.variables[name_upper], dict):
+            raise DBaseError(f"{stmt.name} is not a hashmap — use DIM {stmt.name}{{}} first")
+        key = str(self._eval(stmt.key))
+        val = self._eval(stmt.expr)
+        self.env.variables[name_upper][key] = val
+        return CommandResult(message=f"{stmt.name}({key}) = {val}")
+
+    def _exec_for_each(self, stmt: ForEachStmt) -> CommandResult:
+        name_upper = stmt.hashmap.upper()
+        if name_upper not in self.env.variables or not isinstance(self.env.variables[name_upper], dict):
+            raise DBaseError(f"{stmt.hashmap} is not a hashmap")
+        hmap = self.env.variables[name_upper]
+        iterations = 0
+        max_iter = 1_000_000
+        for key in list(hmap.keys()):
+            iterations += 1
+            if iterations > max_iter:
+                raise DBaseError("FOR EACH loop exceeded maximum iterations")
+            self.env.set_var(stmt.var, key)
+            try:
+                for s in stmt.body:
+                    self._exec_stmt(s)
+            except _LoopSignal:
+                continue
+            except _ExitSignal:
+                break
+        return CommandResult(message=f"FOR EACH completed ({iterations} iterations)")
 
     # -- Settings ------------------------------------------------------------
 

@@ -1,0 +1,19 @@
+.DATA
+COUNT: .VAR
+
+.TEXT
+MAIN:
+    LDA #0
+    STA COUNT
+
+READ:
+    INP A
+    BEQ REPORT
+    INC COUNT
+    JMP READ
+
+REPORT:
+    LDA #"LINES="
+    CAT A, COUNT
+    OUTLN A
+    HALT

@@ -29,6 +29,7 @@ from safari_writer.state import AppState
 def _(s: str) -> str:
     return _locale_info.get_translation().gettext(s)
 
+
 DEFAULT_FIELDS = _DEFAULT_FIELDS
 MAX_RECORDS = _MAX_RECORDS
 
@@ -1301,8 +1302,8 @@ class MailMergeScreen(Screen):
             f"[bold]Mail Merge Complete — {count} document(s)[/]\n\n"
             f"[dim]Preview of record 1:[/]\n"
             f"{preview}\n\n"
-            f"[dim](Full print output would go to printer — not yet wired to print driver)[/]\n\n" +
-            _("Press any key to return to menu.")
+            f"[dim](Full print output would go to printer — not yet wired to print driver)[/]\n\n"
+            + _("Press any key to return to menu.")
         )
         self._set_body(body)
         self._set_message(f"Merged {count} records. Press any key.")

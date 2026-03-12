@@ -60,9 +60,15 @@ _COL3_DEFS = [
 ]
 
 # Combined for binding generation (keep old names for compat)
-COL1_ITEMS = [(key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL1_DEFS]
-COL2_ITEMS = [(key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL2_DEFS]
-COL3_ITEMS = [(key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL3_DEFS]
+COL1_ITEMS = [
+    (key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL1_DEFS
+]
+COL2_ITEMS = [
+    (key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL2_DEFS
+]
+COL3_ITEMS = [
+    (key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL3_DEFS
+]
 MENU_ITEMS = COL1_ITEMS + COL2_ITEMS + COL3_ITEMS
 
 MENU_CSS = """

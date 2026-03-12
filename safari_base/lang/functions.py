@@ -206,7 +206,56 @@ def _type_fn(args: list[Any], env: "Environment") -> str:
         return "D"
     if isinstance(val, str):
         return "C"
+    if isinstance(val, dict):
+        return "H"
     return "U"
+
+
+# -- Hash functions ----------------------------------------------------------
+
+def _hlen(args: list[Any], env: "Environment") -> int:
+    """HLEN(hashname$) — return number of keys in a hashmap."""
+    _check_args("HLEN", args, 1)
+    name = str(args[0]).upper()
+    val = env.variables.get(name)
+    if not isinstance(val, dict):
+        raise DBaseError(f"HLEN: {name} is not a hashmap")
+    return len(val)
+
+
+def _hhas(args: list[Any], env: "Environment") -> bool:
+    """HHAS(hashname$, key$) — return .T. if key exists."""
+    _check_args("HHAS", args, 2)
+    name = str(args[0]).upper()
+    key = str(args[1])
+    val = env.variables.get(name)
+    if not isinstance(val, dict):
+        raise DBaseError(f"HHAS: {name} is not a hashmap")
+    return key in val
+
+
+def _hdel(args: list[Any], env: "Environment") -> bool:
+    """HDEL(hashname$, key$) — delete a key, return .T. if existed."""
+    _check_args("HDEL", args, 2)
+    name = str(args[0]).upper()
+    key = str(args[1])
+    val = env.variables.get(name)
+    if not isinstance(val, dict):
+        raise DBaseError(f"HDEL: {name} is not a hashmap")
+    if key in val:
+        del val[key]
+        return True
+    return False
+
+
+def _hkeys(args: list[Any], env: "Environment") -> str:
+    """HKEYS(hashname$) — return comma-separated list of keys."""
+    _check_args("HKEYS", args, 1)
+    name = str(args[0]).upper()
+    val = env.variables.get(name)
+    if not isinstance(val, dict):
+        raise DBaseError(f"HKEYS: {name} is not a hashmap")
+    return ",".join(str(k) for k in val.keys())
 
 
 # -- Helpers -----------------------------------------------------------------
@@ -256,4 +305,9 @@ _FUNCTIONS: dict[str, Any] = {
     "ROUND": _round_fn,
     # Meta
     "TYPE": _type_fn,
+    # Hash
+    "HLEN": _hlen,
+    "HHAS": _hhas,
+    "HDEL": _hdel,
+    "HKEYS": _hkeys,
 }

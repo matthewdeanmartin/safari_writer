@@ -1,0 +1,17 @@
+.DATA
+NAME: .VAR
+
+.TEXT
+.ENTRY MAIN
+MAIN:
+    LDA #"MATT"
+    JSR MAKEGREETING
+    OUTLN A
+    HALT
+
+MAKEGREETING:
+    STA NAME
+    LDA #"HELLO, "
+    CAT A, NAME
+    CAT A, #"!"
+    RTS

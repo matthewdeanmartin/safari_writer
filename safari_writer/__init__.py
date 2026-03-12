@@ -18,6 +18,7 @@ from safari_writer.document_io import (
     serialize_document_buffer,
 )
 from safari_writer.export_md import export_markdown
+from safari_writer.export_pdf import export_pdf
 from safari_writer.export_ps import export_postscript
 from safari_writer.file_types import (
     FileProfile,
@@ -102,6 +103,7 @@ __all__ = [
     "decode_sfw",
     "dict_lookup",
     "encode_sfw",
+    "export_pdf",
     "export_markdown",
     "export_postscript",
     "extract_ansi_page",

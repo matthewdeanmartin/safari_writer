@@ -36,6 +36,9 @@ class Environment:
         # Memory variables
         self.variables: dict[str, Any] = {}
 
+        # User-defined functions/procedures (name -> AST node)
+        self._user_funcs: dict[str, Any] = {}
+
         # Settings
         self.deleted_on: bool = False  # SET DELETED OFF by default
 
@@ -155,6 +158,16 @@ class Environment:
 
     def set_var(self, name: str, value: Any) -> None:
         self.variables[name.upper()] = value
+
+    # -- User-defined functions -----------------------------------------------
+
+    def define_user_func(self, name: str, defn: Any) -> None:
+        """Register a user-defined function or procedure."""
+        self._user_funcs[name.upper()] = defn
+
+    def get_user_func(self, name: str) -> Any | None:
+        """Look up a user-defined function by name. Returns None if not found."""
+        return self._user_funcs.get(name.upper())
 
     # -- Output --------------------------------------------------------------
 

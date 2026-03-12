@@ -1,0 +1,10 @@
+.TEXT
+MAIN:
+LOOP:
+    INP A
+    BEQ DONE
+    OUTLN A
+    JMP LOOP
+
+DONE:
+    HALT

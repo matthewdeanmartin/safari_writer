@@ -10,16 +10,17 @@ from safari_base.lang.types import Token, TokenType
 # Keywords that must be recognized as such (case-insensitive)
 KEYWORDS = frozenset({
     "ALL", "ALIAS", "AND", "APPEND", "AVERAGE", "BLANK", "BOTTOM", "CASE",
-    "CD", "CLOSE", "CONTINUE", "COPY", "COUNT", "CREATE", "DELETE", "DIR",
-    "DISPLAY", "DO", "ELSE", "ELSEIF", "ENDCASE", "ENDDO", "ENDFOR",
-    "ENDIF", "ENDSCAN", "ERASE", "EXCLUSIVE", "EXIT", "EXTENDED",
-    "FILE", "FIELDS", "FILTER", "FOR", "FROM", "GO", "GOTO", "IF",
-    "INDEX", "LIST", "LOCATE", "LOOP", "MD", "MODIFY", "NEXT", "NOT",
-    "NOTE", "ON", "OR", "ORDER", "OTHERWISE", "PACK", "QUIT", "RD",
-    "RECALL", "RENAME", "REPLACE", "REST", "RETURN", "SCAN", "SEEK",
-    "SELECT", "SET", "SKIP", "STEP", "STORE", "STRUCTURE", "SUM",
-    "TABLE", "TAG", "TO", "TOP", "USE", "WHILE", "WITH", "ZAP",
-    "DEFAULT", "DELETED", "RECORD", "AVERAGE",
+    "CD", "CLOSE", "CONTINUE", "COPY", "COUNT", "CREATE", "DEF", "DELETE",
+    "DIM", "DIR", "DISPLAY", "DO", "EACH", "ELSE", "ELSEIF", "END",
+    "ENDCASE", "ENDDO", "ENDFOR", "ENDIF", "ENDSCAN", "ERASE", "EXCLUSIVE",
+    "EXIT", "EXTENDED", "FILE", "FIELDS", "FILTER", "FN", "FOR", "FROM",
+    "FUNC", "GO", "GOTO", "IF", "IN", "INDEX", "LIST", "LOCATE", "LOOP",
+    "MD", "MODIFY", "NEXT", "NOT", "NOTE", "ON", "OR", "ORDER",
+    "OTHERWISE", "PACK", "PRINT", "PROC", "QUIT", "RD", "RECALL", "RENAME",
+    "REPLACE", "REST", "RETURN", "SCAN", "SEEK", "SELECT", "SET", "SKIP",
+    "STEP", "STORE", "STRUCTURE", "SUM", "TABLE", "TAG", "TO", "TOP",
+    "USE", "WHILE", "WITH", "ZAP", "DEFAULT", "DELETED", "RECORD",
+    "AVERAGE",
 })
 
 
@@ -158,6 +159,8 @@ def tokenize(source: str, start_line: int = 1) -> list[Token]:
                 ">": TokenType.GT,
                 "(": TokenType.LPAREN,
                 ")": TokenType.RPAREN,
+                "{": TokenType.LBRACE,
+                "}": TokenType.RBRACE,
                 ",": TokenType.COMMA,
             }
             if line[pos] in one_char_map:

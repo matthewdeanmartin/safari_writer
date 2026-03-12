@@ -27,6 +27,7 @@ def bundled_macros_dir() -> Path | None:
         pass
     return None
 
+
 _PICKER_CSS = """
 MacroPickerScreen {
     align: center middle;
@@ -122,9 +123,7 @@ class MacroPickerScreen(ModalScreen[Path | None]):
         with Container(id="macro-dialog"):
             yield Static("=== SAFARI BASIC — SELECT MACRO ===", id="macro-title")
             yield Static(self._render_list(), id="macro-list")
-            yield Static(
-                "Up/Down Move  Enter Select  Esc Cancel", id="macro-footer"
-            )
+            yield Static("Up/Down Move  Enter Select  Esc Cancel", id="macro-footer")
 
     def _render_list(self) -> str:
         if not self._macros:

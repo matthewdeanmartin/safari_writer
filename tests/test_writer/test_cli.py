@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 from pathlib import Path
 
@@ -19,6 +20,8 @@ import safari_writer.state as state_module
 from safari_writer.cli_types import StartupRequest
 from safari_writer.main import build_startup_request, main, parse_args
 from safari_writer.screens.editor import CTRL_BOLD, CTRL_MERGE
+
+export_pdf_module = importlib.import_module("safari_writer.export_pdf")
 
 
 class FakeChecker:
@@ -66,6 +69,7 @@ def test_public_package_exports_are_explicit():
         "load_document_buffer",
         "load_demo_document_buffer",
         "load_mail_merge_db",
+        "export_pdf",
         "parse_args",
         "render_ansi_preview",
         "run_cli",
@@ -94,6 +98,7 @@ def test_public_submodule_exports_are_explicit():
     ]
     assert app_module.__all__ == ["SafariWriterApp"]
     assert export_md_module.__all__ == ["export_markdown"]
+    assert export_pdf_module.__all__ == ["export_pdf"]
     assert export_ps_module.__all__ == ["export_postscript"]
     assert format_codec.__all__ == [
         "decode_sfw",
@@ -302,6 +307,19 @@ def test_export_markdown_applies_mail_merge_database(capsys, tmp_path):
     assert "Dear Pat" in captured.out
 
 
+def test_export_pdf_writes_output_file(capsys, tmp_path):
+    document = tmp_path / "draft.sfw"
+    output = tmp_path / "draft.pdf"
+    document.write_text(f"{CTRL_BOLD}hello{CTRL_BOLD}")
+
+    exit_code = main(["export", "pdf", str(document), "--output", str(output)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Exported PDF" in captured.out
+    assert output.read_bytes().startswith(b"%PDF-")
+
+
 def test_export_ansi_rejects_out_of_range_page(capsys, tmp_path):
     document = tmp_path / "draft.txt"
     document.write_text("Hello")
@@ -311,6 +329,14 @@ def test_export_ansi_rejects_out_of_range_page(capsys, tmp_path):
     captured = capsys.readouterr()
     assert exit_code == 2
     assert "out of range" in captured.err
+
+
+def test_build_startup_request_for_pdf_print_target():
+    args = parse_args(["tui", "print", "--target", "pdf"])
+
+    request = build_startup_request(args)
+
+    assert request == StartupRequest(destination="print", print_target="pdf")
 
 
 def test_proof_check_exit_codes(monkeypatch, capsys, tmp_path):

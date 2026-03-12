@@ -213,6 +213,7 @@ MENU_TEXT = """\
 # Helpers — thin wrappers around GitPython
 # ---------------------------------------------------------------------------
 
+
 def _find_repo_root(start: Path) -> Optional[Path]:
     """Walk up from *start* to find a .git directory; return its root or None."""
     current = start.resolve()
@@ -226,6 +227,7 @@ def _git_status(repo_path: Path) -> str:
     """Return a human-readable status summary."""
     try:
         import git  # type: ignore[import]
+
         repo = git.Repo(repo_path)
         lines: list[str] = []
         lines.append(f"Branch: [bold]{repo.active_branch.name}[/bold]")
@@ -270,6 +272,7 @@ def _remote_url(repo: Any) -> str:
 def _git_add_all(repo_path: Path) -> str:
     try:
         import git  # type: ignore[import]
+
         repo = git.Repo(repo_path)
         repo.git.add(A=True)
         return "[green]All changes staged.[/green]"
@@ -280,6 +283,7 @@ def _git_add_all(repo_path: Path) -> str:
 def _git_commit(repo_path: Path, message: str) -> str:
     try:
         import git  # type: ignore[import]
+
         repo = git.Repo(repo_path)
         if not message.strip():
             return "[yellow]Commit cancelled — empty message.[/yellow]"
@@ -292,6 +296,7 @@ def _git_commit(repo_path: Path, message: str) -> str:
 def _git_push(repo_path: Path) -> str:
     try:
         import git  # type: ignore[import]
+
         repo = git.Repo(repo_path)
         if not repo.remotes:
             return "[yellow]No remote configured.[/yellow]"
@@ -310,6 +315,7 @@ def _git_push(repo_path: Path) -> str:
 def _git_pull(repo_path: Path) -> str:
     try:
         import git  # type: ignore[import]
+
         repo = git.Repo(repo_path)
         if not repo.remotes:
             return "[yellow]No remote configured.[/yellow]"
@@ -323,6 +329,7 @@ def _git_pull(repo_path: Path) -> str:
 def _git_log(repo_path: Path, count: int = 20) -> str:
     try:
         import git  # type: ignore[import]
+
         repo = git.Repo(repo_path)
         if not repo.head.is_valid():
             return "(no commits yet)"
@@ -347,6 +354,7 @@ def _git_log(repo_path: Path, count: int = 20) -> str:
 # Help modal
 # ---------------------------------------------------------------------------
 
+
 class GitHelpScreen(ModalScreen):
     CSS = GIT_CSS
 
@@ -364,6 +372,7 @@ class GitHelpScreen(ModalScreen):
 # ---------------------------------------------------------------------------
 # Commit message input modal
 # ---------------------------------------------------------------------------
+
 
 class GitCommitInputScreen(ModalScreen[str | None]):
     CSS = GIT_CSS
@@ -406,6 +415,7 @@ class GitCommitInputScreen(ModalScreen[str | None]):
 # Repo path input modal
 # ---------------------------------------------------------------------------
 
+
 class GitRepoPathScreen(ModalScreen[str | None]):
     CSS = GIT_CSS
 
@@ -447,6 +457,7 @@ class GitRepoPathScreen(ModalScreen[str | None]):
 # ---------------------------------------------------------------------------
 # Main Git Publish Screen
 # ---------------------------------------------------------------------------
+
 
 class GitPublishScreen(Screen):
     """Two-pane git publish screen for bloggers."""
@@ -526,16 +537,25 @@ class GitPublishScreen(Screen):
     def _update_footer(self, msg: str) -> None:
         repo_label = self._repo_label()
         line1 = f" Repo: {repo_label}"
-        line2 = f" {msg}" if msg else " S=Status  A=AddAll  C=Commit  P=Push  U=Pull  F1=Help  Esc=Return"
+        line2 = (
+            f" {msg}"
+            if msg
+            else " S=Status  A=AddAll  C=Commit  P=Push  U=Pull  F1=Help  Esc=Return"
+        )
         self.query_one("#git-footer", Static).update(f"{line1}\n{line2}")
 
     def _set_status_msg(self, msg: str) -> None:
         """Show a result message in the status pane and refresh afterward."""
         current = self.query_one("#git-status-body", Static)
         current.update(msg)
-        self._update_footer(msg.replace("[green]", "").replace("[/green]", "")
-                            .replace("[red]", "").replace("[/red]", "")
-                            .replace("[yellow]", "").replace("[/yellow]", ""))
+        self._update_footer(
+            msg.replace("[green]", "")
+            .replace("[/green]", "")
+            .replace("[red]", "")
+            .replace("[/red]", "")
+            .replace("[yellow]", "")
+            .replace("[/yellow]", "")
+        )
 
     # ------------------------------------------------------------------
     # Key handling

@@ -29,7 +29,7 @@ Follow the menus.
   - Keybindings mostly modern, but somewhat influenced by original Atari.
   - Search and replace, word count, and alphabetize.
   - Style codes/printer codes for formatting.
-  - Print/export to markdown, ANSI preview, or postscript. 
+  - Print/export to markdown, ANSI preview, postscript, or PDF.
 - **Proofreader**: A built-in spell checker.
 - **Mailmerge**: Database-driven form letters with a dedicated record editor.
 - **Safari DOS**: A menu-driven way to do file browsing and manipulation, featuring a classic two-pane layout and a "Garbage" bin for file recovery.

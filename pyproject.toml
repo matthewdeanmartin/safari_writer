@@ -30,6 +30,9 @@ dependencies = [
     "httpx>=0.27.0",
     "dbf>=0.99.11",
     "gitpython>=3.1.0",
+    "Pillow>=10.0.0",
+    "term-image>=0.7.0",
+    "reportlab>=4.4.10",
 ]
 
 [project.scripts]
@@ -38,9 +41,11 @@ safari-dos = "safari_dos.main:main"
 safari-chat = "safari_chat.main:main"
 safari-base = "safari_base.main:main"
 safari-fed = "safari_fed.main:main"
+safari-asm = "safari_asm.main:main"
 safari-repl = "safari_repl.main:main"
 safari-reader = "safari_reader.main:main"
-
+safari-view = "safari_view.main:main"
+safari-view-tk = "safari_view.ui_tk.tk_app:main"
 
 [project.urls]
 "Bug Tracker" = "https://github.com/matthewdeanmartin/safari-writer/issues"
@@ -52,7 +57,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["safari_writer", "safari_dos", "safari_chat", "safari_base", "safari_fed", "safari_basic", "safari_repl", "safari_reader"]
+packages = ["safari_writer", "safari_dos", "safari_chat", "safari_base", "safari_fed", "safari_basic", "safari_asm", "safari_repl", "safari_reader", "safari_view"]
 include = [
     "safari_writer/locales/LC_MESSAGES/*.mo",
     "safari_writer/locales/LC_MESSAGES/*.po",
@@ -66,8 +71,11 @@ include = [
     "safari_chat/py.typed",
     "safari_base/py.typed",
     "safari_fed/py.typed",
+    "safari_asm/example/*.asm",
+    "safari_asm/py.typed",
     "safari_repl/py.typed",
     "safari_reader/py.typed",
+    "safari_view/py.typed",
     "/README.md", "LICENSE",
 ]
 
@@ -99,4 +107,8 @@ pretty = true
 
 [[tool.mypy.overrides]]
 module = ["enchant"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["reportlab", "reportlab.*"]
 ignore_missing_imports = true

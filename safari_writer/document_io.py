@@ -38,7 +38,8 @@ __all__ = [
 
 
 def load_document_buffer(
-    path: Path, encoding: str = "utf-8",
+    path: Path,
+    encoding: str = "utf-8",
 ) -> list[str]:
     """Load a document file into Safari Writer's in-memory buffer format."""
 
@@ -110,7 +111,10 @@ def sanitize_plain_buffer(buffer: list[str]) -> list[str]:
 
 
 def serialize_document_buffer(
-    buffer: list[str], path: Path, *, doc_language: str = "",
+    buffer: list[str],
+    path: Path,
+    *,
+    doc_language: str = "",
 ) -> str:
     """Serialize a buffer for writing to a target path.
 

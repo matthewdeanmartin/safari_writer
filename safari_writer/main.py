@@ -149,7 +149,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_tui_file_option(tui_print)
     _add_tui_read_only_option(tui_print)
-    tui_print.add_argument("--target", choices=["ansi", "markdown", "postscript"])
+    tui_print.add_argument(
+        "--target", choices=["ansi", "markdown", "postscript", "pdf"]
+    )
     tui_print.set_defaults(handler=_handle_tui_command)
 
     tui_index_current = tui_subparsers.add_parser(
@@ -211,6 +213,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--merge-db", help="Optional mail-merge database to apply."
     )
     export_postscript.set_defaults(handler=_handle_export_postscript)
+
+    export_pdf = export_subparsers.add_parser("pdf", help="Export a document to PDF.")
+    _add_export_input(export_pdf)
+    export_pdf.add_argument("-o", "--output", help="Destination .pdf file.")
+    export_pdf.add_argument("--merge-db", help="Optional mail-merge database to apply.")
+    export_pdf.set_defaults(handler=_handle_export_pdf)
 
     export_ansi = export_subparsers.add_parser(
         "ansi", help="Render ANSI preview output headlessly."
@@ -542,7 +550,9 @@ def _handle_tui_command(args: argparse.Namespace) -> int:
             f"Safari DOS path is not a directory: {request.safari_dos_path}"
         )
     if request.safari_repl_path and not request.safari_repl_path.exists():
-        raise FileNotFoundError(f"Safari REPL file not found: {request.safari_repl_path}")
+        raise FileNotFoundError(
+            f"Safari REPL file not found: {request.safari_repl_path}"
+        )
     for path in request.personal_dict_paths:
         if not path.exists():
             raise FileNotFoundError(f"Personal dictionary not found: {path}")
@@ -606,6 +616,21 @@ def _handle_export_postscript(args: argparse.Namespace) -> int:
     rendered = export_postscript(buffer, GlobalFormat())
     output_path.write_text(rendered, encoding="utf-8")
     _emit_status(args, f"Exported PostScript to {output_path}")
+    return 0
+
+
+def _handle_export_pdf(args: argparse.Namespace) -> int:
+    from safari_writer.export_pdf import export_pdf
+
+    input_path = Path(args.input).resolve()
+    output_path = (
+        Path(args.output).resolve() if args.output else input_path.with_suffix(".pdf")
+    )
+    buffer = load_document_buffer(input_path, encoding=args.encoding)
+    buffer = _load_merge_applied_buffer(buffer, args.merge_db, args.encoding)
+    rendered = export_pdf(buffer, GlobalFormat())
+    output_path.write_bytes(rendered)
+    _emit_status(args, f"Exported PDF to {output_path}")
     return 0
 
 

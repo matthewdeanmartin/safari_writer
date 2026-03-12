@@ -91,6 +91,7 @@ def write_backup(state: "AppState") -> Path | None:
 @dataclass
 class BackupMeta:
     """Describes one backup entry in the browser."""
+
     path: Path
     original_filename: str
     backup_time: datetime

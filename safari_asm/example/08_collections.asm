@@ -1,0 +1,17 @@
+.DATA
+COLORS:   .LIST "RED", "GREEN", "BLUE"
+SETTINGS: .MAP "MODE", "FAST"
+
+.TEXT
+MAIN:
+    PUT SETTINGS, #"DEBUG", TRUE
+    GET X, SETTINGS, #"MODE"
+    GET Y, SETTINGS, #"DEBUG"
+
+    JOIN A, COLORS, #"|"
+    CAT A, #" MODE="
+    CAT A, X
+    CAT A, #" DEBUG="
+    CAT A, Y
+    OUTLN A
+    HALT

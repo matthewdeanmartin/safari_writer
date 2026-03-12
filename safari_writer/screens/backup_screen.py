@@ -120,9 +120,7 @@ class BackupScreen(Screen):
                 lv = ListView(id="backup-list")
                 yield lv
             else:
-                yield Static(
-                    _("No backups found."), id="backup-empty"
-                )
+                yield Static(_("No backups found."), id="backup-empty")
 
         with Container(id="backup-footer"):
             yield Static(

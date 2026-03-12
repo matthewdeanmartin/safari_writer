@@ -115,7 +115,7 @@ Additionally, `Ctrl+P` in the editor should also open the same Print/Export dial
 
 ## 6. Print/Export Dialog
 
-Print is implemented as a **modal dialog screen** (`PrintScreen`) pushed from either the main menu or the editor. It offers three output modes:
+Print is implemented as a **modal dialog screen** (`PrintScreen`) pushed from either the main menu or the editor. It offers four output modes:
 
 ```
   *** PRINT / EXPORT ***
@@ -123,6 +123,7 @@ Print is implemented as a **modal dialog screen** (`PrintScreen`) pushed from ei
   [A]  ANSI Preview
   [M]  Export to Markdown (.md)
   [P]  Export to PostScript (.ps)
+  [D]  Export to PDF (.pdf)
 
   [Esc]  Cancel
 ```
@@ -193,6 +194,19 @@ The PostScript output applies full Global Format settings:
 
 The user is prompted for an output filename (pre-filled as `<current_name>.ps`).
 
+### 6d. Export to PDF
+
+Generates a `.pdf` file directly from Safari Writer using the same page layout rules as PostScript export:
+
+- US Letter page size
+- Global Format margins, line spacing, paragraph indent, and page numbering
+- Built-in font mapping for pica, condensed, proportional, and elite
+- Bold, underline, superscript, subscript, centered, and flush-right text
+- Headers, footers, hard page breaks, and section heading numbering
+- Mail merge expansion when a database is loaded
+
+The user is prompted for an output filename (pre-filled as `<current_name>.pdf`).
+
 ### Mail merge at print/export time
 
 If the document contains merge fields (`\@N`):
@@ -234,7 +248,7 @@ If the document contains form blanks (`\_`):
 
 1. **`format_codec.py`** — encode/decode/strip. Unit-testable in isolation.
 2. **Update `app.py` load/save** — wire codec into file I/O path.
-3. **`PrintScreen` dialog** — the 3-option modal.
+3. **`PrintScreen` dialog** — the print/export modal.
 4. **ANSI Preview** — the most useful output for day-to-day use.
 5. **Markdown export** — straightforward text transform.
 6. **PostScript export** — most complex, requires page layout engine.
@@ -245,6 +259,5 @@ If the document contains form blanks (`\_`):
 
 - **Original AtariWriter binary format** — not supported. Maybe someday.
 - **Direct system printing** — we export to `.ps` which can be sent to a printer externally. No `lpr` / Windows print API integration.
-- **PDF export** — use `ps2pdf` on the `.ps` output. We don't bundle a PDF library.
 - **RTF / DOCX export** — not planned.
 - **Interactive form fill at print time** — deferred to Phase 12.

@@ -33,6 +33,7 @@ from safari_writer.syntax_highlight import create_highlighter
 def _(s: str) -> str:
     return _locale_info.get_translation().gettext(s)
 
+
 _log = logging.getLogger("safari_writer.editor")
 if os.environ.get("SAFARI_LOG"):
     _log.setLevel(logging.DEBUG)
@@ -968,7 +969,10 @@ class EditorArea(Widget, can_focus=True):
         # Exit — return to Fed screen if composing, else main menu
         elif key == "escape":
             self._clear_selection()
-            if hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active:  # type: ignore[attr-defined]
+            if (
+                hasattr(self.app, "_fed_compose_active")
+                and self.app._fed_compose_active
+            ):  # type: ignore[attr-defined]
                 self.app.finish_fed_compose()  # type: ignore[attr-defined]
             else:
                 self.app.pop_screen()
@@ -1651,6 +1655,7 @@ class EditorArea(Widget, can_focus=True):
 
         def _on_picked(path: object) -> None:
             from pathlib import Path as _Path
+
             if not isinstance(path, _Path):
                 self._set_screen_message("Macro cancelled")
                 return
@@ -1682,7 +1687,9 @@ class EditorArea(Widget, can_focus=True):
                 s.cursor_row = row + len(lines) - 1
                 s.cursor_col = len(lines[-1])
             s.modified = True
-            self._set_screen_message(f"Macro: {path.stem} — {len(lines)} line(s) inserted")
+            self._set_screen_message(
+                f"Macro: {path.stem} — {len(lines)} line(s) inserted"
+            )
             self.refresh()
             self._update_status()
 
@@ -1723,8 +1730,7 @@ class EditorScreen(Screen):
         yield Static(self._tab_bar_text(), id="tab-bar")
         yield EditorArea(self.state)
         fed_active = (
-            hasattr(self.app, "_fed_compose_active")
-            and self.app._fed_compose_active  # type: ignore[attr-defined]
+            hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active  # type: ignore[attr-defined]
         )
         if fed_active:
             help_bar = HELP_TEXT_FED
@@ -1733,7 +1739,9 @@ class EditorScreen(Screen):
         else:
             help_bar = HELP_TEXT
         with Container(id="editor-footer"):
-            yield Static(self._message or _("Welcome to Safari Writer"), id="message-bar")
+            yield Static(
+                self._message or _("Welcome to Safari Writer"), id="message-bar"
+            )
             yield Static(self._status_text(), id="status-bar")
             yield Static(help_bar, id="help-bar")
 

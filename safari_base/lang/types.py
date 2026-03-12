@@ -40,6 +40,8 @@ class TokenType(Enum):
     # Punctuation
     LPAREN = auto()
     RPAREN = auto()
+    LBRACE = auto()   # {
+    RBRACE = auto()   # }
     COMMA = auto()
     SEMI = auto()  # line continuation
     ARROW = auto()  # ->
@@ -405,6 +407,74 @@ class CommentStmt(Stmt):
 @dataclass
 class SetOrderStmt(Stmt):
     tag: str = ""
+
+
+# ---------------------------------------------------------------------------
+# User-defined functions and procedures (Safari BASIC extensions)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class FuncDefStmt(Stmt):
+    """FUNC name(params) ... END FUNC"""
+    name: str = ""
+    params: list[str] = field(default_factory=list)
+    body: list[Stmt] = field(default_factory=list)
+
+
+@dataclass
+class ProcDefStmt(Stmt):
+    """PROC name(params) ... END PROC"""
+    name: str = ""
+    params: list[str] = field(default_factory=list)
+    body: list[Stmt] = field(default_factory=list)
+
+
+@dataclass
+class DefFnStmt(Stmt):
+    """DEF FN name(params) = expr  (one-liner function)"""
+    name: str = ""
+    params: list[str] = field(default_factory=list)
+    expr: Expr = field(default_factory=lambda: NumberLit(0))
+
+
+@dataclass
+class ProcCallStmt(Stmt):
+    """A procedure call used as a statement: DOBOX(1)"""
+    name: str = ""
+    args: list[Expr] = field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Hashmaps (Safari BASIC extensions)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class DimHashStmt(Stmt):
+    """DIM FOO{} — declare an empty hashmap."""
+    name: str = ""
+
+
+@dataclass
+class HashAssignStmt(Stmt):
+    """FOO("key") = expr — assign a value to a hashmap key."""
+    name: str = ""
+    key: Expr = field(default_factory=lambda: StringLit(""))
+    expr: Expr = field(default_factory=lambda: NumberLit(0))
+
+
+@dataclass
+class ForEachStmt(Stmt):
+    """FOR EACH K$ IN PRICES ... NEXT"""
+    var: str = ""
+    hashmap: str = ""
+    body: list[Stmt] = field(default_factory=list)
+
+
+@dataclass
+class HashAccessExpr(Expr):
+    """FOO("key") as an expression — hashmap key lookup."""
+    name: str = ""
+    key: Expr = field(default_factory=lambda: StringLit(""))
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,15 @@
+.DATA
+ITEMS: .LIST "ALPHA", "BETA", "GAMMA"
+ROW:   .LIST
+
+.TEXT
+MAIN:
+    LDX #1
+    LDA ITEMS,X
+    OUTLN A
+
+    LDA #"CENTER"
+    STA ROW,X
+    LDA ROW,X
+    OUTLN A
+    HALT

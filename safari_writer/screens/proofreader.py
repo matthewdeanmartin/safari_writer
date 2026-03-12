@@ -148,7 +148,9 @@ class ProofreaderScreen(Screen):
         from safari_writer.locale_info import LOCALE
 
         lang = self._state.doc_language or LOCALE
-        return _("*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]").format(lang=lang)
+        return _("*** SAFARI WRITER — PROOFREADER ***  [Dict: {lang}]").format(
+            lang=lang
+        )
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container
@@ -332,18 +334,14 @@ class ProofreaderScreen(Screen):
             self._mode = MODE_LOAD_PERSONAL
             default = _default_personal_dict_path()
             self._input_buf = default
-            self._set_message(
-                "Load Personal Dictionary: edit path or Enter to confirm"
-            )
+            self._set_message("Load Personal Dictionary: edit path or Enter to confirm")
             self._set_body(f"Load personal dictionary file:\n\n> {default}")
             self._set_help(" Enter Load  Esc Cancel")
         elif k == "w":
             self._mode = MODE_SAVE_PERSONAL
             default = _default_personal_dict_path()
             self._input_buf = default
-            self._set_message(
-                "Save Personal Dictionary: edit path or Enter to confirm"
-            )
+            self._set_message("Save Personal Dictionary: edit path or Enter to confirm")
             self._set_body(f"Save personal dictionary to file:\n\n> {default}")
             self._set_help(" Enter Save  Esc Cancel")
         elif key == "escape":
@@ -457,9 +455,7 @@ class ProofreaderScreen(Screen):
 
         lines: list[str] = []
         if exact:
-            lines.append(
-                f"[bold green]'{self._dict_prefix}'[/] is a valid word.\n"
-            )
+            lines.append(f"[bold green]'{self._dict_prefix}'[/] is a valid word.\n")
 
         if page:
             cols = 3
@@ -468,16 +464,13 @@ class ProofreaderScreen(Screen):
             max_rows = max(len(c) for c in col_lines)
             label = "Related" if exact else "Suggestions"
             lines.append(
-                f"[bold]{label} for '{self._dict_prefix}'[/]"
-                f"  ({total} found)\n"
+                f"[bold]{label} for '{self._dict_prefix}'[/]  ({total} found)\n"
             )
             for row_i in range(max_rows):
                 row_parts = []
                 for col_i in range(cols):
                     word = (
-                        col_lines[col_i][row_i]
-                        if row_i < len(col_lines[col_i])
-                        else ""
+                        col_lines[col_i][row_i] if row_i < len(col_lines[col_i]) else ""
                     )
                     row_parts.append(word.ljust(col_width))
                 lines.append("".join(row_parts))
@@ -495,9 +488,7 @@ class ProofreaderScreen(Screen):
 
         self._set_body("\n".join(lines))
         page_count = max(1, (total - 1) // page_size + 1) if total else 1
-        self._set_message(
-            f"Page {self._dict_page + 1} of {page_count}"
-        )
+        self._set_message(f"Page {self._dict_page + 1} of {page_count}")
         self._set_help("  ".join(nav))
 
     def _handle_dict_results_key(self, key: str) -> None:
@@ -606,7 +597,9 @@ class ProofreaderScreen(Screen):
         error_count = len(error_positions)
         self._set_body("\n".join(lines_out))
         self._set_message(
-            _("Highlight scan complete — {error_count} error(s) found. Press any key to return.").format(error_count=error_count)
+            _(
+                "Highlight scan complete — {error_count} error(s) found. Press any key to return."
+            ).format(error_count=error_count)
         )
         self._set_help(" Any key → return to menu")
         self._mode = MODE_HIGHLIGHT
