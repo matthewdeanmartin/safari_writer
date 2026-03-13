@@ -15,10 +15,15 @@ You can run the main editor or the companion tools directly:
 ```bash
 safari-writer # Word processor 
 safari-dos # File browser/manager
+safari-dos browse C:\work --show-hidden --sort date --descending
+safari-dos ls C:\work --sort type
 safari-chat # Eliza style help chat bot
 safari-fed # Mastodon client
 safari-base  # xbase clone
 safari-repl # BASIC repl
+safari-view # Retro image viewer
+safari-view open images\frog.png --mode st --no-dithering
+safari-view render images\frog.png --mode 2600 --width 160 --height 192 --output out\frog-2600.png
 ```
 
 Follow the menus. 

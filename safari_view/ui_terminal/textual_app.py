@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
@@ -14,16 +13,12 @@ from textual.widgets import (
     DirectoryTree,
     Footer,
     Header,
-    Label,
     Static,
 )
 
-from safari_view.state import SafariViewState
+from safari_view.state import SafariViewLaunchConfig, SafariViewState
 from safari_view.render import create_pipeline, RenderContext, RenderMode
 from safari_view.ui_terminal.widgets import ChunkyImage
-
-if TYPE_CHECKING:
-    from PIL import Image
 
 
 _log = logging.getLogger("safari_view.ui_terminal")
@@ -92,9 +87,14 @@ class SafariViewApp(App):
         ("enter", "open_image", "Open"),
     ]
 
-    def __init__(self, state: SafariViewState | None = None) -> None:
+    def __init__(
+        self,
+        state: SafariViewState | None = None,
+        launch_config: SafariViewLaunchConfig | None = None,
+    ) -> None:
         super().__init__()
         self.state = state or SafariViewState()
+        self.launch_config = launch_config or SafariViewLaunchConfig()
         self.pipeline = create_pipeline()
         self._last_selected_path: Path | None = None
 
@@ -111,6 +111,7 @@ class SafariViewApp(App):
     def on_mount(self) -> None:
         """Called when the app is mounted."""
         self.title = f"{self.TITLE} - {self.state.render_mode.name}"
+        self.call_after_refresh(self._apply_startup_state)
 
     def on_resize(self) -> None:
         """Handle terminal resize by refreshing the image."""
@@ -125,6 +126,7 @@ class SafariViewApp(App):
         """Toggle the file browser pane visibility."""
         file_pane = self.query_one("#file_pane")
         file_pane.visible = not file_pane.visible
+        self._update_focus_from_visibility()
 
     def action_set_mode_2600(self) -> None:
         """Set rendering mode to 2600."""
@@ -170,6 +172,32 @@ class SafariViewApp(App):
         if self._last_selected_path:
             self._load_and_render_image(self._last_selected_path)
         self.title = f"{self.TITLE} - {self.state.render_mode.name}"
+
+    def _apply_startup_state(self) -> None:
+        """Apply startup-only launch configuration once widgets are ready."""
+        file_pane = self.query_one("#file_pane", Vertical)
+        file_pane.visible = self.launch_config.browser_visible
+
+        startup_path = self.launch_config.selected_path
+        if startup_path is not None and startup_path.is_file():
+            self._last_selected_path = startup_path
+
+        if self.state.current_image_path is not None:
+            self._last_selected_path = self.state.current_image_path
+            self._load_and_render_image(self.state.current_image_path)
+
+        self._update_focus_from_visibility()
+
+    def _update_focus_from_visibility(self) -> None:
+        """Keep focus aligned with the requested startup target."""
+        file_pane = self.query_one("#file_pane", Vertical)
+        tree = self.query_one(DirectoryTree)
+        viewer = self.query_one("#image_viewer", ChunkyImage)
+
+        if self.launch_config.focus_target == "viewer" or not file_pane.visible:
+            self.set_focus(viewer)
+        else:
+            self.set_focus(tree)
 
     def _load_and_render_image(self, path: Path) -> None:
         """Load and transform the image for display."""

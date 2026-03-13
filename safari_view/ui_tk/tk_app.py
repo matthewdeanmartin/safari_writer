@@ -4,18 +4,15 @@ Provides a higher-fidelity windowed image viewer.
 """
 from __future__ import annotations
 
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from PIL import Image, ImageTk
+from PIL import ImageTk
 
 from safari_view.state import SafariViewState
 from safari_view.render import create_pipeline, RenderContext, RenderMode
-
-if TYPE_CHECKING:
-    pass
 
 
 class SafariViewTkApp:
@@ -116,6 +113,7 @@ class SafariViewTkApp:
                 target_width=w,
                 target_height=h,
                 dithering=self.state.dithering,
+                pixel_grid=self.state.pixel_grid,
             )
             
             transformed = self.pipeline.process(path, self.state.render_mode, context)
@@ -133,9 +131,11 @@ class SafariViewTkApp:
         self.root.mainloop()
 
 
-def main():
-    app = SafariViewTkApp()
-    app.run()
+def main() -> int:
+    """Launch the Tk frontend through the shared SafariView CLI."""
+    from safari_view.main import main as shared_main
+
+    return shared_main(["tk", *sys.argv[1:]])
 
 
 if __name__ == "__main__":

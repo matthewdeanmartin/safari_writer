@@ -1,13 +1,19 @@
-"""
-SafariView State.
-Manages the application state, including current image, render mode, and configuration.
-"""
+"""State models for SafariView."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from safari_view.render import RenderMode
+
+
+@dataclass(frozen=True)
+class SafariViewLaunchConfig:
+    """Startup-only configuration for the Textual frontend."""
+
+    browser_visible: bool = True
+    focus_target: str = "browser"
+    selected_path: Path | None = None
 
 
 @dataclass

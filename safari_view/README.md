@@ -24,11 +24,25 @@ pip install .
 ### Terminal UI
 ```bash
 safari-view [path]
+safari-view tui .
+safari-view browse images --select images\frog.png
+safari-view open images\frog.png --mode st --no-dithering
 ```
 
 ### Desktop UI
 ```bash
 safari-view-tk [path]
+safari-view tk --image images\frog.png --mode native
+```
+
+### Headless Rendering
+```bash
+safari-view render images\frog.png --mode 2600 --width 160 --height 192 --output out\frog-2600.png
+```
+
+### List Modes
+```bash
+safari-view modes
 ```
 
 ## Key Bindings

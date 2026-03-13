@@ -7,6 +7,7 @@ from pathlib import Path
 
 import safari_dos
 from safari_dos.main import main as safari_dos_main, parse_args
+from safari_dos.state import SafariDosLaunchConfig, SafariDosState
 from safari_dos.screens import SafariDosBrowserScreen
 from safari_dos.services import (
     copy_paths,
@@ -61,7 +62,33 @@ def test_public_exports_are_explicit():
 def test_parse_args_supports_optional_start_path():
     args = parse_args(["docs"])
 
+    assert args.command == "menu"
     assert args.path == "docs"
+
+
+def test_parse_args_supports_browse_startup_flags():
+    args = parse_args(
+        [
+            "browse",
+            "docs",
+            "--show-hidden",
+            "--sort",
+            "size",
+            "--descending",
+            "--filter",
+            "draft",
+            "--select",
+            "draft.sfw",
+        ]
+    )
+
+    assert args.command == "browse"
+    assert args.path == "docs"
+    assert args.show_hidden is True
+    assert args.sort == "size"
+    assert args.descending is True
+    assert args.filter == "draft"
+    assert args.select == "draft.sfw"
 
 
 def test_list_directory_filters_hidden_files(tmp_path):
@@ -214,7 +241,13 @@ def test_main_launches_writer_when_app_requests_handoff(monkeypatch, tmp_path):
     safari_writer_main_module = importlib.import_module("safari_writer.main")
 
     class FakeApp:
-        def __init__(self, start_path: Path | None = None) -> None:
+        def __init__(
+            self,
+            start_path: Path | None = None,
+            *,
+            state: SafariDosState | None = None,
+            launch_config: SafariDosLaunchConfig | None = None,
+        ) -> None:
             self.start_path = start_path
 
         def run(self):
@@ -229,6 +262,104 @@ def test_main_launches_writer_when_app_requests_handoff(monkeypatch, tmp_path):
 
     assert exit_code == 0
     assert launched == [["tui", "edit", "--file", str(document)]]
+
+
+def test_main_browse_launches_with_startup_state(monkeypatch, tmp_path):
+    selected = tmp_path / "draft.sfw"
+    selected.write_text("Hello", encoding="utf-8")
+    captured: dict[str, object] = {}
+    safari_dos_main_module = importlib.import_module("safari_dos.main")
+
+    class FakeApp:
+        def __init__(
+            self,
+            start_path: Path | None = None,
+            *,
+            state: SafariDosState | None = None,
+            launch_config: SafariDosLaunchConfig | None = None,
+        ) -> None:
+            captured["start_path"] = start_path
+            captured["state"] = state
+            captured["launch_config"] = launch_config
+
+        def run(self):
+            captured["ran"] = True
+            return None
+
+    monkeypatch.setattr(safari_dos_main_module, "SafariDosApp", FakeApp)
+
+    exit_code = safari_dos_main(
+        [
+            "browse",
+            str(tmp_path),
+            "--show-hidden",
+            "--preview",
+            "fullscreen",
+            "--sort",
+            "date",
+            "--descending",
+            "--filter",
+            "draft",
+            "--select",
+            "draft.sfw",
+        ]
+    )
+
+    assert exit_code == 0
+    state = captured["state"]
+    launch = captured["launch_config"]
+    assert state.current_path == tmp_path.resolve()
+    assert state.show_hidden is True
+    assert state.show_preview is True
+    assert state.fullscreen_preview is True
+    assert state.sort_field == "date"
+    assert state.ascending is False
+    assert state.filter_text == "draft"
+    assert launch.initial_screen == "browser"
+    assert launch.selected_path == selected.resolve()
+    assert captured["ran"] is True
+
+
+def test_main_ls_lists_directory_entries(tmp_path, capsys):
+    folder = tmp_path / "folder"
+    folder.mkdir()
+    doc = tmp_path / "doc.txt"
+    doc.write_text("hello", encoding="utf-8")
+
+    exit_code = safari_dos_main(["ls", str(tmp_path), "--sort", "name"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "folder" in captured.out
+    assert "doc.txt" in captured.out
+
+
+def test_main_mkdir_creates_directory(tmp_path, capsys):
+    exit_code = safari_dos_main(["mkdir", str(tmp_path), "Drafts"])
+
+    captured = capsys.readouterr()
+    created = tmp_path / "Drafts"
+    assert exit_code == 0
+    assert created.is_dir()
+    assert str(created.resolve()) in captured.out
+
+
+def test_main_edit_delegates_to_safari_writer(monkeypatch, tmp_path):
+    document = tmp_path / "draft.sfw"
+    document.write_text("Hello", encoding="utf-8")
+    launched: list[list[str]] = []
+    safari_writer_main_module = importlib.import_module("safari_writer.main")
+
+    monkeypatch.setattr(
+        safari_writer_main_module,
+        "main",
+        lambda argv: launched.append(argv) or 0,
+    )
+
+    exit_code = safari_dos_main(["edit", str(document)])
+
+    assert exit_code == 0
+    assert launched == [["tui", "edit", "--file", str(document.resolve())]]
 
 
 def test_dos_help_screen_is_modal():

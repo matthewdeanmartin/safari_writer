@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-__all__ = ["SafariDosExitRequest", "SafariDosState"]
+__all__ = ["SafariDosExitRequest", "SafariDosLaunchConfig", "SafariDosState"]
 
 
 @dataclass(frozen=True)
@@ -16,6 +16,15 @@ class SafariDosExitRequest:
     document_path: Path | None = None
     location_path: Path | None = None
     filename: str | None = None
+
+
+@dataclass(frozen=True)
+class SafariDosLaunchConfig:
+    """Startup-only routing for Safari DOS."""
+
+    initial_screen: str = "menu"
+    picker_mode: str | None = None
+    selected_path: Path | None = None
 
 
 @dataclass

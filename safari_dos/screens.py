@@ -466,11 +466,18 @@ class SafariDosBrowserScreen(Screen):
     ]
 
     def __init__(
-        self, state: SafariDosState, *, picker_mode: str | None = None
+        self,
+        state: SafariDosState,
+        *,
+        picker_mode: str | None = None,
+        initial_selection_path: Path | None = None,
     ) -> None:
         super().__init__()
         self._state = state
         self._picker_mode = picker_mode
+        self._initial_selection_path = (
+            initial_selection_path.resolve() if initial_selection_path is not None else None
+        )
         self._entries: list[DirectoryEntry] = []
         self._selected_index = 0
         self._message = "Ready"
@@ -613,7 +620,19 @@ class SafariDosBrowserScreen(Screen):
         self._selected_index = min(
             self._selected_index, max(len(self._entries) - 1, 0)
         )
+        self._apply_initial_selection()
         self._refresh_view()
+
+    def _apply_initial_selection(self) -> None:
+        if self._initial_selection_path is None:
+            return
+        target = self._initial_selection_path
+        for index, entry in enumerate(self._entries):
+            if entry.path.resolve() == target:
+                self._selected_index = index
+                self._initial_selection_path = None
+                return
+        self._initial_selection_path = None
 
     def _selected_entry(self) -> DirectoryEntry | None:
         if not self._entries:
