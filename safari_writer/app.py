@@ -72,6 +72,8 @@ from safari_repl.screens import ReplMainMenuScreen, ReplEditorScreen
 from safari_repl.state import ReplState
 from safari_reader.screens import SafariReaderMainMenuScreen
 from safari_reader.state import SafariReaderState
+from safari_view.ui_terminal.textual_app import SafariViewScreen
+from safari_view.state import SafariViewState
 
 __all__ = ["SafariWriterApp"]
 
@@ -234,6 +236,8 @@ class SafariWriterApp(App):
             self._action_safari_repl()
         elif action == "safari_reader":
             self._action_safari_reader()
+        elif action == "safari_view":
+            self._action_safari_view()
         elif action == "load":
             self._action_load_via_safari_dos()
         elif action == "save":
@@ -716,6 +720,10 @@ class SafariWriterApp(App):
     def quit_reader(self) -> None:
         """Called by SafariReaderMainMenuScreen to return to the writer menu."""
         self.pop_screen()
+
+    def _action_safari_view(self) -> None:
+        start_path = self._picker_start_path()
+        self.push_screen(SafariViewScreen(SafariViewState(current_path=start_path)))
 
     def _action_safari_repl(self, bas_path: Path | None = None) -> None:
         if self.repl_state is None:

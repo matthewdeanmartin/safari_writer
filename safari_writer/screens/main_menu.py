@@ -1,7 +1,9 @@
 """Main Menu screen — the hub for all Safari Writer operations."""
 
 from datetime import datetime
+from typing import cast
 
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
@@ -23,7 +25,7 @@ def _menu_label_suffix(key: str, text: str) -> str:
     return " " + text
 
 
-# Column 1: document operations — (hotkey, full_msgid, action)
+# Column 1: Words
 _COL1_DEFS = [
     ("C", "Create File", "create"),
     ("E", "Edit File", "edit"),
@@ -31,11 +33,13 @@ _COL1_DEFS = [
     ("P", "Print File", "print"),
     ("G", "Global Format", "global_format"),
     ("M", "Mail Merge", "mail_merge"),
+    ("I", "lIbrary Reader", "safari_reader"),
     ("?", "Doctor (diagnostics)", "doctor"),
 ]
 
-# Column 2: file/disk operations
+# Column 2: DOS
 _COL2_DEFS = [
+    ("O", "Open Safari DOS", "safari_dos"),
     ("1", "Index Current Folder", "index1"),
     ("2", "Index External Drive", "index2"),
     ("K", "Backup & Restore", "backup_restore"),
@@ -47,29 +51,16 @@ _COL2_DEFS = [
     ("Q", "Quit", "quit"),
 ]
 
-# Column 3: tools & extras (separator + special items)
+# Column 3: Tools
 _COL3_DEFS = [
-    ("O", "Open Safari DOS", "safari_dos"),
     ("B", "Base (Address Book)", "safari_base"),
     ("H", "Help Chat", "safari_chat"),
     ("N", "Net Safari Fed", "safari_fed"),
     ("R", "Run Safari REPL", "safari_repl"),
-    ("I", "lIbrary Reader", "safari_reader"),
+    ("W", "atari VieWer", "safari_view"),
     ("X", "Style Switcher", "style_switcher"),
     ("T", "Try Demo Mode", "demo"),
 ]
-
-# Combined for binding generation (keep old names for compat)
-COL1_ITEMS = [
-    (key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL1_DEFS
-]
-COL2_ITEMS = [
-    (key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL2_DEFS
-]
-COL3_ITEMS = [
-    (key, _menu_label_suffix(key, msgid), action) for key, msgid, action in _COL3_DEFS
-]
-MENU_ITEMS = COL1_ITEMS + COL2_ITEMS + COL3_ITEMS
 
 MENU_CSS = """
 MainMenuScreen {
@@ -112,9 +103,13 @@ MainMenuScreen {
     color: $foreground;
 }
 
-.menu-separator {
+.menu-header {
     height: 1;
-    color: $secondary;
+    text-align: center;
+    text-style: bold;
+    background: $accent;
+    color: $surface;
+    margin-bottom: 1;
 }
 
 .menu-key {
@@ -156,9 +151,25 @@ MainMenuScreen {
 
 
 class MenuItem(Static):
-    def __init__(self, key: str, label: str) -> None:
-        markup = f"[bold underline]{key}[/]{label}"
-        super().__init__(markup, classes="menu-item")
+    def __init__(self, key: str, label: str, action: str) -> None:
+        self.key_char = key
+        self.label_text = label
+        self.action_name = action
+        super().__init__("", classes="menu-item")
+        self._is_selected = False
+
+    def set_selected(self, selected: bool) -> None:
+        self._is_selected = selected
+        self._update_markup()
+
+    def _update_markup(self) -> None:
+        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
+        if self._is_selected:
+            markup = f"[reverse]{markup}[/reverse]"
+        self.update(markup)
+
+    def on_mount(self) -> None:
+        self._update_markup()
 
 
 class MainMenuScreen(Screen):
@@ -186,15 +197,24 @@ class MainMenuScreen(Screen):
         Binding("n", "menu_action('safari_fed')", "Open Safari Fed", show=False),
         Binding("r", "menu_action('safari_repl')", "Run Safari REPL", show=False),
         Binding("i", "menu_action('safari_reader')", "Library Reader", show=False),
+        Binding("w", "menu_action('safari_view')", "Atari Viewer", show=False),
         Binding("x", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("t", "menu_action('demo')", "Try Demo Mode", show=False),
         Binding("question_mark", "menu_action('doctor')", "Doctor", show=False),
+        # Arrow navigation
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("left", "cursor_left", "Left", show=False),
+        Binding("right", "cursor_right", "Right", show=False),
+        Binding("enter", "activate", "Activate", show=False),
     ]
 
     def __init__(self) -> None:
         super().__init__()
         self._message = ""
         self._clock_timer: Timer | None = None
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
 
     def compose(self) -> ComposeResult:
         from textual.containers import Container, Horizontal
@@ -208,21 +228,112 @@ class MainMenuScreen(Screen):
                 yield Static(_("*** SAFARI WRITER ***"), id="title")
                 with Horizontal(id="menu-columns"):
                     with Container(id="menu-col-1"):
-                        for key, msgid, _unused in _COL1_DEFS:
-                            yield MenuItem(key, _label(key, msgid))
+                        yield Static(_("*** Words ***"), classes="menu-header")
+                        for key, msgid, action in _COL1_DEFS:
+                            yield MenuItem(key, _label(key, msgid), action)
                     with Container(id="menu-col-2"):
-                        for key, msgid, _unused in _COL2_DEFS:
-                            yield MenuItem(key, _label(key, msgid))
+                        yield Static(_("*** DOS ***"), classes="menu-header")
+                        for key, msgid, action in _COL2_DEFS:
+                            yield MenuItem(key, _label(key, msgid), action)
                     with Container(id="menu-col-3"):
-                        yield Static(_("--- Tools ---"), classes="menu-separator")
-                        for key, msgid, _action in _COL3_DEFS:
-                            yield MenuItem(key, _label(key, msgid))
+                        yield Static(_("*** Tools ***"), classes="menu-header")
+                        for key, msgid, action in _COL3_DEFS:
+                            yield MenuItem(key, _label(key, msgid), action)
 
         with Container(id="menu-footer"):
             yield Static(self._context_text(), id="context-bar")
             with Horizontal(id="status-bar"):
                 yield Static(self._status_line(), id="status-text")
                 yield Static(self._clock_text(), id="status-clock")
+
+    def on_mount(self) -> None:
+        self._menu_widgets = list(self.query(MenuItem))
+        self._refresh_menu()
+        self._refresh_footer()
+        self._clock_timer = self.set_interval(1, self._update_clock)
+
+    def _refresh_menu(self) -> None:
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        # If in first column, wrap or stop? Stop at top.
+        col1_len = len(_COL1_DEFS)
+        col2_len = len(_COL2_DEFS)
+        col3_len = len(_COL3_DEFS)
+
+        if self._selected_index < col1_len:
+            # Col 1
+            if self._selected_index > 0:
+                self._selected_index -= 1
+        elif self._selected_index < col1_len + col2_len:
+            # Col 2
+            if self._selected_index > col1_len:
+                self._selected_index -= 1
+        else:
+            # Col 3
+            if self._selected_index > col1_len + col2_len:
+                self._selected_index -= 1
+        self._refresh_menu()
+
+    def action_cursor_down(self) -> None:
+        col1_len = len(_COL1_DEFS)
+        col2_len = len(_COL2_DEFS)
+        col3_len = len(_COL3_DEFS)
+
+        if self._selected_index < col1_len:
+            # Col 1
+            if self._selected_index < col1_len - 1:
+                self._selected_index += 1
+        elif self._selected_index < col1_len + col2_len:
+            # Col 2
+            if self._selected_index < col1_len + col2_len - 1:
+                self._selected_index += 1
+        else:
+            # Col 3
+            if self._selected_index < col1_len + col2_len + col3_len - 1:
+                self._selected_index += 1
+        self._refresh_menu()
+
+    def action_cursor_left(self) -> None:
+        col1_len = len(_COL1_DEFS)
+        col2_len = len(_COL2_DEFS)
+
+        if self._selected_index < col1_len:
+            # Already in Col 1
+            pass
+        elif self._selected_index < col1_len + col2_len:
+            # In Col 2, go to Col 1
+            row = self._selected_index - col1_len
+            self._selected_index = min(row, col1_len - 1)
+        else:
+            # In Col 3, go to Col 2
+            row = self._selected_index - (col1_len + col2_len)
+            self._selected_index = col1_len + min(row, col2_len - 1)
+        self._refresh_menu()
+
+    def action_cursor_right(self) -> None:
+        col1_len = len(_COL1_DEFS)
+        col2_len = len(_COL2_DEFS)
+        col3_len = len(_COL3_DEFS)
+
+        if self._selected_index < col1_len:
+            # In Col 1, go to Col 2
+            row = self._selected_index
+            self._selected_index = col1_len + min(row, col2_len - 1)
+        elif self._selected_index < col1_len + col2_len:
+            # In Col 2, go to Col 3
+            row = self._selected_index - col1_len
+            self._selected_index = col1_len + col2_len + min(row, col3_len - 1)
+        else:
+            # Already in Col 3
+            pass
+        self._refresh_menu()
+
+    def action_activate(self) -> None:
+        if 0 <= self._selected_index < len(self._menu_widgets):
+            action = self._menu_widgets[self._selected_index].action_name
+            self.action_menu_action(action)
 
     def _clock_text(self) -> str:
         from safari_writer.locale_info import format_datetime
@@ -302,10 +413,6 @@ class MainMenuScreen(Screen):
         self.query_one("#context-bar", Static).update(self._context_text())
         self.query_one("#status-text", Static).update(self._status_line())
         self._update_clock()
-
-    def on_mount(self) -> None:
-        self._refresh_footer()
-        self._clock_timer = self.set_interval(1, self._update_clock)
 
     def on_show(self) -> None:
         self._refresh_footer()

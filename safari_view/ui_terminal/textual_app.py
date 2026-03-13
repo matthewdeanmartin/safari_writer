@@ -9,6 +9,7 @@ from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
+from textual.screen import Screen
 from textual.widgets import (
     DirectoryTree,
     Footer,
@@ -47,33 +48,8 @@ def resolve_render_target(
     return max(1, resolved_width), max(2, resolved_height_rows * 2)
 
 
-class SafariViewApp(App):
-    """SafariView — a retro 8-bit image viewer."""
-
-    TITLE = "SafariView"
-    CSS = """
-    Screen {
-        background: #000033; /* Dark blue background */
-        color: #00FFFF; /* Cyan text */
-    }
-    
-    #file_pane {
-        width: 30;
-        border-right: solid #00FFFF;
-    }
-    
-    #viewer_pane {
-        width: 1fr;
-        height: 1fr;
-        align: center middle;
-        overflow: hidden;
-    }
-    
-    ChunkyImage {
-        width: 1fr;
-        height: 1fr;
-    }
-    """
+class SafariViewScreen(Screen):
+    """SafariView — a retro 8-bit image viewer as a Screen."""
 
     BINDINGS = [
         ("q", "quit", "Quit"),
@@ -85,6 +61,7 @@ class SafariViewApp(App):
         ("d", "toggle_dithering", "Dithering"),
         ("g", "toggle_pixel_grid", "Pixel Grid"),
         ("enter", "open_image", "Open"),
+        ("escape", "back", "Back"),
     ]
 
     def __init__(
@@ -99,7 +76,7 @@ class SafariViewApp(App):
         self._last_selected_path: Path | None = None
 
     def compose(self) -> ComposeResult:
-        """Compose the application layout."""
+        """Compose the screen layout."""
         yield Header()
         with Horizontal():
             with Vertical(id="file_pane"):
@@ -109,8 +86,8 @@ class SafariViewApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        """Called when the app is mounted."""
-        self.title = f"{self.TITLE} - {self.state.render_mode.name}"
+        """Called when the screen is mounted."""
+        self.app.title = f"SafariView - {self.state.render_mode.name}"
         self.call_after_refresh(self._apply_startup_state)
 
     def on_resize(self) -> None:
@@ -167,11 +144,15 @@ class SafariViewApp(App):
                 self._last_selected_path = path
                 self._load_and_render_image(path)
 
+    def action_back(self) -> None:
+        """Return to the previous screen."""
+        self.app.pop_screen()
+
     def _refresh_image(self) -> None:
         """Rerender the current image with current settings."""
         if self._last_selected_path:
             self._load_and_render_image(self._last_selected_path)
-        self.title = f"{self.TITLE} - {self.state.render_mode.name}"
+        self.app.title = f"SafariView - {self.state.render_mode.name}"
 
     def _apply_startup_state(self) -> None:
         """Apply startup-only launch configuration once widgets are ready."""
@@ -208,8 +189,8 @@ class SafariViewApp(App):
 
             pane_width = max(pane.content_size.width, pane.size.width)
             pane_height = max(pane.content_size.height, pane.size.height)
-            console_width = max(self.size.width, self.console.width)
-            console_height = max(self.size.height, self.console.height)
+            console_width = max(self.app.size.width, self.app.console.width)
+            console_height = max(self.app.size.height, self.app.console.height)
             browser_width = (
                 max(file_pane.size.width, FILE_PANE_FALLBACK_WIDTH)
                 if file_pane.visible
@@ -257,11 +238,52 @@ class SafariViewApp(App):
             )
             viewer.update_image(transformed)
             self.state.current_image_path = path
-            self.notify(f"Loaded: {path.name}")
+            self.app.notify(f"Loaded: {path.name}")
 
         except Exception as e:
             _log.exception("Error loading image %s", path)
-            self.notify(f"Error loading image: {e}", severity="error")
+            self.app.notify(f"Error loading image: {e}", severity="error")
+
+
+class SafariViewApp(App):
+    """SafariView — a retro 8-bit image viewer."""
+
+    TITLE = "SafariView"
+    CSS = """
+    Screen {
+        background: #000033; /* Dark blue background */
+        color: #00FFFF; /* Cyan text */
+    }
+    
+    #file_pane {
+        width: 30;
+        border-right: solid #00FFFF;
+    }
+    
+    #viewer_pane {
+        width: 1fr;
+        height: 1fr;
+        align: center middle;
+        overflow: hidden;
+    }
+    
+    ChunkyImage {
+        width: 1fr;
+        height: 1fr;
+    }
+    """
+
+    def __init__(
+        self,
+        state: SafariViewState | None = None,
+        launch_config: SafariViewLaunchConfig | None = None,
+    ) -> None:
+        super().__init__()
+        self.state = state or SafariViewState()
+        self.launch_config = launch_config or SafariViewLaunchConfig()
+
+    def on_mount(self) -> None:
+        self.push_screen(SafariViewScreen(self.state, self.launch_config))
 
 
 def main():
