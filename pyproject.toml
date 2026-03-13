@@ -65,6 +65,7 @@ include = [
     "safari_writer/*.json",
     "safari_writer/locales/**/*.mo",
     "safari_writer/macros/*.bas",
+    "safari_writer/*.png",
     "safari_writer/py.typed",
     "safari_dos/py.typed",
     "safari_chat/default_help.md",

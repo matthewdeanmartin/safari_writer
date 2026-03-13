@@ -186,7 +186,7 @@ def test_build_startup_request_for_safari_repl():
 
 def test_main_default_invocation_launches_menu(monkeypatch):
     captured: dict[str, object] = {}
-    splash_calls: list[bool] = []
+    splash_calls: list[tuple[bool, object | None]] = []
 
     def fake_launch(state, request, args):
         captured["state"] = state
@@ -194,24 +194,32 @@ def test_main_default_invocation_launches_menu(monkeypatch):
         return 0
 
     monkeypatch.setattr(
+        "safari_writer.main.load_settings",
+        lambda: {"splash_style": "logo"},
+    )
+    monkeypatch.setattr(
         "safari_writer.main.maybe_show_splash",
-        lambda *, no_splash: splash_calls.append(no_splash),
+        lambda *, no_splash, style: splash_calls.append((no_splash, style)),
     )
     monkeypatch.setattr("safari_writer.main._launch_tui", fake_launch)
 
     exit_code = main([])
 
     assert exit_code == 0
-    assert splash_calls == [False]
+    assert splash_calls == [(False, "logo")]
     assert captured["request"] == StartupRequest(destination="menu")
 
 
 def test_main_passes_no_splash_flag_to_tui_launch(monkeypatch):
-    splash_calls: list[bool] = []
+    splash_calls: list[tuple[bool, object | None]] = []
 
     monkeypatch.setattr(
+        "safari_writer.main.load_settings",
+        lambda: {"splash_style": "fancy"},
+    )
+    monkeypatch.setattr(
         "safari_writer.main.maybe_show_splash",
-        lambda *, no_splash: splash_calls.append(no_splash),
+        lambda *, no_splash, style: splash_calls.append((no_splash, style)),
     )
     monkeypatch.setattr(
         "safari_writer.main._launch_tui", lambda state, request, args: 0
@@ -220,7 +228,7 @@ def test_main_passes_no_splash_flag_to_tui_launch(monkeypatch):
     exit_code = main(["--no-splash"])
 
     assert exit_code == 0
-    assert splash_calls == [True]
+    assert splash_calls == [(True, "fancy")]
 
 
 def test_main_tui_edit_loads_file_and_request(monkeypatch, tmp_path):

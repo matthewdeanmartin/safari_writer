@@ -406,6 +406,8 @@ class _EditorScreenHost(_MessageScreen, Protocol):
 class _EditorApp(Protocol):
     def _action_print(self) -> None: ...
 
+    def _action_save_via_safari_dos(self) -> None: ...
+
 
 class EditorArea(Widget, can_focus=True):
     """The main text editing widget."""

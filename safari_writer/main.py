@@ -31,6 +31,7 @@ from safari_writer.proofing import (
 )
 from safari_writer.splash import maybe_show_splash
 from safari_writer.state import AppState, GlobalFormat
+from safari_writer.themes import load_settings
 
 __all__ = ["build_parser", "build_startup_request", "main", "parse_args"]
 
@@ -562,7 +563,11 @@ def _handle_tui_command(args: argparse.Namespace) -> int:
 
 
 def _show_tui_splash(args: argparse.Namespace) -> None:
-    maybe_show_splash(no_splash=getattr(args, "no_splash", False))
+    settings = load_settings()
+    maybe_show_splash(
+        no_splash=getattr(args, "no_splash", False),
+        style=settings.get("splash_style"),
+    )
 
 
 def _launch_tui(
