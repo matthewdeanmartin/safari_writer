@@ -22,7 +22,6 @@ from textual.containers import Container
 from textual.screen import Screen
 from textual.widgets import RichLog, Static
 
-from safari_basic.interpreter import BasicError
 from safari_basic.repl import SafariREPL
 from safari_repl.state import ReplState
 

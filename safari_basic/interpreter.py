@@ -420,6 +420,7 @@ class SafariBasic:
         match = re.match(r"^[A-Za-z][A-Za-z0-9_]*\$?", scanner.remaining())
         if not match:
             self._error("Expected variable")
+        assert match is not None
         raw_name = match.group(0)
         name, is_string = raw_name.upper(), raw_name.endswith("$")
         scanner.advance(len(raw_name))
@@ -694,7 +695,8 @@ class SafariBasic:
             del self.files[fd]
 
     def _eval_expr(self, scanner: Scanner) -> Union[float, str]:
-        left = self._eval_term(scanner)
+        """Evaluates an expression, handling relational operators with lowest precedence."""
+        left = self._eval_sum(scanner)
         while scanner.remaining():
             scanner.skip_spaces()
             rel_op, rem = None, scanner.remaining()
@@ -704,7 +706,7 @@ class SafariBasic:
                     break
             if rel_op:
                 scanner.advance(len(rel_op))
-                right = self._eval_term(scanner)
+                right = self._eval_sum(scanner)
                 if isinstance(left, type(right)):
                     if rel_op == "=":
                         res = left == right
@@ -716,29 +718,37 @@ class SafariBasic:
                         res = left > right
                     elif rel_op == "<=":
                         res = left <= right
-                    elif rel_op == ">=":
+                    else:  # rel_op == ">="
                         res = left >= right
                     left = 1.0 if res else 0.0
                 else:
                     self._error("Type mismatch in comparison")
             else:
-                op = scanner.peek()
-                if op in ("+", "-"):
-                    scanner.advance()
-                    right = self._eval_term(scanner)
-                    if op == "+":
-                        if isinstance(left, str) and isinstance(right, str):
-                            left = left + right
-                        elif isinstance(left, float) and isinstance(right, float):
-                            left = left + right
-                        else:
-                            self._error("Type mismatch")
+                break
+        return left
+
+    def _eval_sum(self, scanner: Scanner) -> Union[float, str]:
+        """Evaluates addition and subtraction, which have higher precedence than comparisons."""
+        left = self._eval_term(scanner)
+        while scanner.remaining():
+            scanner.skip_spaces()
+            op = scanner.peek()
+            if op in ("+", "-"):
+                scanner.advance()
+                right = self._eval_term(scanner)
+                if op == "+":
+                    if isinstance(left, str) and isinstance(right, str):
+                        left = left + right
+                    elif isinstance(left, float) and isinstance(right, float):
+                        left = left + right
                     else:
-                        if isinstance(left, str) or isinstance(right, str):
-                            self._error("Type mismatch")
-                        left = left - right
+                        self._error("Type mismatch")
                 else:
-                    break
+                    if isinstance(left, str) or isinstance(right, str):
+                        self._error("Type mismatch")
+                    left = left - right
+            else:
+                break
         return left
 
     def _eval_term(self, scanner: Scanner) -> Union[float, str]:
@@ -803,7 +813,7 @@ class SafariBasic:
         if char == "+":
             scanner.advance()
             return self._eval_factor(scanner)
-        rem = scanner.remaining().upper()
+        # rem = scanner.remaining().upper() # dead code?
         for func in [
             "SIN",
             "COS",

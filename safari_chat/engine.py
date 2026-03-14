@@ -365,8 +365,8 @@ _FALLBACKS: list[str] = [
 
 
 def parse_document(text: str) -> list[TopicChunk]:
-    """Split a Markdown document on ``---`` delimiters into topic chunks."""
-    raw_chunks = re.split(r"^\s*---\s*$", text, flags=re.MULTILINE)
+    """Split a Markdown document on ``---`` or ``___`` delimiters into topic chunks."""
+    raw_chunks = re.split(r"^\s*(?:---|_{3,})\s*$", text, flags=re.MULTILINE)
     result: list[TopicChunk] = []
     for _idx, raw in enumerate(raw_chunks):
         body = raw.strip()

@@ -1,9 +1,6 @@
-import json
 import os
 import re
-import sys
 import threading
-import time
 from pathlib import Path
 from typing import List, Optional, TextIO
 
@@ -145,7 +142,7 @@ class SafariREPL:
             path = os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
-                    self.history = [l.rstrip("\n") for l in f.readlines()][
+                    self.history = [line.rstrip("\n") for line in f.readlines()][
                         -self.MAX_HISTORY :
                     ]
         except Exception:
@@ -404,8 +401,8 @@ class SafariREPL:
         try:
             with open(filename, "r", encoding="utf-8") as f:
                 self.interpreter.reset()
-                for l in f:
-                    self.process_line(l.strip())
+                for line in f:
+                    self.process_line(line.strip())
                 self.current_filename = filename
                 self.modified = False
                 self.print_out(f"LOADED {filename}")
@@ -704,7 +701,7 @@ class SafariREPL:
             except Exception:
                 pass
             self.print_out(f"  {ex.stem.upper()}{desc}")
-        self.print_out(f"\nTYPE EXAMPLES <NAME> TO LOAD ONE")
+        self.print_out("\nTYPE EXAMPLES <NAME> TO LOAD ONE")
 
 
 def main():

@@ -79,7 +79,7 @@ class SafariReplApp(App[ReplExitRequest | None]):
 from textual import events  # noqa: E402
 from textual.app import ComposeResult  # noqa: E402
 from textual.containers import Container  # noqa: E402
-from textual.screen import ModalScreen, Screen  # noqa: E402
+from textual.screen import ModalScreen  # noqa: E402
 from textual.widgets import Static  # noqa: E402
 
 _PICKER_CSS = """

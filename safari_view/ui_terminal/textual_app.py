@@ -11,7 +11,7 @@ from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import DirectoryTree, Footer, Header, Static
+from textual.widgets import DirectoryTree, Footer, Header
 
 from safari_view.render import RenderContext, RenderMode, create_pipeline
 from safari_view.state import SafariViewLaunchConfig, SafariViewState
