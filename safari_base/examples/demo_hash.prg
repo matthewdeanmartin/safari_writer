@@ -19,7 +19,11 @@ config("port") = 8080
 ? ""
 ? "Iterating over keys using FOR EACH:"
 FOR EACH k IN config
-    ? "Key: " + k + " = " + STR(config(k))
+    IF k = "port"
+        ? "Key: " + k + " = " + STR(config(k))
+    ELSE
+        ? "Key: " + k + " = " + config(k)
+    ENDIF
 ENDFOR
 
 ? ""

@@ -525,8 +525,9 @@ def test_writer_finish_fed_compose_returns_to_fed(monkeypatch):
 def test_print_menu_includes_mastodon_option():
     """The Print/Export dialog includes a Mastodon posting option."""
     from safari_writer.screens.print_screen import PrintScreen
+    from safari_writer.file_types import HighlightProfile
 
-    screen = PrintScreen()
+    screen = PrintScreen(HighlightProfile.SAFARI_WRITER)
     assert hasattr(screen, "on_key")
 
 

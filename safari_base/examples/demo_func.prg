@@ -20,7 +20,7 @@ DEF FN Cube(x) = x * x * x
 
 ? ""
 ? "Calling user-defined procedure Greet('User'):"
-DO Greet WITH "User"
+Greet("User")
 
 ? ""
 ? "Calling inline DEF FN Cube(3):"

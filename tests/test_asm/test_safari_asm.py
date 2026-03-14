@@ -5,6 +5,8 @@ from __future__ import annotations
 import io
 import math
 from pathlib import Path
+
+import pytest
 import safari_asm
 from safari_asm import SafariAsmInterpreter, parse_args
 from safari_asm.parser import parse_source
@@ -39,6 +41,96 @@ def run_example(
 ) -> tuple[SafariAsmInterpreter, str, str]:
     source = (EXAMPLE_DIR / filename).read_text(encoding="utf-8")
     return run_program(source, argv=argv, stdin_text=stdin_text)
+
+
+def assert_example_runs(
+    filename: str,
+    *,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    argv: list[str] | None = None
+    stdin_text = ""
+    dst: Path | None = None
+
+    if filename == "01_prompt_name.asm":
+        stdin_text = "  Matt  \n"
+    elif filename in {"02_echo_stdin.asm", "03_count_stdin_lines.asm"}:
+        stdin_text = "ALPHA\nBETA\n"
+    elif filename == "07_csv_split.asm":
+        stdin_text = "LEFT,RIGHT\n"
+    elif filename == "10_cli_args.asm":
+        argv = ["LEFT", "RIGHT"]
+    elif filename == "11_env_lookup.asm":
+        monkeypatch.setenv("SAFARI_ASM_DEMO", "retro")
+    elif filename == "12_file_copy.asm":
+        src = tmp_path / "source.txt"
+        dst = tmp_path / "dest.txt"
+        src.write_text("ALPHA\nBETA\n", encoding="utf-8")
+        argv = [str(src), str(dst)]
+    elif filename == "15_friendly_style.asm":
+        stdin_text = "  Ada  \n"
+    elif filename == "16_text_pipeline.asm":
+        stdin_text = "  cat nap  \n"
+
+    _, stdout, stderr = run_example(filename, argv=argv, stdin_text=stdin_text)
+
+    match filename:
+        case "00_hello_world.asm":
+            assert stdout == "HELLO FROM SAFARI ASM\n"
+            assert stderr == ""
+        case "01_prompt_name.asm":
+            assert stdout == "ENTER YOUR NAME: HELLO, Matt!\n"
+            assert stderr == ""
+        case "02_echo_stdin.asm":
+            assert stdout == "ALPHA\nBETA\n"
+            assert stderr == ""
+        case "03_count_stdin_lines.asm":
+            assert stdout == "LINES=2\n"
+            assert stderr == ""
+        case "04_numeric_loop.asm":
+            assert stdout.splitlines() == ["1", "2", "3", "4", "5"]
+            assert stderr == ""
+        case "05_subroutine_greeting.asm":
+            assert stdout == "HELLO, MATT!\n"
+            assert stderr == ""
+        case "06_stack_roundtrip.asm":
+            assert stdout.splitlines() == ["SECOND", "FIRST"]
+            assert stderr == ""
+        case "07_csv_split.asm":
+            assert stdout == "LEFT=LEFT RIGHT=RIGHT\n"
+            assert stderr == ""
+        case "08_collections.asm":
+            assert stdout == "RED|GREEN|BLUE MODE=FAST DEBUG=TRUE\n"
+            assert stderr == ""
+        case "09_indexed_access.asm":
+            assert stdout.splitlines() == ["BETA", "CENTER"]
+            assert stderr == ""
+        case "10_cli_args.asm":
+            assert stdout == "LEFT=LEFT RIGHT=RIGHT\n"
+            assert stderr == ""
+        case "11_env_lookup.asm":
+            assert stdout == "ENV=retro\n"
+            assert stderr == ""
+        case "12_file_copy.asm":
+            assert stdout == ""
+            assert stderr == ""
+            assert dst is not None
+            assert dst.read_text(encoding="utf-8") == "ALPHA\nBETA\n"
+        case "13_python_bridge.asm":
+            assert stdout == "apple,banana,pear LEN=4\n"
+            assert stderr == ""
+        case "14_error_branch.asm":
+            assert stdout == ""
+            assert "missing-file.txt" in stderr
+        case "15_friendly_style.asm":
+            assert stdout == "WHAT IS YOUR NAME? HELLO, Ada!\n"
+            assert stderr == ""
+        case "16_text_pipeline.asm":
+            assert stdout == "DOG NAP LEN=7\n"
+            assert stderr == ""
+        case _:
+            raise AssertionError(f"Unhandled ASM example: {filename}")
 
 
 def test_public_exports_are_explicit():
@@ -81,6 +173,19 @@ def test_all_example_scripts_parse():
         assert program.instructions, (
             f"{path.name} should contain executable instructions"
         )
+
+
+@pytest.mark.parametrize(
+    "example_path",
+    sorted(EXAMPLE_DIR.glob("*.asm")),
+    ids=lambda path: path.name,
+)
+def test_all_example_scripts_run(
+    example_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+):
+    assert_example_runs(example_path.name, monkeypatch=monkeypatch, tmp_path=tmp_path)
 
 
 def test_hello_world_program():

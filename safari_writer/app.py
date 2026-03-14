@@ -761,6 +761,8 @@ class SafariWriterApp(App):
         If the active screen is a sub-app screen (Chat, DOS), return to the
         menu instead of exiting the whole app.
         """
+        from safari_base.screen import SafariBaseScreen
+
         if isinstance(self.screen, SafariChatMainScreen):
             self.quit_chat()
             return
@@ -772,6 +774,9 @@ class SafariWriterApp(App):
             return
         if isinstance(self.screen, (SafariDosMainMenuScreen, SafariDosBrowserScreen)):
             self.quit_dos()
+            return
+        if isinstance(self.screen, SafariBaseScreen):
+            self.quit_base()
             return
         self._action_quit()
 
@@ -797,6 +802,10 @@ class SafariWriterApp(App):
 
     def quit_fed(self) -> None:
         """Called by SafariFedMainScreen to return to the writer menu."""
+        self.pop_screen()
+
+    def quit_base(self) -> None:
+        """Called by SafariBaseScreen to return to the writer menu."""
         self.pop_screen()
 
     def _action_safari_reader(self) -> None:

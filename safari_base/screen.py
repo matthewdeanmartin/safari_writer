@@ -215,6 +215,12 @@ class SafariBaseScreen(Screen[None]):
             self._show_browse()
             return
         if key == "escape":
+            if self._view_mode != "browse":
+                self._show_browse()
+                return
+            if not self._prompt_buffer:
+                self._quit_base()
+                return
             self._prompt_buffer = ""
             self._prompt_cursor = 0
             self._message = "Prompt cleared"
@@ -235,7 +241,8 @@ class SafariBaseScreen(Screen[None]):
             self._move_cursor(self._visible_rows())
             return
         if key == "enter":
-            self._run_command(self._prompt_buffer.strip())
+            if self._run_command(self._prompt_buffer.strip()):
+                return
             self._prompt_buffer = ""
             self._prompt_cursor = 0
             self._refresh()
@@ -650,10 +657,11 @@ class SafariBaseScreen(Screen[None]):
 
     def _quit_base(self) -> None:
         """Pop back to parent screen if embedded, otherwise exit the app."""
-        if len(self.app.screen_stack) > 1:
-            self.dismiss(None)
-        else:
+        app_name = self.app.__class__.__name__
+        if app_name == "SafariBaseApp" or len(self.app.screen_stack) == 1:
             self.app.exit()
+        else:
+            self.dismiss(None)
 
     def _show_help(self) -> None:
         self._view_mode = "help"
@@ -772,81 +780,82 @@ class SafariBaseScreen(Screen[None]):
         elif self._cursor_row >= self._row_offset + visible_rows:
             self._row_offset = self._cursor_row - visible_rows + 1
 
-    def _run_command(self, command: str) -> None:
+    def _run_command(self, command: str) -> bool:
         if not command:
             self._message = "Ready"
-            return
+            return False
 
         verb, args = self._parse_command(command)
         if verb == "BROWSE":
             self._show_browse()
-            return
+            return False
         if verb == "HELP":
             self._show_help()
-            return
+            return False
         if verb == "TABLES":
             self._show_tables()
-            return
+            return False
         if verb == "STRUCTURE":
             self._show_structure()
-            return
+            return False
         if verb == "APPEND":
             self._start_append()
-            return
+            return False
         if verb == "MODIFY_COMMAND":
             self._open_program_editor(args)
-            return
+            return False
         if verb == "EDIT":
             self._show_not_implemented("Edit form")
-            return
+            return False
         if verb == "DELETE":
             self._show_not_implemented("Delete record")
-            return
+            return False
         if verb == "ASSIST":
             self._show_assist()
-            return
+            return False
         if verb == "LIST":
             self._show_report("LIST", self._list_report_lines(), f"Listed {self.session.current_table}")
-            return
+            return False
         if verb == "DISPLAY":
             self._show_report(
                 "DISPLAY",
                 self._display_report_lines(),
                 f"Displayed {self.session.current_table}",
             )
-            return
+            return False
         if verb == "COMMANDS":
             self._show_report(
                 "COMMANDS",
                 self._command_summary_lines(),
                 "Showing supported commands",
             )
-            return
+            return False
         if verb == "QUIT":
             self._quit_base()
-            return
+            return True
         if verb == "DO":
             self._run_program(args)
-            return
+            return False
         if verb == "USE":
             table_name = args
             if not table_name:
                 self._message = "USE requires a table name"
-                return
+                return False
             try:
                 self.session.set_current_table(table_name)
             except ValueError:
                 self._message = f"Table not found: {table_name}"
-                return
+                return False
             self._cursor_row = 0
             self._row_offset = 0
             self._cursor_col = 0
             self._col_offset = 0
             self._view_mode = "browse"
             self._message = f"Using {self.session.current_table}"
-            return
+            return False
 
         self._message = f"Unknown command: {command}"
+        return False
 
     def _parse_command(self, command: str) -> tuple[str, str]:
         text = command.strip()

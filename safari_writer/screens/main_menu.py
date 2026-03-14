@@ -64,7 +64,7 @@ _COL3_DEFS = [
     ("N", "Net Safari Fed", "safari_fed"),
     ("J", "Slide Projector", "safari_slides"),
     ("R", "Run Safari REPL", "safari_repl"),
-    ("W", "atari VieWer", "safari_view"),
+    ("W", "Image VieWer", "safari_view"),
     ("X", "Style Switcher", "style_switcher"),
     ("T", "Try Demo Mode", "demo"),
 ]

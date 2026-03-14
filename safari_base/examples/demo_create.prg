@@ -26,8 +26,8 @@ INDEX ON balance TAG bal_idx
 LIST ALL
 
 ? ""
-? "Finding Charlie (SEEK)..."
-SEEK 2100.75
+? "Finding Charlie (LOCATE)..."
+LOCATE FOR name = "Charlie Brown"
 IF FOUND()
     ? "Found: " + name + " with balance " + STR(balance)
 ELSE

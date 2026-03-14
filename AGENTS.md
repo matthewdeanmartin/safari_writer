@@ -8,7 +8,7 @@ Python + Textual TUI. `uv` manages env + deps.
 - Never use bare `python` or `pip`.
 
 ## Make
-- Defaults are compact. Use them first.
+- Defaults are compact, use them to save token cost.
 - Use `*-verbose` only when debugging.
 - Use `*-writer`, `*-dos`, `*-all` to target one module or both.
 - `install` / `install-verbose`
@@ -24,6 +24,7 @@ Python + Textual TUI. `uv` manages env + deps.
 
 ## Notes
 - Windows repo; commands may use git-bash syntax.
+- Are you gpt/codex/copilot? You seem to be stuck using powershell.
 - Specs: `spec/*.md`
-- TODO: `TODO.md`
 - Skill: `.github/skills/session-sql-todos/SKILL.md` for session SQL / TODO tracking.
+- Tests go in tests folder, use tmp_path for temporary files, don't creat throw away tests and delete them. Create permanent tests.
