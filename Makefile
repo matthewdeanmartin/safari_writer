@@ -21,8 +21,9 @@ FORMAT_TARGETS := $(ALL_MODULES) tests
 PYLINT_RULES := --disable=all --enable=E,F,W0611,W0612
 UV_SYNC_DEFAULT_FLAGS := --quiet --no-progress
 UV_SYNC_VERBOSE_FLAGS := --verbose
-PYTEST_DEFAULT_FLAGS := -q --disable-warnings -n 8
-PYTEST_VERBOSE_FLAGS := -v
+PYTEST_PARALLEL_FLAGS := -n 8
+PYTEST_DEFAULT_FLAGS := -q --disable-warnings $(PYTEST_PARALLEL_FLAGS)
+PYTEST_VERBOSE_FLAGS := -v $(PYTEST_PARALLEL_FLAGS)
 PYTEST_COVERAGE_REPORT_FLAGS := --cov-report=term-missing --cov-report=xml:coverage.xml
 RUFF_CHECK_DEFAULT_FLAGS := --quiet --fix
 RUFF_CHECK_VERBOSE_FLAGS := --verbose --fix

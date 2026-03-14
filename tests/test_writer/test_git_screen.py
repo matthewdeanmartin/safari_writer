@@ -145,8 +145,11 @@ class TestGitAddAll:
         import git as gitmodule
 
         repo = gitmodule.Repo(tmp_path)
-        staged_paths = [d.a_path for d in repo.index.diff("HEAD")]
-        assert "new.md" in staged_paths
+        try:
+            staged_paths = [d.a_path for d in repo.index.diff("HEAD")]
+            assert "new.md" in staged_paths
+        finally:
+            repo.close()
 
     def test_stages_modified_file(self, tmp_path):
         _make_repo(tmp_path)
@@ -363,8 +366,11 @@ class TestRemoteUrl:
         import git as gitmodule
 
         repo = gitmodule.Repo(tmp_path)
-        result = _remote_url(repo)
-        assert result == "(no remote)"
+        try:
+            result = _remote_url(repo)
+            assert result == "(no remote)"
+        finally:
+            repo.close()
 
     def test_with_remote_returns_url(self, tmp_path):
         _make_repo(tmp_path)
@@ -377,8 +383,28 @@ class TestRemoteUrl:
         import git as gitmodule
 
         repo = gitmodule.Repo(tmp_path)
-        result = _remote_url(repo)
-        assert "github.com" in result
+        try:
+            result = _remote_url(repo)
+            assert "github.com" in result
+        finally:
+            repo.close()
+
+
+class TestGitRepoCleanup:
+    def test_git_status_closes_repo(self, tmp_path):
+        _make_repo(tmp_path)
+
+        mock_repo = MagicMock()
+        mock_repo.active_branch.name = "main"
+        mock_repo.head.is_valid.return_value = True
+        mock_repo.index.diff.side_effect = [[], []]
+        mock_repo.untracked_files = []
+
+        with patch("git.Repo", return_value=mock_repo):
+            result = _git_status(tmp_path)
+
+        assert "Working tree clean" in result
+        mock_repo.close.assert_called_once_with()
 
 
 # ---------------------------------------------------------------------------

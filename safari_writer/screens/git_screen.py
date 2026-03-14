@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Optional, Protocol, Sequence, cast
+from typing import Any, Iterator, Optional, Protocol, Sequence, cast
 
 from textual import events
 from textual.app import ComposeResult
@@ -223,34 +224,46 @@ def _find_repo_root(start: Path) -> Optional[Path]:
     return None
 
 
+@contextmanager
+def _open_repo(repo_path: Path) -> Iterator[Any]:
+    """Open a GitPython repo and ensure Windows subprocess resources are released."""
+    import git
+
+    repo = git.Repo(repo_path)
+    try:
+        yield repo
+    finally:
+        close = getattr(repo, "close", None)
+        if callable(close):
+            close()
+
+
 def _git_status(repo_path: Path) -> str:
     """Return a human-readable status summary."""
     try:
-        import git
-
-        repo = git.Repo(repo_path)
-        lines: list[str] = []
-        lines.append(f"Branch: [bold]{repo.active_branch.name}[/bold]")
-        lines.append(f"Remote: {_remote_url(repo)}")
-        lines.append("")
-        staged = repo.index.diff("HEAD") if repo.head.is_valid() else []
-        unstaged = repo.index.diff(None)
-        untracked = repo.untracked_files
-        if staged:
-            lines.append("[bold]Staged:[/bold]")
-            for diff in staged:
-                lines.append(f"  [green]M  {diff.a_path}[/green]")
-        if unstaged:
-            lines.append("[bold]Modified (not staged):[/bold]")
-            for diff in unstaged:
-                lines.append(f"  [yellow]M  {diff.a_path}[/yellow]")
-        if untracked:
-            lines.append("[bold]Untracked:[/bold]")
-            for f in untracked[:20]:
-                lines.append(f"  [red]?  {f}[/red]")
-        if not staged and not unstaged and not untracked:
-            lines.append("[green]Working tree clean.[/green]")
-        return "\n".join(lines)
+        with _open_repo(repo_path) as repo:
+            lines: list[str] = []
+            lines.append(f"Branch: [bold]{repo.active_branch.name}[/bold]")
+            lines.append(f"Remote: {_remote_url(repo)}")
+            lines.append("")
+            staged = repo.index.diff("HEAD") if repo.head.is_valid() else []
+            unstaged = repo.index.diff(None)
+            untracked = repo.untracked_files
+            if staged:
+                lines.append("[bold]Staged:[/bold]")
+                for diff in staged:
+                    lines.append(f"  [green]M  {diff.a_path}[/green]")
+            if unstaged:
+                lines.append("[bold]Modified (not staged):[/bold]")
+                for diff in unstaged:
+                    lines.append(f"  [yellow]M  {diff.a_path}[/yellow]")
+            if untracked:
+                lines.append("[bold]Untracked:[/bold]")
+                for f in untracked[:20]:
+                    lines.append(f"  [red]?  {f}[/red]")
+            if not staged and not unstaged and not untracked:
+                lines.append("[green]Working tree clean.[/green]")
+            return "\n".join(lines)
     except Exception as exc:
         return f"[red]Error: {exc}[/red]"
 
@@ -271,10 +284,8 @@ def _remote_url(repo: Any) -> str:
 
 def _git_add_all(repo_path: Path) -> str:
     try:
-        import git
-
-        repo = git.Repo(repo_path)
-        repo.git.add(A=True)
+        with _open_repo(repo_path) as repo:
+            repo.git.add(A=True)
         return "[green]All changes staged.[/green]"
     except Exception as exc:
         return f"[red]Add failed: {exc}[/red]"
@@ -282,12 +293,10 @@ def _git_add_all(repo_path: Path) -> str:
 
 def _git_commit(repo_path: Path, message: str) -> str:
     try:
-        import git
-
-        repo = git.Repo(repo_path)
-        if not message.strip():
-            return "[yellow]Commit cancelled — empty message.[/yellow]"
-        repo.index.commit(message.strip())
+        with _open_repo(repo_path) as repo:
+            if not message.strip():
+                return "[yellow]Commit cancelled — empty message.[/yellow]"
+            repo.index.commit(message.strip())
         return f"[green]Committed: {message.strip()!r}[/green]"
     except Exception as exc:
         return f"[red]Commit failed: {exc}[/red]"
@@ -295,57 +304,51 @@ def _git_commit(repo_path: Path, message: str) -> str:
 
 def _git_push(repo_path: Path) -> str:
     try:
-        import git
-
-        repo = git.Repo(repo_path)
-        if not repo.remotes:
-            return "[yellow]No remote configured.[/yellow]"
-        origin = repo.remotes[0]
-        push_info = origin.push()
-        if push_info:
-            flags = push_info[0].flags
-            # PushInfo.ERROR = 1024
-            if flags & 1024:
-                return f"[red]Push error: {push_info[0].summary}[/red]"
-        return f"[green]Pushed to {origin.name}.[/green]"
+        with _open_repo(repo_path) as repo:
+            if not repo.remotes:
+                return "[yellow]No remote configured.[/yellow]"
+            origin = repo.remotes[0]
+            push_info = origin.push()
+            if push_info:
+                flags = push_info[0].flags
+                # PushInfo.ERROR = 1024
+                if flags & 1024:
+                    return f"[red]Push error: {push_info[0].summary}[/red]"
+            return f"[green]Pushed to {origin.name}.[/green]"
     except Exception as exc:
         return f"[red]Push failed: {exc}[/red]"
 
 
 def _git_pull(repo_path: Path) -> str:
     try:
-        import git
-
-        repo = git.Repo(repo_path)
-        if not repo.remotes:
-            return "[yellow]No remote configured.[/yellow]"
-        origin = repo.remotes[0]
-        origin.pull()
-        return f"[green]Pulled from {origin.name}.[/green]"
+        with _open_repo(repo_path) as repo:
+            if not repo.remotes:
+                return "[yellow]No remote configured.[/yellow]"
+            origin = repo.remotes[0]
+            origin.pull()
+            return f"[green]Pulled from {origin.name}.[/green]"
     except Exception as exc:
         return f"[red]Pull failed: {exc}[/red]"
 
 
 def _git_log(repo_path: Path, count: int = 20) -> str:
     try:
-        import git
-
-        repo = git.Repo(repo_path)
-        if not repo.head.is_valid():
-            return "(no commits yet)"
-        lines: list[str] = []
-        for commit in list(repo.iter_commits(max_count=count)):
-            sha = commit.hexsha[:7]
-            raw_message = commit.message
-            message = (
-                raw_message.decode("utf-8", errors="replace")
-                if isinstance(raw_message, bytes)
-                else raw_message
-            )
-            msg = message.split("\n")[0][:50]
-            date = commit.committed_datetime.strftime("%m/%d %H:%M")
-            lines.append(f"[dim]{sha}[/dim] [cyan]{date}[/cyan]\n  {msg}")
-        return "\n".join(lines) if lines else "(no commits)"
+        with _open_repo(repo_path) as repo:
+            if not repo.head.is_valid():
+                return "(no commits yet)"
+            lines: list[str] = []
+            for commit in list(repo.iter_commits(max_count=count)):
+                sha = commit.hexsha[:7]
+                raw_message = commit.message
+                message = (
+                    raw_message.decode("utf-8", errors="replace")
+                    if isinstance(raw_message, bytes)
+                    else raw_message
+                )
+                msg = message.split("\n")[0][:50]
+                date = commit.committed_datetime.strftime("%m/%d %H:%M")
+                lines.append(f"[dim]{sha}[/dim] [cyan]{date}[/cyan]\n  {msg}")
+            return "\n".join(lines) if lines else "(no commits)"
     except Exception as exc:
         return f"[red]Log error: {exc}[/red]"
 
