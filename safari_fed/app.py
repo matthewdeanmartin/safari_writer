@@ -136,6 +136,9 @@ class SafariFedApp(App[SafariFedExitRequest | None]):
         )
 
     def on_mount(self) -> None:
+        if os.environ.get("SAFARI_HEADLESS") == "1":
+            self.exit()
+
         from safari_writer.themes import DEFAULT_THEME, THEMES, load_settings
 
         for theme in THEMES.values():

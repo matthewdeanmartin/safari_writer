@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from textual.app import App
@@ -28,6 +29,8 @@ class SafariBaseApp(App[None]):
         self.session = session or ensure_database(database_path)
 
     def on_mount(self) -> None:
+        if os.environ.get("SAFARI_HEADLESS") == "1":
+            self.exit()
         for theme in THEMES.values():
             self.register_theme(theme)
         self.theme = DEFAULT_THEME

@@ -7,6 +7,8 @@ Python + Textual TUI. `uv` manages env + deps.
 - Prefer `make <target>` when it exists.
 - Otherwise use `uv run ...`.
 - Never use bare `python` or `pip`.
+- Run tests with `uv run pytest`.
+- Integration tests can be run with `uv run pytest test_integration/test_cli_integration.py`.
 
 ## Make
 

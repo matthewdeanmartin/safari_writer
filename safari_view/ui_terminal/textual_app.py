@@ -6,6 +6,7 @@ The primary Textual application for browsing and viewing images.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 from textual.app import App, ComposeResult
@@ -280,6 +281,8 @@ class SafariViewApp(App):
         self.launch_config = launch_config or SafariViewLaunchConfig()
 
     def on_mount(self) -> None:
+        if os.environ.get("SAFARI_HEADLESS") == "1":
+            self.exit()
         self.push_screen(SafariViewScreen(self.state, self.launch_config))
 
 

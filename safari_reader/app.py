@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from textual.app import App
@@ -26,6 +27,9 @@ class SafariReaderApp(App[SafariReaderExitRequest | None]):
             self.state.library_dir = library_dir
 
     def on_mount(self) -> None:
+        if os.environ.get("SAFARI_HEADLESS") == "1":
+            self.exit()
+
         from safari_writer.themes import DEFAULT_THEME, THEMES, load_settings
 
         for theme in THEMES.values():

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -94,6 +95,9 @@ class SafariWriterApp(App):
         self._last_backup_path: Path | None = None
 
     def on_mount(self) -> None:
+        if os.environ.get("SAFARI_HEADLESS") == "1":
+            self.exit()
+
         # Register all themes
         for theme in THEMES.values():
             self.register_theme(theme)
