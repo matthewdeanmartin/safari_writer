@@ -72,6 +72,7 @@ Safari Fed organises posts into folders like a mail program:
 - **D** — defer the post to the Deferred folder.
 - **U** — sync from Mastodon (requires credentials).
 - **W** — export the selected post or thread to Safari Writer.
+- **~** — run a Safari BASIC macro against the current post and save the output as a draft.
 
 ## Compose
 
@@ -97,3 +98,4 @@ Press **W** on any post or thread to export it as plain text and open it in Safa
 ## Help
 
 - **F1 / ?** — display the full key-command reference.
+- **Ctrl+Q** — quit Safari Fed immediately from any view.

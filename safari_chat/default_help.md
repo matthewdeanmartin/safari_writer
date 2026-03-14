@@ -604,12 +604,17 @@ frustrating, it will acknowledge that. It is on your side.
 ## Safari Chat Commands
 
 **Keyboard shortcuts:**
+- **F1 / ?** — show help screen
+- **F2** — show the conversation tree / memory view
 - **Ctrl + T** — show parsed topics from the help document
 - **Ctrl + S** — show safety notice and crisis resources
-- **Ctrl + H** — show help screen
+- **Ctrl + O** — show options and settings
 - **Ctrl + Q** — quit
 - **Page Up / Page Down** — scroll the conversation
 - **Escape** — quit
+
+Safari Chat avoids `Ctrl + H` and `Ctrl + M` because many terminals
+map them to **Backspace** and **Enter**.
 
 **Slash commands (type these at the prompt):**
 - **/topics** — list all topics from the help document

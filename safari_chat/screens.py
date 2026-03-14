@@ -119,6 +119,10 @@ SafariChatHelpScreen {
 # ---------------------------------------------------------------------------
 
 _BAR_WIDTH = 10
+CHAT_MENU_BAR = " F1 Help | F2 Memory | ^T Topics | ^S Safety | ^O Options | ^Q Quit"
+CHAT_COMMAND_BAR = (
+    " F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll"
+)
 
 
 def _render_distress(level: DistressLevel, score: float) -> str:
@@ -143,10 +147,9 @@ class SafariChatMainScreen(Screen):
         Binding("ctrl+q", "quit_chat", "Quit", show=False),
         Binding("ctrl+t", "show_topics", "Topics", show=False),
         Binding("ctrl+s", "show_safety", "Safety", show=False),
-        Binding("ctrl+h", "show_help", "Help", show=False),
-        Binding("ctrl+m", "show_memory", "Memory", show=False),
         Binding("ctrl+o", "show_options", "Options", show=False),
-        Binding("f1", "show_help", "Help", show=False),
+        Binding("f1,question_mark", "show_help", "Help", show=False),
+        Binding("f2", "show_memory", "Memory", show=False),
         Binding("escape", "quit_chat", "Quit", show=False),
         Binding("pageup", "scroll_up", "PgUp", show=False),
         Binding("pagedown", "scroll_down", "PgDn", show=False),
@@ -164,7 +167,7 @@ class SafariChatMainScreen(Screen):
             id="chat-distress-bar",
         )
         yield Static(
-            " F1 Help | ^T Topics | ^M Memory | ^S Safety | ^O Options | ^Q Quit",
+            CHAT_MENU_BAR,
             id="chat-menu-bar",
         )
         yield VerticalScroll(
@@ -173,7 +176,7 @@ class SafariChatMainScreen(Screen):
         )
         yield Static("USER> ", id="chat-input-bar")
         yield Static(
-            " F1 Help  ^T Topics  ^M Memory  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll",
+            CHAT_COMMAND_BAR,
             id="chat-command-bar",
         )
 
@@ -476,15 +479,15 @@ class SafariChatOptionsScreen(ModalScreen[None]):
 
 CHAT_HELP_CONTENT = """\
 KEYBOARD SHORTCUTS
-  F1 / Ctrl+H      Show this help
-  Ctrl+T            Show parsed topics
-  Ctrl+M            Show conversation memory
-  Ctrl+S            Show safety notice
-  Ctrl+O            Show options
-  Ctrl+Q / Escape   Quit
-  PgUp / PgDn       Scroll transcript
-  Enter             Submit message
-  Backspace         Delete last character
+  F1 / ?           Show this help
+  F2               Show conversation memory
+  Ctrl+T           Show parsed topics
+  Ctrl+S           Show safety notice
+  Ctrl+O           Show options
+  Ctrl+Q / Escape  Quit
+  PgUp / PgDn      Scroll transcript
+  Enter            Submit message
+  Backspace        Delete last character
 
 SLASH COMMANDS
   /topics           List document topics
@@ -494,6 +497,11 @@ SLASH COMMANDS
   /clear            Clear conversation
   /help             Show this help
   /quit             Quit
+
+NOTES
+  F1/? and F2 avoid terminal aliases that
+  can collapse Ctrl+H into Backspace and
+  Ctrl+M into Enter.
 
 ABOUT
   Safari Chat is an ELIZA-inspired help

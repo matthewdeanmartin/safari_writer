@@ -6,6 +6,12 @@ from pathlib import Path
 
 from safari_chat.app import SafariChatApp, _DEFAULT_HELP
 from safari_chat.engine import parse_document
+from safari_chat.screens import (
+    CHAT_COMMAND_BAR,
+    CHAT_HELP_CONTENT,
+    CHAT_MENU_BAR,
+    SafariChatMainScreen,
+)
 from safari_chat.state import SafariChatState
 
 
@@ -134,3 +140,23 @@ class TestChatMain:
 
         result = main([str(tmp_path / "nonexistent.md")])
         assert result == 1
+
+
+class TestChatShortcuts:
+    def test_bindings_avoid_risky_ctrl_aliases(self) -> None:
+        binding_keys = {binding.key for binding in SafariChatMainScreen.BINDINGS}
+
+        assert "f1,question_mark" in binding_keys
+        assert "f2" in binding_keys
+        assert "ctrl+h" not in binding_keys
+        assert "ctrl+m" not in binding_keys
+
+    def test_visible_help_text_matches_safe_bindings(self) -> None:
+        assert "F2 Memory" in CHAT_MENU_BAR
+        assert "F2 Memory" in CHAT_COMMAND_BAR
+        assert "^M Memory" not in CHAT_MENU_BAR
+        assert "^M Memory" not in CHAT_COMMAND_BAR
+        assert "F1 / ?" in CHAT_HELP_CONTENT
+        assert "F2               Show conversation memory" in CHAT_HELP_CONTENT
+        assert "Ctrl+H      Show this help" not in CHAT_HELP_CONTENT
+        assert "Ctrl+M            Show conversation memory" not in CHAT_HELP_CONTENT

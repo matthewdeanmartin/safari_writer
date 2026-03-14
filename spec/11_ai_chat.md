@@ -454,7 +454,7 @@ The UI should emulate **AtariWriter / Atari DOS** text-mode software.
 |                                                                        |
 |                                                                        |
 +------------------------------------------------------------------------+
-| ^C Abort  ^R Retrieve  ^T Topics  ^M Memory  ^S Safety  ^H Help  ^Q Quit |
+| F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit            |
 +------------------------------------------------------------------------+
 ```
 
@@ -568,8 +568,11 @@ A control-key legend must appear at the bottom of the screen.
 ### 13.2 Baseline commands
 
 ```text
-^C Abort   ^R Retrieve   ^T Topics   ^M Memory   ^S Safety   ^H Help   ^Q Quit
+F1 Help   F2 Memory   ^T Topics   ^S Safety   ^O Options   ^Q Quit
 ```
+
+Use `F1` / `?` for help and `F2` for memory to avoid common terminal aliases such
+as `Ctrl+H` -> Backspace and `Ctrl+M` -> Enter.
 
 ### 13.3 Optional context commands
 
