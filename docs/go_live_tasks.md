@@ -10,6 +10,8 @@
 - Update F1 help
 - Check CLI options vs code for each module
   - any capabilities missing
+- check for textual vs app short cut clash (eg. control-p)
+- execute all the example bas, asm, prg files
 
 Code Quality
 - Check unit tests. Any vacuous or low quality tests
