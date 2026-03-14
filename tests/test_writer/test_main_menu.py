@@ -6,10 +6,15 @@ import asyncio
 from unittest.mock import patch
 
 from safari_writer.app import SafariWriterApp
-from safari_writer.screens.main_menu import (COL1_ITEMS, COL2_ITEMS,
-                                              COL3_ITEMS, MENU_ITEMS,
-                                              MainMenuScreen, MenuItem)
 from safari_writer.screens.file_ops import ConfirmScreen
+from safari_writer.screens.main_menu import (
+    COL1_ITEMS,
+    COL2_ITEMS,
+    COL3_ITEMS,
+    MENU_ITEMS,
+    MainMenuScreen,
+    MenuItem,
+)
 from safari_writer.state import AppState
 
 
@@ -144,7 +149,9 @@ class TestActionQuitOverride:
         def fail_backup(state):
             raise OSError("disk full")
 
-        monkeypatch.setattr(app, "set_message", lambda message: messages.append(message))
+        monkeypatch.setattr(
+            app, "set_message", lambda message: messages.append(message)
+        )
         monkeypatch.setattr(
             app,
             "push_screen",

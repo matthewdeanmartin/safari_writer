@@ -55,4 +55,3 @@ Baseline: `make check` passes, so the items below are latent release risks, unim
 - Files: `safari_dos\services.py:45-46`, `safari_dos\services.py:416-425`, `safari_dos\screens.py:1395-1417`, `safari_dos\screens.py:1454`, `spec\09_safari_dos_TODO.md:5-18`
 - Problem: the public API keeps `list_garbage()` / `restore_from_garbage()`, but one always returns `[]` and the other always raises. The help text still says “Garbage restores items without permanent delete”, while the actual garbage screen tells users to use the OS file manager because restore is not supported.
 - Why this matters: this is half-implemented, contradictory behavior. The screen, help text, API surface, and spec TODO are not aligned, so users and downstream callers get a misleading picture of what Safari DOS can actually do.
-

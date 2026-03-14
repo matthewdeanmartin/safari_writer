@@ -159,8 +159,7 @@ def gather_doctor_info(doc_language: str = "") -> str:
     lines.append("")
 
     # -- Locale (i18n) --
-    from safari_writer.locale_info import (LANGUAGE, LOCALE, REGION,
-                                           available_languages)
+    from safari_writer.locale_info import LANGUAGE, LOCALE, REGION, available_languages
 
     lines.append("[bold]Locale[/]")
     lines.append(f"  Detected:       {LOCALE}")

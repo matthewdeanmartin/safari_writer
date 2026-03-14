@@ -9,36 +9,92 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from safari_base.lang.dbf_adapter import (TableHandle, copy_structure,
-                                          create_table, open_table)
+from safari_base.lang.dbf_adapter import (
+    TableHandle,
+    copy_structure,
+    create_table,
+    open_table,
+)
 from safari_base.lang.environment import Environment
-from safari_base.lang.errors import (DBaseError, NoTableError, ParseError,
-                                     UnsafeCommandError)
+from safari_base.lang.errors import (
+    DBaseError,
+    NoTableError,
+    ParseError,
+    UnsafeCommandError,
+)
 from safari_base.lang.functions import call_function
 from safari_base.lang.parser import parse, parse_command
-from safari_base.lang.types import (AppendBlankStmt, AppendFromStmt,
-                                    AssignStmt, AverageStmt, BinOp, CdStmt,
-                                    CloseStmt, CommandResult, CommentStmt,
-                                    ContinueStmt, CopyFileStmt,
-                                    CopyStructureStmt, CountStmt,
-                                    CreateFromStmt, CreateTableStmt, DefFnStmt,
-                                    DeleteStmt, DimHashStmt, DirStmt,
-                                    DisplayStructureStmt, DoCaseStmt,
-                                    DoProgramStmt, DoWhileStmt, EraseStmt,
-                                    ExitStmt, Expr, FieldRef, ForEachStmt,
-                                     ForStmt, FuncCall, FuncDefStmt, GoStmt,
-                                     HashAssignStmt, Ident, IfStmt, IndexOnStmt,
-                                     InsertStmt,
-                                     ListStmt, LocateStmt, LogicalLit, LoopStmt,
-                                    MdStmt, NumberLit, PackStmt, PrintStmt,
-                                    ProcCallStmt, ProcDefStmt, QuitStmt,
-                                    RdStmt, RecallStmt, RenameStmt,
-                                    ReplaceStmt, ReturnStmt, ScanStmt,
-                                    SeekStmt, SelectStmt, SetDefaultStmt,
-                                    SetDeletedStmt, SetFilterStmt,
-                                    SetOrderStmt, SetStmt, SkipStmt, Stmt,
-                                    StoreStmt, StringLit, SumStmt, UnaryOp,
-                                    UseStmt, ZapStmt)
+from safari_base.lang.types import (
+    AppendBlankStmt,
+    AppendFromStmt,
+    AssignStmt,
+    AverageStmt,
+    BinOp,
+    CdStmt,
+    CloseStmt,
+    CommandResult,
+    CommentStmt,
+    ContinueStmt,
+    CopyFileStmt,
+    CopyStructureStmt,
+    CountStmt,
+    CreateFromStmt,
+    CreateTableStmt,
+    DefFnStmt,
+    DeleteStmt,
+    DimHashStmt,
+    DirStmt,
+    DisplayStructureStmt,
+    DoCaseStmt,
+    DoProgramStmt,
+    DoWhileStmt,
+    EraseStmt,
+    ExitStmt,
+    Expr,
+    FieldRef,
+    ForEachStmt,
+    ForStmt,
+    FuncCall,
+    FuncDefStmt,
+    GoStmt,
+    HashAssignStmt,
+    Ident,
+    IfStmt,
+    IndexOnStmt,
+    InsertStmt,
+    ListStmt,
+    LocateStmt,
+    LogicalLit,
+    LoopStmt,
+    MdStmt,
+    NumberLit,
+    PackStmt,
+    PrintStmt,
+    ProcCallStmt,
+    ProcDefStmt,
+    QuitStmt,
+    RdStmt,
+    RecallStmt,
+    RenameStmt,
+    ReplaceStmt,
+    ReturnStmt,
+    ScanStmt,
+    SeekStmt,
+    SelectStmt,
+    SetDefaultStmt,
+    SetDeletedStmt,
+    SetFilterStmt,
+    SetOrderStmt,
+    SetStmt,
+    SkipStmt,
+    Stmt,
+    StoreStmt,
+    StringLit,
+    SumStmt,
+    UnaryOp,
+    UseStmt,
+    ZapStmt,
+)
 
 
 class _LoopSignal(Exception):
@@ -414,7 +470,11 @@ class Interpreter:
         if stmt.target == "BOTTOM":
             wa.go_bottom()
             return CommandResult(message=f"Record {wa.recno}")
-        n = int(stmt.target) if isinstance(stmt.target, str) else int(self._eval(stmt.target))
+        n = (
+            int(stmt.target)
+            if isinstance(stmt.target, str)
+            else int(self._eval(stmt.target))
+        )
         wa.go_record(n)
         return CommandResult(message=f"Record {wa.recno}")
 

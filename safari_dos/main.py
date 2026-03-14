@@ -9,16 +9,27 @@ from importlib import metadata
 from pathlib import Path
 
 from safari_dos.app import SafariDosApp
-from safari_dos.services import (copy_paths, create_folder, discover_locations,
-                                 duplicate_path, get_entry_info,
-                                 get_preview_text, list_directory,
-                                 list_favorites, list_recent_documents,
-                                 list_recent_locations, move_paths,
-                                 move_to_garbage, record_recent_document,
-                                 rename_path, set_protected, toggle_favorite,
-                                 unzip_path, zip_paths)
-from safari_dos.state import (SafariDosExitRequest, SafariDosLaunchConfig,
-                              SafariDosState)
+from safari_dos.services import (
+    copy_paths,
+    create_folder,
+    discover_locations,
+    duplicate_path,
+    get_entry_info,
+    get_preview_text,
+    list_directory,
+    list_favorites,
+    list_recent_documents,
+    list_recent_locations,
+    move_paths,
+    move_to_garbage,
+    record_recent_document,
+    rename_path,
+    set_protected,
+    toggle_favorite,
+    unzip_path,
+    zip_paths,
+)
+from safari_dos.state import SafariDosExitRequest, SafariDosLaunchConfig, SafariDosState
 from safari_writer.program_runner import decode_stdin_text, run_program_file
 
 __all__ = ["build_parser", "main", "parse_args"]

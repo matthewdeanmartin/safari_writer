@@ -30,7 +30,11 @@ def _client() -> SafariFedClient:
 
 @given(st.lists(HTML_TEXT, min_size=1, max_size=5))
 def test_plain_text_removes_tags_and_unescapes_entities(fragments: list[str]) -> None:
-    html = "<p>" + "</p><br><p>".join(f"{fragment} &amp; {fragment}" for fragment in fragments) + "</p>"
+    html = (
+        "<p>"
+        + "</p><br><p>".join(f"{fragment} &amp; {fragment}" for fragment in fragments)
+        + "</p>"
+    )
 
     result = _client()._plain_text(html)
     expected = [f"{fragment} & {fragment}" for fragment in fragments]

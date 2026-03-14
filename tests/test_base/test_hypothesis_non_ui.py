@@ -10,8 +10,8 @@ from hypothesis import strategies as st
 
 from safari_base.bridge import _fields_to_schema, _schema_for_columns
 from safari_base.database import (
-    BaseSession,
     DEFAULT_ADDRESS_SCHEMA,
+    BaseSession,
     _quote_identifier,
     list_tables,
 )
@@ -32,14 +32,21 @@ FIELD_NAME_TEXT = st.text(
 
 @st.composite
 def unique_identifiers(draw: st.DrawFn) -> list[str]:
-    names = draw(st.lists(IDENTIFIER_TEXT, min_size=1, max_size=8, unique_by=str.casefold))
+    names = draw(
+        st.lists(IDENTIFIER_TEXT, min_size=1, max_size=8, unique_by=str.casefold)
+    )
     return names
 
 
 @st.composite
 def field_defs(draw: st.DrawFn) -> list[FieldDef]:
     names = draw(
-        st.lists(FIELD_NAME_TEXT, min_size=1, max_size=8, unique_by=lambda value: value.strip().casefold())
+        st.lists(
+            FIELD_NAME_TEXT,
+            min_size=1,
+            max_size=8,
+            unique_by=lambda value: value.strip().casefold(),
+        )
     )
     widths = draw(
         st.lists(
@@ -52,11 +59,15 @@ def field_defs(draw: st.DrawFn) -> list[FieldDef]:
 
 
 def _mixed_case(text: str) -> str:
-    return "".join(ch.upper() if index % 2 == 0 else ch.lower() for index, ch in enumerate(text))
+    return "".join(
+        ch.upper() if index % 2 == 0 else ch.lower() for index, ch in enumerate(text)
+    )
 
 
 @given(unique_identifiers())
-def test_list_tables_returns_user_tables_in_case_insensitive_order(names: list[str]) -> None:
+def test_list_tables_returns_user_tables_in_case_insensitive_order(
+    names: list[str],
+) -> None:
     connection = sqlite3.connect(":memory:")
     try:
         for index, name in enumerate(names):
@@ -79,7 +90,9 @@ def test_resolve_table_name_is_case_insensitive(
         for name in names:
             connection.execute(f"CREATE TABLE {_quote_identifier(name)} (value TEXT)")
 
-        session = BaseSession(connection=connection, database_path=None, current_table=names[0])
+        session = BaseSession(
+            connection=connection, database_path=None, current_table=names[0]
+        )
         requested_name = names[requested_index % len(names)]
         variant = f"  {_mixed_case(requested_name)}  "
 
@@ -89,7 +102,9 @@ def test_resolve_table_name_is_case_insensitive(
 
 
 @given(field_defs())
-def test_fields_to_schema_preserves_widths_and_default_names(fields: list[FieldDef]) -> None:
+def test_fields_to_schema_preserves_widths_and_default_names(
+    fields: list[FieldDef],
+) -> None:
     schema = _fields_to_schema(fields, DEFAULT_ADDRESS_SCHEMA)
 
     assert len(schema) == len(fields)
@@ -102,8 +117,12 @@ def test_fields_to_schema_preserves_widths_and_default_names(fields: list[FieldD
 
 
 @given(st.lists(IDENTIFIER_TEXT, min_size=1, max_size=12))
-def test_schema_for_columns_preserves_order_and_assigns_widths(columns: list[str]) -> None:
-    normalized_columns = [column.strip().upper().replace(" ", "_")[:12] for column in columns]
+def test_schema_for_columns_preserves_order_and_assigns_widths(
+    columns: list[str],
+) -> None:
+    normalized_columns = [
+        column.strip().upper().replace(" ", "_")[:12] for column in columns
+    ]
     schema = _schema_for_columns(normalized_columns, DEFAULT_ADDRESS_SCHEMA)
     width_map = dict(DEFAULT_ADDRESS_SCHEMA)
 

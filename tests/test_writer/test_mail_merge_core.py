@@ -9,19 +9,27 @@ import pytest
 
 from safari_writer.export_md import export_markdown
 from safari_writer.export_ps import export_postscript
-from safari_writer.mail_merge_db import (DEFAULT_FIELDS, MAX_FIELD_DATA_LEN,
-                                         MAX_FIELD_NAME_LEN, MAX_FIELDS,
-                                         MAX_RECORDS, FieldDef, MailMergeDB,
-                                         apply_mail_merge_to_buffer,
-                                         inspect_mail_merge_db,
-                                         load_mail_merge_db,
-                                         save_mail_merge_db,
-                                         validate_mail_merge_data)
+from safari_writer.mail_merge_db import (
+    DEFAULT_FIELDS,
+    MAX_FIELD_DATA_LEN,
+    MAX_FIELD_NAME_LEN,
+    MAX_FIELDS,
+    MAX_RECORDS,
+    FieldDef,
+    MailMergeDB,
+    apply_mail_merge_to_buffer,
+    inspect_mail_merge_db,
+    load_mail_merge_db,
+    save_mail_merge_db,
+    validate_mail_merge_data,
+)
 from safari_writer.screens.editor import CTRL_MERGE
-from safari_writer.screens.print_screen import (_apply_record,
-                                                _buffer_has_merge_markers,
-                                                _render_document,
-                                                _render_with_mail_merge)
+from safari_writer.screens.print_screen import (
+    _apply_record,
+    _buffer_has_merge_markers,
+    _render_document,
+    _render_with_mail_merge,
+)
 from safari_writer.state import GlobalFormat
 
 # ── helpers ──────────────────────────────────────────────────────────

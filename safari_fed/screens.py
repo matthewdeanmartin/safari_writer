@@ -11,8 +11,13 @@ from textual.screen import ModalScreen, Screen
 from textual.timer import Timer
 from textual.widgets import Static
 
-from safari_fed.state import (FOLDER_ORDER, FedPost, SafariFedState,
-                              render_post_for_writer, render_thread_for_writer)
+from safari_fed.state import (
+    FOLDER_ORDER,
+    FedPost,
+    SafariFedState,
+    render_post_for_writer,
+    render_thread_for_writer,
+)
 
 __all__ = ["FED_CSS", "FedHelpScreen", "SafariFedMainScreen"]
 

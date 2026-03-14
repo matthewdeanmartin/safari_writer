@@ -10,8 +10,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from safari_writer.file_types import (FileProfile, HighlightProfile,
-                                      resolve_file_profile)
+from safari_writer.file_types import FileProfile, HighlightProfile, resolve_file_profile
 
 __all__ = [
     "decode_stdin_text",

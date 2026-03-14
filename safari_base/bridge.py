@@ -21,9 +21,12 @@ def mail_merge_to_session(db: MailMergeDB) -> BaseSession:
     The resulting session uses an in-memory SQLite database populated with
     the mail-merge schema and records.
     """
-    from safari_base.database import (DEFAULT_ADDRESS_SCHEMA,
-                                      DEFAULT_TABLE_NAME, BaseSession,
-                                      _quote_identifier)
+    from safari_base.database import (
+        DEFAULT_ADDRESS_SCHEMA,
+        DEFAULT_TABLE_NAME,
+        BaseSession,
+        _quote_identifier,
+    )
 
     connection = sqlite3.connect(":memory:")
 

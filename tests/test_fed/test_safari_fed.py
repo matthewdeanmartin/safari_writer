@@ -10,14 +10,22 @@ from textual.widgets import Static
 
 import safari_fed
 from safari_fed.app import SafariFedApp, build_fed_state
-from safari_fed.client import (FedSyncResult, SafariFedClient,
-                               load_client_from_env, load_clients_from_env)
+from safari_fed.client import (
+    FedSyncResult,
+    SafariFedClient,
+    load_client_from_env,
+    load_clients_from_env,
+)
 from safari_fed.config import load_default_identity, load_mastodon_identities
 from safari_fed.main import main as safari_fed_main
 from safari_fed.main import parse_args
 from safari_fed.screens import SafariFedMainScreen
-from safari_fed.state import (FedPost, SafariFedExitRequest, build_demo_state,
-                              render_post_for_writer)
+from safari_fed.state import (
+    FedPost,
+    SafariFedExitRequest,
+    build_demo_state,
+    render_post_for_writer,
+)
 from safari_writer.app import SafariWriterApp
 
 

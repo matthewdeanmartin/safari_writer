@@ -15,6 +15,8 @@ from textual.containers import Container
 from textual.screen import Screen
 from textual.widgets import Static
 
+from safari_writer.windows_api import get_kernel32
+
 
 def _find_external_drives() -> list[Path]:
     """Detect removable/external drives (USB thumb drives, etc.)."""
@@ -22,16 +24,17 @@ def _find_external_drives() -> list[Path]:
     drives: list[Path] = []
 
     if system == "Windows":
-        import ctypes
-
-        bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+        kernel32 = get_kernel32()
+        if kernel32 is None:
+            return drives
+        bitmask = int(kernel32.GetLogicalDrives())
         DRIVE_REMOVABLE = 2
         DRIVE_FIXED = 3
         for i in range(26):
             if bitmask & (1 << i):
                 letter = chr(65 + i)
                 drive_path = f"{letter}:\\"
-                drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)
+                drive_type = int(kernel32.GetDriveTypeW(drive_path))
                 if drive_type == DRIVE_REMOVABLE:
                     drives.append(Path(drive_path))
                 elif drive_type == DRIVE_FIXED and letter not in ("C",):

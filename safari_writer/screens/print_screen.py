@@ -12,12 +12,24 @@ import safari_writer.locale_info as _locale_info
 from safari_writer.file_types import HighlightProfile
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.mail_merge_db import MailMergeDB
-from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_CHAIN,
-                                          CTRL_EJECT, CTRL_ELONGATE,
-                                          CTRL_FOOTER, CTRL_FORM, CTRL_HEADER,
-                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
-                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
-                                          CTRL_UNDERLINE, TOGGLE_MARKERS)
+from safari_writer.screens.editor import (
+    CTRL_BOLD,
+    CTRL_CENTER,
+    CTRL_CHAIN,
+    CTRL_EJECT,
+    CTRL_ELONGATE,
+    CTRL_FOOTER,
+    CTRL_FORM,
+    CTRL_HEADER,
+    CTRL_HEADING,
+    CTRL_MERGE,
+    CTRL_PARA,
+    CTRL_RIGHT,
+    CTRL_SUB,
+    CTRL_SUPER,
+    CTRL_UNDERLINE,
+    TOGGLE_MARKERS,
+)
 from safari_writer.state import AppState, GlobalFormat
 
 
@@ -344,8 +356,7 @@ class TootPreviewScreen(ModalScreen[bool]):
         self._run_spellcheck()
 
     def _run_spellcheck(self) -> None:
-        from safari_writer.proofing import (check_word, extract_words,
-                                            make_checker)
+        from safari_writer.proofing import check_word, extract_words, make_checker
 
         checker = make_checker(self._doc_language)
         lines = self._text.splitlines()

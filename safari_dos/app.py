@@ -7,14 +7,20 @@ from pathlib import Path
 
 from textual.app import App
 
-from safari_dos.screens import (SafariDosBrowserScreen, SafariDosDevicesScreen,
-                                SafariDosFavoritesScreen,
-                                SafariDosGarbageScreen, SafariDosHelpScreen,
-                                SafariDosMainMenuScreen)
-from safari_dos.services import (list_favorites, list_recent_documents,
-                                 list_recent_locations)
-from safari_dos.state import (SafariDosExitRequest, SafariDosLaunchConfig,
-                              SafariDosState)
+from safari_dos.screens import (
+    SafariDosBrowserScreen,
+    SafariDosDevicesScreen,
+    SafariDosFavoritesScreen,
+    SafariDosGarbageScreen,
+    SafariDosHelpScreen,
+    SafariDosMainMenuScreen,
+)
+from safari_dos.services import (
+    list_favorites,
+    list_recent_documents,
+    list_recent_locations,
+)
+from safari_dos.state import SafariDosExitRequest, SafariDosLaunchConfig, SafariDosState
 
 __all__ = ["SafariDosApp"]
 

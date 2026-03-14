@@ -3,16 +3,31 @@
 import pytest
 
 from safari_writer.mail_merge_db import FieldDef, MailMergeDB
-from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_CHAIN,
-                                          CTRL_EJECT, CTRL_ELONGATE,
-                                          CTRL_FOOTER, CTRL_FORM, CTRL_HEADER,
-                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
-                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
-                                          CTRL_UNDERLINE, TOGGLE_MARKERS)
-from safari_writer.screens.print_screen import (_count_pages, _render_document,
-                                                _render_inline,
-                                                _render_with_mail_merge,
-                                                _strip_inline)
+from safari_writer.screens.editor import (
+    CTRL_BOLD,
+    CTRL_CENTER,
+    CTRL_CHAIN,
+    CTRL_EJECT,
+    CTRL_ELONGATE,
+    CTRL_FOOTER,
+    CTRL_FORM,
+    CTRL_HEADER,
+    CTRL_HEADING,
+    CTRL_MERGE,
+    CTRL_PARA,
+    CTRL_RIGHT,
+    CTRL_SUB,
+    CTRL_SUPER,
+    CTRL_UNDERLINE,
+    TOGGLE_MARKERS,
+)
+from safari_writer.screens.print_screen import (
+    _count_pages,
+    _render_document,
+    _render_inline,
+    _render_with_mail_merge,
+    _strip_inline,
+)
 from safari_writer.state import GlobalFormat
 
 

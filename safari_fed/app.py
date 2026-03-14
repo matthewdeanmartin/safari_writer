@@ -11,8 +11,12 @@ from textual.app import App
 
 from safari_fed.client import SafariFedClient, load_clients_from_env
 from safari_fed.screens import SafariFedMainScreen
-from safari_fed.state import (FedPost, SafariFedExitRequest, SafariFedState,
-                              build_demo_state)
+from safari_fed.state import (
+    FedPost,
+    SafariFedExitRequest,
+    SafariFedState,
+    build_demo_state,
+)
 
 __all__ = ["SafariFedApp"]
 

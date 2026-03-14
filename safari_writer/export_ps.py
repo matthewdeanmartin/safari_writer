@@ -14,12 +14,23 @@ from safari_writer.state import GlobalFormat
 if TYPE_CHECKING:
     from safari_writer.mail_merge_db import MailMergeDB
 
-from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_CHAIN,
-                                          CTRL_EJECT, CTRL_ELONGATE,
-                                          CTRL_FOOTER, CTRL_FORM, CTRL_HEADER,
-                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
-                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
-                                          CTRL_UNDERLINE)
+from safari_writer.screens.editor import (
+    CTRL_BOLD,
+    CTRL_CENTER,
+    CTRL_CHAIN,
+    CTRL_EJECT,
+    CTRL_ELONGATE,
+    CTRL_FOOTER,
+    CTRL_FORM,
+    CTRL_HEADER,
+    CTRL_HEADING,
+    CTRL_MERGE,
+    CTRL_PARA,
+    CTRL_RIGHT,
+    CTRL_SUB,
+    CTRL_SUPER,
+    CTRL_UNDERLINE,
+)
 
 __all__ = ["export_postscript"]
 

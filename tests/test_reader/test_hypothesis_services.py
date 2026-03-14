@@ -24,7 +24,9 @@ CHAPTER_PREFIX = st.sampled_from(["CHAPTER", "BOOK", "PART", "SECTION", "ACT", "
 
 @given(st.lists(PLAIN_TEXT, min_size=1, max_size=5))
 def test_strip_html_tags_is_idempotent_for_simple_markup(fragments: list[str]) -> None:
-    html = "<div>" + "<br>".join(f"<p>{fragment}</p>" for fragment in fragments) + "</div>"
+    html = (
+        "<div>" + "<br>".join(f"<p>{fragment}</p>" for fragment in fragments) + "</div>"
+    )
 
     stripped = strip_html_tags(html)
 
@@ -40,9 +42,12 @@ def test_strip_html_tags_is_idempotent_for_simple_markup(fragments: list[str]) -
     )
 )
 def test_parse_chapters_returns_offsets_inside_document(
-    sections: list[tuple[str, str]]
+    sections: list[tuple[str, str]],
 ) -> None:
-    document = "\n\n".join(f"{prefix} {title}\nBody {index}" for index, (prefix, title) in enumerate(sections))
+    document = "\n\n".join(
+        f"{prefix} {title}\nBody {index}"
+        for index, (prefix, title) in enumerate(sections)
+    )
     chapters = parse_chapters(document)
 
     assert len(chapters) == len(sections)
@@ -53,11 +58,11 @@ def test_parse_chapters_returns_offsets_inside_document(
 
 
 @given(
-        st.lists(
-            st.lists(WORD_TEXT, min_size=1, max_size=8),
-            min_size=1,
-            max_size=4,
-        ),
+    st.lists(
+        st.lists(WORD_TEXT, min_size=1, max_size=8),
+        min_size=1,
+        max_size=4,
+    ),
     st.integers(min_value=20, max_value=100),
     st.integers(min_value=0, max_value=10),
 )

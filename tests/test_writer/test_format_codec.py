@@ -2,8 +2,13 @@
 
 import pytest
 
-from safari_writer.format_codec import (decode_sfw, encode_sfw, has_controls,
-                                        is_sfw, strip_controls)
+from safari_writer.format_codec import (
+    decode_sfw,
+    encode_sfw,
+    has_controls,
+    is_sfw,
+    strip_controls,
+)
 
 
 class TestIsSfw:

@@ -47,7 +47,7 @@ In the catalog:
 - **T** — Toggle the table of contents.
 - **+ / =** — Bigger text.
 - **-** — Smaller text.
-- **] / [** — More or less line spacing.
+- **\] / \[** — More or less line spacing.
 - **H** — Open help.
 - **L** — Return to the library.
 - **Q / Esc** — Back or quit.

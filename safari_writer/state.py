@@ -5,8 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import TYPE_CHECKING
 
-from safari_writer.file_types import (FileProfile, HighlightProfile,
-                                      StorageMode, resolve_file_profile)
+from safari_writer.file_types import (
+    FileProfile,
+    HighlightProfile,
+    StorageMode,
+    resolve_file_profile,
+)
 
 __all__ = ["AppState", "GlobalFormat"]
 

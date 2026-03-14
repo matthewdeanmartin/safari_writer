@@ -12,15 +12,24 @@ from pathlib import Path
 
 import pytest
 
-from safari_reader.services import (add_book_to_library, delete_book,
-                                    download_gutenberg_text, format_book_text,
-                                    gutenberg_book_detail, import_local_file,
-                                    load_library, load_reading_state,
-                                    open_book, parse_chapters, save_library,
-                                    save_reading_state, search_gutenberg,
-                                    strip_html_tags, top_gutenberg)
-from safari_reader.state import (Bookmark, BookMeta, ReaderSettings,
-                                 SafariReaderState)
+from safari_reader.services import (
+    add_book_to_library,
+    delete_book,
+    download_gutenberg_text,
+    format_book_text,
+    gutenberg_book_detail,
+    import_local_file,
+    load_library,
+    load_reading_state,
+    open_book,
+    parse_chapters,
+    save_library,
+    save_reading_state,
+    search_gutenberg,
+    strip_html_tags,
+    top_gutenberg,
+)
+from safari_reader.state import Bookmark, BookMeta, ReaderSettings, SafariReaderState
 
 # ── Offline unit-level tests (no network) ────────────────────────
 

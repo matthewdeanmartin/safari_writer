@@ -603,7 +603,11 @@ class SafariBasic:
         scanner.skip_spaces()
         if scanner.consume_keyword("STEP"):
             step_val = self._eval_expr(scanner)
-        if not (isinstance(start_val, float) and isinstance(end_val, float) and isinstance(step_val, float)):
+        if not (
+            isinstance(start_val, float)
+            and isinstance(end_val, float)
+            and isinstance(step_val, float)
+        ):
             self._error("Type mismatch")
         self.vars[name] = start_val
         self.for_stack.append(

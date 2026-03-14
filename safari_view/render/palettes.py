@@ -5,7 +5,6 @@ Provides common retro palettes for rendering modes.
 
 from __future__ import annotations
 
-
 from PIL import Image
 
 

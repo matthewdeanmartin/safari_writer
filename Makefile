@@ -21,9 +21,11 @@ FORMAT_TARGETS := $(ALL_MODULES) tests
 PYLINT_RULES := --disable=all --enable=E,F,W0611,W0612
 UV_SYNC_DEFAULT_FLAGS := --quiet --no-progress
 UV_SYNC_VERBOSE_FLAGS := --verbose
+PYTEST_RANDOM_SEED := $(shell uv run python -c "import secrets; print(secrets.randbits(32))")
+PYTEST_RANDOM_FLAGS := --randomly-seed=$(PYTEST_RANDOM_SEED)
 PYTEST_PARALLEL_FLAGS := -n 8
-PYTEST_DEFAULT_FLAGS := -q --disable-warnings $(PYTEST_PARALLEL_FLAGS)
-PYTEST_VERBOSE_FLAGS := -v $(PYTEST_PARALLEL_FLAGS)
+PYTEST_DEFAULT_FLAGS := -q --disable-warnings $(PYTEST_PARALLEL_FLAGS) $(PYTEST_RANDOM_FLAGS)
+PYTEST_VERBOSE_FLAGS := -v $(PYTEST_PARALLEL_FLAGS) $(PYTEST_RANDOM_FLAGS)
 PYTEST_COVERAGE_REPORT_FLAGS := --cov-report=term-missing --cov-report=xml:coverage.xml
 RUFF_CHECK_DEFAULT_FLAGS := --quiet --fix
 RUFF_CHECK_VERBOSE_FLAGS := --verbose --fix
@@ -129,15 +131,19 @@ dev-reader-verbose:
 	@uv run textual run --dev safari_reader/main.py
 
 test:
+	@echo pytest-randomly seed: $(PYTEST_RANDOM_SEED)
 	@uv run pytest tests/ $(PYTEST_DEFAULT_FLAGS)
 
 test-verbose:
+	@echo pytest-randomly seed: $(PYTEST_RANDOM_SEED)
 	@uv run pytest tests/ $(PYTEST_VERBOSE_FLAGS)
 
 coverage:
+	@echo pytest-randomly seed: $(PYTEST_RANDOM_SEED)
 	@uv run pytest tests/ $(PYTEST_DEFAULT_FLAGS) $(foreach module,$(PYTEST_COVERAGE_MODULES),--cov=$(module)) $(PYTEST_COVERAGE_REPORT_FLAGS)
 
 coverage-verbose:
+	@echo pytest-randomly seed: $(PYTEST_RANDOM_SEED)
 	@uv run pytest tests/ $(PYTEST_VERBOSE_FLAGS) $(foreach module,$(PYTEST_COVERAGE_MODULES),--cov=$(module)) $(PYTEST_COVERAGE_REPORT_FLAGS)
 
 tox:

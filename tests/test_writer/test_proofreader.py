@@ -7,16 +7,21 @@ import pytest
 from textual.widgets import Static
 
 from safari_writer.app import SafariWriterApp
-from safari_writer.screens.proofreader import (MODE_CORRECT,
-                                               MODE_CORRECT_CONFIRM,
-                                               MODE_CORRECT_MENU,
-                                               MODE_CORRECT_WORD,
-                                               MODE_DICT_RESULTS,
-                                               MODE_DICT_SEARCH,
-                                               MODE_HIGHLIGHT, MODE_MENU,
-                                               MODE_PRINT, ProofreaderScreen,
-                                               _check_word, _dict_lookup,
-                                               _extract_words)
+from safari_writer.screens.proofreader import (
+    MODE_CORRECT,
+    MODE_CORRECT_CONFIRM,
+    MODE_CORRECT_MENU,
+    MODE_CORRECT_WORD,
+    MODE_DICT_RESULTS,
+    MODE_DICT_SEARCH,
+    MODE_HIGHLIGHT,
+    MODE_MENU,
+    MODE_PRINT,
+    ProofreaderScreen,
+    _check_word,
+    _dict_lookup,
+    _extract_words,
+)
 from safari_writer.state import AppState
 
 # ---------------------------------------------------------------------------
@@ -208,7 +213,9 @@ class TestMountBehavior:
                 assert "Highlight Errors" in screen._body_text
                 assert "Select a mode." in screen._message_text
                 assert "Highlight" in screen._help_text
-                assert "Highlight Errors" in screen.query_one("#pr-body", Static).content
+                assert (
+                    "Highlight Errors" in screen.query_one("#pr-body", Static).content
+                )
 
         asyncio.run(run())
 
@@ -222,7 +229,10 @@ class TestMountBehavior:
                 assert "[reverse] H  Highlight Errors[/reverse]" in screen._body_text
                 await pilot.press("down")
                 await pilot.pause()
-                assert "[reverse] P  Print Errors (list on-screen)[/reverse]" in screen._body_text
+                assert (
+                    "[reverse] P  Print Errors (list on-screen)[/reverse]"
+                    in screen._body_text
+                )
                 await pilot.press("up")
                 await pilot.pause()
                 assert "[reverse] H  Highlight Errors[/reverse]" in screen._body_text
@@ -293,7 +303,9 @@ class TestMountBehavior:
                 await pilot.pause()
                 screen = app.screen
                 assert screen._mode == MODE_MENU
-                assert "Highlight Errors" in screen.query_one("#pr-body", Static).content
+                assert (
+                    "Highlight Errors" in screen.query_one("#pr-body", Static).content
+                )
                 assert "[reverse] H  Highlight Errors[/reverse]" in screen._body_text
 
         asyncio.run(run())

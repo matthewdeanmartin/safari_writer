@@ -2,8 +2,12 @@
 
 import pytest
 
-from safari_writer.file_types import (FileProfile, HighlightProfile,
-                                      StorageMode, resolve_file_profile)
+from safari_writer.file_types import (
+    FileProfile,
+    HighlightProfile,
+    StorageMode,
+    resolve_file_profile,
+)
 
 
 class TestStorageModeResolution:

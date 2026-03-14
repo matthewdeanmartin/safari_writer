@@ -5,8 +5,13 @@ from __future__ import annotations
 import re
 from dataclasses import replace
 
-from safari_slides.model import (Presentation, PresentationMetadata,
-                                 RenderLine, Slide, SlideMetadata)
+from safari_slides.model import (
+    Presentation,
+    PresentationMetadata,
+    RenderLine,
+    Slide,
+    SlideMetadata,
+)
 
 __all__ = ["parse_slidemd"]
 

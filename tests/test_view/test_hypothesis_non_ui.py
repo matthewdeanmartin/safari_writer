@@ -9,8 +9,8 @@ from PIL import Image
 from safari_view.render import RenderMode
 from safari_view.render.palettes import (
     apply_palette,
-    get_atari_2600_palette,
     get_atari_800_palette,
+    get_atari_2600_palette,
 )
 from safari_view.state import SafariViewState
 

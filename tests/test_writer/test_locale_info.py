@@ -8,9 +8,14 @@ from unittest.mock import patch
 
 import pytest
 
-from safari_writer.locale_info import (_normalize_tag, available_languages,
-                                       format_datetime, get_locale,
-                                       get_translation, refresh)
+from safari_writer.locale_info import (
+    _normalize_tag,
+    available_languages,
+    format_datetime,
+    get_locale,
+    get_translation,
+    refresh,
+)
 
 # ---------------------------------------------------------------------------
 # _normalize_tag
@@ -64,6 +69,14 @@ class TestGetLocale:
         with patch.dict(os.environ, {}, clear=True):
             result = get_locale()
             assert len(result) >= 2  # at minimum a 2-letter language code
+
+    def test_windows_without_windll_falls_back_to_env(self):
+        with (
+            patch("safari_writer.locale_info.platform.system", return_value="Windows"),
+            patch("safari_writer.locale_info.get_kernel32", return_value=None),
+            patch.dict(os.environ, {"LANG": "de_DE.UTF-8"}, clear=True),
+        ):
+            assert get_locale() == "de_DE"
 
 
 class TestRefresh:
