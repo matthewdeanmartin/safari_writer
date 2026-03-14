@@ -396,6 +396,14 @@ def parse_document(text: str) -> list[TopicChunk]:
         for sub in re.findall(r"^#{1,6}\s+(.+)$", body, re.MULTILINE):
             kw_tokens.extend(_tokenize(sub))
 
+        # Extract branches (questions that link to other sections).
+        branches: list[tuple[str, str]] = []
+        for match in re.finditer(
+            r"^\s*[-*]\s*\[([^\]]+)\]\(#([^\)]+)\)", body, re.MULTILINE
+        ):
+            label, target = match.groups()
+            branches.append((label.strip(), target.strip()))
+
         keywords = sorted(set(kw_tokens) - _STOPWORDS)
         result.append(
             TopicChunk(
@@ -404,6 +412,7 @@ def parse_document(text: str) -> list[TopicChunk]:
                 body=body,
                 keywords=keywords,
                 raw_markdown=raw,
+                branches=branches,
             )
         )
     return result
@@ -687,7 +696,38 @@ def plan_response(
         callback_candidates=callbacks,
     )
 
-    # 3. Callback opportunity.
+    # 3. Exact branch match check.
+    last_bot = next(
+        (n for n in reversed(state.conversation[:-1]) if n.speaker == "bot"), None
+    )
+    if last_bot and last_bot.retrieved_chunk_ids:
+        for cid in last_bot.retrieved_chunk_ids:
+            chunk = next((c for c in state.chunks if c.chunk_id == cid), None)
+            if chunk:
+                for label, target in chunk.branches:
+                    if user_input.lower().strip() == label.lower().strip():
+                        target_chunk = next(
+                            (
+                                c
+                                for c in state.chunks
+                                if c.heading.lower() == target.lower()
+                            ),
+                            None,
+                        )
+                        if target_chunk:
+                            resp = _build_grounded_response(
+                                target_chunk, user_input, "statement"
+                            )
+                            resp = _maybe_vary(resp, state)
+                            state.add_node(
+                                "bot",
+                                resp,
+                                retrieved_chunk_ids=[target_chunk.chunk_id],
+                                intent="branch",
+                            )
+                            return ResponseMode.GROUNDED, resp, [target_chunk.chunk_id]
+
+    # 4. Callback opportunity.
     if callbacks and len(state.conversation) > 8:
         cb_node = _find_node(state, callbacks[0])
         if cb_node:
@@ -762,8 +802,14 @@ def _find_node(state: SafariChatState, node_id: int) -> ConversationNode | None:
 def _build_grounded_response(chunk: TopicChunk, user_input: str, intent: str) -> str:
     """Summarise a retrieved topic chunk in a conversational way."""
     body = chunk.body
-    # Strip markdown headings from the excerpt.
-    lines = [ln for ln in body.splitlines() if not ln.strip().startswith("#")]
+    # Strip markdown headings and branch links from the excerpt.
+    lines = []
+    for ln in body.splitlines():
+        if ln.strip().startswith("#"):
+            continue
+        if re.search(r"^\s*[-*]\s*\[([^\]]+)\]\(#([^\)]+)\)", ln):
+            continue
+        lines.append(ln)
     excerpt = "\n".join(ln for ln in lines if ln.strip())
 
     prefix = ""
@@ -773,6 +819,13 @@ def _build_grounded_response(chunk: TopicChunk, user_input: str, intent: str) ->
         prefix = "Good question. "
 
     topic_ref = f'I found help under "{chunk.heading}".\n\n' if chunk.heading else ""
+
+    # Add branches if present.
+    if chunk.branches:
+        branch_lines = ["\nWould you like to know more about:"]
+        for label, _ in chunk.branches:
+            branch_lines.append(f"- {label}")
+        excerpt += "\n" + "\n".join(branch_lines)
 
     followup = _pick_followup(intent)
     return f"{prefix}{topic_ref}{excerpt}\n\n{followup}"

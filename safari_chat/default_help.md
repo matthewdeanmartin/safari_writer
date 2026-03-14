@@ -18,7 +18,6 @@ load an existing one, or explore other features.
 If you are new, try pressing **T** from the Main Menu to load a
 demo document. This will show you what formatted text looks like
 in the editor.
-
 ---
 
 ## Main Menu
@@ -34,11 +33,38 @@ to activate each option.
 - **A** **Save As** — save with a new filename
 - **D** **Delete** File — move a file to Garbage (recoverable)
 
+**Need help with saving?**
+- [I am getting a Disk Full error](#Disk Full Error)
+- [I do not know where my file went](#Finding Files)
+
 **Modules:**
 - **V** **Verify Spelling** — launch the Proofreader
 - **P** **Print** File — print or export your document
 - **G** **Global Format** — set margins, spacing, and layout
 - **M** **Mail Merge** — database and form letters
+
+---
+
+## Disk Full Error
+
+If you see a "Disk Full" error, your storage device has no more
+room for new data. You have a few options:
+
+1.  **Delete** old files using the **D** command from the Main Menu.
+2.  **Insert** a different disk or use a different folder.
+3.  **Compress** your document by removing large images or unneeded text.
+
+---
+
+## Finding Files
+
+If you saved a file but cannot find it, check the following:
+
+1.  **Current Folder:** Use the **1** command to see files in the current folder.
+2.  **External Drives:** Use the **2** command to check other drives.
+3.  **Search:** Use the Search function in **Safari DOS** (press **O**).
+
+---
 
 **File Browsing:**
 - **1** **Index** Current Folder — browse files here

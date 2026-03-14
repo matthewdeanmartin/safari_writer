@@ -45,6 +45,7 @@ class TopicChunk:
     body: str
     keywords: list[str]
     raw_markdown: str
+    branches: list[tuple[str, str]] = field(default_factory=list)
 
 
 @dataclass
