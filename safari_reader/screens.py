@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Center, Vertical
+from textual.containers import Container, Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import Input, Label, ListItem, ListView, Static
 from textual.worker import Worker, WorkerState
@@ -26,6 +27,7 @@ __all__ = [
     "SafariReaderCatalogScreen",
     "SafariReaderBookDetailScreen",
     "SafariReaderBookmarksScreen",
+    "SafariReaderDiskBrowserScreen",
     "SafariReaderHelpScreen",
     "SafariReaderSearchScreen",
 ]
@@ -35,6 +37,88 @@ __all__ = [
 
 _STATUS_BAR_STYLE = "bold reverse"
 _FOOTER_STYLE = "reverse"
+
+MENU_CSS = """
+SafariReaderMainMenuScreen {
+    background: $background;
+    layout: vertical;
+}
+
+#reader-menu-body {
+    height: 1fr;
+    align: center middle;
+}
+
+#reader-menu-container {
+    width: 90;
+    height: auto;
+    border: solid $accent;
+    background: $surface;
+    padding: 1 2;
+}
+
+#reader-title {
+    text-align: center;
+    text-style: bold;
+    margin-bottom: 1;
+    color: $accent;
+}
+
+#reader-menu-columns {
+    layout: horizontal;
+    height: auto;
+}
+
+#reader-menu-col-1, #reader-menu-col-2, #reader-menu-col-3 {
+    width: 1fr;
+    height: auto;
+}
+
+.menu-item {
+    height: 1;
+    color: $foreground;
+}
+
+.menu-header {
+    height: 1;
+    text-align: center;
+    text-style: bold;
+    background: $accent;
+    color: $surface;
+    margin-bottom: 1;
+}
+
+#reader-menu-footer {
+    dock: bottom;
+    height: 2;
+    layout: vertical;
+}
+
+#reader-context-bar {
+    height: 1;
+    background: $secondary;
+    color: $foreground;
+    padding: 0 1;
+}
+
+#reader-status-bar {
+    height: 1;
+    background: $primary;
+    color: $foreground;
+    padding: 0 1;
+    layout: horizontal;
+}
+
+#reader-status-text {
+    width: 1fr;
+    height: 1;
+}
+
+#reader-status-clock {
+    width: auto;
+    height: 1;
+}
+"""
 
 
 def _progress_bar(percent: float, width: int = 20) -> str:
@@ -72,96 +156,141 @@ class MenuItem(Static):
 class SafariReaderMainMenuScreen(Screen):
     """Boot / splash screen for Safari Reader."""
 
-    MENU_ITEMS = [
+    CSS = MENU_CSS
+
+    COMMAND_ITEMS = [
         ("R", "esume last book", "resume"),
         ("L", "ibrary", "library"),
+        ("O", "pen from disk", "browse_disk"),
         ("C", "atalog (online)", "catalog"),
         ("H", "elp", "help"),
-        ("S", "ettings", "settings"),
         ("Q", "uit", "quit"),
+    ]
+    CONFIG_ITEMS = [
+        ("S", "ettings", "settings"),
+        ("T", "heme switcher", "theme"),
     ]
 
     BINDINGS = [
         Binding("r", "menu('resume')", "Resume", show=False),
         Binding("l", "menu('library')", "Library", show=False),
+        Binding("o", "menu('browse_disk')", "Open From Disk", show=False),
         Binding("c", "menu('catalog')", "Catalog", show=False),
         Binding("h", "menu('help')", "Help", show=False),
         Binding("s", "menu('settings')", "Settings", show=False),
+        Binding("t", "menu('theme')", "Theme", show=False),
         Binding("q", "menu('quit')", "Quit", show=False),
+        Binding("1", "recent('1')", "Recent 1", show=False),
+        Binding("2", "recent('2')", "Recent 2", show=False),
+        Binding("3", "recent('3')", "Recent 3", show=False),
+        Binding("4", "recent('4')", "Recent 4", show=False),
+        Binding("5", "recent('5')", "Recent 5", show=False),
+        Binding("6", "recent('6')", "Recent 6", show=False),
+        Binding("7", "recent('7')", "Recent 7", show=False),
+        Binding("8", "recent('8')", "Recent 8", show=False),
+        Binding("9", "recent('9')", "Recent 9", show=False),
         Binding("escape", "menu('quit')", "Quit", show=False),
-        # Arrow navigation
         Binding("up", "cursor_up", "Up", show=False),
         Binding("down", "cursor_down", "Down", show=False),
+        Binding("left", "cursor_left", "Left", show=False),
+        Binding("right", "cursor_right", "Right", show=False),
         Binding("enter", "activate", "Activate", show=False),
     ]
 
     def __init__(self, state: SafariReaderState) -> None:
         super().__init__()
         self.state = state
+        self._message = ""
         self._selected_index = 0
         self._menu_widgets: list[MenuItem] = []
+        self._column_lengths = [0, 0, 0]
         load_library(state)
 
     def compose(self) -> ComposeResult:
-        last_book = ""
-        for b in sorted(
-            self.state.library,
-            key=lambda x: x.last_opened or "",
-            reverse=True,
-        ):
-            if b.last_opened:
-                last_book = b.title
-                break
-
-        yield Static(
-            f"[{_STATUS_BAR_STYLE}]  SAFARI READER  v1.0  [/{_STATUS_BAR_STYLE}]"
-        )
-        yield Static("")
-        with Center():
-            yield Static(
-                "╔══════════════════════════════════════╗\n"
-                "║                                      ║\n"
-                "║         S A F A R I                   ║\n"
-                "║         R E A D E R                   ║\n"
-                "║                                      ║\n"
-                "║   A keyboard-first book reader       ║\n"
-                "║   with AtariWriter-era charm         ║\n"
-                "║                                      ║\n"
-                "╚══════════════════════════════════════╝"
-            )
-        yield Static("")
-        if last_book:
-            yield Static(f"  Last read: {last_book}")
-            yield Static("")
-
-        with Vertical(id="reader-menu-container"):
-            for key, label, action in self.MENU_ITEMS:
-                yield MenuItem(key, label, action)
-
-        yield Static("")
-        yield Static(
-            f"[{_FOOTER_STYLE}]"
-            "  R=Resume  L=Library  C=Catalog  H=Help  Q=Quit  "
-            f"[/{_FOOTER_STYLE}]"
-        )
+        command_items = self.COMMAND_ITEMS
+        recent_items = self._recent_menu_items()
+        config_items = self.CONFIG_ITEMS
+        with Container(id="reader-menu-body"):
+            with Container(id="reader-menu-container"):
+                yield Static("*** SAFARI READER ***", id="reader-title")
+                with Horizontal(id="reader-menu-columns"):
+                    with Container(id="reader-menu-col-1"):
+                        yield Static("*** Commands ***", classes="menu-header")
+                        for key, label, action in command_items:
+                            yield MenuItem(key, label, action)
+                    with Container(id="reader-menu-col-2"):
+                        yield Static("*** Recent ***", classes="menu-header")
+                        for key, label, action in recent_items:
+                            yield MenuItem(key, label, action)
+                    with Container(id="reader-menu-col-3"):
+                        yield Static("*** Configuration ***", classes="menu-header")
+                        for key, label, action in config_items:
+                            yield MenuItem(key, label, action)
+        with Container(id="reader-menu-footer"):
+            yield Static(self._context_text(), id="reader-context-bar")
+            with Horizontal(id="reader-status-bar"):
+                yield Static(self._status_line(), id="reader-status-text")
+                yield Static(self._clock_text(), id="reader-status-clock")
 
     def on_mount(self) -> None:
         self._menu_widgets = list(self.query(MenuItem))
+        self._column_lengths = [
+            len(self.COMMAND_ITEMS),
+            len(self._recent_menu_items()),
+            len(self.CONFIG_ITEMS),
+        ]
         self._refresh_menu()
+        self._refresh_footer()
 
     def _refresh_menu(self) -> None:
         for i, widget in enumerate(self._menu_widgets):
             widget.set_selected(i == self._selected_index)
 
     def action_cursor_up(self) -> None:
-        if self._selected_index > 0:
+        col1_len, col2_len, _col3_len = self._column_lengths
+        if self._selected_index < col1_len:
+            if self._selected_index > 0:
+                self._selected_index -= 1
+        elif self._selected_index < col1_len + col2_len:
+            if self._selected_index > col1_len:
+                self._selected_index -= 1
+        elif self._selected_index > col1_len + col2_len:
             self._selected_index -= 1
-            self._refresh_menu()
+        self._refresh_menu()
 
     def action_cursor_down(self) -> None:
-        if self._selected_index < len(self._menu_widgets) - 1:
+        col1_len, col2_len, col3_len = self._column_lengths
+        if self._selected_index < col1_len:
+            if self._selected_index < col1_len - 1:
+                self._selected_index += 1
+        elif self._selected_index < col1_len + col2_len:
+            if self._selected_index < col1_len + col2_len - 1:
+                self._selected_index += 1
+        elif self._selected_index < col1_len + col2_len + col3_len - 1:
             self._selected_index += 1
-            self._refresh_menu()
+        self._refresh_menu()
+
+    def action_cursor_left(self) -> None:
+        col1_len, col2_len, _col3_len = self._column_lengths
+        if self._selected_index < col1_len:
+            return
+        if self._selected_index < col1_len + col2_len:
+            row = self._selected_index - col1_len
+            self._selected_index = min(row, col1_len - 1)
+        else:
+            row = self._selected_index - (col1_len + col2_len)
+            self._selected_index = col1_len + min(row, col2_len - 1)
+        self._refresh_menu()
+
+    def action_cursor_right(self) -> None:
+        col1_len, col2_len, col3_len = self._column_lengths
+        if self._selected_index < col1_len:
+            row = self._selected_index
+            self._selected_index = col1_len + min(row, col2_len - 1)
+        elif self._selected_index < col1_len + col2_len:
+            row = self._selected_index - col1_len
+            self._selected_index = col1_len + col2_len + min(row, col3_len - 1)
+        self._refresh_menu()
 
     def action_activate(self) -> None:
         if 0 <= self._selected_index < len(self._menu_widgets):
@@ -169,31 +298,108 @@ class SafariReaderMainMenuScreen(Screen):
             self.action_menu(action)
 
     def action_menu(self, choice: str) -> None:
+        if choice.startswith("recent:"):
+            try:
+                index = int(choice.split(":", maxsplit=1)[1])
+            except ValueError:
+                return
+            recent_books = self._recent_books()
+            if 0 <= index < len(recent_books):
+                self._open_book(recent_books[index])
+            return
         if choice == "library":
             self.app.push_screen(SafariReaderLibraryScreen(self.state))
         elif choice == "catalog":
             self.app.push_screen(SafariReaderCatalogScreen(self.state))
+        elif choice == "browse_disk":
+            self.app.push_screen(SafariReaderDiskBrowserScreen(self.state))
         elif choice == "resume":
             self._resume_last()
         elif choice == "help":
             self.app.push_screen(SafariReaderHelpScreen(self.state))
         elif choice == "settings":
             self.app.push_screen(SafariReaderSettingsScreen(self.state))
+        elif choice == "theme":
+            from safari_writer.screens.style_switcher import StyleSwitcherScreen
+
+            self.app.push_screen(StyleSwitcherScreen(self.app.theme))
         elif choice == "quit":
             _quit_reader(self)
 
+    def action_recent(self, slot: str) -> None:
+        try:
+            index = int(slot) - 1
+        except ValueError:
+            return
+        recent_books = self._recent_books()
+        if 0 <= index < len(recent_books):
+            self._open_book(recent_books[index])
+
     def _resume_last(self) -> None:
-        candidates = sorted(
-            self.state.library,
-            key=lambda x: x.last_opened or "",
-            reverse=True,
-        )
-        for b in candidates:
-            if b.last_opened and b.file_path and b.file_path.exists():
-                open_book(b, self.state)
-                self.app.push_screen(SafariReaderScreen(self.state))
+        for book in self._recent_books():
+            if book.last_opened and book.file_path and book.file_path.exists():
+                self._open_book(book)
                 return
         self.notify("NO BOOK TO RESUME", severity="warning")
+
+    def _open_book(self, book: BookMeta) -> None:
+        open_book(book, self.state)
+        self.app.push_screen(SafariReaderScreen(self.state))
+
+    def _recent_books(self) -> list[BookMeta]:
+        return sorted(
+            [book for book in self.state.library if book.file_path and book.file_path.exists()],
+            key=lambda book: (book.last_opened or book.added or "", book.title.lower()),
+            reverse=True,
+        )[:9]
+
+    def _recent_menu_items(self) -> list[tuple[str, str, str]]:
+        recent_books = self._recent_books()
+        if recent_books:
+            return [
+                (str(index + 1), f" {book.title[:24]}", f"recent:{index}")
+                for index, book in enumerate(recent_books)
+            ]
+        return [("-", " No recent books", "noop")]
+
+    def _context_text(self) -> str:
+        book = self.state.current_book
+        if book is None:
+            recent = self._recent_books()
+            if recent:
+                book = recent[0]
+        if book is None:
+            current = "(no book selected)"
+            progress = ""
+        else:
+            current = book.title
+            progress = f"   Progress: {book.progress_percent:.0f}%"
+        return f" Current Book: {current}{progress}   Library: {self.state.library_dir}"
+
+    def _status_line(self) -> str:
+        if self._message:
+            return f" {self._message}"
+        return (
+            " R=Resume  O=Open From Disk  C=Catalog  1-9=Recent  "
+            "S=Settings  T=Theme  Q=Quit"
+        )
+
+    def _clock_text(self) -> str:
+        return datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    def _refresh_footer(self) -> None:
+        if not self.is_mounted:
+            return
+        self.query_one("#reader-context-bar", Static).update(self._context_text())
+        self.query_one("#reader-status-text", Static).update(self._status_line())
+        self.query_one("#reader-status-clock", Static).update(self._clock_text())
+
+    def on_show(self) -> None:
+        self._refresh_footer()
+
+    def on_screen_resume(self) -> None:
+        load_library(self.state)
+        self._refresh_footer()
 
 
 # ── Library Screen ───────────────────────────────────────────────
@@ -206,6 +412,7 @@ class SafariReaderLibraryScreen(Screen):
         Binding("r", "read_selected", "Read", show=False),
         Binding("enter", "read_selected", "Read", show=False),
         Binding("i", "import_file", "Import", show=False),
+        Binding("o", "browse_disk", "Browse Disk", show=False),
         Binding("d", "details", "Details", show=False),
         Binding("a", "archive", "Archive", show=False),
         Binding("c", "catalog", "Catalog", show=False),
@@ -241,9 +448,14 @@ class SafariReaderLibraryScreen(Screen):
         yield Static("")
         yield Static(
             f"[{_FOOTER_STYLE}]"
-            "  R/Enter=Read  I=Import  D=Details  A=Archive  C=Catalog  Q=Back  "
+            "  R/Enter=Read  O=Browse Disk  I=Import  D=Details  A=Archive  C=Catalog  Q=Back  "
             f"[/{_FOOTER_STYLE}]"
         )
+
+    def on_mount(self) -> None:
+        matches = self.query("#library-list")
+        if matches:
+            matches.first(ListView).focus()
 
     def _selected_book(self) -> BookMeta | None:
         """Return the currently highlighted book, or None."""
@@ -264,6 +476,9 @@ class SafariReaderLibraryScreen(Screen):
 
     def action_import_file(self) -> None:
         self.app.push_screen(SafariReaderImportScreen(self.state))
+
+    def action_browse_disk(self) -> None:
+        self.app.push_screen(SafariReaderDiskBrowserScreen(self.state))
 
     def action_details(self) -> None:
         book = self._selected_book()
@@ -592,6 +807,9 @@ class SafariReaderTOCScreen(Screen):
         yield Static("")
         yield Static(f"[{_FOOTER_STYLE}]  Enter=Jump  Q/Esc=Back  [/{_FOOTER_STYLE}]")
 
+    def on_mount(self) -> None:
+        self.query_one("#toc-list", ListView).focus()
+
     def action_jump(self) -> None:
         matches = self.query("#toc-list")
         if not matches:
@@ -656,8 +874,14 @@ class SafariReaderCatalogScreen(Screen):
                 label = f"  {i + 1:>3}. {title:<50} {author:<32} DL:{dl}"
                 items.append(ListItem(Label(label), id=f"cat-{i}"))
             body.mount(ListView(*items, id="catalog-list"))
+            self.call_after_refresh(self._focus_catalog_list)
         else:
             body.mount(Static("  Press [S] to Search or [T] for Top Downloads."))
+
+    def _focus_catalog_list(self) -> None:
+        matches = self.query("#catalog-list")
+        if matches:
+            matches.first(ListView).focus()
 
     def _set_status(self, text: str) -> None:
         self.query_one("#catalog-status", Static).update(text)
@@ -974,6 +1198,119 @@ class SafariReaderImportScreen(Screen):
         self.app.pop_screen()
 
 
+# ── Disk Browser ─────────────────────────────────────────────────
+
+
+class SafariReaderDiskBrowserScreen(Screen):
+    """Browse local folders and open a text file in the reader."""
+
+    SUPPORTED_SUFFIXES = {".txt", ".md", ".html", ".htm"}
+
+    BINDINGS = [
+        Binding("enter", "activate", "Open", show=False),
+        Binding("right", "activate", "Open", show=False),
+        Binding("left", "parent", "Up", show=False),
+        Binding("backspace", "parent", "Up", show=False),
+        Binding("q", "go_back", "Back", show=False),
+        Binding("escape", "go_back", "Back", show=False),
+    ]
+
+    def __init__(self, state: SafariReaderState, start_dir: Path | None = None) -> None:
+        super().__init__()
+        self.state = state
+        if start_dir is not None:
+            self.current_dir = start_dir
+        elif state.current_book and state.current_book.file_path:
+            self.current_dir = state.current_book.file_path.parent
+        else:
+            self.current_dir = Path.cwd()
+        self._entries: list[Path] = []
+
+    def compose(self) -> ComposeResult:
+        yield Static(f"[{_STATUS_BAR_STYLE}]  BROWSE DISK  [/{_STATUS_BAR_STYLE}]")
+        yield Static("", id="disk-browser-path")
+        yield Vertical(id="disk-browser-body")
+        yield Static("")
+        yield Static(
+            f"[{_FOOTER_STYLE}]"
+            "  Arrows=Move  Enter/Right=Open  Left/Backspace=Up  Q/Esc=Back  "
+            f"[/{_FOOTER_STYLE}]"
+        )
+
+    def on_mount(self) -> None:
+        self._refresh_entries()
+
+    def _refresh_entries(self) -> None:
+        self.query_one("#disk-browser-path", Static).update(f"  {self.current_dir}")
+        body = self.query_one("#disk-browser-body", Vertical)
+        body.remove_children()
+        parent = self.current_dir.parent if self.current_dir.parent != self.current_dir else None
+        self._entries = []
+        items: list[ListItem] = []
+        if parent is not None:
+            self._entries.append(parent)
+            items.append(ListItem(Label("  [..] Parent Folder"), id="disk-parent"))
+        try:
+            children = sorted(
+                self.current_dir.iterdir(),
+                key=lambda entry: (not entry.is_dir(), entry.name.lower()),
+            )
+        except OSError as exc:
+            body.mount(Static(f"  Cannot open folder: {exc}"))
+            return
+        for child in children:
+            if child.is_dir():
+                label = f"  [{child.name}]"
+            elif child.suffix.lower() in self.SUPPORTED_SUFFIXES:
+                label = f"  {child.name}"
+            else:
+                continue
+            self._entries.append(child)
+            items.append(ListItem(Label(label)))
+        if items:
+            body.mount(ListView(*items, id="disk-browser-list"))
+            self.call_after_refresh(self._focus_list)
+        else:
+            body.mount(Static("  No readable folders or supported files here."))
+
+    def _focus_list(self) -> None:
+        matches = self.query("#disk-browser-list")
+        if matches:
+            matches.first(ListView).focus()
+
+    def _selected_entry(self) -> Path | None:
+        matches = self.query("#disk-browser-list")
+        if not matches:
+            return None
+        list_view = matches.first(ListView)
+        if list_view.index is None:
+            return None
+        if 0 <= list_view.index < len(self._entries):
+            return self._entries[list_view.index]
+        return None
+
+    def action_activate(self) -> None:
+        selected = self._selected_entry()
+        if selected is None:
+            return
+        if selected.is_dir():
+            self.current_dir = selected
+            self._refresh_entries()
+            return
+        meta = import_local_file(selected, self.state)
+        open_book(meta, self.state)
+        self.app.push_screen(SafariReaderScreen(self.state))
+
+    def action_parent(self) -> None:
+        if self.current_dir.parent == self.current_dir:
+            return
+        self.current_dir = self.current_dir.parent
+        self._refresh_entries()
+
+    def action_go_back(self) -> None:
+        self.app.pop_screen()
+
+
 # ── Search Inside Book ───────────────────────────────────────────
 
 
@@ -1185,6 +1522,11 @@ class SafariReaderBookmarksScreen(Screen):
         yield Static(
             f"[{_FOOTER_STYLE}]  Enter=Jump  D=Delete  Q/Esc=Back  [/{_FOOTER_STYLE}]"
         )
+
+    def on_mount(self) -> None:
+        matches = self.query("#bookmarks-list")
+        if matches:
+            matches.first(ListView).focus()
 
     def _selected_bookmark_index(self) -> int | None:
         """Return the index of the highlighted bookmark, or None."""

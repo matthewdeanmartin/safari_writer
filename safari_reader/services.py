@@ -339,26 +339,62 @@ def load_reading_state(state: SafariReaderState) -> None:
 
 def import_local_file(path: Path, state: SafariReaderState) -> BookMeta:
     """Import a local file into the library."""
+    path = path.expanduser().resolve()
     text = path.read_text(encoding="utf-8", errors="replace")
     suffix = path.suffix.lower()
     if suffix in {".html", ".htm"}:
         text = strip_html_tags(text)
     state.library_dir.mkdir(parents=True, exist_ok=True)
-    dest = state.library_dir / path.name
+    existing = next(
+        (
+            book
+            for book in state.library
+            if book.source == "local" and book.source_id == str(path)
+        ),
+        None,
+    )
+    if existing is not None and existing.file_path is not None:
+        dest = existing.file_path
+    else:
+        dest = _unique_library_path(state.library_dir, path.name)
     dest.write_text(text, encoding="utf-8")
     now = datetime.now(tz=timezone.utc).isoformat()
-    meta = BookMeta(
-        title=path.stem.replace("_", " ").replace("-", " ").title(),
-        file_path=dest,
-        format=suffix.lstrip(".") or "txt",
-        size_bytes=len(text.encode("utf-8")),
-        added=now,
-        total_chars=len(text),
-        source="local",
-    )
-    state.library.append(meta)
+    if existing is not None:
+        existing.title = path.stem.replace("_", " ").replace("-", " ").title()
+        existing.file_path = dest
+        existing.format = suffix.lstrip(".") or "txt"
+        existing.size_bytes = len(text.encode("utf-8"))
+        existing.total_chars = len(text)
+        meta = existing
+    else:
+        meta = BookMeta(
+            title=path.stem.replace("_", " ").replace("-", " ").title(),
+            file_path=dest,
+            format=suffix.lstrip(".") or "txt",
+            size_bytes=len(text.encode("utf-8")),
+            added=now,
+            total_chars=len(text),
+            source="local",
+            source_id=str(path),
+        )
+        state.library.append(meta)
     save_library(state)
     return meta
+
+
+def _unique_library_path(library_dir: Path, filename: str) -> Path:
+    """Return a non-conflicting destination path inside the library."""
+    candidate = library_dir / filename
+    if not candidate.exists():
+        return candidate
+    stem = candidate.stem
+    suffix = candidate.suffix
+    counter = 2
+    while True:
+        candidate = library_dir / f"{stem}_{counter}{suffix}"
+        if not candidate.exists():
+            return candidate
+        counter += 1
 
 
 def add_book_to_library(

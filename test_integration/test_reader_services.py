@@ -175,6 +175,21 @@ class TestImportLocalFile:
             assert "Hello" in dest_text
             assert "script" not in dest_text
 
+    def test_reimport_same_local_file_updates_existing_book(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            src = Path(td) / "same-book.txt"
+            src.write_text("first edition", encoding="utf-8")
+            state = SafariReaderState(library_dir=Path(td) / "lib")
+
+            first = import_local_file(src, state)
+            src.write_text("second edition", encoding="utf-8")
+            second = import_local_file(src, state)
+
+            assert len(state.library) == 1
+            assert first is second
+            assert second.file_path is not None
+            assert second.file_path.read_text(encoding="utf-8") == "second edition"
+
 
 class TestOpenBook:
     def test_open_sets_text_and_chapters(self) -> None:
