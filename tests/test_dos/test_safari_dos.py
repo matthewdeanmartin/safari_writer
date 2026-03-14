@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import importlib
+import json
 import unittest.mock as mock
 from pathlib import Path
 
 import safari_dos
+import safari_dos.services as dos_services
 from safari_dos.main import main as safari_dos_main
 from safari_dos.main import parse_args
 from safari_dos.screens import InputScreen, SafariDosBrowserScreen
@@ -123,7 +125,30 @@ def test_move_to_garbage_sends_to_os_trash(tmp_path):
     assert entry.name == "notes.txt"
 
 
-def test_list_garbage_returns_empty():
+def test_list_garbage_reads_windows_recycle_bin(monkeypatch):
+    payload = [
+        {
+            "ItemId": "recycled-1",
+            "Name": "notes.txt",
+            "OriginalPath": "C:\\Temp\\notes.txt",
+            "DeletedAt": "2026-03-14T17:00:00",
+            "IsDir": False,
+        }
+    ]
+    completed = mock.Mock(stdout=json.dumps(payload))
+
+    monkeypatch.setattr(dos_services.os, "name", "nt", raising=False)
+    monkeypatch.setattr(dos_services.subprocess, "run", lambda *args, **kwargs: completed)
+
+    entries = list_garbage()
+
+    assert [entry.name for entry in entries] == ["notes.txt"]
+    assert entries[0].original_path == Path("C:\\Temp\\notes.txt")
+
+
+def test_list_garbage_returns_empty_off_windows(monkeypatch):
+    monkeypatch.setattr(dos_services.os, "name", "posix", raising=False)
+
     assert list_garbage() == []
 
 

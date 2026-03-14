@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import stat
+import subprocess
 import zipfile
 from dataclasses import dataclass
 from datetime import datetime
@@ -42,8 +43,7 @@ __all__ = [
     "zip_paths",
 ]
 
-# GarbageEntry is kept for API compatibility but items are managed by the OS trash.
-# list_garbage() always returns [] and restore_from_garbage() is not supported.
+# GarbageEntry models items visible in the OS trash / recycling bin.
 
 SORT_FIELDS = ("name", "date", "size", "type")
 
@@ -413,10 +413,84 @@ def move_to_garbage(path: Path) -> GarbageEntry:
     )
 
 
-def list_garbage() -> list[GarbageEntry]:
-    """Return items in the OS trash. Not supported — always returns empty list."""
+def _parse_recycle_deleted_at(raw_value: object) -> datetime:
+    if isinstance(raw_value, (int, float)):
+        return datetime.fromtimestamp(raw_value)
+    if isinstance(raw_value, str):
+        raw_text = raw_value.strip()
+        if raw_text:
+            try:
+                return datetime.fromisoformat(raw_text.replace("Z", "+00:00"))
+            except ValueError:
+                pass
+    return datetime.fromtimestamp(0)
 
-    return []
+
+def _list_windows_garbage() -> list[GarbageEntry]:
+    script = r"""
+$ErrorActionPreference = 'Stop'
+$shell = New-Object -ComObject Shell.Application
+$bin = $shell.Namespace(0xA)
+if ($null -eq $bin) {
+    @() | ConvertTo-Json -Compress
+    exit 0
+}
+$items = foreach ($item in $bin.Items()) {
+    $deletedAt = $item.ExtendedProperty('System.Recycle.DateDeleted')
+    [PSCustomObject]@{
+        ItemId = [string]$item.Path
+        Name = [string]$item.Name
+        OriginalPath = [string]$item.ExtendedProperty('System.Recycle.DeletedFrom')
+        DeletedAt = if ($deletedAt -is [DateTime]) { $deletedAt.ToString('o') } else { [string]$deletedAt }
+        IsDir = [bool]$item.IsFolder
+    }
+}
+$items | ConvertTo-Json -Compress
+"""
+    try:
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", script],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise OSError("Unable to query the Windows Recycle Bin") from exc
+
+    payload_text = result.stdout.strip()
+    if not payload_text:
+        return []
+    payload = json.loads(payload_text)
+    items = payload if isinstance(payload, list) else [payload]
+    entries: list[GarbageEntry] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        original_raw = str(item.get("OriginalPath") or "").strip()
+        original_path = Path(original_raw) if original_raw else Path(
+            str(item.get("Name") or item.get("ItemId") or "recycled-item")
+        )
+        name = str(item.get("Name") or original_path.name or original_path)
+        entries.append(
+            GarbageEntry(
+                item_id=str(item.get("ItemId") or original_path),
+                name=name,
+                stored_path=original_path,
+                original_path=original_path,
+                deleted_at=_parse_recycle_deleted_at(item.get("DeletedAt")),
+                is_dir=bool(item.get("IsDir", False)),
+            )
+        )
+    entries.sort(key=lambda entry: entry.deleted_at, reverse=True)
+    return entries
+
+
+def list_garbage() -> list[GarbageEntry]:
+    """Return items currently visible in the OS trash / recycling bin."""
+
+    if os.name != "nt":
+        return []
+    return _list_windows_garbage()
 
 
 def restore_from_garbage(item_id: str, destination: Path | None = None) -> Path:

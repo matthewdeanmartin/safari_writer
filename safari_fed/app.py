@@ -33,10 +33,7 @@ def _load_fed_cache() -> dict:
 
 
 def _save_fed_cache(data: dict) -> None:
-    try:
-        _fed_cache_path().write_text(json.dumps(data, indent=2), encoding="utf-8")
-    except OSError:
-        pass
+    _fed_cache_path().write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
 def _posts_to_cache(posts: list[FedPost]) -> list[dict]:

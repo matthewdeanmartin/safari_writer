@@ -538,8 +538,10 @@ class SafariFedMainScreen(Screen[None]):
             from safari_fed.app import persist_fed_state
 
             persist_fed_state(self.state)
-        except Exception:
-            pass
+        except Exception as exc:
+            message = f"Could not save Safari Fed state: {exc}"
+            self.set_message(message)
+            self.notify(message, severity="error")
 
     def _quit_fed(self) -> None:
         self._persist_state()

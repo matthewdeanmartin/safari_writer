@@ -265,11 +265,16 @@ class SafariWriterApp(App):
             return
         try:
             new_path = write_backup(self.state)
-        except OSError:
+        except OSError as exc:
+            self.set_message(f"Autosave failed: {exc}")
             return
         if new_path is None:
             return
-        # Clean up the previous backup for this session now that we have a newer one
+        self._remember_session_backup(new_path)
+
+    def _remember_session_backup(self, new_path: Path) -> None:
+        """Track the most recent session backup and remove the older copy."""
+
         if self._last_backup_path and self._last_backup_path != new_path:
             delete_backup(self._last_backup_path)
         self._last_backup_path = new_path
@@ -519,16 +524,17 @@ class SafariWriterApp(App):
         if self.state.modified:
             # Write a final backup before asking — so if the user chooses to
             # quit, the work is safely in the backup store for later recovery.
+            prompt = _("Unsaved changes will be lost. Quit?")
             try:
                 new_path = write_backup(self.state)
                 if new_path:
-                    if self._last_backup_path and self._last_backup_path != new_path:
-                        delete_backup(self._last_backup_path)
-                    self._last_backup_path = new_path
-            except OSError:
-                pass
+                    self._remember_session_backup(new_path)
+            except OSError as exc:
+                failure = f"Final backup failed: {exc}"
+                self.set_message(failure)
+                prompt = f"{failure}\nUnsaved changes will be lost if you quit."
             self.push_screen(
-                ConfirmScreen(_("Unsaved changes will be lost. Quit?")),
+                ConfirmScreen(prompt),
                 callback=self._on_quit_confirm,
             )
         else:

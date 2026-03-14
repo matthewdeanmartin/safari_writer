@@ -428,6 +428,25 @@ def test_shell_cycles_between_accounts():
     asyncio.run(run())
 
 
+def test_persist_state_failure_updates_status(monkeypatch):
+    screen = SafariFedMainScreen(build_demo_state())
+    notifications: list[str] = []
+    screen._refresh_status = lambda: None
+    screen.notify = lambda message, severity="information", **_: notifications.append(
+        f"{severity}:{message}"
+    )
+
+    def fail(state):
+        raise OSError("disk full")
+
+    monkeypatch.setattr("safari_fed.app.persist_fed_state", fail)
+
+    screen._persist_state()
+
+    assert screen.state.status_message == "Could not save Safari Fed state: disk full"
+    assert notifications == ["error:Could not save Safari Fed state: disk full"]
+
+
 def test_writer_open_fed_compose_loads_editor_buffer(monkeypatch):
     """Pressing 'c' in Safari Fed within the Writer app opens the editor."""
     app = SafariWriterApp()

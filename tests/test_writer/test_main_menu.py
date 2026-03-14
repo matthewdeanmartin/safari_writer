@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from unittest.mock import patch
 
 from safari_writer.app import SafariWriterApp
 from safari_writer.screens.main_menu import (COL1_ITEMS, COL2_ITEMS,
-                                             COL3_ITEMS, MENU_ITEMS,
-                                             MainMenuScreen, MenuItem)
+                                              COL3_ITEMS, MENU_ITEMS,
+                                              MainMenuScreen, MenuItem)
+from safari_writer.screens.file_ops import ConfirmScreen
 from safari_writer.state import AppState
 
 
@@ -132,3 +134,27 @@ class TestActionQuitOverride:
     def test_app_has_quit_repl(self) -> None:
         app = SafariWriterApp()
         assert hasattr(app, "quit_repl")
+
+    def test_quit_warns_when_final_backup_fails(self, monkeypatch) -> None:
+        app = SafariWriterApp()
+        app.state.modified = True
+        messages: list[str] = []
+        pushed: list[object] = []
+
+        def fail_backup(state):
+            raise OSError("disk full")
+
+        monkeypatch.setattr(app, "set_message", lambda message: messages.append(message))
+        monkeypatch.setattr(
+            app,
+            "push_screen",
+            lambda screen, callback=None, **_: pushed.append(screen),
+        )
+
+        with patch("safari_writer.app.write_backup", side_effect=fail_backup):
+            app._action_quit()
+
+        assert messages == ["Final backup failed: disk full"]
+        assert isinstance(pushed[0], ConfirmScreen)
+        assert "Final backup failed: disk full" in pushed[0]._prompt
+        assert "Unsaved changes will be lost if you quit." in pushed[0]._prompt

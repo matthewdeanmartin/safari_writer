@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, cast
 
@@ -24,11 +25,11 @@ from textual.containers import Container
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 
-from safari_dos.services import (CODE_EXTENSIONS, DirectoryEntry, copy_paths,
-                                 create_folder, discover_locations,
+from safari_dos.services import (CODE_EXTENSIONS, DirectoryEntry, GarbageEntry,
+                                 copy_paths, create_folder, discover_locations,
                                  duplicate_path, format_timestamp,
                                  get_entry_info, get_preview_syntax,
-                                 list_directory, list_favorites,
+                                 list_directory, list_favorites, list_garbage,
                                  list_recent_documents, list_recent_locations,
                                  move_paths, move_to_garbage,
                                  record_recent_document,
@@ -1194,7 +1195,6 @@ class SafariDosBrowserScreen(Screen):
 
     def _on_restore_from_garbage(self, restored: Path | None) -> None:
         if restored is None:
-            self.set_message("Operation cancelled")
             return
         self.set_message(f"Restored: {restored.name}")
         self.refresh_listing()
@@ -1393,27 +1393,83 @@ class SafariDosDevicesScreen(ModalScreen[Path | None]):
 
 
 class SafariDosGarbageScreen(ModalScreen[Path | None]):
-    """Inform the user that deleted items are in the OS trash / recycling bin."""
+    """Browse items currently visible in the OS trash / recycling bin."""
 
     CSS = DOS_CSS
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._entries: list[GarbageEntry] = []
+        self._selected = 0
+        self._status = "Loading recycle bin..."
+        self._load_error: str | None = None
 
     def compose(self) -> ComposeResult:
         with Container(id="dos-container"):
             with Container(id="dos-header"):
                 yield Static("*** GARBAGE ***", id="dos-title")
-                yield Static("Items sent to OS trash", id="dos-path")
-                yield Static("", id="dos-columns")
-            yield Static(
-                "Deleted files are in your OS trash / recycling bin.\n"
-                "Use your system file manager to browse or restore them.",
-                id="dos-body",
-            )
+                yield Static("Recycle Bin contents", id="dos-path")
+                yield Static(
+                    "TYPE   NAME                     DELETED              ORIGINAL LOCATION",
+                    id="dos-columns",
+                )
+            yield Static("", id="dos-body")
             with Container(id="dos-footer"):
-                yield Static("", id="dos-status")
-                yield Static("Esc=close", id="dos-help")
+                yield Static(self._status, id="dos-status")
+                yield Static("Up/Down=select  Esc=close", id="dos-help")
+
+    def on_mount(self) -> None:
+        self._reload_entries()
+
+    def _reload_entries(self) -> None:
+        try:
+            self._entries = list_garbage()
+            self._load_error = None
+            self._status = (
+                f"Recycle Bin items: {len(self._entries)}"
+                if self._entries
+                else "Recycle Bin is empty"
+            )
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            self._entries = []
+            self._load_error = str(exc)
+            self._status = "Recycle Bin unavailable"
+        self._selected = min(self._selected, max(len(self._entries) - 1, 0))
+        self._refresh_view()
+
+    def _refresh_view(self) -> None:
+        if self._load_error:
+            body = self._load_error
+            path_line = "Recycle Bin unavailable"
+        elif not self._entries:
+            body = "<empty>"
+            path_line = "Recycle Bin contents"
+        else:
+            lines: list[str] = []
+            for index, entry in enumerate(self._entries):
+                kind = "<DIR>" if entry.is_dir else "FILE"
+                deleted = format_timestamp(entry.deleted_at)
+                location = str(entry.original_path)[:36]
+                line = f"{kind:<6} {entry.name[:24]:<24} {deleted[:19]:<19} {location}"
+                if index == self._selected:
+                    line = f"[reverse]{line}[/reverse]"
+                lines.append(line)
+            selected = self._entries[self._selected]
+            path_line = str(selected.original_path)
+            body = "\n".join(lines)
+        self.query_one("#dos-path", Static).update(path_line)
+        self.query_one("#dos-body", Static).update(body)
+        self.query_one("#dos-status", Static).update(self._status)
 
     def on_key(self, event: events.Key) -> None:
-        self.dismiss(None)
+        if event.key == "escape":
+            self.dismiss(None)
+        elif event.key == "up" and self._selected > 0:
+            self._selected -= 1
+            self._refresh_view()
+        elif event.key == "down" and self._selected < len(self._entries) - 1:
+            self._selected += 1
+            self._refresh_view()
         event.stop()
 
 
@@ -1451,7 +1507,7 @@ FILE BROWSER — OPERATIONS
 OTHER
   F1                This help screen       Esc               Back / Cancel
 
-Garbage restores items without permanent delete.
+Garbage shows recycle-bin contents; restore items from your system file manager.
 Safari DOS stays foreground-only; no background daemon.
 
 TEXTUAL FRAMEWORK (reserved)

@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
+from textual.widgets import Static
 
 from safari_writer.app import SafariWriterApp
 from safari_writer.screens.proofreader import (MODE_CORRECT,
@@ -207,6 +208,93 @@ class TestMountBehavior:
                 assert "Highlight Errors" in screen._body_text
                 assert "Select a mode." in screen._message_text
                 assert "Highlight" in screen._help_text
+                assert "Highlight Errors" in screen.query_one("#pr-body", Static).content
+
+        asyncio.run(run())
+
+    def test_arrow_navigation_updates_highlighted_menu_item(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(ProofreaderScreen(app.state))
+                await pilot.pause()
+                screen = app.screen
+                assert "[reverse] H  Highlight Errors[/reverse]" in screen._body_text
+                await pilot.press("down")
+                await pilot.pause()
+                assert "[reverse] P  Print Errors (list on-screen)[/reverse]" in screen._body_text
+                await pilot.press("up")
+                await pilot.pause()
+                assert "[reverse] H  Highlight Errors[/reverse]" in screen._body_text
+
+        asyncio.run(run())
+
+    def test_pressing_enter_activates_default_menu_item(self):
+        async def run():
+            app = SafariWriterApp()
+            app.state.buffer = ["This is teh sample document."]
+            async with app.run_test() as pilot:
+                app.push_screen(ProofreaderScreen(app.state))
+                await pilot.pause()
+                await pilot.press("enter")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_HIGHLIGHT
+                assert "Highlight scan complete" in screen._message_text
+                assert screen.query_one("#pr-body", Static).content
+
+        asyncio.run(run())
+
+    def test_arrow_then_enter_activates_selected_menu_item(self):
+        async def run():
+            app = SafariWriterApp()
+            app.state.buffer = ["Clean document"]
+            async with app.run_test() as pilot:
+                app.push_screen(ProofreaderScreen(app.state))
+                await pilot.pause()
+                await pilot.press("down", "enter")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_PRINT
+                assert "Scan complete" in screen._message_text
+                assert (
+                    "No spelling errors found."
+                    in screen.query_one("#pr-body", Static).content
+                )
+
+        asyncio.run(run())
+
+    def test_pressing_h_enters_highlight_without_crashing(self):
+        async def run():
+            app = SafariWriterApp()
+            app.state.buffer = ["This is teh sample document."]
+            async with app.run_test() as pilot:
+                app.push_screen(ProofreaderScreen(app.state))
+                await pilot.pause()
+                await pilot.press("h")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_HIGHLIGHT
+                assert "Highlight scan complete" in screen._message_text
+                assert screen.query_one("#pr-body", Static).content
+
+        asyncio.run(run())
+
+    def test_highlight_return_restores_visible_menu(self):
+        async def run():
+            app = SafariWriterApp()
+            app.state.buffer = ["This is teh sample document."]
+            async with app.run_test() as pilot:
+                app.push_screen(ProofreaderScreen(app.state))
+                await pilot.pause()
+                await pilot.press("h")
+                await pilot.pause()
+                await pilot.press("x")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_MENU
+                assert "Highlight Errors" in screen.query_one("#pr-body", Static).content
+                assert "[reverse] H  Highlight Errors[/reverse]" in screen._body_text
 
         asyncio.run(run())
 

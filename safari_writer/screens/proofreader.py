@@ -96,31 +96,6 @@ MODE_SAVE_PERSONAL = "save_personal"
 MODE_LOAD_PERSONAL = "load_personal"
 
 
-class MenuItem(Static):
-    """Menu item with selection highlighting."""
-
-    def __init__(self, key: str, label: str, action: str = "") -> None:
-        self.key_char = key
-        self.label_text = label
-        self.action_name = action
-        super().__init__("", classes="menu-item")
-        self._is_selected = False
-        self._update_markup()
-
-    def set_selected(self, selected: bool) -> None:
-        self._is_selected = selected
-        self._update_markup()
-
-    def _update_markup(self) -> None:
-        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
-        if self._is_selected:
-            markup = f"[reverse]{markup}[/reverse]"
-        self.update(markup)
-
-    def on_mount(self) -> None:
-        self._update_markup()
-
-
 class ProofreaderScreen(Screen):
     """Integrated spelling verification module."""
 
@@ -176,7 +151,6 @@ class ProofreaderScreen(Screen):
         self._from_correct = False
 
         self._selected_index = 0
-        self._menu_widgets: list[MenuItem] = []
         self._enter_menu()
 
     # ------------------------------------------------------------------
@@ -198,7 +172,7 @@ class ProofreaderScreen(Screen):
             yield Static(self._message_text, id="pr-message")
             yield Static(self._title_text(), id="pr-title")
             with Vertical(id="pr-body-container"):
-                yield Static("", id="pr-body")
+                yield Static(self._body_text, id="pr-body")
             yield Static(self._help_text, id="pr-help")
 
     def on_mount(self) -> None:
@@ -218,7 +192,12 @@ class ProofreaderScreen(Screen):
         return hasattr(self, "_nodes") and self.is_mounted
 
     def _menu_body_text(self, lang: str) -> str:
-        menu_lines = [f" {key}{label}" for key, label, _ in self.MENU_ITEMS]
+        menu_lines = []
+        for index, (key, label, _action) in enumerate(self.MENU_ITEMS):
+            line = f" {key}{label}"
+            if index == self._selected_index:
+                line = f"[reverse]{line}[/reverse]"
+            menu_lines.append(line)
         return "\n".join(
             [f"Dictionary: {lang}", "", *menu_lines, "", "Esc  Return to Main Menu"]
         )
@@ -240,37 +219,23 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def _enter_menu(self) -> None:
-        from textual.containers import Vertical
-
         from safari_writer.locale_info import LOCALE
 
         self._mode = MODE_MENU
         lang = self._state.doc_language or LOCALE
-        self._body_text = self._menu_body_text(lang)
-
-        if self._has_live_dom():
-            body_container = self.query_one("#pr-body-container", Vertical)
-            body_container.remove_children()
-
-            body_container.mount(Static(f"[bold]Dictionary:[/] {lang}\n"))
-            self._menu_widgets = []
-            for key, label, action in self.MENU_ITEMS:
-                widget = MenuItem(key, label, action)
-                self._menu_widgets.append(widget)
-                body_container.mount(widget)
-
-            body_container.mount(Static("\n[dim]Esc  Return to Main Menu[/]"))
-            self._refresh_menu()
+        self._set_body(self._menu_body_text(lang))
         self._set_message(f"Proofing in [{lang}]. Select a mode.")
         self._set_help(
             " H Highlight  P Print  C Correct  S Search  L Load  W Write  Esc Exit"
         )
 
     def _refresh_menu(self) -> None:
-        if self._mode != MODE_MENU or not self._menu_widgets:
+        from safari_writer.locale_info import LOCALE
+
+        if self._mode != MODE_MENU:
             return
-        for i, widget in enumerate(self._menu_widgets):
-            widget.set_selected(i == self._selected_index)
+        lang = self._state.doc_language or LOCALE
+        self._set_body(self._menu_body_text(lang))
 
     def action_cursor_up(self) -> None:
         if self._mode == MODE_MENU:
@@ -283,7 +248,7 @@ class ProofreaderScreen(Screen):
 
     def action_cursor_down(self) -> None:
         if self._mode == MODE_MENU:
-            if self._selected_index < len(self._menu_widgets) - 1:
+            if self._selected_index < len(self.MENU_ITEMS) - 1:
                 self._selected_index += 1
                 self._refresh_menu()
         elif self._mode == MODE_DICT_RESULTS:
@@ -291,8 +256,8 @@ class ProofreaderScreen(Screen):
 
     def action_activate(self) -> None:
         if self._mode == MODE_MENU:
-            if 0 <= self._selected_index < len(self._menu_widgets):
-                action = self._menu_widgets[self._selected_index].action_name
+            if 0 <= self._selected_index < len(self.MENU_ITEMS):
+                action = self.MENU_ITEMS[self._selected_index][2]
                 self._handle_menu_action(action)
         elif self._mode == MODE_CORRECT_MENU:
             self._handle_correct_menu_key("enter")
@@ -334,13 +299,9 @@ class ProofreaderScreen(Screen):
         self._set_help(" Enter Save  Esc Cancel")
 
     def _set_body(self, text: str) -> None:
-        from textual.containers import Vertical
-
         self._body_text = text
         if self._has_live_dom():
-            container = self.query_one("#pr-body-container", Vertical)
-            container.remove_children()
-            container.mount(Static(text, id="pr-body"))
+            self.query_one("#pr-body", Static).update(text)
 
     def _enter_highlight(self) -> None:
         self._mode = MODE_HIGHLIGHT
@@ -429,7 +390,14 @@ class ProofreaderScreen(Screen):
         mode = self._mode
 
         if mode == MODE_MENU:
-            self._handle_menu_key(key)
+            if key == "up":
+                self.action_cursor_up()
+            elif key == "down":
+                self.action_cursor_down()
+            elif key == "enter":
+                self.action_activate()
+            else:
+                self._handle_menu_key(key)
         elif mode == MODE_HIGHLIGHT:
             self._enter_menu()
         elif mode == MODE_PRINT:

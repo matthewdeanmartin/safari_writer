@@ -67,6 +67,7 @@ def make_screen(db: MailMergeDB | None = None) -> MailMergeScreen:
         screen._status_text = ""
         screen._body_text = ""
         screen._help_text = ""
+        screen._selected_index = 0
         screen._from_correct = False
     # Stub widget methods
     screen._set_message = MagicMock()
@@ -116,9 +117,89 @@ class TestMailMergeMountBehavior:
                     == "*** MAIL MERGE ***"
                 )
                 assert "Create File" in screen._body_text
+                assert "Create File" in screen.query_one("#mm-body", Static).content
                 assert "SELECT ITEM" in screen._message_text
                 assert "F1/? Help" in screen._help_text
                 assert "RECORDS FREE" in screen._status_text
+
+        asyncio.run(run())
+
+    def test_arrow_navigation_updates_highlighted_menu_item(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(MailMergeScreen(app.state))
+                await pilot.pause()
+                screen = app.screen
+                assert "[reverse] C  Create File[/reverse]" in screen._body_text
+                await pilot.press("down")
+                await pilot.pause()
+                assert "[reverse] N  New Record[/reverse]" in screen._body_text
+                await pilot.press("up")
+                await pilot.pause()
+                assert "[reverse] C  Create File[/reverse]" in screen._body_text
+
+        asyncio.run(run())
+
+    def test_pressing_enter_activates_default_menu_item(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(MailMergeScreen(app.state))
+                await pilot.pause()
+                await pilot.press("enter")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_SCHEMA
+                assert "New file" in screen._message_text
+                assert "Field Name" in screen.query_one("#mm-body", Static).content
+
+        asyncio.run(run())
+
+    def test_arrow_then_enter_activates_selected_menu_item(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(MailMergeScreen(app.state))
+                await pilot.pause()
+                await pilot.press("down", "enter")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_ENTER
+                assert "Field 1/" in screen._message_text
+                assert "Enter Record 1" in screen.query_one("#mm-body", Static).content
+
+        asyncio.run(run())
+
+    def test_pressing_c_enters_schema_without_crashing(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(MailMergeScreen(app.state))
+                await pilot.pause()
+                await pilot.press("c")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_SCHEMA
+                assert "New file" in screen._message_text
+                assert "Field Name" in screen.query_one("#mm-body", Static).content
+
+        asyncio.run(run())
+
+    def test_escape_from_print_restores_visible_menu(self):
+        async def run():
+            app = SafariWriterApp()
+            async with app.run_test() as pilot:
+                app.push_screen(MailMergeScreen(app.state))
+                await pilot.pause()
+                await pilot.press("p")
+                await pilot.pause()
+                await pilot.press("escape")
+                await pilot.pause()
+                screen = app.screen
+                assert screen._mode == MODE_MAIN
+                assert "Create File" in screen.query_one("#mm-body", Static).content
+                assert "[reverse] C  Create File[/reverse]" in screen._body_text
 
         asyncio.run(run())
 
@@ -155,6 +236,16 @@ class TestMailMergeHelp:
         assert "#mm-outer {" in MM_CSS
         assert "border: solid $accent;" in MM_CSS
         assert "#mm-title {" in MM_CSS
+
+
+class TestMailMergeDriveSelection:
+    def test_main_menu_index_drive_2_uses_drive_helper(self):
+        screen = make_screen()
+        screen._enter_index_drive2 = MagicMock()
+
+        screen._handle_main_action("index2")
+
+        screen._enter_index_drive2.assert_called_once_with()
 
 
 # ---------------------------------------------------------------------------

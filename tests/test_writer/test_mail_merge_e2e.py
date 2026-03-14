@@ -332,6 +332,7 @@ def _make_screen(db: MailMergeDB | None = None) -> MailMergeScreen:
         screen._status_text = ""
         screen._body_text = ""
         screen._help_text = ""
+        screen._selected_index = 0
         screen._from_correct = False
     screen._set_message = MagicMock()
     screen._set_body = MagicMock()

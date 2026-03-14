@@ -223,31 +223,6 @@ class MailMergeHelpScreen(ModalScreen[None]):
 # ---------------------------------------------------------------------------
 
 
-class MenuItem(Static):
-    """Menu item with selection highlighting."""
-
-    def __init__(self, key: str, label: str, action: str = "") -> None:
-        self.key_char = key
-        self.label_text = label
-        self.action_name = action
-        super().__init__("", classes="menu-item")
-        self._is_selected = False
-        self._update_markup()
-
-    def set_selected(self, selected: bool) -> None:
-        self._is_selected = selected
-        self._update_markup()
-
-    def _update_markup(self) -> None:
-        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
-        if self._is_selected:
-            markup = f"[reverse]{markup}[/reverse]"
-        self.update(markup)
-
-    def on_mount(self) -> None:
-        self._update_markup()
-
-
 class MailMergeScreen(Screen):
     """Mail Merge database module."""
 
@@ -320,7 +295,6 @@ class MailMergeScreen(Screen):
         self._help_text = ""
 
         self._selected_index = 0
-        self._menu_widgets: list[MenuItem] = []
         self._enter_main()
 
     # ------------------------------------------------------------------
@@ -335,7 +309,7 @@ class MailMergeScreen(Screen):
             yield Static(_("*** MAIL MERGE ***"), id="mm-title")
             yield Static(self._status_text, id="mm-status")
             with Vertical(id="mm-body-container"):
-                yield Static("", id="mm-body")
+                yield Static(self._body_text, id="mm-body")
             yield Static(self._help_text, id="mm-help")
 
     def on_mount(self) -> None:
@@ -357,7 +331,12 @@ class MailMergeScreen(Screen):
         if self._active_subset is not None:
             subset_note = f"  SUBSET ACTIVE: {len(self._active_subset)} records"
         filename_note = f"  File: {self._db.filename or '(unsaved)'}"
-        menu_lines = [f" {key}{label}" for key, label, _ in self.MENU_ITEMS]
+        menu_lines = []
+        for index, (key, label, _action) in enumerate(self.MENU_ITEMS):
+            line = f" {key}{label}"
+            if index == self._selected_index:
+                line = f"[reverse]{line}[/reverse]"
+            menu_lines.append(line)
         return "\n".join(
             [filename_note + subset_note, "", *menu_lines, "", "F1/?  Help"]
         )
@@ -367,26 +346,9 @@ class MailMergeScreen(Screen):
     # ------------------------------------------------------------------
 
     def _enter_main(self, preserve_message: bool = False) -> None:
-        from textual.containers import Vertical
-
         self._mode = MODE_MAIN
         self._refresh_status()
-        self._body_text = self._main_menu_body_text()
-
-        if self._has_live_dom():
-            body_container = self.query_one("#mm-body-container", Vertical)
-            body_container.remove_children()
-
-            filename_line, *_rest = self._body_text.splitlines()
-            body_container.mount(Static(f"[dim]{filename_line}[/]\n"))
-            self._menu_widgets = []
-            for key, label, action in self.MENU_ITEMS:
-                widget = MenuItem(key, label, action)
-                self._menu_widgets.append(widget)
-                body_container.mount(widget)
-
-            body_container.mount(Static("\n[dim]F1/?  Help[/]"))
-            self._refresh_menu()
+        self._set_body(self._main_menu_body_text())
 
         if not preserve_message:
             self._set_message(_("SELECT ITEM"))
@@ -395,10 +357,9 @@ class MailMergeScreen(Screen):
         )
 
     def _refresh_menu(self) -> None:
-        if self._mode != MODE_MAIN or not self._menu_widgets:
+        if self._mode != MODE_MAIN:
             return
-        for i, widget in enumerate(self._menu_widgets):
-            widget.set_selected(i == self._selected_index)
+        self._set_body(self._main_menu_body_text())
 
     def action_cursor_up(self) -> None:
         if self._mode == MODE_MAIN:
@@ -414,7 +375,7 @@ class MailMergeScreen(Screen):
 
     def action_cursor_down(self) -> None:
         if self._mode == MODE_MAIN:
-            if self._selected_index < len(self._menu_widgets) - 1:
+            if self._selected_index < len(self.MENU_ITEMS) - 1:
                 self._selected_index += 1
                 self._refresh_menu()
         elif self._mode == MODE_SCHEMA:
@@ -426,8 +387,8 @@ class MailMergeScreen(Screen):
 
     def action_activate(self) -> None:
         if self._mode == MODE_MAIN:
-            if 0 <= self._selected_index < len(self._menu_widgets):
-                action = self._menu_widgets[self._selected_index].action_name
+            if 0 <= self._selected_index < len(self.MENU_ITEMS):
+                action = self.MENU_ITEMS[self._selected_index][2]
                 self._handle_main_action(action)
         elif self._mode == MODE_INDEX:
             self._handle_index_key("enter")
@@ -450,7 +411,7 @@ class MailMergeScreen(Screen):
         elif action == "index1":
             self._enter_index(Path.cwd(), "browse")
         elif action == "index2":
-            self._enter_index(Path.cwd(), "browse")  # TODO: proper drive 2
+            self._enter_index_drive2()
         elif action == "load":
             self._enter_load()
         elif action == "save":
@@ -585,6 +546,16 @@ class MailMergeScreen(Screen):
         if getattr(self, "_print_preview_shown", False):
             self._print_preview_shown = False
             self._enter_main()
+            return
+
+        if key == "up":
+            self.action_cursor_up()
+            return
+        if key == "down":
+            self.action_cursor_down()
+            return
+        if key == "enter":
+            self.action_activate()
             return
 
         k = key.lower()
@@ -1593,13 +1564,9 @@ class MailMergeScreen(Screen):
         self._set_help(" Enter Save  Esc Cancel")
 
     def _set_body(self, text: str) -> None:
-        from textual.containers import Vertical
-
         self._body_text = text
         if self._has_live_dom():
-            container = self.query_one("#mm-body-container", Vertical)
-            container.remove_children()
-            container.mount(Static(text, id="mm-body"))
+            self.query_one("#mm-body", Static).update(text)
 
     def _set_message(self, msg: str) -> None:
         self._message_text = f" {msg}"
