@@ -50,6 +50,7 @@ Most people start with `safari-writer` and open the other tools from the Main Me
 - **Safari DOS**: A menu-driven way to do file browsing and manipulation, featuring a classic two-pane layout and a "Garbage" bin for file recovery.
 - **Safari Chat**: A "Clippy" style helper based on ELIZA. It answers your questions using the help docs and offers emotional support—no LLMs involved.
 - **Safari Base**: A dBASE-style shell for browsing and updating SQLite-backed address-book style data.
+- **Safari ASM**: An assembly-flavored interpreter for `.asm` files.
 - **Safari Fed**: A calm, keyboard-driven Mastodon client styled after Pine and retro BBS readers. Queue-based reading, folder metaphors, thread view, and a direct handoff to Safari Writer.
 - **Safari Reader**: A keyboard-first library, catalog, and long-form reading app.
 - **Safari REPL**: A small Atari BASIC REPL and `.BAS` file runner with Writer handoff for loaded files.

@@ -9,6 +9,7 @@ It is part of a suite of applications:
 - **Safari Chat**: An ELIZA-style help assistant.
 - **Safari Fed**: A calm, keyboard-driven Mastodon client.
 - **Safari Base**: A dBASE-style SQLite shell for address-book and table work.
+- **Safari ASM**: An assembly-flavored interpreter for `.asm` programs.
 - **Safari Basic**: The shared Atari BASIC-compatible macro engine.
 - **Safari REPL**: A small Atari BASIC REPL and `.BAS` file runner.
 - **Safari Reader**: A keyboard-first book reader with a local library and Gutenberg catalog.

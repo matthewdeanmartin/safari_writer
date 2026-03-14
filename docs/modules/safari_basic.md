@@ -1,6 +1,6 @@
 # Safari Basic
 
-Safari Basic is the Atari BASIC-compatible language runtime used by Safari Writer macros, Safari Fed macros, and Safari REPL.
+Safari Basic is the Atari BASIC-compatible language runtime used by Safari Writer macros, Safari Fed macros, and Safari REPL. Safari Basic source files use the `.bas` extension.
 
 ## Features
 
@@ -24,4 +24,4 @@ Safari Basic is also the macro engine for Safari Writer and Safari Fed. You can 
 - **Editor:** Press **Ctrl+Backslash** to open the macro picker.
 - **Safari Fed:** Press **~** to run a macro against the current post (output saved as a draft).
 
-See the full how-to guide: [docs/usage/macros.md](../usage/macros.md)
+See the full how-to guide: [Macros](../usage/macros.md)

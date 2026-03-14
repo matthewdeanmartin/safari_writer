@@ -18,6 +18,12 @@ markdown_extensions:
   - toc:
       permalink: true
 
+exclude_docs: |
+  /README.md
+
+not_in_nav: |
+  /go_live_tasks.md
+
 nav:
   - "Home": "index.md"
   - "Overview":
@@ -28,16 +34,27 @@ nav:
       - "Quick Start": "usage/usage.md"
       - "Keyboard Commands": "usage/commands.md"
       - "Configuration": "usage/config.md"
+      - "Macros": "usage/macros.md"
+      - "Posting to Mastodon": "usage/mastodon.md"
+      - "Blog Publishing with Git": "usage/blog_publishing.md"
+      - "Documentation Tour Slides": "safari_suite_tools.slides.md"
       - "Workflows": "usage/workflows.md"
   - "Modules":
+      - "Safari Writer": "modules/safari_writer.md"
       - "Safari DOS": "modules/safari_dos.md"
       - "Safari Chat": "modules/safari_chat.md"
+      - "Safari Base": "modules/safari_base.md"
       - "Safari Fed": "modules/safari_fed.md"
+      - "Safari ASM": "modules/safari_asm.md"
       - "Safari Basic": "modules/safari_basic.md"
       - "Safari REPL": "modules/safari_repl.md"
+      - "Safari Reader": "modules/safari_reader.md"
+      - "Safari Slides": "modules/safari_slides.md"
+      - "Safari View": "modules/safari_view.md"
   - "Reference":
       - "File Types": "reference/file_types.md"
       - "CLI Usage": "reference/cli.md"
+      - "PRG Programs": "reference/prg_language.md"
       - "Troubleshooting": "reference/troubleshooting.md"
   - "Change Log": "CHANGELOG.md"
   - "Contributing": "CONTRIBUTING.md"

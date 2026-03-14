@@ -11,6 +11,8 @@ safari-base address_book.db
 
 If you do not pass a database path, Safari Base starts with an in-memory session.
 
+Safari Base expects SQLite databases. Common filenames include `address_book.db`, `contacts.sqlite`, or other standard SQLite extensions such as `.db`, `.sqlite`, `.sqlite3`, and `.db3`.
+
 ## Current Workflow
 
 Safari Base is currently centered on a single-screen shell:
@@ -33,6 +35,25 @@ Safari Base is currently centered on a single-screen shell:
 - **CapsLock / F9** — Toggle caps mode.
 - **Esc** — Return to browse mode, clear the prompt, or quit if the prompt is empty.
 - **Ctrl + Q** — Quit Safari Base immediately.
+
+## Commands and `.prg` programs
+
+Safari Base supports interactive shell commands plus dBASE-style program files:
+
+- `HELP`, `?`, `COMMANDS`
+- `BROWSE`, `LIST`, `DISPLAY`
+- `TABLES`, `USE <table>`, `STRUCT`
+- `APPEND`, `EDIT`, `DELETE`, `ASSIST`
+- `MODIFY COMMAND <file>` — Open or create a `.prg` program in the full-screen editor.
+- `DO <file>` — Run a `.prg` program.
+
+If you omit the extension, Safari Base resolves program filenames as `.prg` automatically.
+
+## What `.prg` means here
+
+`.prg` files are Safari Base program files: plain-text dBASE-style scripts stored next to your database or in the current working directory. They are not SQLite database files themselves.
+
+Use them when you want repeatable table workflows such as setup scripts, reports, and small data-entry helpers. See the dedicated reference page: [PRG Programs](../reference/prg_language.md).
 
 ## Current Notes
 

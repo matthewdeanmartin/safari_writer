@@ -16,6 +16,7 @@ This skill is for **systematic documentation synchronization**, not just writing
   - what the code exposes,
   - what the user sees on screen,
   - what the docs say,
+  - what `mkdocs.yml` exposes in site navigation,
   - what `safari_chat\default_help.md` teaches.
 - If a module exists in the app family but has no matching docs page, call that out and add one when the task scope requires user-facing documentation completeness.
 - Do not stop after updating one file. New features often require updates in multiple surfaces.
@@ -41,6 +42,8 @@ Read these before broad searching:
   - Docs landing summary for the suite.
 - `docs\index.md`
   - User-facing intro and suite overview.
+- `mkdocs.yml`
+  - Confirms which docs pages are actually exposed in the published site and which existing files are omitted from nav.
 - `docs\modules\*.md`
   - Per-module documentation pages that commonly drift or go missing.
 - `safari_chat\default_help.md`
@@ -126,6 +129,7 @@ For each feature or module you touch, check all relevant surfaces:
    - `README.md`
    - `docs\README.md`
    - `docs\index.md`
+   - `mkdocs.yml`
 
 1. **Module docs**
    - `docs\modules\*.md`
@@ -135,6 +139,7 @@ For each feature or module you touch, check all relevant surfaces:
    - `docs\usage\*.md`
    - `docs\overview\*.md`
    - `docs\reference\*.md`
+   - Make sure new or existing pages are linked from `mkdocs.yml` nav if they are user-facing.
 
 1. **In-app help / visible H1-style screen titles**
    - Help constants like `HELP_CONTENT`, `CHAT_HELP_CONTENT`, `DOS_HELP_CONTENT`, `FED_HELP_CONTENT`
@@ -191,6 +196,7 @@ For the same area, compare in this order:
 
 1. matching `docs\modules\...` page
 1. matching `docs\usage\...` / `docs\overview\...` / `docs\reference\...` pages
+1. `mkdocs.yml` navigation and omitted-file warnings
 1. root `README.md`
 1. `docs\README.md` and `docs\index.md`
 1. `safari_chat\default_help.md`
@@ -240,6 +246,8 @@ When you audit a help area, explicitly check these questions:
 
 - Is there a module page for each user-facing module?
 - Is a new feature only described in code but nowhere in docs?
+- Is there a user-facing docs file under `docs\` that is missing from `mkdocs.yml` nav?
+- Does `mkdocs.yml` still point at files that were removed, renamed, or never added?
 - Is `safari_chat\default_help.md` missing the new topic entirely?
 
 ## Search strategy
@@ -260,6 +268,7 @@ rg -n "Safari Writer|Safari DOS|Safari Chat|Safari Fed|Safari REPL|Safari Reader
 Do not make these mistakes:
 
 - Updating `README.md` but forgetting `docs\index.md`.
+- Updating docs files but forgetting to expose them in `mkdocs.yml`.
 - Updating module docs but forgetting `safari_chat\default_help.md`.
 - Updating prose without checking the actual on-screen title or help modal.
 - Treating an old docs page as ground truth when the code has moved on.
