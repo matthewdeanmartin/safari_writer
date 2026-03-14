@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import importlib
-from pathlib import Path
 
 from textual.widgets import Static
 
@@ -15,7 +14,10 @@ from safari_fed.client import (FedSyncResult, SafariFedClient,
 from safari_fed.config import load_default_identity, load_mastodon_identities
 from safari_fed.main import main as safari_fed_main
 from safari_fed.main import parse_args
-from safari_fed.screens import SafariFedMainScreen
+from safari_fed.opml import (DEFAULT_MAX_ACCOUNTS, DEFAULT_MAX_FEEDS,
+                             WebDocument, build_opml_document,
+                             export_followed_feeds_to_opml)
+from safari_fed.screens import FedOpmlLimitsScreen, SafariFedMainScreen
 from safari_fed.state import (FedPost, SafariFedExitRequest, build_demo_state,
                               render_post_for_writer)
 from safari_writer.app import SafariWriterApp
@@ -24,12 +26,16 @@ from safari_writer.app import SafariWriterApp
 def test_public_exports_are_explicit():
     expected = {
         "FedPost",
+        "FeedSubscription",
         "SafariFedApp",
         "SafariFedClient",
         "SafariFedExitRequest",
         "SafariFedState",
         "build_demo_state",
+        "build_opml_document",
         "build_parser",
+        "default_opml_export_path",
+        "export_followed_feeds_to_opml",
         "load_default_identity",
         "load_clients_from_env",
         "main",
@@ -52,6 +58,15 @@ def test_parse_args_supports_account_selection():
 
     assert args.folder == "Mentions"
     assert args.account == "ART"
+
+
+def test_parse_args_supports_export_opml_command():
+    args = parse_args(["export-opml", "--account", "ART"])
+
+    assert args.command == "export-opml"
+    assert args.account == "ART"
+    assert args.max_accounts == DEFAULT_MAX_ACCOUNTS
+    assert args.max_feeds == DEFAULT_MAX_FEEDS
 
 
 def test_load_mastodon_identities_supports_multi_identity_pattern():
@@ -227,6 +242,179 @@ def test_main_launches_writer_when_app_requests_handoff(monkeypatch, tmp_path):
 
     assert exit_code == 0
     assert launched == [["tui", "edit", "--file", str(document)]]
+
+
+def test_export_followed_feeds_to_opml_scavenges_profile_links(tmp_path):
+    identity = load_default_identity(
+        {
+            "MASTODON_ID_MAIN_BASE_URL": "https://mastodon.social",
+            "MASTODON_ID_MAIN_ACCESS_TOKEN": "token",
+        }
+    )
+    assert identity is not None
+
+    class FakeMastodon:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+        def account_verify_credentials(self):
+            return {"id": "me"}
+
+        def account_following(self, account_id: str, limit: int = 200):
+            assert account_id == "me"
+            return [
+                {
+                    "display_name": "Alice Example",
+                    "acct": "alice@example.social",
+                    "url": "https://alice.example/about",
+                    "fields": [
+                        {
+                            "name": "blog",
+                            "value": '<a href="https://alice.example/blog">Blog</a>',
+                        }
+                    ],
+                    "note": "Writing at https://alice.example/blog",
+                }
+            ]
+
+    pages = {
+        "https://alice.example/about": WebDocument(
+            url="https://alice.example/about",
+            text="<html><head><title>Alice</title></head><body>about</body></html>",
+            content_type="text/html",
+        ),
+        "https://alice.example/about/feed": WebDocument(
+            url="https://alice.example/about/feed.xml",
+            text='<?xml version="1.0"?><rss version="2.0"></rss>',
+            content_type="application/rss+xml",
+        ),
+        "https://alice.example/blog": WebDocument(
+            url="https://alice.example/blog",
+            text=(
+                '<html><head><title>Alice Blog</title>'
+                '<link rel="alternate" type="application/rss+xml" '
+                'href="/feed.xml"></head></html>'
+            ),
+            content_type="text/html",
+        ),
+    }
+
+    client = SafariFedClient(identity=identity, mastodon_factory=FakeMastodon)
+    output_path = tmp_path / "feeds.opml"
+    subscriptions = export_followed_feeds_to_opml(
+        client,
+        output_path,
+        fetcher=lambda url: pages.get(url),
+    )
+
+    assert len(subscriptions) == 2
+    written = output_path.read_text(encoding="utf-8")
+    assert "https://alice.example/about/feed.xml" in written
+    assert "https://alice.example/blog" in written
+    assert written.count("<outline ") == 2
+
+
+def test_export_followed_feeds_to_opml_stops_at_feed_limit(tmp_path):
+    identity = load_default_identity(
+        {
+            "MASTODON_ID_MAIN_BASE_URL": "https://mastodon.social",
+            "MASTODON_ID_MAIN_ACCESS_TOKEN": "token",
+        }
+    )
+    assert identity is not None
+
+    class FakeMastodon:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+        def account_verify_credentials(self):
+            return {"id": "me"}
+
+        def account_following(self, account_id: str, limit: int = 200):
+            assert account_id == "me"
+            assert limit == 100
+            return [
+                {"display_name": "One", "acct": "one@example", "url": "https://one.example"},
+                {"display_name": "Two", "acct": "two@example", "url": "https://two.example"},
+            ]
+
+    pages = {
+        "https://one.example": WebDocument(
+            url="https://one.example/feed.xml",
+            text='<?xml version="1.0"?><rss version="2.0"></rss>',
+            content_type="application/rss+xml",
+        ),
+        "https://two.example": WebDocument(
+            url="https://two.example/feed.xml",
+            text='<?xml version="1.0"?><rss version="2.0"></rss>',
+            content_type="application/rss+xml",
+        ),
+    }
+
+    client = SafariFedClient(identity=identity, mastodon_factory=FakeMastodon)
+    subscriptions = export_followed_feeds_to_opml(
+        client,
+        tmp_path / "feeds.opml",
+        fetcher=lambda url: pages.get(url),
+        max_accounts=100,
+        max_feeds=1,
+    )
+
+    assert len(subscriptions) == 1
+    assert subscriptions[0].xml_url == "https://one.example/feed.xml"
+
+
+def test_build_opml_document_renders_outline_rows():
+    opml = build_opml_document([])
+
+    assert "<opml version=\"2.0\">" in opml
+    assert "<body>" in opml
+
+
+def test_main_export_opml_command_writes_default_path(monkeypatch, tmp_path, capsys):
+    safari_fed_main_module = importlib.import_module("safari_fed.main")
+
+    class FakeClient:
+        def __init__(self) -> None:
+            self.identity = type("Identity", (), {"name": "MAIN"})()
+
+    output_path = tmp_path / "fed-feeds-main.opml"
+
+    monkeypatch.setattr(
+        safari_fed_main_module,
+        "load_clients_from_env",
+        lambda: ({"MAIN": FakeClient()}, "MAIN"),
+    )
+    monkeypatch.setattr(
+        safari_fed_main_module,
+        "default_opml_export_path",
+        lambda account_name: output_path,
+    )
+    monkeypatch.setattr(
+        safari_fed_main_module,
+        "export_followed_feeds_to_opml",
+        lambda client, path, max_accounts, max_feeds: (
+            path.write_text("<opml />", encoding="utf-8"),
+            [],
+            max_accounts,
+            max_feeds,
+        )[1],
+    )
+
+    exit_code = safari_fed_main(["export-opml"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Exported 0 feeds to" in captured.out
+    assert output_path.read_text(encoding="utf-8") == "<opml />"
+
+
+def test_main_export_opml_command_rejects_invalid_limits(capsys):
+    exit_code = safari_fed_main(["export-opml", "--max-accounts", "0"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert "--max-accounts must be at least 1" in captured.err
 
 
 def test_sync_from_api_replaces_remote_posts_and_updates_status():
@@ -550,6 +738,7 @@ def test_command_bar_shows_compose_in_index():
     screen = SafariFedMainScreen(state)
     bar = screen._render_command_bar()
     assert "C Compose" in bar
+    assert "O OPML" in bar
     assert "F1 Help" in bar
 
 
@@ -560,6 +749,7 @@ def test_command_bar_shows_compose_in_reader():
     screen = SafariFedMainScreen(state)
     bar = screen._render_command_bar()
     assert "C Compose" in bar
+    assert "O OPML" in bar
 
 
 def test_command_bar_shows_compose_in_thread():
@@ -569,6 +759,42 @@ def test_command_bar_shows_compose_in_thread():
     screen = SafariFedMainScreen(state)
     bar = screen._render_command_bar()
     assert "C Compose" in bar
+    assert "O OPML" in bar
+
+
+def test_help_content_mentions_opml_export():
+    assert "O                 Export OPML feeds" in (
+        importlib.import_module("safari_fed.screens").FED_HELP_CONTENT
+    )
+
+
+def test_o_key_starts_opml_export(monkeypatch):
+    calls: list[str] = []
+
+    async def run() -> None:
+        app = SafariFedApp(clients={})
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            monkeypatch.setattr(
+                app.screen,
+                "_prompt_for_opml_export",
+                lambda: calls.append("opml"),
+            )
+            await pilot.press("o")
+
+    asyncio.run(run())
+
+    assert calls == ["opml"]
+
+
+def test_opml_limits_screen_returns_defaults_on_enter():
+    screen = FedOpmlLimitsScreen()
+    results: list[tuple[int, int] | None] = []
+    screen.dismiss = lambda result=None: results.append(result)
+
+    screen.on_key(type("Key", (), {"key": "enter", "character": None, "stop": lambda self: None})())
+
+    assert results == [(DEFAULT_MAX_ACCOUNTS, DEFAULT_MAX_FEEDS)]
 
 
 def test_help_screen_opens_on_f1():

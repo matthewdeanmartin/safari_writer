@@ -11,6 +11,9 @@ from textual.screen import ModalScreen, Screen
 from textual.timer import Timer
 from textual.widgets import Static
 
+from safari_fed.opml import (DEFAULT_MAX_ACCOUNTS, DEFAULT_MAX_FEEDS,
+                             default_opml_export_path,
+                             export_followed_feeds_to_opml)
 from safari_fed.state import (FOLDER_ORDER, FedPost, SafariFedState,
                               render_post_for_writer, render_thread_for_writer)
 
@@ -44,7 +47,8 @@ ACTIONS
   B                 Boost post            F                 Favourite post
   M                 Toggle bookmark       X                 Toggle read/unread
   D                 Toggle deferred       U                 Sync from Mastodon
-  W                 Export to Writer      ~                 Run macro → Draft
+  W                 Export to Writer      O                 Export OPML feeds
+  ~                 Run macro → Draft
 
 ACCOUNTS
   A                 Cycle account         1-9               Select account
@@ -103,6 +107,134 @@ class FedHelpScreen(ModalScreen):
 
     def on_key(self, event: events.Key) -> None:
         self.dismiss()
+
+
+FED_LIMITS_CSS = """
+FedOpmlLimitsScreen {
+    align: center middle;
+}
+
+#fed-limits-dialog {
+    width: 64;
+    height: 10;
+    border: solid $primary;
+    background: $surface;
+    padding: 1 2;
+}
+
+#fed-limits-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+}
+
+.fed-limits-line {
+    margin-top: 1;
+}
+
+#fed-limits-hint {
+    color: $text-muted;
+    text-align: center;
+    margin-top: 1;
+}
+"""
+
+
+class FedOpmlLimitsScreen(ModalScreen[tuple[int, int] | None]):
+    """Prompt for bounded OPML export limits."""
+
+    CSS = FED_LIMITS_CSS
+
+    def __init__(
+        self,
+        max_accounts: int = DEFAULT_MAX_ACCOUNTS,
+        max_feeds: int = DEFAULT_MAX_FEEDS,
+    ) -> None:
+        super().__init__()
+        self._accounts_buf = str(max_accounts)
+        self._feeds_buf = str(max_feeds)
+        self._active_field = 0
+
+    def compose(self) -> ComposeResult:
+        with Container(id="fed-limits-dialog"):
+            yield Static("=== OPML EXPORT LIMITS ===", id="fed-limits-title")
+            yield Static("", id="fed-limits-accounts", classes="fed-limits-line")
+            yield Static("", id="fed-limits-feeds", classes="fed-limits-line")
+            yield Static(
+                "Tab switch fields | Enter export | Esc cancel",
+                id="fed-limits-hint",
+            )
+
+    def on_mount(self) -> None:
+        self._refresh_inputs()
+
+    def _render_field(self, label: str, value: str, active: bool) -> str:
+        cursor = "[reverse] [/reverse]" if active else ""
+        return f"{label}: {value}{cursor}"
+
+    def _refresh_inputs(self) -> None:
+        self.query_one("#fed-limits-accounts", Static).update(
+            self._render_field(
+                "Accounts to check (max)",
+                self._accounts_buf,
+                self._active_field == 0,
+            )
+        )
+        self.query_one("#fed-limits-feeds", Static).update(
+            self._render_field(
+                "RSS feeds to find (max)",
+                self._feeds_buf,
+                self._active_field == 1,
+            )
+        )
+
+    def on_key(self, event: events.Key) -> None:
+        if event.key == "escape":
+            self.dismiss(None)
+            event.stop()
+            return
+        if event.key == "tab":
+            self._active_field = (self._active_field + 1) % 2
+            self._refresh_inputs()
+            event.stop()
+            return
+        if event.key == "shift+tab":
+            self._active_field = (self._active_field - 1) % 2
+            self._refresh_inputs()
+            event.stop()
+            return
+        if event.key == "enter":
+            try:
+                max_accounts = int(self._accounts_buf.strip())
+                max_feeds = int(self._feeds_buf.strip())
+            except ValueError:
+                self.notify("Enter whole numbers for both limits", severity="error")
+                event.stop()
+                return
+            if max_accounts < 1 or max_feeds < 1:
+                self.notify("Both limits must be at least 1", severity="error")
+                event.stop()
+                return
+            self.dismiss((max_accounts, max_feeds))
+            event.stop()
+            return
+        if event.key == "backspace":
+            if self._active_field == 0:
+                self._accounts_buf = self._accounts_buf[:-1]
+            else:
+                self._feeds_buf = self._feeds_buf[:-1]
+            self._refresh_inputs()
+            event.stop()
+            return
+        if event.character and event.character.isdigit():
+            if self._active_field == 0:
+                self._accounts_buf += event.character
+            else:
+                self._feeds_buf += event.character
+            self._refresh_inputs()
+            event.stop()
+            return
+        event.stop()
 
 
 FED_CSS = """
@@ -378,6 +510,9 @@ class SafariFedMainScreen(Screen[None]):
         if key == "w":
             self._open_in_writer()
             return
+        if key == "o":
+            self._prompt_for_opml_export()
+            return
         if key in {"f1", "question_mark"}:
             self.app.push_screen(FedHelpScreen())
             return
@@ -532,6 +667,68 @@ class SafariFedMainScreen(Screen[None]):
         self._refresh()
         self._persist_state()
 
+    def _prompt_for_opml_export(self) -> None:
+        """Ask for bounded OPML export limits before starting."""
+        if self._spinner_active:
+            self.set_message("Another network task is already in progress…")
+            return
+        self.app.push_screen(FedOpmlLimitsScreen(), self._on_opml_limits_selected)
+
+    def _on_opml_limits_selected(
+        self,
+        result: tuple[int, int] | None,
+    ) -> None:
+        """Start OPML export if the user confirmed limits."""
+        if result is None:
+            self.set_message("OPML export cancelled")
+            self._refresh()
+            return
+        max_accounts, max_feeds = result
+        self._export_opml_in_background(max_accounts=max_accounts, max_feeds=max_feeds)
+
+    def _export_opml_in_background(
+        self,
+        *,
+        max_accounts: int,
+        max_feeds: int,
+    ) -> None:
+        """Start followed-feed OPML export in a worker thread."""
+        if self._spinner_active:
+            self.set_message("Another network task is already in progress…")
+            return
+        if self.state.client is None:
+            self.set_message("No Mastodon credentials found; cannot export OPML")
+            self._refresh()
+            return
+        self._start_spinner()
+        self.set_message(
+            f"Scavenging feeds from up to {max_accounts} accounts for {max_feeds} feeds…"
+        )
+        self._do_export_opml_worker(max_accounts, max_feeds)
+
+    @work(thread=True, exclusive=True)
+    def _do_export_opml_worker(self, max_accounts: int, max_feeds: int) -> None:
+        """Worker: discover followed feeds and write the OPML file."""
+        try:
+            account_name = self.state.active_account_id or None
+            output_path = default_opml_export_path(account_name)
+            subscriptions = export_followed_feeds_to_opml(
+                self.state.client,
+                output_path,
+                max_accounts=max_accounts,
+                max_feeds=max_feeds,
+            )
+            message = f"Exported {len(subscriptions)} feeds to {output_path}"
+        except Exception as error:
+            message = f"OPML export error: {error}"
+        self.app.call_from_thread(self._on_export_opml_done, message)
+
+    def _on_export_opml_done(self, message: str) -> None:
+        """Called on the main thread after OPML export completes."""
+        self._stop_spinner()
+        self.set_message(message)
+        self._refresh()
+
     def _persist_state(self) -> None:
         """Persist account selection and cached posts to disk."""
         try:
@@ -587,7 +784,7 @@ class SafariFedMainScreen(Screen[None]):
         for folder in FOLDER_ORDER:
             label = f"[{folder}]" if folder == self.state.current_folder else folder
             parts.append(f"{label}({self.state.folder_count(folder)})")
-        return " Folders: " + "  ".join(parts) + "  Tab Cycle  U Sync  W Writer"
+        return " Folders: " + "  ".join(parts) + "  Tab Cycle  U Sync  W Writer  O OPML"
 
     def _render_accounts(self) -> str:
         parts: list[str] = []
@@ -723,10 +920,10 @@ class SafariFedMainScreen(Screen[None]):
         if self.state.view_mode == "compose":
             return " Ctrl+X Send  Ctrl+S Save Draft  Esc Cancel  F1 Help "
         if self.state.view_mode == "thread":
-            return " J/K Move  C Compose  R Reply  W Writer  Esc Index  Tab Folder  F1 Help "
+            return " J/K Move  C Compose  R Reply  W Writer  O OPML  Esc Index  Tab Folder  F1 Help "
         if self.state.view_mode == "reader":
-            return " J/K Prev/Next  T Thread  C Compose  R Reply  W Writer  Esc Index  F1 Help "
-        return " J/K Move  Enter View  C Compose  R Reply  B Boost  F Fav  W Writer  F1 Help "
+            return " J/K Prev/Next  T Thread  C Compose  R Reply  W Writer  O OPML  Esc Index  F1 Help "
+        return " J/K Move  Enter View  C Compose  R Reply  B Boost  F Fav  W Writer  O OPML  F1 Help "
 
     def _flag(self, post: FedPost) -> str:
         if post.draft:

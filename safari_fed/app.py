@@ -14,13 +14,19 @@ from safari_fed.screens import SafariFedMainScreen
 from safari_fed.state import (FedPost, SafariFedExitRequest, SafariFedState,
                               build_demo_state)
 
-__all__ = ["SafariFedApp"]
+__all__ = ["SafariFedApp", "fed_config_dir"]
+
+
+def fed_config_dir() -> Path:
+    """Return the Safari Fed config directory, creating it if needed."""
+
+    cfg = Path.home() / ".config" / "safari_writer"
+    cfg.mkdir(parents=True, exist_ok=True)
+    return cfg
 
 
 def _fed_cache_path() -> Path:
-    cfg = Path.home() / ".config" / "safari_writer"
-    cfg.mkdir(parents=True, exist_ok=True)
-    return cfg / "fed_cache.json"
+    return fed_config_dir() / "fed_cache.json"
 
 
 def _load_fed_cache() -> dict:
