@@ -38,6 +38,9 @@ class HighlightProfile(Enum):
     TOML = "toml"
     YAML = "yaml"
     INI = "ini"
+    SAFARI_BASIC = "safari-basic"
+    SAFARI_ASM = "safari-asm"
+    SAFARI_BASE = "safari-base"
     ENGLISH_TEXT = "english-text"
     ENGLISH_MARKDOWN = "english-markdown"
 
@@ -56,6 +59,9 @@ _SUFFIX_MAP: dict[str, HighlightProfile] = {
     ".yml": HighlightProfile.YAML,
     ".ini": HighlightProfile.INI,
     ".cfg": HighlightProfile.INI,
+    ".bas": HighlightProfile.SAFARI_BASIC,
+    ".asm": HighlightProfile.SAFARI_ASM,
+    ".prg": HighlightProfile.SAFARI_BASE,
 }
 
 # English overlay: (lang_suffix, base_profile) → overlay profile
@@ -74,6 +80,9 @@ PYGMENTS_LEXER_MAP: dict[HighlightProfile, str] = {
     HighlightProfile.YAML: "yaml",
     HighlightProfile.INI: "ini",
     HighlightProfile.MARKDOWN: "markdown",
+    HighlightProfile.SAFARI_BASIC: "basic",
+    HighlightProfile.SAFARI_ASM: "asm",
+    HighlightProfile.SAFARI_BASE: "foxpro",
 }
 
 # Human-readable display names
@@ -88,6 +97,9 @@ _DISPLAY_NAMES: dict[HighlightProfile, str] = {
     HighlightProfile.TOML: "TOML",
     HighlightProfile.YAML: "YAML",
     HighlightProfile.INI: "INI",
+    HighlightProfile.SAFARI_BASIC: "Safari Basic",
+    HighlightProfile.SAFARI_ASM: "Safari ASM",
+    HighlightProfile.SAFARI_BASE: "Safari Base",
     HighlightProfile.ENGLISH_TEXT: "English Text",
     HighlightProfile.ENGLISH_MARKDOWN: "English Markdown",
 }

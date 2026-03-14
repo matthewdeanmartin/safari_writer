@@ -560,6 +560,37 @@ class Interpreter:
         wa._eof = saved_recno >= wa.record_count
         return CommandResult(message=f"Index created: {wa._order_tag} ({len(keys)} keys)")
 
+    def _exec_insert(self, stmt: InsertStmt) -> CommandResult:
+        """Execute modern INSERT INTO table (fields) VALUES (values)"""
+        # Save current work area
+        old_area = self.env.active_area
+        
+        try:
+            # If table is specified, USE it
+            if stmt.table:
+                self._exec_use(UseStmt(table=stmt.table))
+            
+            wa = self.env.require_work_area()
+            
+            if len(stmt.fields) != len(stmt.values):
+                raise DBaseError(f"Field count ({len(stmt.fields)}) does not match value count ({len(stmt.values)})")
+            
+            # Evaluate values before appending
+            evaled_values = [self._eval(v) for v in stmt.values]
+            
+            # Append record
+            recno = wa.append_blank()
+            
+            # Set fields
+            for field_name, val in zip(stmt.fields, evaled_values):
+                wa.set_field(field_name, val)
+                
+            return CommandResult(message=f"Record {recno} inserted into {wa.alias}", rows_affected=1)
+            
+        finally:
+            # Restore work area
+            self.env.select_area(old_area)
+
     def _exec_list(self, stmt: ListStmt) -> CommandResult:
         wa = self.env.require_work_area()
         fields = stmt.fields or wa.field_names()

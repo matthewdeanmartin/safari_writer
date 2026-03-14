@@ -12,7 +12,9 @@ def test_print_choice_pdf_uses_pdf_prompt(monkeypatch) -> None:
     pushed: list[tuple[object, object]] = []
 
     monkeypatch.setattr(
-        app, "push_screen", lambda screen, callback=None: pushed.append((screen, callback))
+        app,
+        "push_screen",
+        lambda screen, callback=None: pushed.append((screen, callback)),
     )
 
     app._on_print_choice("pdf")

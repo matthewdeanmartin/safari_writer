@@ -422,7 +422,9 @@ def test_get_preview_text_unreadable_file_returns_error_string(tmp_path):
 
     if sys.platform == "win32":
         # chmod is unreliable on Windows; patch Path.open instead
-        with mock.patch.object(type(doc), "open", side_effect=PermissionError("Access denied")):
+        with mock.patch.object(
+            type(doc), "open", side_effect=PermissionError("Access denied")
+        ):
             result = get_preview_text(doc)
     else:
         doc.chmod(0o000)
@@ -730,8 +732,6 @@ def test_duplicate_path_increments_index_on_conflict(tmp_path):
     dup = duplicate_path(src)
 
     assert dup.name == "note COPY 2.txt"
-
-
 
 
 # ---------------------------------------------------------------------------

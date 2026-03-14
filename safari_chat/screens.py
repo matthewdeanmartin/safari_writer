@@ -516,9 +516,7 @@ class SafariChatHelpScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(classes="modal-container"):
-            yield Static(
-                "=== SAFARI CHAT — KEY COMMANDS ===", classes="modal-title"
-            )
+            yield Static("=== SAFARI CHAT — KEY COMMANDS ===", classes="modal-title")
             yield Static(CHAT_HELP_CONTENT, classes="modal-body")
             yield Static(
                 "Press Escape to close",

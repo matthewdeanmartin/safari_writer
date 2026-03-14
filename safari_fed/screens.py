@@ -478,6 +478,7 @@ class SafariFedMainScreen(Screen[None]):
 
         def _on_picked(path: object) -> None:
             from pathlib import Path as _Path
+
             if not isinstance(path, _Path):
                 self.set_message("Macro cancelled")
                 return
@@ -540,6 +541,7 @@ class SafariFedMainScreen(Screen[None]):
         """Persist account selection and cached posts to disk."""
         try:
             from safari_fed.app import persist_fed_state
+
             persist_fed_state(self.state)
         except Exception:
             pass
@@ -572,7 +574,9 @@ class SafariFedMainScreen(Screen[None]):
         )
 
     def _render_title(self) -> str:
-        spinner = f"{_SPINNER_FRAMES[self._spinner_frame]} " if self._spinner_active else " "
+        spinner = (
+            f"{_SPINNER_FRAMES[self._spinner_frame]} " if self._spinner_active else " "
+        )
         return (
             f"{spinner}SAFARI-FED  {self.state.current_folder}  "
             f"{self.state.unread_total()} unread  "

@@ -25,33 +25,43 @@ from safari_writer.screens.git_screen import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_repo(tmp_path: Path) -> Path:
     """Init a real git repo in tmp_path and return its root."""
     subprocess.run(["git", "init", str(tmp_path)], check=True, capture_output=True)
     subprocess.run(
         ["git", "config", "user.email", "test@example.com"],
-        cwd=tmp_path, check=True, capture_output=True,
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
     )
     subprocess.run(
         ["git", "config", "user.name", "Tester"],
-        cwd=tmp_path, check=True, capture_output=True,
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
     )
     return tmp_path
 
 
-def _add_commit(repo_path: Path, filename: str = "post.md", message: str = "init") -> None:
+def _add_commit(
+    repo_path: Path, filename: str = "post.md", message: str = "init"
+) -> None:
     """Create a file and make an initial commit."""
     (repo_path / filename).write_text("# Hello\n")
     subprocess.run(["git", "add", "."], cwd=repo_path, check=True, capture_output=True)
     subprocess.run(
         ["git", "commit", "-m", message],
-        cwd=repo_path, check=True, capture_output=True,
+        cwd=repo_path,
+        check=True,
+        capture_output=True,
     )
 
 
 # ---------------------------------------------------------------------------
 # _find_repo_root
 # ---------------------------------------------------------------------------
+
 
 class TestFindRepoRoot:
     def test_finds_repo_at_root(self, tmp_path):
@@ -82,6 +92,7 @@ class TestFindRepoRoot:
 # ---------------------------------------------------------------------------
 # _git_status
 # ---------------------------------------------------------------------------
+
 
 class TestGitStatus:
     def test_clean_repo_says_clean(self, tmp_path):
@@ -129,6 +140,7 @@ class TestGitStatus:
 # _git_add_all
 # ---------------------------------------------------------------------------
 
+
 class TestGitAddAll:
     def test_stages_new_file(self, tmp_path):
         _make_repo(tmp_path)
@@ -138,6 +150,7 @@ class TestGitAddAll:
         assert "[green]" in result
         # Verify it's actually staged
         import git as gitmodule
+
         repo = gitmodule.Repo(tmp_path)
         staged_paths = [d.a_path for d in repo.index.diff("HEAD")]
         assert "new.md" in staged_paths
@@ -159,6 +172,7 @@ class TestGitAddAll:
 # ---------------------------------------------------------------------------
 # _git_commit
 # ---------------------------------------------------------------------------
+
 
 class TestGitCommit:
     def test_commit_creates_entry_in_log(self, tmp_path):
@@ -196,6 +210,7 @@ class TestGitCommit:
 # ---------------------------------------------------------------------------
 # _git_log
 # ---------------------------------------------------------------------------
+
 
 class TestGitLog:
     def test_shows_commit_sha_and_message(self, tmp_path):
@@ -241,6 +256,7 @@ class TestGitLog:
 # _git_push — tested with mocks (no real remote)
 # ---------------------------------------------------------------------------
 
+
 class TestGitPush:
     def test_no_remotes_returns_warning(self, tmp_path):
         _make_repo(tmp_path)
@@ -253,13 +269,16 @@ class TestGitPush:
         _make_repo(tmp_path)
         _add_commit(tmp_path)
         import git as gitmodule
+
         mock_push_info = MagicMock()
         mock_push_info.__iter__ = MagicMock(return_value=iter([]))
         mock_push_info.__getitem__ = MagicMock(return_value=MagicMock(flags=0))
         mock_remote = MagicMock()
         mock_remote.name = "origin"
         mock_remote.push.return_value = mock_push_info
-        with patch.object(gitmodule.Repo, "remotes", new_callable=PropertyMock) as mock_remotes:
+        with patch.object(
+            gitmodule.Repo, "remotes", new_callable=PropertyMock
+        ) as mock_remotes:
             mock_remotes.return_value = [mock_remote]
             result = _git_push(tmp_path)
         assert "[green]" in result
@@ -268,6 +287,7 @@ class TestGitPush:
         _make_repo(tmp_path)
         _add_commit(tmp_path)
         import git as gitmodule
+
         mock_item = MagicMock()
         mock_item.flags = 1024  # PushInfo.ERROR
         mock_item.summary = "rejected"
@@ -277,7 +297,9 @@ class TestGitPush:
         mock_remote = MagicMock()
         mock_remote.name = "origin"
         mock_remote.push.return_value = mock_push_info
-        with patch.object(gitmodule.Repo, "remotes", new_callable=PropertyMock) as mock_remotes:
+        with patch.object(
+            gitmodule.Repo, "remotes", new_callable=PropertyMock
+        ) as mock_remotes:
             mock_remotes.return_value = [mock_remote]
             result = _git_push(tmp_path)
         assert "[red]" in result
@@ -293,6 +315,7 @@ class TestGitPush:
 # _git_pull — tested with mocks (no real remote)
 # ---------------------------------------------------------------------------
 
+
 class TestGitPull:
     def test_no_remotes_returns_warning(self, tmp_path):
         _make_repo(tmp_path)
@@ -304,10 +327,13 @@ class TestGitPull:
         _make_repo(tmp_path)
         _add_commit(tmp_path)
         import git as gitmodule
+
         mock_remote = MagicMock()
         mock_remote.name = "origin"
         mock_remote.pull.return_value = None
-        with patch.object(gitmodule.Repo, "remotes", new_callable=PropertyMock) as mock_remotes:
+        with patch.object(
+            gitmodule.Repo, "remotes", new_callable=PropertyMock
+        ) as mock_remotes:
             mock_remotes.return_value = [mock_remote]
             result = _git_pull(tmp_path)
         assert "[green]" in result
@@ -316,9 +342,12 @@ class TestGitPull:
         _make_repo(tmp_path)
         _add_commit(tmp_path)
         import git as gitmodule
+
         mock_remote = MagicMock()
         mock_remote.pull.side_effect = Exception("network error")
-        with patch.object(gitmodule.Repo, "remotes", new_callable=PropertyMock) as mock_remotes:
+        with patch.object(
+            gitmodule.Repo, "remotes", new_callable=PropertyMock
+        ) as mock_remotes:
             mock_remotes.return_value = [mock_remote]
             result = _git_pull(tmp_path)
         assert "[red]" in result
@@ -334,10 +363,12 @@ class TestGitPull:
 # _remote_url
 # ---------------------------------------------------------------------------
 
+
 class TestRemoteUrl:
     def test_no_remote_returns_placeholder(self, tmp_path):
         _make_repo(tmp_path)
         import git as gitmodule
+
         repo = gitmodule.Repo(tmp_path)
         result = _remote_url(repo)
         assert result == "(no remote)"
@@ -346,9 +377,12 @@ class TestRemoteUrl:
         _make_repo(tmp_path)
         subprocess.run(
             ["git", "remote", "add", "origin", "https://github.com/user/blog.git"],
-            cwd=tmp_path, check=True, capture_output=True,
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
         )
         import git as gitmodule
+
         repo = gitmodule.Repo(tmp_path)
         result = _remote_url(repo)
         assert "github.com" in result
@@ -357,6 +391,7 @@ class TestRemoteUrl:
 # ---------------------------------------------------------------------------
 # GitPublishScreen — construction and auto-detect logic
 # ---------------------------------------------------------------------------
+
 
 class TestGitPublishScreen:
     def test_instantiates_without_document_path(self):

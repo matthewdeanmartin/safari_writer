@@ -8,6 +8,7 @@ from pathlib import Path
 
 import safari_writer.locale_info as _locale_info
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
@@ -226,12 +227,57 @@ class MailMergeHelpScreen(ModalScreen[None]):
 # ---------------------------------------------------------------------------
 
 
+class MenuItem(Static):
+    """Menu item with selection highlighting."""
+
+    def __init__(self, key: str, label: str, action: str = "") -> None:
+        self.key_char = key
+        self.label_text = label
+        self.action_name = action
+        super().__init__("", classes="menu-item")
+        self._is_selected = False
+        self._update_markup()
+
+    def set_selected(self, selected: bool) -> None:
+        self._is_selected = selected
+        self._update_markup()
+
+    def _update_markup(self) -> None:
+        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
+        if self._is_selected:
+            markup = f"[reverse]{markup}[/reverse]"
+        self.update(markup)
+
+    def on_mount(self) -> None:
+        self._update_markup()
+
+
 class MailMergeScreen(Screen):
     """Mail Merge database module."""
 
     CSS = MM_CSS
 
-    BINDINGS = []
+    BINDINGS = [
+        # Arrow navigation (for main menu)
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("enter", "activate", "Activate", show=False),
+    ]
+
+    MENU_ITEMS = [
+        ("C", "  Create File", "create"),
+        ("N", "  New Record", "new"),
+        ("E", "  Edit File", "edit"),
+        ("B", "  Build Subset", "subset"),
+        ("A", "  Append File", "append"),
+        ("P", "  Print File", "print"),
+        ("1", "  Index Drive 1", "index1"),
+        ("2", "  Index Drive 2", "index2"),
+        ("L", "  Load File", "load"),
+        ("S", "  Save File", "save"),
+        ("R", "  Return to Safari Writer", "quit"),
+        ("F", "  Format Record (extra)", "schema"),
+    ]
 
     def __init__(self, app_state: AppState, initial_mode: str = MODE_MAIN) -> None:
         super().__init__()
@@ -276,6 +322,9 @@ class MailMergeScreen(Screen):
         self._status_text = ""
         self._body_text = ""
         self._help_text = ""
+
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
         self._enter_main()
 
     # ------------------------------------------------------------------
@@ -283,13 +332,14 @@ class MailMergeScreen(Screen):
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
-        from textual.containers import Container
+        from textual.containers import Container, Vertical
 
         with Container(id="mm-outer"):
             yield Static(self._message_text, id="mm-message")
             yield Static(_("*** MAIL MERGE ***"), id="mm-title")
             yield Static(self._status_text, id="mm-status")
-            yield Static(self._body_text, id="mm-body")
+            with Vertical(id="mm-body-container"):
+                yield Static("", id="mm-body")
             yield Static(self._help_text, id="mm-help")
 
     def on_mount(self) -> None:
@@ -303,42 +353,114 @@ class MailMergeScreen(Screen):
         elif self._initial_mode == MODE_SUBSET:
             self._enter_subset()
 
+    def _has_live_dom(self) -> bool:
+        return hasattr(self, "_nodes") and self.is_mounted
+
+    def _main_menu_body_text(self) -> str:
+        subset_note = ""
+        if self._active_subset is not None:
+            subset_note = f"  SUBSET ACTIVE: {len(self._active_subset)} records"
+        filename_note = f"  File: {self._db.filename or '(unsaved)'}"
+        menu_lines = [f" {key}{label}" for key, label, _ in self.MENU_ITEMS]
+        return "\n".join([filename_note + subset_note, "", *menu_lines, "", "F1/?  Help"])
+
     # ------------------------------------------------------------------
     # Mode entry helpers
     # ------------------------------------------------------------------
 
     def _enter_main(self, preserve_message: bool = False) -> None:
+        from textual.containers import Vertical
+
         self._mode = MODE_MAIN
         self._refresh_status()
-        subset_note = ""
-        if self._active_subset is not None:
-            subset_note = (
-                f"  [bold yellow]SUBSET ACTIVE: {len(self._active_subset)} records[/]"
-            )
-        filename_note = f"  [dim]File: {self._db.filename or '(unsaved)'}[/]"
-        self._set_body(
-            f"{filename_note}{subset_note}\n\n"
-            "[bold]C[/]  Create File\n"
-            "[bold]N[/]  New Record\n"
-            "[bold]E[/]  Edit File\n"
-            "[bold]B[/]  Build Subset\n"
-            "[bold]A[/]  Append File\n"
-            "[bold]P[/]  Print File\n"
-            "\n"
-            "[bold]1[/]  Index Drive 1\n"
-            "[bold]2[/]  Index Drive 2\n"
-            "[bold]L[/]  Load File\n"
-            "[bold]S[/]  Save File\n"
-            "\n"
-            "[bold]R[/]  Return to Safari Writer\n"
-            "\n"
-            "[dim]F  Format Record (extra)    F1/?  Help[/]"
-        )
+        self._body_text = self._main_menu_body_text()
+
+        if self._has_live_dom():
+            body_container = self.query_one("#mm-body-container", Vertical)
+            body_container.remove_children()
+
+            filename_line, *_rest = self._body_text.splitlines()
+            body_container.mount(Static(f"[dim]{filename_line}[/]\n"))
+            self._menu_widgets = []
+            for key, label, action in self.MENU_ITEMS:
+                widget = MenuItem(key, label, action)
+                self._menu_widgets.append(widget)
+                body_container.mount(widget)
+
+            body_container.mount(Static("\n[dim]F1/?  Help[/]"))
+            self._refresh_menu()
+
         if not preserve_message:
             self._set_message(_("SELECT ITEM"))
         self._set_help(
             " C Create  N New  E Edit  B Subset  A Append  P Print  1/2 Index  L Load  S Save  R Return"
         )
+
+    def _refresh_menu(self) -> None:
+        if self._mode != MODE_MAIN or not self._menu_widgets:
+            return
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        if self._mode == MODE_MAIN:
+            if self._selected_index > 0:
+                self._selected_index -= 1
+                self._refresh_menu()
+        elif self._mode == MODE_SCHEMA:
+            self._handle_schema_key("up")
+        elif self._mode == MODE_UPDATE:
+            self._handle_update_key("up")
+        elif self._mode == MODE_INDEX:
+            self._handle_index_key("up")
+
+    def action_cursor_down(self) -> None:
+        if self._mode == MODE_MAIN:
+            if self._selected_index < len(self._menu_widgets) - 1:
+                self._selected_index += 1
+                self._refresh_menu()
+        elif self._mode == MODE_SCHEMA:
+            self._handle_schema_key("down")
+        elif self._mode == MODE_UPDATE:
+            self._handle_update_key("down")
+        elif self._mode == MODE_INDEX:
+            self._handle_index_key("down")
+
+    def action_activate(self) -> None:
+        if self._mode == MODE_MAIN:
+            if 0 <= self._selected_index < len(self._menu_widgets):
+                action = self._menu_widgets[self._selected_index].action_name
+                self._handle_main_action(action)
+        elif self._mode == MODE_INDEX:
+            self._handle_index_key("enter")
+        elif self._mode == MODE_UPDATE:
+            self._handle_update_key("enter")
+
+    def _handle_main_action(self, action: str) -> None:
+        if action == "create":
+            self._confirm_create()
+        elif action == "new":
+            self._enter_data_entry()
+        elif action == "edit":
+            self._enter_update()
+        elif action == "subset":
+            self._enter_subset()
+        elif action == "append":
+            self._enter_append()
+        elif action == "print":
+            self._enter_print()
+        elif action == "index1":
+            self._enter_index(Path.cwd(), "browse")
+        elif action == "index2":
+            self._enter_index(Path.cwd(), "browse")  # TODO: proper drive 2
+        elif action == "load":
+            self._enter_load()
+        elif action == "save":
+            self._enter_save()
+        elif action == "schema":
+            self._enter_schema()
+        elif action == "quit":
+            self.app.pop_screen()
 
     def _enter_schema(self) -> None:
         self._mode = MODE_SCHEMA
@@ -1366,19 +1488,131 @@ class MailMergeScreen(Screen):
         if self.is_mounted:
             self.query_one("#mm-status", Static).update(self._status_text)
 
+    def _handle_schema_key(self, key: str) -> None:
+        """Handler for schema navigation when called from arrow keys."""
+        fields = self._db.fields
+        if key == "up":
+            self._schema_field_idx = max(0, self._schema_field_idx - 1)
+        elif key == "down":
+            self._schema_field_idx = min(len(fields) - 1, self._schema_field_idx + 1)
+        self._render_schema()
+
+    def _handle_update_key(self, key: str) -> None:
+        """Handler for record navigation when called from arrow keys."""
+        if not self._db.records:
+            return
+        if key == "up":
+            self._update_field_idx = max(0, self._update_field_idx - 1)
+        elif key == "down":
+            self._update_field_idx = min(
+                len(self._db.fields) - 1, self._update_field_idx + 1
+            )
+        elif key == "enter":
+            # Edit the highlighted field
+            rec = self._db.records[self._update_record_idx]
+            fi = self._update_field_idx
+            self._mode = MODE_UPDATE_EDIT
+            self._update_editing = True
+            self._input_buf = rec[fi] if fi < len(rec) else ""
+            self._render_update_edit()
+            self._set_message(
+                f"Edit field {fi + 1}: {self._db.fields[fi].name}  — Enter save, Esc cancel"
+            )
+            self._set_help(" Enter Save field  Esc Cancel")
+        self._render_update_record()
+
+    def _handle_index_key(self, key: str) -> None:
+        """Handler for index navigation when called from arrow keys."""
+        entries = self._index_entries
+        if not entries:
+            return
+        if key == "up":
+            if self._index_selected > 0:
+                self._index_selected -= 1
+        elif key == "down":
+            if self._index_selected < len(entries) - 1:
+                self._index_selected += 1
+        elif key == "enter":
+            if not entries or entries[0][0].startswith("<"):
+                return
+            name = entries[self._index_selected][0]
+            full_path = self._index_directory / name
+            if full_path.is_dir():
+                self._index_directory = full_path
+                self._index_selected = 0
+                self._scan_index()
+            else:
+                filename = str(full_path)
+                purpose = self._index_purpose
+                if purpose == "load":
+                    self._load_db(filename)
+                elif purpose == "append":
+                    self._append_db(filename)
+                else:
+                    self._load_db(filename)
+        self._render_index()
+
+    def _confirm_create(self) -> None:
+        """C — Create File: reset DB to defaults and go straight into schema edit."""
+        self._db = MailMergeDB()
+        self._app_state.mail_merge_db = self._db
+        self._active_subset = None
+        self._update_record_idx = 0
+        self._refresh_status()
+        self._from_create = True
+        # Enter schema first so user can adjust field definitions
+        self._schema_field_idx = 0
+        self._mode = MODE_SCHEMA
+        self._render_schema()
+        self._set_message(
+            "New file — review/edit field layout, then Esc to start entering records"
+        )
+        self._set_help(
+            " ↑↓ Select  R Rename  M MaxLen  I Insert  D Delete  Esc → Enter Records"
+        )
+
+    def _enter_append(self) -> None:
+        self._mode = MODE_APPEND
+        self._input_buf = ""
+        self._set_body("Append database file:\n\n> ")
+        self._set_message(
+            "Enter filename to append, or press 1/2 to browse, Esc to cancel"
+        )
+        self._set_help(" Enter Append  Esc Cancel")
+
+    def _enter_load(self) -> None:
+        self._mode = MODE_LOAD
+        self._input_buf = ""
+        self._set_body("Load database from file:\n\n> ")
+        self._set_message(
+            "Enter filename to load, or press 1 to browse, Esc to cancel"
+        )
+        self._set_help(" Enter Load  1 Browse  Esc Cancel")
+
+    def _enter_save(self) -> None:
+        self._mode = MODE_SAVE
+        self._input_buf = self._db.filename or ""
+        self._set_body(f"Save database to file:\n\n> {self._input_buf}")
+        self._set_message("Enter filename, Enter to confirm")
+        self._set_help(" Enter Save  Esc Cancel")
+
+    def _set_body(self, text: str) -> None:
+        from textual.containers import Vertical
+
+        self._body_text = text
+        if self._has_live_dom():
+            container = self.query_one("#mm-body-container", Vertical)
+            container.remove_children()
+            container.mount(Static(text, id="mm-body"))
+
     def _set_message(self, msg: str) -> None:
         self._message_text = f" {msg}"
-        if self.is_mounted:
+        if self._has_live_dom():
             self.query_one("#mm-message", Static).update(self._message_text)
-
-    def _set_body(self, content: str) -> None:
-        self._body_text = content
-        if self.is_mounted:
-            self.query_one("#mm-body", Static).update(self._body_text)
 
     def _set_help(self, text: str) -> None:
         self._help_text = text if "F1" in text else f"{text}  F1/? Help"
-        if self.is_mounted:
+        if self._has_live_dom():
             self.query_one("#mm-help", Static).update(self._help_text)
 
     # ------------------------------------------------------------------

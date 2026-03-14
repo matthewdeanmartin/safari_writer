@@ -646,11 +646,19 @@ class Parser:
                 type_char = type_tok[0].upper()
                 width = 10
                 decimals = 0
+                
+                # Check for (width, decimals)
                 if self._match_type(TokenType.LPAREN):
                     width = int(float(self._expect(TokenType.NUMBER).value))
                     if self._match_type(TokenType.COMMA):
                         decimals = int(float(self._expect(TokenType.NUMBER).value))
                     self._expect(TokenType.RPAREN)
+                # Check for width decimals (no parens)
+                elif self._peek().type == TokenType.NUMBER:
+                    width = int(float(self._advance().value))
+                    if self._peek().type == TokenType.NUMBER:
+                        decimals = int(float(self._advance().value))
+                
                 columns.append((col_name, type_char, width, decimals))
                 if not self._match_type(TokenType.COMMA):
                     break
@@ -686,6 +694,30 @@ class Parser:
             tag = self._read_ident_or_string()
         self._skip_to_eol()
         return IndexOnStmt(expr=expr, tag=tag, line=line)
+
+    def _parse_insert(self, line: int) -> InsertStmt:
+        """Parse INSERT INTO table (fields) VALUES (values)"""
+        self._advance()  # consume INSERT
+        self._expect(TokenType.KEYWORD, "INTO")
+        table = self._read_ident_or_string()
+        
+        fields: list[str] = []
+        if self._match_type(TokenType.LPAREN):
+            fields.append(self._read_ident_or_string())
+            while self._match_type(TokenType.COMMA):
+                fields.append(self._read_ident_or_string())
+            self._expect(TokenType.RPAREN)
+            
+        self._expect(TokenType.KEYWORD, "VALUES")
+        self._expect(TokenType.LPAREN)
+        values: list[Expr] = []
+        values.append(self._parse_expr())
+        while self._match_type(TokenType.COMMA):
+            values.append(self._parse_expr())
+        self._expect(TokenType.RPAREN)
+        
+        self._skip_to_eol()
+        return InsertStmt(table=table, fields=fields, values=values, line=line)
 
     def _parse_list(self, line: int) -> ListStmt:
         self._advance()  # consume LIST

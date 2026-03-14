@@ -2,6 +2,7 @@ import unittest
 import math
 from safari_basic.atari_basic import AtariBasic
 
+
 class TestExhaustiveFunctions(unittest.TestCase):
     def setUp(self):
         self.interpreter = AtariBasic()
@@ -94,5 +95,6 @@ class TestExhaustiveFunctions(unittest.TestCase):
         # INT(10.5) = 10
         self.assertEqual(self.run_basic(code), "10")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

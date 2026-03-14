@@ -4,6 +4,7 @@ Covers: EDIT, DELETE, dirty state, FILES/DIR, PWD/CD, FIND, REPLACE,
 TRON VARS, tab completion, better error reporting, AUTOSAVE, HELP <topic>,
 and persistent history.
 """
+
 import io
 import os
 import tempfile
@@ -138,7 +139,7 @@ class TestDirtyState:
 
     def test_load_clears_modified(self):
         repl, out = make_repl()
-        with tempfile.NamedTemporaryFile(mode='w', suffix=".bas", delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".bas", delete=False) as f:
             f.write('10 PRINT "HI"\n')
             fname = f.name
         try:
@@ -160,7 +161,7 @@ class TestDirtyState:
         repl, out = make_repl()
         repl.process_line('10 PRINT "HI"')
         reset_output(out)
-        with tempfile.NamedTemporaryFile(mode='w', suffix=".bas", delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".bas", delete=False) as f:
             f.write('10 PRINT "OTHER"\n')
             fname = f.name
         try:
@@ -313,7 +314,7 @@ class TestFind:
 
     def test_find_no_argument(self):
         repl, out = make_repl()
-        repl.process_line('FIND')
+        repl.process_line("FIND")
         assert "REQUIRES" in output(out)
 
 
@@ -363,7 +364,7 @@ class TestReplace:
 
     def test_replace_no_arguments(self):
         repl, out = make_repl()
-        repl.process_line('REPLACE')
+        repl.process_line("REPLACE")
         assert "REQUIRES" in output(out)
 
 
@@ -415,9 +416,9 @@ class TestTronVars:
     def test_plain_tron_still_works(self):
         out = io.StringIO()
         interp = SafariBasic(out_stream=out)
-        interp.add_program_line('10 TRON')
+        interp.add_program_line("10 TRON")
         interp.add_program_line('20 PRINT "HI"')
-        interp.add_program_line('30 TROFF')
+        interp.add_program_line("30 TROFF")
         interp.run_program()
         result = out.getvalue()
         assert "[20]" in result
@@ -545,7 +546,7 @@ class TestAutosave:
 
     def test_autosave_tick_saves(self):
         repl, out = make_repl()
-        with tempfile.NamedTemporaryFile(suffix=".bas", delete=False, mode='w') as f:
+        with tempfile.NamedTemporaryFile(suffix=".bas", delete=False, mode="w") as f:
             fname = f.name
         try:
             repl.process_line('10 PRINT "SAVED"')
@@ -557,7 +558,7 @@ class TestAutosave:
             repl._do_autosave_tick()
             repl._stop_autosave()
             assert repl.modified is False
-            with open(fname, 'r') as f:
+            with open(fname, "r") as f:
                 content = f.read()
             assert 'PRINT "UPDATED"' in content
         finally:
@@ -587,10 +588,33 @@ class TestHelpTopics:
         assert "NO HELP FOR" in output(out)
 
     def test_all_major_topics_exist(self):
-        for topic in ["LIST", "RUN", "NEW", "LOAD", "SAVE", "EDIT", "DELETE",
-                       "FIND", "REPLACE", "TRON", "TROFF", "FILES", "PWD", "CD",
-                       "AUTOSAVE", "PRINT", "INPUT", "IF", "FOR", "GOTO", "GOSUB",
-                       "DIM", "END", "STOP", "HELP"]:
+        for topic in [
+            "LIST",
+            "RUN",
+            "NEW",
+            "LOAD",
+            "SAVE",
+            "EDIT",
+            "DELETE",
+            "FIND",
+            "REPLACE",
+            "TRON",
+            "TROFF",
+            "FILES",
+            "PWD",
+            "CD",
+            "AUTOSAVE",
+            "PRINT",
+            "INPUT",
+            "IF",
+            "FOR",
+            "GOTO",
+            "GOSUB",
+            "DIM",
+            "END",
+            "STOP",
+            "HELP",
+        ]:
             assert topic in HELP_TOPICS, f"Missing help topic: {topic}"
 
 
@@ -645,7 +669,14 @@ class TestHistory:
 class TestExamples:
     def test_hello_example_loads(self):
         repl, out = make_repl()
-        example = os.path.join(os.path.dirname(__file__), "..", "..", "safari_basic", "examples", "hello.bas")
+        example = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "safari_basic",
+            "examples",
+            "hello.bas",
+        )
         example = os.path.abspath(example)
         if os.path.exists(example):
             repl.process_line(f'LOAD "{example}"')
@@ -656,7 +687,14 @@ class TestExamples:
 
     def test_fibonacci_example_runs(self):
         repl, out = make_repl()
-        example = os.path.join(os.path.dirname(__file__), "..", "..", "safari_basic", "examples", "fibonacci.bas")
+        example = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "..",
+            "safari_basic",
+            "examples",
+            "fibonacci.bas",
+        )
         example = os.path.abspath(example)
         if os.path.exists(example):
             repl.process_line(f'LOAD "{example}"')
@@ -742,7 +780,7 @@ class TestIntegration:
         """EDIT a line, modify, delete old."""
         repl, out = make_repl()
         repl.process_line('10 PRINT "OLD"')
-        repl.process_line('20 GOTO 10')
+        repl.process_line("20 GOTO 10")
 
         # EDIT shows the line
         reset_output(out)

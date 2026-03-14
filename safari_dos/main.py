@@ -109,7 +109,9 @@ def _add_browser_startup_flags(parser: argparse.ArgumentParser) -> None:
         help="Reverse file ordering within directories and files.",
     )
     parser.add_argument("--filter", default="", help="Initial name filter text.")
-    parser.add_argument("--select", help="Select an item by name in the current folder.")
+    parser.add_argument(
+        "--select", help="Select an item by name in the current folder."
+    )
     parser.add_argument("--select-path", help="Select an item by path.")
 
 
@@ -227,7 +229,9 @@ def build_parser() -> argparse.ArgumentParser:
     favorite_toggle.add_argument("path")
 
     recent_parser = subparsers.add_parser("recent", help="List recent items.")
-    recent_subparsers = recent_parser.add_subparsers(dest="recent_command", required=True)
+    recent_subparsers = recent_parser.add_subparsers(
+        dest="recent_command", required=True
+    )
     recent_subparsers.add_parser("locations", help="List recent locations.")
     recent_subparsers.add_parser("documents", help="List recent documents.")
 

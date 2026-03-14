@@ -441,7 +441,9 @@ class SafariFedState:
                 last_sync_label=last_sync_label,
                 client=client,
             )
-        chosen_account = active_account_id if active_account_id in self.sessions else None
+        chosen_account = (
+            active_account_id if active_account_id in self.sessions else None
+        )
         if chosen_account is None:
             chosen_account = next(iter(self.sessions))
         self.active_account_id = chosen_account

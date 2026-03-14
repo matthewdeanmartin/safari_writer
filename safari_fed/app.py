@@ -11,7 +11,12 @@ from textual.app import App
 
 from safari_fed.client import SafariFedClient, load_clients_from_env
 from safari_fed.screens import SafariFedMainScreen
-from safari_fed.state import FedPost, SafariFedExitRequest, SafariFedState, build_demo_state
+from safari_fed.state import (
+    FedPost,
+    SafariFedExitRequest,
+    SafariFedState,
+    build_demo_state,
+)
 
 __all__ = ["SafariFedApp"]
 
@@ -42,32 +47,34 @@ def _posts_to_cache(posts: list[FedPost]) -> list[dict]:
     """Serialize a list of FedPost objects to JSON-safe dicts."""
     result = []
     for post in posts:
-        result.append({
-            "post_id": post.post_id,
-            "author": post.author,
-            "handle": post.handle,
-            "posted_at": post.posted_at,
-            "age": post.age,
-            "content_lines": post.content_lines,
-            "preview_text": post.preview_text,
-            "thread_title": post.thread_title,
-            "thread_lines": list(post.thread_lines),
-            "boosts": post.boosts,
-            "favourites": post.favourites,
-            "replies": post.replies,
-            "tags": list(post.tags),
-            "flags": list(post.flags),
-            "attachments": list(post.attachments),
-            "visibility": post.visibility,
-            "cw": post.cw,
-            "unread": post.unread,
-            "bookmarked": post.bookmarked,
-            "mention": post.mention,
-            "direct": post.direct,
-            "draft": post.draft,
-            "sent": post.sent,
-            "deferred": post.deferred,
-        })
+        result.append(
+            {
+                "post_id": post.post_id,
+                "author": post.author,
+                "handle": post.handle,
+                "posted_at": post.posted_at,
+                "age": post.age,
+                "content_lines": post.content_lines,
+                "preview_text": post.preview_text,
+                "thread_title": post.thread_title,
+                "thread_lines": list(post.thread_lines),
+                "boosts": post.boosts,
+                "favourites": post.favourites,
+                "replies": post.replies,
+                "tags": list(post.tags),
+                "flags": list(post.flags),
+                "attachments": list(post.attachments),
+                "visibility": post.visibility,
+                "cw": post.cw,
+                "unread": post.unread,
+                "bookmarked": post.bookmarked,
+                "mention": post.mention,
+                "direct": post.direct,
+                "draft": post.draft,
+                "sent": post.sent,
+                "deferred": post.deferred,
+            }
+        )
     return result
 
 
@@ -78,32 +85,34 @@ def _posts_from_cache(data: list) -> list[FedPost]:
         if not isinstance(item, dict):
             continue
         try:
-            posts.append(FedPost(
-                post_id=item.get("post_id", ""),
-                author=item.get("author", ""),
-                handle=item.get("handle", ""),
-                posted_at=item.get("posted_at", ""),
-                age=item.get("age", ""),
-                content_lines=item.get("content_lines", []),
-                preview_text=item.get("preview_text", ""),
-                thread_title=item.get("thread_title", ""),
-                thread_lines=tuple(item.get("thread_lines", [])),
-                boosts=item.get("boosts", 0),
-                favourites=item.get("favourites", 0),
-                replies=item.get("replies", 0),
-                tags=tuple(item.get("tags", [])),
-                flags=tuple(item.get("flags", [])),
-                attachments=tuple(item.get("attachments", [])),
-                visibility=item.get("visibility", "Public"),
-                cw=item.get("cw", "none"),
-                unread=item.get("unread", True),
-                bookmarked=item.get("bookmarked", False),
-                mention=item.get("mention", False),
-                direct=item.get("direct", False),
-                draft=item.get("draft", False),
-                sent=item.get("sent", False),
-                deferred=item.get("deferred", False),
-            ))
+            posts.append(
+                FedPost(
+                    post_id=item.get("post_id", ""),
+                    author=item.get("author", ""),
+                    handle=item.get("handle", ""),
+                    posted_at=item.get("posted_at", ""),
+                    age=item.get("age", ""),
+                    content_lines=item.get("content_lines", []),
+                    preview_text=item.get("preview_text", ""),
+                    thread_title=item.get("thread_title", ""),
+                    thread_lines=tuple(item.get("thread_lines", [])),
+                    boosts=item.get("boosts", 0),
+                    favourites=item.get("favourites", 0),
+                    replies=item.get("replies", 0),
+                    tags=tuple(item.get("tags", [])),
+                    flags=tuple(item.get("flags", [])),
+                    attachments=tuple(item.get("attachments", [])),
+                    visibility=item.get("visibility", "Public"),
+                    cw=item.get("cw", "none"),
+                    unread=item.get("unread", True),
+                    bookmarked=item.get("bookmarked", False),
+                    mention=item.get("mention", False),
+                    direct=item.get("direct", False),
+                    draft=item.get("draft", False),
+                    sent=item.get("sent", False),
+                    deferred=item.get("deferred", False),
+                )
+            )
         except Exception:
             continue
     return posts

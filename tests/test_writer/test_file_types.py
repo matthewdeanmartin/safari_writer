@@ -96,6 +96,18 @@ class TestHighlightProfileResolution:
         p = resolve_file_profile("setup.cfg")
         assert p.highlight_profile == HighlightProfile.INI
 
+    def test_bas_profile(self):
+        p = resolve_file_profile("prog.bas")
+        assert p.highlight_profile == HighlightProfile.SAFARI_BASIC
+
+    def test_asm_profile(self):
+        p = resolve_file_profile("prog.asm")
+        assert p.highlight_profile == HighlightProfile.SAFARI_ASM
+
+    def test_prg_profile(self):
+        p = resolve_file_profile("prog.prg")
+        assert p.highlight_profile == HighlightProfile.SAFARI_BASE
+
     def test_unknown_extension_falls_back(self):
         p = resolve_file_profile("data.xyz")
         assert p.highlight_profile == HighlightProfile.PLAIN_TEXT
@@ -159,6 +171,18 @@ class TestFileProfileProperties:
         p = resolve_file_profile("main.py")
         assert p.pygments_lexer == "python"
 
+    def test_pygments_lexer_for_basic(self):
+        p = resolve_file_profile("prog.bas")
+        assert p.pygments_lexer == "basic"
+
+    def test_pygments_lexer_for_asm(self):
+        p = resolve_file_profile("prog.asm")
+        assert p.pygments_lexer == "asm"
+
+    def test_pygments_lexer_for_base(self):
+        p = resolve_file_profile("prog.prg")
+        assert p.pygments_lexer == "foxpro"
+
     def test_pygments_lexer_none_for_txt(self):
         p = resolve_file_profile("notes.txt")
         assert p.pygments_lexer is None
@@ -172,6 +196,15 @@ class TestDisplayNames:
 
     def test_python_display_name(self):
         assert resolve_file_profile("main.py").display_name == "Python"
+
+    def test_basic_display_name(self):
+        assert resolve_file_profile("prog.bas").display_name == "Safari Basic"
+
+    def test_asm_display_name(self):
+        assert resolve_file_profile("prog.asm").display_name == "Safari ASM"
+
+    def test_base_display_name(self):
+        assert resolve_file_profile("prog.prg").display_name == "Safari Base"
 
     def test_english_text_display_name(self):
         assert resolve_file_profile("ch.en.txt").display_name == "English Text"

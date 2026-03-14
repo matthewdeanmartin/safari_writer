@@ -63,22 +63,61 @@ def _progress_bar(percent: float, width: int = 20) -> str:
 # ── Main Menu ────────────────────────────────────────────────────
 
 
+class MenuItem(Static):
+    """Menu item with selection highlighting."""
+
+    def __init__(self, key: str, label: str, action: str) -> None:
+        self.key_char = key
+        self.label_text = label
+        self.action_name = action
+        super().__init__("", classes="menu-item")
+        self._is_selected = False
+
+    def set_selected(self, selected: bool) -> None:
+        self._is_selected = selected
+        self._update_markup()
+
+    def _update_markup(self) -> None:
+        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
+        if self._is_selected:
+            markup = f"[reverse]{markup}[/reverse]"
+        self.update(markup)
+
+    def on_mount(self) -> None:
+        self._update_markup()
+
+
 class SafariReaderMainMenuScreen(Screen):
     """Boot / splash screen for Safari Reader."""
 
+    MENU_ITEMS = [
+        ("R", "esume last book", "resume"),
+        ("L", "ibrary", "library"),
+        ("C", "atalog (online)", "catalog"),
+        ("H", "elp", "help"),
+        ("S", "ettings", "settings"),
+        ("Q", "uit", "quit"),
+    ]
+
     BINDINGS = [
+        Binding("r", "menu('resume')", "Resume", show=False),
         Binding("l", "menu('library')", "Library", show=False),
         Binding("c", "menu('catalog')", "Catalog", show=False),
-        Binding("r", "menu('resume')", "Resume", show=False),
         Binding("h", "menu('help')", "Help", show=False),
         Binding("s", "menu('settings')", "Settings", show=False),
         Binding("q", "menu('quit')", "Quit", show=False),
         Binding("escape", "menu('quit')", "Quit", show=False),
+        # Arrow navigation
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("enter", "activate", "Activate", show=False),
     ]
 
     def __init__(self, state: SafariReaderState) -> None:
         super().__init__()
         self.state = state
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
         load_library(state)
 
     def compose(self) -> ComposeResult:
@@ -112,17 +151,40 @@ class SafariReaderMainMenuScreen(Screen):
         if last_book:
             yield Static(f"  Last read: {last_book}")
             yield Static("")
-        yield Static(
-            "  [R] Resume last book    [L] Library\n"
-            "  [C] Online Catalog      [H] Help\n"
-            "  [S] Settings            [Q] Quit"
-        )
+
+        with Vertical(id="reader-menu-container"):
+            for key, label, action in self.MENU_ITEMS:
+                yield MenuItem(key, label, action)
+
         yield Static("")
         yield Static(
             f"[{_FOOTER_STYLE}]"
             "  R=Resume  L=Library  C=Catalog  H=Help  Q=Quit  "
             f"[/{_FOOTER_STYLE}]"
         )
+
+    def on_mount(self) -> None:
+        self._menu_widgets = list(self.query(MenuItem))
+        self._refresh_menu()
+
+    def _refresh_menu(self) -> None:
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        if self._selected_index > 0:
+            self._selected_index -= 1
+            self._refresh_menu()
+
+    def action_cursor_down(self) -> None:
+        if self._selected_index < len(self._menu_widgets) - 1:
+            self._selected_index += 1
+            self._refresh_menu()
+
+    def action_activate(self) -> None:
+        if 0 <= self._selected_index < len(self._menu_widgets):
+            action = self._menu_widgets[self._selected_index].action_name
+            self.action_menu(action)
 
     def action_menu(self, choice: str) -> None:
         if choice == "library":
@@ -984,30 +1046,74 @@ class SafariReaderSearchScreen(Screen):
 class SafariReaderGoToScreen(Screen):
     """Jump to a percentage, chapter, or bookmark."""
 
+    MENU_ITEMS = [
+        ("P", "ercentage", "percent"),
+        ("C", "hapter", "chapter"),
+        ("B", "ookmark", "bookmarks"),
+    ]
+
     BINDINGS = [
         Binding("p", "goto_percent", "Percent", show=False),
         Binding("c", "goto_chapter", "Chapter", show=False),
         Binding("b", "goto_bookmarks", "Bookmarks", show=False),
         Binding("escape", "go_back", "Back", show=False),
         Binding("q", "go_back", "Back", show=False),
+        # Arrow navigation
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("enter", "activate", "Activate", show=False),
     ]
 
     def __init__(self, state: SafariReaderState) -> None:
         super().__init__()
         self.state = state
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
 
     def compose(self) -> ComposeResult:
         yield Static(f"[{_STATUS_BAR_STYLE}]  GO TO  [/{_STATUS_BAR_STYLE}]")
         yield Static("")
-        yield Static("  [P] Go to Percentage")
-        yield Static("  [C] Go to Chapter")
-        yield Static(f"  [B] Go to Bookmark ({len(self.state.bookmarks)} saved)")
+        with Vertical(id="goto-menu-container"):
+            for key, label, action in self.MENU_ITEMS:
+                # Add bookmark count to label if it's the bookmarks option
+                display_label = label
+                if action == "bookmarks":
+                    display_label += f" ({len(self.state.bookmarks)} saved)"
+                yield MenuItem(key, display_label, action)
         yield Static("")
         yield Static(
             f"[{_FOOTER_STYLE}]"
             "  P=Percent  C=Chapter  B=Bookmarks  Q/Esc=Back  "
             f"[/{_FOOTER_STYLE}]"
         )
+
+    def on_mount(self) -> None:
+        self._menu_widgets = list(self.query(MenuItem))
+        self._refresh_menu()
+
+    def _refresh_menu(self) -> None:
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        if self._selected_index > 0:
+            self._selected_index -= 1
+            self._refresh_menu()
+
+    def action_cursor_down(self) -> None:
+        if self._selected_index < len(self._menu_widgets) - 1:
+            self._selected_index += 1
+            self._refresh_menu()
+
+    def action_activate(self) -> None:
+        if 0 <= self._selected_index < len(self._menu_widgets):
+            action = self._menu_widgets[self._selected_index].action_name
+            if action == "percent":
+                self.action_goto_percent()
+            elif action == "chapter":
+                self.action_goto_chapter()
+            elif action == "bookmarks":
+                self.action_goto_bookmarks()
 
     def action_goto_percent(self) -> None:
         self.app.push_screen(SafariReaderGoToPercentScreen(self.state))  # type: ignore[arg-type]
@@ -1146,41 +1252,87 @@ class SafariReaderSettingsScreen(Screen):
         Binding("x", "style_switcher", "Theme", show=False),
         Binding("escape", "go_back", "Back", show=False),
         Binding("q", "go_back", "Back", show=False),
+        # Arrow navigation
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("enter", "activate", "Activate", show=False),
     ]
 
     def __init__(self, state: SafariReaderState) -> None:
         super().__init__()
         self.state = state
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
 
-    def compose(self) -> ComposeResult:
+    def _get_menu_items(self) -> list[tuple[str, str, str]]:
         s = self.state.settings
         scale_names = ["Compact", "Normal", "Large", "X-Large"]
         spacing_names = {1: "Single", 2: "1.5x", 3: "Double"}
         margin_names = {0: "Narrow", 1: "Normal", 2: "Wide"}
         mode = "Page" if s.page_mode else "Flow"
+
+        return [
+            ("1", f" Text size: {scale_names[s.text_scale]} (Press 1-4)", "scale"),
+            (
+                "S",
+                f" Line spacing: {spacing_names.get(s.line_spacing, 'Single')}",
+                "spacing",
+            ),
+            ("M", f" Margins: {margin_names.get(s.margin_width, 'Normal')}", "margin"),
+            ("P", f" Read mode: {mode}", "mode"),
+            ("X", " Theme Switcher", "theme"),
+        ]
+
+    def compose(self) -> ComposeResult:
         yield Static(
             f"[{_STATUS_BAR_STYLE}]  READING PREFERENCES  [/{_STATUS_BAR_STYLE}]"
         )
         yield Static("")
-        yield Static(
-            f"  Text size:    [{s.text_scale + 1}] {scale_names[s.text_scale]}"
-        )
-        yield Static(
-            f"  Line spacing: [S] {spacing_names.get(s.line_spacing, 'Single')}"
-        )
-        yield Static(
-            f"  Margins:      [M] {margin_names.get(s.margin_width, 'Normal')}"
-        )
-        yield Static(f"  Read mode:    [P] {mode}")
-        yield Static("  Theme:        [X] Style Switcher")
-        yield Static("")
-        yield Static("  Press 1-4 to set text size.")
+        with Vertical(id="settings-menu-container"):
+            for key, label, action in self._get_menu_items():
+                yield MenuItem(key, label, action)
         yield Static("")
         yield Static(
             f"[{_FOOTER_STYLE}]"
             "  1-4=Size  S=Spacing  M=Margin  P=Mode  X=Theme  Q/Esc=Back  "
             f"[/{_FOOTER_STYLE}]"
         )
+
+    def on_mount(self) -> None:
+        self._menu_widgets = list(self.query(MenuItem))
+        self._refresh_menu()
+
+    def _refresh_menu(self) -> None:
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        if self._selected_index > 0:
+            self._selected_index -= 1
+            self._refresh_menu()
+
+    def action_cursor_down(self) -> None:
+        if self._selected_index < len(self._menu_widgets) - 1:
+            self._selected_index += 1
+            self._refresh_menu()
+
+    def action_activate(self) -> None:
+        if 0 <= self._selected_index < len(self._menu_widgets):
+            action = self._menu_widgets[self._selected_index].action_name
+            if action == "scale":
+                # Cycle scale if activated via enter
+                self.state.settings.text_scale = (
+                    self.state.settings.text_scale + 1
+                ) % 4
+                self._refresh_screen()
+            elif action == "spacing":
+                self.action_toggle_spacing()
+            elif action == "margin":
+                self.action_toggle_margin()
+            elif action == "mode":
+                self.action_toggle_page_mode()
+            elif action == "theme":
+                self.action_style_switcher()
 
     def _refresh_screen(self) -> None:
         self.app.pop_screen()

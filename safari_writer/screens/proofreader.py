@@ -98,6 +98,31 @@ MODE_SAVE_PERSONAL = "save_personal"
 MODE_LOAD_PERSONAL = "load_personal"
 
 
+class MenuItem(Static):
+    """Menu item with selection highlighting."""
+
+    def __init__(self, key: str, label: str, action: str = "") -> None:
+        self.key_char = key
+        self.label_text = label
+        self.action_name = action
+        super().__init__("", classes="menu-item")
+        self._is_selected = False
+        self._update_markup()
+
+    def set_selected(self, selected: bool) -> None:
+        self._is_selected = selected
+        self._update_markup()
+
+    def _update_markup(self) -> None:
+        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
+        if self._is_selected:
+            markup = f"[reverse]{markup}[/reverse]"
+        self.update(markup)
+
+    def on_mount(self) -> None:
+        self._update_markup()
+
+
 class ProofreaderScreen(Screen):
     """Integrated spelling verification module."""
 
@@ -105,6 +130,19 @@ class ProofreaderScreen(Screen):
 
     BINDINGS = [
         Binding("escape", "exit_proofreader", "Exit", show=False),
+        # Arrow navigation (for main menu)
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("enter", "activate", "Activate", show=False),
+    ]
+
+    MENU_ITEMS = [
+        ("H", "  Highlight Errors", "highlight"),
+        ("P", "  Print Errors (list on-screen)", "print"),
+        ("C", "  Correct Errors", "correct"),
+        ("S", "  Dictionary Search", "search"),
+        ("L", "  Load Personal Dictionary", "load"),
+        ("W", "  Write (save) Personal Dictionary", "write"),
     ]
 
     def __init__(
@@ -138,6 +176,9 @@ class ProofreaderScreen(Screen):
         self._dict_prefix = ""
         self._dict_exact = False
         self._from_correct = False
+
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
         self._enter_menu()
 
     # ------------------------------------------------------------------
@@ -153,12 +194,13 @@ class ProofreaderScreen(Screen):
         )
 
     def compose(self) -> ComposeResult:
-        from textual.containers import Container
+        from textual.containers import Container, Vertical
 
         with Container(id="pr-outer"):
             yield Static(self._message_text, id="pr-message")
             yield Static(self._title_text(), id="pr-title")
-            yield Static(self._body_text, id="pr-body")
+            with Vertical(id="pr-body-container"):
+                yield Static("", id="pr-body")
             yield Static(self._help_text, id="pr-help")
 
     def on_mount(self) -> None:
@@ -173,6 +215,15 @@ class ProofreaderScreen(Screen):
             self._enter_correct()
         elif self._initial_mode == "search":
             self._enter_dict_search(from_correct=False)
+
+    def _has_live_dom(self) -> bool:
+        return hasattr(self, "_nodes") and self.is_mounted
+
+    def _menu_body_text(self, lang: str) -> str:
+        menu_lines = [f" {key}{label}" for key, label, _ in self.MENU_ITEMS]
+        return "\n".join(
+            [f"Dictionary: {lang}", "", *menu_lines, "", "Esc  Return to Main Menu"]
+        )
 
     def _ensure_checker(self) -> SpellChecker | None:
         if not self._checker_loaded:
@@ -192,24 +243,105 @@ class ProofreaderScreen(Screen):
 
     def _enter_menu(self) -> None:
         from safari_writer.locale_info import LOCALE
+        from textual.containers import Vertical
 
         self._mode = MODE_MENU
         lang = self._state.doc_language or LOCALE
-        self._set_body(
-            f"[bold]Dictionary:[/] {lang}\n\n"
-            "[bold]H[/]  Highlight Errors\n"
-            "[bold]P[/]  Print Errors (list on-screen)\n"
-            "[bold]C[/]  Correct Errors\n"
-            "[bold]S[/]  Dictionary Search\n"
-            "[bold]L[/]  Load Personal Dictionary\n"
-            "[bold]W[/]  Write (save) Personal Dictionary\n"
-            "\n"
-            "[dim]Esc  Return to Main Menu[/]"
-        )
+        self._body_text = self._menu_body_text(lang)
+
+        if self._has_live_dom():
+            body_container = self.query_one("#pr-body-container", Vertical)
+            body_container.remove_children()
+
+            body_container.mount(Static(f"[bold]Dictionary:[/] {lang}\n"))
+            self._menu_widgets = []
+            for key, label, action in self.MENU_ITEMS:
+                widget = MenuItem(key, label, action)
+                self._menu_widgets.append(widget)
+                body_container.mount(widget)
+
+            body_container.mount(Static("\n[dim]Esc  Return to Main Menu[/]"))
+            self._refresh_menu()
         self._set_message(f"Proofing in [{lang}]. Select a mode.")
         self._set_help(
             " H Highlight  P Print  C Correct  S Search  L Load  W Write  Esc Exit"
         )
+
+    def _refresh_menu(self) -> None:
+        if self._mode != MODE_MENU or not self._menu_widgets:
+            return
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        if self._mode == MODE_MENU:
+            if self._selected_index > 0:
+                self._selected_index -= 1
+                self._refresh_menu()
+        # Other modes could potentially use arrows too? (e.g. dict results)
+        elif self._mode == MODE_DICT_RESULTS:
+            self._handle_dict_results_key("up")
+
+    def action_cursor_down(self) -> None:
+        if self._mode == MODE_MENU:
+            if self._selected_index < len(self._menu_widgets) - 1:
+                self._selected_index += 1
+                self._refresh_menu()
+        elif self._mode == MODE_DICT_RESULTS:
+            self._handle_dict_results_key("down")
+
+    def action_activate(self) -> None:
+        if self._mode == MODE_MENU:
+            if 0 <= self._selected_index < len(self._menu_widgets):
+                action = self._menu_widgets[self._selected_index].action_name
+                self._handle_menu_action(action)
+        elif self._mode == MODE_CORRECT_MENU:
+            self._handle_correct_menu_key("enter")
+        elif self._mode == MODE_CORRECT_WORD:
+            self._handle_correct_word_key("enter", events.Key("enter", "enter"))
+        elif self._mode == MODE_DICT_SEARCH:
+            self._handle_dict_search_key("enter", events.Key("enter", "enter"))
+        elif self._mode == MODE_DICT_RESULTS:
+            self._handle_dict_results_key("enter")
+
+    def _handle_menu_action(self, action: str) -> None:
+        if action == "highlight":
+            self._enter_highlight()
+        elif action == "print":
+            self._enter_print()
+        elif action == "correct":
+            self._enter_correct()
+        elif action == "search":
+            self._enter_dict_search(from_correct=False)
+        elif action == "load":
+            self._enter_load_personal()
+        elif action == "write":
+            self._enter_save_personal()
+
+    def _enter_load_personal(self) -> None:
+        self._mode = MODE_LOAD_PERSONAL
+        default = _default_personal_dict_path()
+        self._input_buf = default
+        self._set_message("Load Personal Dictionary: edit path or Enter to confirm")
+        self._set_body(f"Load personal dictionary file:\n\n> {default}")
+        self._set_help(" Enter Load  Esc Cancel")
+
+    def _enter_save_personal(self) -> None:
+        self._mode = MODE_SAVE_PERSONAL
+        default = _default_personal_dict_path()
+        self._input_buf = default
+        self._set_message("Save Personal Dictionary: edit path or Enter to confirm")
+        self._set_body(f"Save personal dictionary to file:\n\n> {default}")
+        self._set_help(" Enter Save  Esc Cancel")
+
+    def _set_body(self, text: str) -> None:
+        from textual.containers import Vertical
+
+        self._body_text = text
+        if self._has_live_dom():
+            container = self.query_one("#pr-body-container", Vertical)
+            container.remove_children()
+            container.mount(Static(text, id="pr-body"))
 
     def _enter_highlight(self) -> None:
         self._mode = MODE_HIGHLIGHT
@@ -625,17 +757,12 @@ class ProofreaderScreen(Screen):
 
     def _set_message(self, msg: str) -> None:
         self._message_text = f" {msg}"
-        if self.is_mounted:
+        if self._has_live_dom():
             self.query_one("#pr-message", Static).update(self._message_text)
-
-    def _set_body(self, content: str) -> None:
-        self._body_text = content
-        if self.is_mounted:
-            self.query_one("#pr-body", Static).update(self._body_text)
 
     def _set_help(self, text: str) -> None:
         self._help_text = text
-        if self.is_mounted:
+        if self._has_live_dom():
             self.query_one("#pr-help", Static).update(self._help_text)
 
     # ------------------------------------------------------------------

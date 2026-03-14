@@ -115,7 +115,9 @@ def test_load_clients_from_env_returns_clients_and_default(monkeypatch):
         def __init__(self, identity) -> None:
             self.identity = identity
 
-    monkeypatch.setattr("safari_fed.client.load_mastodon_identities", lambda: identities)
+    monkeypatch.setattr(
+        "safari_fed.client.load_mastodon_identities", lambda: identities
+    )
     monkeypatch.setattr(
         "safari_fed.client.load_default_identity", lambda: identities["MAIN"]
     )
@@ -160,7 +162,9 @@ def test_build_fed_state_starts_configured_account_empty_before_sync(monkeypatch
     assert state.posts == []
     assert state.visible_posts() == []
     assert state.account_label == "MAIN@mastodon.social"
-    assert state.status_message == "Mastodon ready: MAIN@mastodon.social (press U to sync)"
+    assert (
+        state.status_message == "Mastodon ready: MAIN@mastodon.social (press U to sync)"
+    )
 
 
 def test_render_post_for_writer_contains_author_and_body():

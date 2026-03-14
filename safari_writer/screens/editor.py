@@ -14,6 +14,9 @@
 
 import logging
 import os
+import io
+import sys
+import subprocess
 from pathlib import Path
 from typing import Protocol, cast
 
@@ -28,6 +31,7 @@ from textual.containers import Container
 from safari_writer.file_types import HighlightProfile, StorageMode
 from safari_writer.state import AppState
 from safari_writer.syntax_highlight import create_highlighter
+from safari_writer.screens.output_screen import OutputScreen
 
 
 def _(s: str) -> str:
@@ -257,6 +261,7 @@ DOCUMENT STRUCTURE (SFW files only)
 OTHER
   Ctrl+P                  Print / Export menu
   Ctrl+Backslash          Run macro (.BAS file)
+  F5                      Run program (.BAS, .ASM, .PRG, .PY)
   F1                      Show this help screen
   Escape                  Return to Main Menu
 
@@ -911,6 +916,8 @@ class EditorArea(Widget, can_focus=True):
             self._prompt_search()
         elif key == "f3":
             self._find_next()
+        elif key == "f5":
+            self._run_program()
         elif key == "alt+h":
             self._prompt_replace()
         elif key == "alt+n":
@@ -1696,6 +1703,84 @@ class EditorArea(Widget, can_focus=True):
             self._update_status()
 
         self.app.push_screen(MacroPickerScreen(), _on_picked)
+
+    def _run_program(self) -> None:
+        """Run the current buffer as a program based on its file profile."""
+        profile = self.state.file_profile
+        source = "\n".join(self.state.buffer)
+        output = ""
+        title = "EXECUTION OUTPUT"
+
+        if profile.highlight_profile == HighlightProfile.SAFARI_BASIC:
+            from safari_basic.interpreter import SafariBasic, BasicError
+
+            buf = io.StringIO()
+            basic_interp = SafariBasic(out_stream=buf)
+            try:
+                basic_interp.reset()
+                for line in self.state.buffer:
+                    basic_interp.add_program_line(line.strip())
+                basic_interp.run_program()
+                output = buf.getvalue()
+                title = "SAFARI BASIC OUTPUT"
+            except BasicError as exc:
+                output = f"BASIC ERROR: {exc}"
+            except Exception as exc:
+                output = f"SYSTEM ERROR: {exc}"
+
+        elif profile.highlight_profile == HighlightProfile.SAFARI_ASM:
+            from safari_asm.interpreter import run_source as run_asm
+
+            buf = io.StringIO()
+            try:
+                run_asm(source, stdout=buf, stderr=buf)
+                output = buf.getvalue()
+                title = "SAFARI ASM OUTPUT"
+            except Exception as exc:
+                output = f"ASM ERROR: {exc}"
+
+        elif profile.highlight_profile == HighlightProfile.SAFARI_BASE:
+            from safari_base.lang.interpreter import Interpreter as BaseInterpreter
+            from safari_base.lang.environment import Environment as BaseEnvironment
+
+            try:
+                env = BaseEnvironment()
+                base_interp = BaseInterpreter(env)
+                base_result = base_interp.run_source(source)
+                output = base_result.data or base_result.message or ""
+                if base_result.message and base_result.data:
+                    output = f"{base_result.message}\n\n{base_result.data}"
+                title = "SAFARI BASE OUTPUT"
+            except Exception as exc:
+                output = f"BASE ERROR: {exc}"
+
+        elif profile.highlight_profile == HighlightProfile.PYTHON:
+            try:
+                import tempfile
+
+                with tempfile.NamedTemporaryFile(
+                    suffix=".py", delete=False, mode="w", encoding="utf-8"
+                ) as f:
+                    f.write(source)
+                    temp_name = f.name
+
+                python_result = subprocess.run(
+                    [sys.executable, temp_name],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                output = python_result.stdout + python_result.stderr
+                title = "PYTHON OUTPUT"
+                os.unlink(temp_name)
+            except Exception as exc:
+                output = f"PYTHON ERROR: {exc}"
+
+        else:
+            self._set_screen_message(_("No runner available for this file type"))
+            return
+
+        self.app.push_screen(OutputScreen(output, title=title))
 
     def _scroll_to_cursor(self) -> None:
         """Adjust ``_scroll_offset`` so the cursor row is visible.

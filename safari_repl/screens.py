@@ -127,10 +127,27 @@ ReplMainMenuScreen {
 
 
 class MenuItem(Static):
-    """Lightweight menu item matching Safari DOS's shared menu style."""
+    """Menu item with selection highlighting."""
 
-    def __init__(self, key: str, label: str) -> None:
-        super().__init__(f"[bold underline]{key}[/]{label}", classes="menu-item")
+    def __init__(self, key: str, label: str, action: str) -> None:
+        self.key_char = key
+        self.label_text = label
+        self.action_name = action
+        super().__init__("", classes="menu-item")
+        self._is_selected = False
+
+    def set_selected(self, selected: bool) -> None:
+        self._is_selected = selected
+        self._update_markup()
+
+    def _update_markup(self) -> None:
+        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
+        if self._is_selected:
+            markup = f"[reverse]{markup}[/reverse]"
+        self.update(markup)
+
+    def on_mount(self) -> None:
+        self._update_markup()
 
 
 class ReplMainMenuScreen(Screen):
@@ -150,25 +167,54 @@ class ReplMainMenuScreen(Screen):
         Binding("l", "menu_action('load')", "Load", show=False),
         Binding("h,f1", "menu_action('help')", "Help", show=False),
         Binding("q,escape", "menu_action('quit')", "Quit", show=False),
+        # Arrow navigation
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("enter", "activate", "Activate", show=False),
     ]
 
     def __init__(self, state: ReplState) -> None:
         super().__init__()
         self._state = state
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
 
     def compose(self) -> ComposeResult:
         with Container(id="repl-menu-container"):
             yield Static("*** SAFARI REPL ***", id="repl-menu-title")
             yield Static("Atari BASIC Interpreter", classes="menu-item")
             yield Static("", classes="menu-item")
-            for key, label, _ in self.MENU_ITEMS:
-                yield MenuItem(key, label)
+            for key, label, action in self.MENU_ITEMS:
+                yield MenuItem(key, label, action)
         file_label = (
             f" Loaded: {self._state.loaded_path.name}"
             if self._state.loaded_path
             else " No file loaded"
         )
         yield Static(file_label, id="repl-status-bar")
+
+    def on_mount(self) -> None:
+        self._menu_widgets = list(self.query(MenuItem))
+        self._refresh_menu()
+
+    def _refresh_menu(self) -> None:
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        if self._selected_index > 0:
+            self._selected_index -= 1
+            self._refresh_menu()
+
+    def action_cursor_down(self) -> None:
+        if self._selected_index < len(self._menu_widgets) - 1:
+            self._selected_index += 1
+            self._refresh_menu()
+
+    def action_activate(self) -> None:
+        if 0 <= self._selected_index < len(self._menu_widgets):
+            action = self._menu_widgets[self._selected_index].action_name
+            self.action_menu_action(action)
 
     def action_menu_action(self, action: str) -> None:
         app = cast("SafariReplAppProtocol", self.app)

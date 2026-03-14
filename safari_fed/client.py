@@ -339,8 +339,7 @@ def load_clients_from_env() -> tuple[dict[str, SafariFedClient], str | None]:
     if not identities:
         return {}, None
     clients = {
-        name: SafariFedClient(identity)
-        for name, identity in sorted(identities.items())
+        name: SafariFedClient(identity) for name, identity in sorted(identities.items())
     }
     default_identity = load_default_identity()
     default_name = default_identity.name if default_identity is not None else None

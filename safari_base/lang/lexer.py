@@ -14,12 +14,13 @@ KEYWORDS = frozenset({
     "DIM", "DIR", "DISPLAY", "DO", "EACH", "ELSE", "ELSEIF", "END",
     "ENDCASE", "ENDDO", "ENDFOR", "ENDIF", "ENDSCAN", "ERASE", "EXCLUSIVE",
     "EXIT", "EXTENDED", "FILE", "FIELDS", "FILTER", "FN", "FOR", "FROM",
-    "FUNC", "GO", "GOTO", "IF", "IN", "INDEX", "LIST", "LOCATE", "LOOP",
+    "IF", "IN", "INDEX", "LIST", "LOCATE", "LOOP",
     "MD", "MODIFY", "NEXT", "NOT", "NOTE", "ON", "OR", "ORDER",
     "OTHERWISE", "PACK", "PRINT", "PROC", "QUIT", "RD", "RECALL", "RENAME",
     "REPLACE", "REST", "RETURN", "SCAN", "SEEK", "SELECT", "SET", "SKIP",
     "STEP", "STORE", "STRUCTURE", "SUM", "TABLE", "TAG", "TO", "TOP",
     "USE", "WHILE", "WITH", "ZAP", "DEFAULT", "DELETED", "RECORD",
+
     "AVERAGE",
 })
 

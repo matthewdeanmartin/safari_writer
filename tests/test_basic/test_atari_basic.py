@@ -3,6 +3,7 @@ import io
 import os
 from safari_basic.interpreter import SafariBasic as AtariBasic, BasicError
 
+
 class TestAtariBasic(unittest.TestCase):
     def setUp(self):
         self.interpreter = AtariBasic()
@@ -109,14 +110,14 @@ class TestAtariBasic(unittest.TestCase):
         # It should throw a Syntax Error (which maps to BasicError in our runner)
         # However, run_and_capture catches BasicError and prints it to stdout.
         # We need to test the underlying execute_code for exception raising.
-        
+
         with self.assertRaises(BasicError):
-            self.interpreter.execute_code("10 A$ = \"HELLO\"") # This one is fine
-            self.interpreter.execute_code("20 B$ = \"BYE\"")   # Error: B$ not DIM'd
-            
+            self.interpreter.execute_code('10 A$ = "HELLO"')  # This one is fine
+            self.interpreter.execute_code('20 B$ = "BYE"')  # Error: B$ not DIM'd
+
         self.interpreter.reset()
         with self.assertRaises(BasicError):
-            self.interpreter.execute_code("10 A(1) = 10")    # Error: A not DIM'd
+            self.interpreter.execute_code("10 A(1) = 10")  # Error: A not DIM'd
 
     def test_file_io(self):
         test_file = "test_io.txt"
@@ -128,7 +129,7 @@ class TestAtariBasic(unittest.TestCase):
             40 CLOSE #1
             """
             self.interpreter.execute_code(code_write)
-            
+
             code_read = f"""
             10 DIM S$(20)
             20 OPEN #1, "{test_file}", "r"
@@ -150,18 +151,19 @@ class TestAtariBasic(unittest.TestCase):
         # Use execute_repl_line directly to avoid reset() in execute_code/run_and_capture
         buf = io.StringIO()
         self.interpreter.out_stream = buf
-        self.interpreter.execute_repl_line("PRINT NAME$; \" \"; X")
+        self.interpreter.execute_repl_line('PRINT NAME$; " "; X')
         self.assertEqual(buf.getvalue().strip(), "GEMINI 42")
 
     def test_repl_delete_line(self):
         self.interpreter.execute_repl_line("10 PRINT 1")
         self.interpreter.execute_repl_line("20 PRINT 2")
-        self.interpreter.execute_repl_line("10") # Delete line 10
-        
+        self.interpreter.execute_repl_line("10")  # Delete line 10
+
         buf = io.StringIO()
         self.interpreter.out_stream = buf
         self.interpreter.execute_repl_line("RUN")
         self.assertEqual(buf.getvalue().strip(), "2")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

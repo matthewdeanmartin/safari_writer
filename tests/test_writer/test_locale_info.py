@@ -164,14 +164,16 @@ class TestGetTranslation:
         locale_dir = tmp_path / "locales" / "fr" / "LC_MESSAGES"
         locale_dir.mkdir(parents=True)
         (locale_dir / "safari_writer.po").write_text(
-            '\n'.join([
-                'msgid ""',
-                'msgstr ""',
-                "",
-                'msgid "Quit"',
-                'msgstr "Quitter"',
-                "",
-            ]),
+            "\n".join(
+                [
+                    'msgid ""',
+                    'msgstr ""',
+                    "",
+                    'msgid "Quit"',
+                    'msgstr "Quitter"',
+                    "",
+                ]
+            ),
             encoding="utf-8",
         )
 
@@ -192,6 +194,7 @@ class TestGetTranslation:
 
     def test_none_uses_current_locale(self):
         import safari_writer.locale_info as li
+
         trans = get_translation(None)
         # Just verify we get a translation object back
         assert hasattr(trans, "gettext")

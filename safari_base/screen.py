@@ -13,6 +13,7 @@ from textual.screen import Screen
 from textual.widgets import Static
 
 from safari_base.database import BaseSession, DEFAULT_ADDRESS_SCHEMA
+from safari_base.lang.interpreter import Interpreter
 from safari_base.program_editor import ProgramEditorScreen
 
 __all__ = ["SCREEN_CSS", "SafariBaseScreen", "clamp_shell_dimension"]
@@ -716,6 +717,43 @@ class SafariBaseScreen(Screen[None]):
         self._message = f"Browsing {self.session.current_table}"
         self._refresh()
 
+    def _run_program(self, filename: str) -> None:
+        """Execute a .prg file using the dBASE interpreter."""
+        if not filename:
+            self._message = "DO requires a filename"
+            self._refresh()
+            return
+        
+        name = filename.strip().strip('"').strip("'")
+        if "." not in name:
+            name += ".prg"
+
+        if self.session.database_path is not None:
+            work_dir = self.session.database_path.parent
+        else:
+            work_dir = Path.cwd()
+        file_path = work_dir / name
+
+        if not file_path.exists():
+            self._message = f"File not found: {name}"
+            self._refresh()
+            return
+
+        # Run the interpreter
+        interpreter = Interpreter()
+        interpreter.env.work_dir = work_dir
+        
+        # Use a temporary output capture
+        result = interpreter.run_program(file_path)
+        
+        if result.success:
+            output = result.data or ""
+            lines = output.splitlines()
+            self._show_report(f"DO {name}", lines, f"Program {name} completed")
+        else:
+            self._message = f"Error: {result.message}"
+            self._refresh()
+
     def _move_cursor(self, delta: int) -> None:
         record_count = self.session.record_count()
         if record_count == 0:
@@ -786,6 +824,9 @@ class SafariBaseScreen(Screen[None]):
             return
         if verb == "QUIT":
             self._quit_base()
+            return
+        if verb == "DO":
+            self._run_program(args)
             return
         if verb == "USE":
             table_name = args

@@ -1,6 +1,15 @@
 # safari_writer
 
-A text editor with some support for style codes. UI is inspired by AtariWriter but there are a lot of differences.
+A text editor.
+
+Main goals
+
+- Better notepad
+- Can post to Mastodon with spellcheck
+- Can be used to read long documents
+- Supports feature set of AtariWriter and adjacent applications, including database, image viewer, file browser 
+- 1980 Retro UI, Retro scripting languages
+- Modern features, modern keybindings
 
 ## Installation
 

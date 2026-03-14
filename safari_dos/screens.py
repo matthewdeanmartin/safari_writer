@@ -366,10 +366,27 @@ class MessageScreen(ModalScreen[None]):
 
 
 class MenuItem(Static):
-    """Lightweight menu item matching Safari Writer's shared menu style."""
+    """Menu item with selection highlighting."""
 
-    def __init__(self, key: str, label: str) -> None:
-        super().__init__(f"[bold underline]{key}[/]{label}", classes="menu-item")
+    def __init__(self, key: str, label: str, action: str) -> None:
+        self.key_char = key
+        self.label_text = label
+        self.action_name = action
+        super().__init__("", classes="menu-item")
+        self._is_selected = False
+
+    def set_selected(self, selected: bool) -> None:
+        self._is_selected = selected
+        self._update_markup()
+
+    def _update_markup(self) -> None:
+        markup = f"[bold underline]{self.key_char}[/]{self.label_text}"
+        if self._is_selected:
+            markup = f"[reverse]{markup}[/reverse]"
+        self.update(markup)
+
+    def on_mount(self) -> None:
+        self._update_markup()
 
 
 class SafariDosMainMenuScreen(Screen):
@@ -393,21 +410,50 @@ class SafariDosMainMenuScreen(Screen):
         Binding("h,f1", "menu_action('help')", "Help", show=False),
         Binding("y", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("q,escape", "menu_action('quit')", "Quit", show=False),
+        # Arrow navigation
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("enter", "activate", "Activate", show=False),
     ]
 
     def __init__(self, state: SafariDosState) -> None:
         super().__init__()
         self._state = state
+        self._selected_index = 0
+        self._menu_widgets: list[MenuItem] = []
 
     def compose(self) -> ComposeResult:
         with Container(id="dos-menu-container"):
             yield Static("*** SAFARI DOS ***", id="dos-menu-title")
-            for key, label, _ in self.MENU_ITEMS:
-                yield MenuItem(key, label)
+            for key, label, action in self.MENU_ITEMS:
+                yield MenuItem(key, label, action)
         yield Static(
             f" Ready | Current Location: {self._state.current_path}",
             id="dos-status-bar",
         )
+
+    def on_mount(self) -> None:
+        self._menu_widgets = list(self.query(MenuItem))
+        self._refresh_menu()
+
+    def _refresh_menu(self) -> None:
+        for i, widget in enumerate(self._menu_widgets):
+            widget.set_selected(i == self._selected_index)
+
+    def action_cursor_up(self) -> None:
+        if self._selected_index > 0:
+            self._selected_index -= 1
+            self._refresh_menu()
+
+    def action_cursor_down(self) -> None:
+        if self._selected_index < len(self._menu_widgets) - 1:
+            self._selected_index += 1
+            self._refresh_menu()
+
+    def action_activate(self) -> None:
+        if 0 <= self._selected_index < len(self._menu_widgets):
+            action = self._menu_widgets[self._selected_index].action_name
+            self.action_menu_action(action)
 
     def action_menu_action(self, action: str) -> None:
         app = cast("SafariDosAppProtocol", self.app)
@@ -476,7 +522,9 @@ class SafariDosBrowserScreen(Screen):
         self._state = state
         self._picker_mode = picker_mode
         self._initial_selection_path = (
-            initial_selection_path.resolve() if initial_selection_path is not None else None
+            initial_selection_path.resolve()
+            if initial_selection_path is not None
+            else None
         )
         self._entries: list[DirectoryEntry] = []
         self._selected_index = 0
@@ -517,7 +565,9 @@ class SafariDosBrowserScreen(Screen):
             return "Enter=choose/open  Backspace=up  F=favorites  .=hidden  F1=help  Esc=cancel"
         if self._picker_mode == "directory":
             return "Enter=open  Tab=choose folder  F=favorites  .=hidden  F1=help  Esc=cancel"
-        return "Enter=open  T=select  C/M/R/W/N/X ops  Z/U zip  V=view  F1=help  Esc=menu"
+        return (
+            "Enter=open  T=select  C/M/R/W/N/X ops  Z/U zip  V=view  F1=help  Esc=menu"
+        )
 
     def _menu_title(self) -> str:
         if self._picker_mode == "file":
@@ -617,9 +667,7 @@ class SafariDosBrowserScreen(Screen):
             self._entries = [parent_entry] + entries
         else:
             self._entries = entries
-        self._selected_index = min(
-            self._selected_index, max(len(self._entries) - 1, 0)
-        )
+        self._selected_index = min(self._selected_index, max(len(self._entries) - 1, 0))
         self._apply_initial_selection()
         self._refresh_view()
 
@@ -705,7 +753,9 @@ class SafariDosBrowserScreen(Screen):
                     title = f"FILE: {entry.name}"
                     ext = entry.path.suffix.lower()
                     if ext in {".png", ".jpg", ".jpeg", ".bmp", ".gif"}:
-                        content: object = f"[Image File]\n\n{get_entry_info(entry.path)}"
+                        content: object = (
+                            f"[Image File]\n\n{get_entry_info(entry.path)}"
+                        )
                     elif ext in CODE_EXTENSIONS:
                         content = get_preview_syntax(entry.path)
                     else:

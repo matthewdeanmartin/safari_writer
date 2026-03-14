@@ -9,6 +9,14 @@
 - Update safari chat help
 - Update F1 help
 - Check CLI options vs code for each module
+  - any capabilities missing
+
+Code Quality
+- Check unit tests. Any vacuous or low quality tests
+- Any tests that lack meaningful assertions
+- Ignored tests
+- Ignored mypy
+- Ignored lint
 
 
 ----

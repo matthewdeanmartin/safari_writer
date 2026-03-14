@@ -129,21 +129,12 @@ def test_function_keys_are_wired():
             await pilot.press("f10")
             screen = app.screen
             assert isinstance(screen, SafariBaseScreen)
-            assert (
-                "ASSIST"
-                in screen.query_one("#status-bar", Static).content
-            )
+            assert "ASSIST" in screen.query_one("#status-bar", Static).content
             # ASSIST menu should show categories in the workspace
-            assert (
-                "Set Up"
-                in screen.query_one("#workspace-body", Static).content
-            )
+            assert "Set Up" in screen.query_one("#workspace-body", Static).content
             await pilot.press("escape")  # dismiss ASSIST
             await pilot.press("f2")
-            assert (
-                "ASSIST"
-                in screen.query_one("#status-bar", Static).content
-            )
+            assert "ASSIST" in screen.query_one("#status-bar", Static).content
             await pilot.press("escape")  # dismiss ASSIST from f2
             await pilot.press("f6")
             assert (
@@ -347,5 +338,35 @@ def test_assist_menu_navigation():
             # Select Append via Enter
             await pilot.press("enter")
             assert screen._view_mode == "append"
+
+    asyncio.run(run())
+
+
+def test_do_command_in_screen(tmp_path):
+    async def run() -> None:
+        prg_path = tmp_path / "hello.prg"
+        prg_path.write_text('? "HELLO FROM PRG"')
+
+        # We need to ensure SafariBaseApp uses tmp_path as its working directory
+        # but SafariBaseApp(database_path=...) might be easier
+        db_path = tmp_path / "test.sqlite"
+        app = SafariBaseApp(database_path=db_path)
+
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            # Type "DO hello" and press enter
+            # We use f9 to ensure caps off if needed, but let's just type
+            for char in "do hello":
+                await pilot.press(char)
+            await pilot.press("enter")
+            await pilot.pause()
+
+            screen = app.screen
+            assert isinstance(screen, SafariBaseScreen)
+            title = screen.query_one("#workspace-title", Static).content
+            body = screen.query_one("#workspace-body", Static).content
+
+            assert "DO hello.prg" in title
+            assert "HELLO FROM PRG" in body
 
     asyncio.run(run())

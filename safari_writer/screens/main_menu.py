@@ -1,9 +1,7 @@
 """Main Menu screen — the hub for all Safari Writer operations."""
 
 from datetime import datetime
-from typing import cast
 
-from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
@@ -25,6 +23,14 @@ def _menu_label_suffix(key: str, text: str) -> str:
     return " " + text
 
 
+def _menu_items(definitions: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
+    """Return exported menu items using the legacy label-suffix format."""
+    return [
+        (key, _menu_label_suffix(key, text), action)
+        for key, text, action in definitions
+    ]
+
+
 # Column 1: Words
 _COL1_DEFS = [
     ("C", "Create File", "create"),
@@ -39,7 +45,6 @@ _COL1_DEFS = [
 
 # Column 2: DOS
 _COL2_DEFS = [
-    ("O", "Open Safari DOS", "safari_dos"),
     ("1", "Index Current Folder", "index1"),
     ("2", "Index External Drive", "index2"),
     ("K", "Backup & Restore", "backup_restore"),
@@ -53,6 +58,7 @@ _COL2_DEFS = [
 
 # Column 3: Tools
 _COL3_DEFS = [
+    ("O", "Open Safari DOS", "safari_dos"),
     ("B", "Base (Address Book)", "safari_base"),
     ("H", "Help Chat", "safari_chat"),
     ("N", "Net Safari Fed", "safari_fed"),
@@ -61,6 +67,11 @@ _COL3_DEFS = [
     ("X", "Style Switcher", "style_switcher"),
     ("T", "Try Demo Mode", "demo"),
 ]
+
+COL1_ITEMS = _menu_items(_COL1_DEFS)
+COL2_ITEMS = _menu_items(_COL2_DEFS)
+COL3_ITEMS = _menu_items(_COL3_DEFS)
+MENU_ITEMS = COL1_ITEMS + COL2_ITEMS + COL3_ITEMS
 
 MENU_CSS = """
 MainMenuScreen {
@@ -151,12 +162,13 @@ MainMenuScreen {
 
 
 class MenuItem(Static):
-    def __init__(self, key: str, label: str, action: str) -> None:
+    def __init__(self, key: str, label: str, action: str = "") -> None:
         self.key_char = key
         self.label_text = label
         self.action_name = action
         super().__init__("", classes="menu-item")
         self._is_selected = False
+        self._update_markup()
 
     def set_selected(self, selected: bool) -> None:
         self._is_selected = selected
@@ -197,7 +209,7 @@ class MainMenuScreen(Screen):
         Binding("n", "menu_action('safari_fed')", "Open Safari Fed", show=False),
         Binding("r", "menu_action('safari_repl')", "Run Safari REPL", show=False),
         Binding("i", "menu_action('safari_reader')", "Library Reader", show=False),
-        Binding("w", "menu_action('safari_view')", "Atari Viewer", show=False),
+        Binding("w", "menu_action('safari_view')", "Image Viewer", show=False),
         Binding("x", "menu_action('style_switcher')", "Style Switcher", show=False),
         Binding("t", "menu_action('demo')", "Try Demo Mode", show=False),
         Binding("question_mark", "menu_action('doctor')", "Doctor", show=False),
@@ -260,7 +272,7 @@ class MainMenuScreen(Screen):
         # If in first column, wrap or stop? Stop at top.
         col1_len = len(_COL1_DEFS)
         col2_len = len(_COL2_DEFS)
-        col3_len = len(_COL3_DEFS)
+        # col3_len = len(_COL3_DEFS)
 
         if self._selected_index < col1_len:
             # Col 1
