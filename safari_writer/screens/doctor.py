@@ -13,6 +13,7 @@ from textual.app import ComposeResult
 from textual.containers import Container
 from textual.screen import Screen
 from textual.widgets import Static
+
 import safari_writer.locale_info as _locale_info
 
 
@@ -158,7 +159,8 @@ def gather_doctor_info(doc_language: str = "") -> str:
     lines.append("")
 
     # -- Locale (i18n) --
-    from safari_writer.locale_info import LANGUAGE, LOCALE, REGION, available_languages
+    from safari_writer.locale_info import (LANGUAGE, LOCALE, REGION,
+                                           available_languages)
 
     lines.append("[bold]Locale[/]")
     lines.append(f"  Detected:       {LOCALE}")

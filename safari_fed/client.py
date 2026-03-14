@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html import unescape
-import re
 from typing import Any, Mapping, cast
 
 from mastodon import Mastodon
 
-from safari_fed.config import (
-    MastodonIdentity,
-    load_default_identity,
-    load_mastodon_identities,
-)
+from safari_fed.config import (MastodonIdentity, load_default_identity,
+                               load_mastodon_identities)
 from safari_fed.state import FedPost
 
 __all__ = [

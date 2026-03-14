@@ -5,13 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import replace
 
-from safari_slides.model import (
-    Presentation,
-    PresentationMetadata,
-    RenderLine,
-    Slide,
-    SlideMetadata,
-)
+from safari_slides.model import (Presentation, PresentationMetadata,
+                                 RenderLine, Slide, SlideMetadata)
 
 __all__ = ["parse_slidemd"]
 
@@ -108,7 +103,8 @@ def _presentation_metadata(data: dict[str, str]) -> PresentationMetadata:
     extra = {
         key: value
         for key, value in data.items()
-        if key not in {"title", "author", "date", "theme", "aspect", "footer", "paginate"}
+        if key
+        not in {"title", "author", "date", "theme", "aspect", "footer", "paginate"}
     }
     return PresentationMetadata(
         title=data.get("title", ""),
@@ -126,7 +122,8 @@ def _slide_metadata(data: dict[str, str]) -> SlideMetadata:
     extra = {
         key: value
         for key, value in data.items()
-        if key not in {"layout", "background", "class", "transition", "footer", "autoplay"}
+        if key
+        not in {"layout", "background", "class", "transition", "footer", "autoplay"}
     }
     autoplay_raw = data.get("autoplay", "").strip()
     autoplay = int(autoplay_raw) if autoplay_raw.isdigit() else None
@@ -183,7 +180,9 @@ def _split_slide_sections(text: str) -> list[tuple[str, int, int]]:
         merged_sections.append((section_text, section_horizontal, section_vertical))
     if pending_metadata is not None:
         metadata_text, meta_horizontal, meta_vertical = pending_metadata
-        merged_sections.append((f"---\n{metadata_text}\n---", meta_horizontal, meta_vertical))
+        merged_sections.append(
+            (f"---\n{metadata_text}\n---", meta_horizontal, meta_vertical)
+        )
     return merged_sections
 
 
@@ -271,4 +270,3 @@ def _is_metadata_section(section_text: str) -> bool:
     if any(line.startswith(("#", "-", "*", "+", ">")) for line in lines):
         return False
     return bool(_parse_metadata("\n".join(lines)))
-

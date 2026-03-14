@@ -2,35 +2,23 @@
 
 from __future__ import annotations
 
-import safari_writer.locale_info as _locale_info
+from textual import events
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
-from textual import events
 
+import safari_writer.locale_info as _locale_info
 from safari_writer.file_types import HighlightProfile
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.mail_merge_db import MailMergeDB
+from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_CHAIN,
+                                          CTRL_EJECT, CTRL_ELONGATE,
+                                          CTRL_FOOTER, CTRL_FORM, CTRL_HEADER,
+                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
+                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
+                                          CTRL_UNDERLINE, TOGGLE_MARKERS)
 from safari_writer.state import AppState, GlobalFormat
-from safari_writer.screens.editor import (
-    CTRL_BOLD,
-    CTRL_UNDERLINE,
-    CTRL_CENTER,
-    CTRL_RIGHT,
-    CTRL_ELONGATE,
-    CTRL_SUPER,
-    CTRL_SUB,
-    CTRL_PARA,
-    CTRL_MERGE,
-    CTRL_HEADER,
-    CTRL_FOOTER,
-    CTRL_HEADING,
-    CTRL_EJECT,
-    CTRL_CHAIN,
-    CTRL_FORM,
-    TOGGLE_MARKERS,
-)
 
 
 def _(s: str) -> str:
@@ -92,7 +80,8 @@ class PrintScreen(ModalScreen[str | None]):
             yield Static("[bold underline]A[/]  ANSI Preview", classes="print-option")
             if self.highlight_profile != HighlightProfile.MARKDOWN:
                 yield Static(
-                    "[bold underline]M[/]  Export to Markdown (.md)", classes="print-option"
+                    "[bold underline]M[/]  Export to Markdown (.md)",
+                    classes="print-option",
                 )
             yield Static(
                 "[bold underline]P[/]  Export to PostScript (.ps)",
@@ -207,7 +196,6 @@ class PrintPreviewScreen(Screen):
         )
         self._total_pages = _count_pages(self._rendered_lines)
         self._update_view()
-
 
     def _update_view(self) -> None:
         height = max(1, self.size.height - 2)  # minus header + footer
@@ -350,7 +338,8 @@ class TootPreviewScreen(ModalScreen[bool]):
         self._run_spellcheck()
 
     def _run_spellcheck(self) -> None:
-        from safari_writer.proofing import make_checker, extract_words, check_word
+        from safari_writer.proofing import (check_word, extract_words,
+                                            make_checker)
 
         checker = make_checker(self._doc_language)
         lines = self._text.splitlines()

@@ -9,10 +9,14 @@ from safari_writer.state import AppState
 
 def test_writer_preview_pushes_slide_screen(monkeypatch) -> None:
     app = SafariWriterApp(
-        state=AppState(buffer=["# Intro", "", "---", "", "## End"], filename="deck.slides.md")
+        state=AppState(
+            buffer=["# Intro", "", "---", "", "## End"], filename="deck.slides.md"
+        )
     )
     pushed: list[object] = []
-    monkeypatch.setattr(app, "push_screen", lambda screen, callback=None: pushed.append(screen))
+    monkeypatch.setattr(
+        app, "push_screen", lambda screen, callback=None: pushed.append(screen)
+    )
 
     app._action_preview_slides()
 

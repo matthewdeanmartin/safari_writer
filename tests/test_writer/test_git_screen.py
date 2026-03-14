@@ -4,22 +4,15 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from safari_writer.screens.git_screen import (
-    _find_repo_root,
-    _git_add_all,
-    _git_commit,
-    _git_log,
-    _git_pull,
-    _git_push,
-    _git_status,
-    _remote_url,
-    GitPublishScreen,
-)
-
+from safari_writer.screens.git_screen import (GitPublishScreen,
+                                              _find_repo_root, _git_add_all,
+                                              _git_commit, _git_log, _git_pull,
+                                              _git_push, _git_status,
+                                              _remote_url)
 
 # ---------------------------------------------------------------------------
 # Helpers

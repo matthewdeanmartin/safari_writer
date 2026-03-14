@@ -145,7 +145,10 @@ class SafariSlidesMainScreen(Screen):
             if line.fragment_order and line.fragment_order > self.state.fragment_step:
                 continue
             text = line.text
-            if not visible_lines and text.strip().lstrip("#").strip().lower() == trimmed_title:
+            if (
+                not visible_lines
+                and text.strip().lstrip("#").strip().lower() == trimmed_title
+            ):
                 continue
             visible_lines.append(text)
         lines = [slide.title, "=" * len(slide.title), ""]
@@ -172,4 +175,3 @@ class SafariSlidesMainScreen(Screen):
         if footer:
             return f"{footer}  |{hints}"
         return hints
-

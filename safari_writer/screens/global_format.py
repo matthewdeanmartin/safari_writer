@@ -1,14 +1,15 @@
 """Global Format screen — master document layout parameter editor."""
 
 from dataclasses import dataclass
+
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual import events
 from textual.screen import Screen
 from textual.widgets import Static
 
-from safari_writer.state import AppState, GlobalFormat
 import safari_writer.locale_info as _locale_info
+from safari_writer.state import AppState, GlobalFormat
 
 
 def _(s: str) -> str:

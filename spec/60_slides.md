@@ -2,15 +2,15 @@ Below is a **compact but complete specification** for a **Markdown-based slide f
 
 The design goal is:
 
-* Easy for humans to write
-* Mostly valid Markdown
-* Compatible with common conventions (Reveal.js, Pandoc, Marp style ideas)
-* Works well in Git repositories
-* Minimal special syntax
+- Easy for humans to write
+- Mostly valid Markdown
+- Compatible with common conventions (Reveal.js, Pandoc, Marp style ideas)
+- Works well in Git repositories
+- Minimal special syntax
 
 This spec will be referred to as **SlideMD**.
 
----
+______________________________________________________________________
 
 # SlideMD Specification
 
@@ -18,23 +18,27 @@ This spec will be referred to as **SlideMD**.
 
 Version: 0.1
 
----
+______________________________________________________________________
 
 # 1. Design Goals
 
 SlideMD aims to:
 
 1. Allow slide decks to be written entirely in Markdown.
-2. Preserve readability in raw text.
-3. Require minimal syntax beyond standard Markdown.
-4. Follow familiar conventions used in tools like:
 
-   * Reveal.js
-   * Pandoc
-   * Marp
-5. Support speaker notes, layouts, fragments, and metadata.
+1. Preserve readability in raw text.
 
----
+1. Require minimal syntax beyond standard Markdown.
+
+1. Follow familiar conventions used in tools like:
+
+   - Reveal.js
+   - Pandoc
+   - Marp
+
+1. Support speaker notes, layouts, fragments, and metadata.
+
+______________________________________________________________________
 
 # 2. File Structure
 
@@ -62,7 +66,7 @@ Welcome to the talk
 - Q&A
 ```
 
----
+______________________________________________________________________
 
 # 3. Slide Types
 
@@ -108,7 +112,7 @@ Detail A
 Detail B
 ```
 
----
+______________________________________________________________________
 
 # 4. Presentation Metadata
 
@@ -130,17 +134,17 @@ aspect: 16:9
 
 Common fields:
 
-| Field    | Meaning            |
+| Field | Meaning |
 | -------- | ------------------ |
-| title    | Presentation title |
-| author   | Presenter name     |
-| date     | Date               |
-| theme    | Visual theme       |
-| aspect   | 16:9 or 4:3        |
-| footer   | Footer text        |
+| title | Presentation title |
+| author | Presenter name |
+| date | Date |
+| theme | Visual theme |
+| aspect | 16:9 or 4:3 |
+| footer | Footer text |
 | paginate | Show slide numbers |
 
----
+______________________________________________________________________
 
 # 5. Slide Metadata
 
@@ -161,15 +165,15 @@ class: center
 
 Supported attributes:
 
-| Attribute  | Meaning          |
+| Attribute | Meaning |
 | ---------- | ---------------- |
-| layout     | Slide layout     |
+| layout | Slide layout |
 | background | Image background |
-| class      | CSS classes      |
+| class | CSS classes |
 | transition | Slide transition |
-| notes      | Speaker notes    |
+| notes | Speaker notes |
 
----
+______________________________________________________________________
 
 # 6. Speaker Notes
 
@@ -201,7 +205,7 @@ Speaker text
 
 Notes are **not visible to the audience**.
 
----
+______________________________________________________________________
 
 # 7. Fragments (Step-by-Step Reveals)
 
@@ -234,7 +238,7 @@ Alternative shorthand:
 
 Where `+` indicates fragment reveal.
 
----
+______________________________________________________________________
 
 # 8. Layout Blocks
 
@@ -267,7 +271,7 @@ Example:
 :::
 ```
 
----
+______________________________________________________________________
 
 # 9. Image Slides
 
@@ -291,7 +295,7 @@ or
 ![](diagram.png){width=80%}
 ```
 
----
+______________________________________________________________________
 
 # 10. Code Blocks
 
@@ -349,7 +353,7 @@ Recommended pattern:
 
 ```
 
----
+______________________________________________________________________
 
 ## layout: title
 
@@ -374,8 +378,8 @@ Matthew Martin
 
 # Left
 
-* Item
-* Item
+- Item
+- Item
   :::
 
 ::: column
@@ -447,7 +451,7 @@ Example:
 
 ```
 
----
+______________________________________________________________________
 
 ## footer: Safari Writer Project
 
@@ -459,7 +463,7 @@ Override per slide:
 
 ```
 
----
+______________________________________________________________________
 
 ## footer: Confidential
 
@@ -473,7 +477,7 @@ Slides may specify auto-advance.
 
 ```
 
----
+______________________________________________________________________
 
 ## autoplay: 10
 
@@ -521,31 +525,27 @@ SlideMD is intended to render to:
 
 ```
 
----
+______________________________________________________________________
 
-title: Safari Writer
-author: Matthew Martin
-theme: retro
-aspect: 4:3
------------
+## title: Safari Writer author: Matthew Martin theme: retro aspect: 4:3
 
 # Safari Writer
 
 Retro Word Processing
 
----
+______________________________________________________________________
 
 # Why Markdown?
 
-* Simple
-* Git friendly <!-- fragment -->
-* Easy to write <!-- fragment -->
+- Simple
+- Git friendly <!-- fragment -->
+- Easy to write <!-- fragment -->
 
 Note:
 
 Mention how documentation teams already use Markdown.
 
----
+______________________________________________________________________
 
 ::: columns
 
@@ -553,20 +553,20 @@ Mention how documentation teams already use Markdown.
 
 ### Good
 
-* Plain text
-* Diff friendly
+- Plain text
+- Diff friendly
   :::
 
 ::: column
 
 ### Bad
 
-* Not WYSIWYG
+- Not WYSIWYG
   :::
 
 :::
 
----
+______________________________________________________________________
 
 # Thank You
 
@@ -600,3 +600,4 @@ SlideMD does **not attempt to replicate PowerPoint features like**:
 - embedded charts
 
 The focus is **text-first presentations**.
+```

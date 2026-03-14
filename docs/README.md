@@ -14,15 +14,15 @@ pipx install safari-writer
 safari-writer
 ```
 
-Follow the menus. 
+Follow the menus.
 
 ## Features
 
-- Text editor. 
+- Text editor.
   - Keybindings mostly modern, but somewhat influence by original Atari.
   - Search and replace
   - Style codes/printer codes
-- Print/export. Prints/exports to markdown, ANSI preview or postscript. 
+- Print/export. Prints/exports to markdown, ANSI preview or postscript.
 - Proofreader, a spell checker
 - Mailmerge, including a record editor with a default schema.
 - Safari DOS, a menu'ed way to do some file browsing and manipulation
@@ -31,7 +31,7 @@ Follow the menus.
 
 - Clippy helper, but based more on Eliza.
 - An xbase III style alternative user interface for the mail merge data file.
-- Maybe support for the old binary format of Atari Writer files. 
+- Maybe support for the old binary format of Atari Writer files.
 
 ## Trademarks and stuff
 

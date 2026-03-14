@@ -43,14 +43,12 @@ def _quote_identifier(identifier: str) -> str:
 def list_tables(connection: sqlite3.Connection) -> list[str]:
     """Return user tables in display order."""
 
-    rows = connection.execute(
-        """
+    rows = connection.execute("""
         SELECT name
         FROM sqlite_master
         WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
         ORDER BY name COLLATE NOCASE
-        """
-    ).fetchall()
+        """).fetchall()
     return [str(name) for (name,) in rows]
 
 
@@ -159,9 +157,7 @@ def ensure_database(database_path: Path | None = None) -> BaseSession:
         _create_default_table(connection)
         tables = list_tables(connection)
 
-    current_table = (
-        DEFAULT_TABLE_NAME if DEFAULT_TABLE_NAME in tables else tables[0]
-    )
+    current_table = DEFAULT_TABLE_NAME if DEFAULT_TABLE_NAME in tables else tables[0]
     return BaseSession(
         connection=connection,
         database_path=database_path,

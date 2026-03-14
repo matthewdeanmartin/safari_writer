@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from textual import events
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Static
-from textual import events
 
 PREVIEW_CSS = """
 OutputScreen {

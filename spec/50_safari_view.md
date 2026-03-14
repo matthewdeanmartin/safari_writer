@@ -9,90 +9,91 @@
 
 SafariView is a retro-styled image viewer that feels like an 8-bit Atari application, but runs on modern systems. It presents a menu-driven interface, keyboard-centric controls, bold old-school chrome, and mode-based image rendering that emulates three visual eras:
 
-* **2600 mode** — very chunky pixels, tiny palette, aggressively stylized
-* **800 mode** — Atari 8-bit inspired look, limited palette and visible blockiness
-* **ST mode** — cleaner and more detailed, but still retro and constrained
+- **2600 mode** — very chunky pixels, tiny palette, aggressively stylized
+- **800 mode** — Atari 8-bit inspired look, limited palette and visible blockiness
+- **ST mode** — cleaner and more detailed, but still retro and constrained
 
 The app has two front ends:
 
-* **Terminal UI**
+- **Terminal UI**
 
-  * Primary retro shell and file browser
-  * Can display images inline when the terminal supports graphics protocols
-  * Falls back to colored block-art / text-mode rendering otherwise
-* **Tkinter UI**
+  - Primary retro shell and file browser
+  - Can display images inline when the terminal supports graphics protocols
+  - Falls back to colored block-art / text-mode rendering otherwise
 
-  * Same menus, themes, and behaviors
-  * Uses a normal window to show the image at better fidelity
-  * Not constrained by terminal cell geometry
+- **Tkinter UI**
+
+  - Same menus, themes, and behaviors
+  - Uses a normal window to show the image at better fidelity
+  - Not constrained by terminal cell geometry
 
 This split is practical because terminal image support is fragmented. Some terminals support real inline raster graphics through Kitty protocol, iTerm2 inline images, or Sixel, while others require character-cell rendering. Python libraries such as `term-image` support protocol detection and fallback rendering, and Pillow is the right baseline library for decoding and transforming images. ([PyPI][1])
 
----
+______________________________________________________________________
 
 ## 2. Design goals
 
 1. **Retro first**
 
-   * Should feel like launching a serious 1980s productivity/viewer app.
-   * Menu bar, dialog boxes, shortcut hints, status line, help screens.
+   - Should feel like launching a serious 1980s productivity/viewer app.
+   - Menu bar, dialog boxes, shortcut hints, status line, help screens.
 
-2. **Actually useful**
+1. **Actually useful**
 
-   * Open common modern image formats through third-party libraries.
-   * Browse directories, preview files, zoom, pan, slideshow, metadata summary.
+   - Open common modern image formats through third-party libraries.
+   - Browse directories, preview files, zoom, pan, slideshow, metadata summary.
 
-3. **Cross-platform**
+1. **Cross-platform**
 
-   * Windows, macOS, Linux.
-   * Must function even on terminals with no inline image support.
+   - Windows, macOS, Linux.
+   - Must function even on terminals with no inline image support.
 
-4. **Faithful visual modes**
+1. **Faithful visual modes**
 
-   * The image is not merely resized; it is transformed into a retro display style.
+   - The image is not merely resized; it is transformed into a retro display style.
 
-5. **Same mental model in both front ends**
+1. **Same mental model in both front ends**
 
-   * Terminal and Tkinter versions share command names, menus, and rendering modes.
+   - Terminal and Tkinter versions share command names, menus, and rendering modes.
 
-6. **Safety and simplicity**
+1. **Safety and simplicity**
 
-   * Read-only viewer.
-   * No destructive file actions in v1.
+   - Read-only viewer.
+   - No destructive file actions in v1.
 
----
+______________________________________________________________________
 
 ## 3. Non-goals
 
-* Not a paint program
-* Not a photo editor
-* Not a pixel-perfect emulator of real Atari hardware registers
-* Not a game engine
-* Not a file manager beyond lightweight browsing
-* Not dependent on one specific terminal emulator
+- Not a paint program
+- Not a photo editor
+- Not a pixel-perfect emulator of real Atari hardware registers
+- Not a game engine
+- Not a file manager beyond lightweight browsing
+- Not dependent on one specific terminal emulator
 
----
+______________________________________________________________________
 
 ## 4. User experience summary
 
 The user launches SafariView and sees:
 
-* a top title bar
-* a menu bar with pull-down menus
-* a left pane or full-screen file list
-* a preview/status area
-* a bottom command bar with key hints
+- a top title bar
+- a menu bar with pull-down menus
+- a left pane or full-screen file list
+- a preview/status area
+- a bottom command bar with key hints
 
 When opening an image, the user selects one of these views:
 
-* **View in 2600 Mode**
-* **View in 800 Mode**
-* **View in ST Mode**
-* **View in Native Mode** (Tkinter only, optional but useful)
+- **View in 2600 Mode**
+- **View in 800 Mode**
+- **View in ST Mode**
+- **View in Native Mode** (Tkinter only, optional but useful)
 
 In terminal mode, if inline image rendering is supported, the image appears directly in the app area. If not, the app renders a terminal-friendly approximation using Unicode blocks and color. `term-image` and related tools exist specifically to bridge those differences, and terminals differ a lot in protocol support. Kitty documents a full graphics protocol, iTerm2 documents inline images, and modern tools like `timg` explicitly fall back to block-based rendering where needed. ([PyPI][1])
 
----
+______________________________________________________________________
 
 ## 5. Target architecture
 
@@ -100,25 +101,25 @@ In terminal mode, if inline image rendering is supported, the image appears dire
 
 A common Python package should contain:
 
-* configuration
-* theme definitions
-* menu definitions
-* file browsing logic
-* image loading
-* image transformation pipeline
-* retro mode quantization/downsampling rules
-* keyboard command map
-* metadata extraction
-* slideshow logic
+- configuration
+- theme definitions
+- menu definitions
+- file browsing logic
+- image loading
+- image transformation pipeline
+- retro mode quantization/downsampling rules
+- keyboard command map
+- metadata extraction
+- slideshow logic
 
 ## 5.2 Terminal frontend
 
 Recommended implementation approach:
 
-* **Textual** for layout, widgets, menus, panes, keyboard handling, dialogs
-* **Rich** for styled text and panels
-* **term-image** or equivalent for inline image display when possible
-* fallback character-cell renderer when true image display is unavailable
+- **Textual** for layout, widgets, menus, panes, keyboard handling, dialogs
+- **Rich** for styled text and panels
+- **term-image** or equivalent for inline image display when possible
+- fallback character-cell renderer when true image display is unavailable
 
 Textual is cross-platform and intended for sophisticated terminal apps. `term-image` supports multiple render styles and multiple terminal graphics protocols, including Kitty and iTerm2, with automatic support detection. ([Textual Documentation][2])
 
@@ -126,47 +127,49 @@ Textual is cross-platform and intended for sophisticated terminal apps. `term-im
 
 Recommended implementation approach:
 
-* standard `tkinter`
-* Pillow + `ImageTk.PhotoImage` for rendering images in a canvas or label
-* menu bar mirrored from terminal version
-* resize-aware image panel
+- standard `tkinter`
+- Pillow + `ImageTk.PhotoImage` for rendering images in a canvas or label
+- menu bar mirrored from terminal version
+- resize-aware image panel
 
 Pillow’s `ImageTk` module exists specifically to bridge PIL images into Tkinter image objects. ([Pillow (PIL Fork)][3])
 
----
+______________________________________________________________________
 
 ## 6. Third-party libraries
 
 ## 6.1 Required
 
-* **Pillow**
+- **Pillow**
 
-  * image decoding
-  * resizing
-  * palette conversion
-  * dithering
-  * metadata access
-  * supports many common raster formats. ([Pillow (PIL Fork)][4])
+  - image decoding
+  - resizing
+  - palette conversion
+  - dithering
+  - metadata access
+  - supports many common raster formats. ([Pillow (PIL Fork)][4])
 
 ## 6.2 Recommended
 
-* **Textual**
+- **Textual**
 
-  * terminal app framework
-* **Rich**
+  - terminal app framework
 
-  * text styling
-* **term-image**
+- **Rich**
 
-  * terminal graphics protocol support and fallback render styles. ([PyPI][1])
+  - text styling
+
+- **term-image**
+
+  - terminal graphics protocol support and fallback render styles. ([PyPI][1])
 
 ## 6.3 Optional
 
-* image format helpers that Pillow can use indirectly
-* watchdog for live directory refresh
-* platformdirs for config paths
+- image format helpers that Pillow can use indirectly
+- watchdog for live directory refresh
+- platformdirs for config paths
 
----
+______________________________________________________________________
 
 ## 7. Terminal capability reality
 
@@ -174,11 +177,11 @@ This matters for the spec.
 
 Modern terminals do **not** all support image display the same way:
 
-* **Kitty** supports a full graphics protocol. ([Kovid's Software Projects][5])
-* **iTerm2** supports inline images. ([iterm2.com][6])
-* **Some terminals support Sixel**, and current discussions and ecosystem references indicate support is spreading, including to modern terminals. However, support is still uneven enough that it should not be the only path. ([GitHub][7])
-* Tools like `timg` are explicit that they use full-resolution graphics when supported and otherwise fall back to Unicode/24-bit color rendering. ([GitHub][8])
-* `term-image` also notes only partial Windows support in some configurations. ([PyPI][9])
+- **Kitty** supports a full graphics protocol. ([Kovid's Software Projects][5])
+- **iTerm2** supports inline images. ([iterm2.com][6])
+- **Some terminals support Sixel**, and current discussions and ecosystem references indicate support is spreading, including to modern terminals. However, support is still uneven enough that it should not be the only path. ([GitHub][7])
+- Tools like `timg` are explicit that they use full-resolution graphics when supported and otherwise fall back to Unicode/24-bit color rendering. ([GitHub][8])
+- `term-image` also notes only partial Windows support in some configurations. ([PyPI][9])
 
 ### Spec conclusion
 
@@ -186,17 +189,19 @@ SafariView terminal mode must support **three rendering tiers**:
 
 1. **Protocol image mode**
 
-   * Kitty / iTerm2 / Sixel when available
-2. **High-color cell mode**
+   - Kitty / iTerm2 / Sixel when available
 
-   * Unicode half-block / full-block rendering with 24-bit color
-3. **Low-fidelity text mode**
+1. **High-color cell mode**
 
-   * plain ASCII / reduced color fallback for hostile environments
+   - Unicode half-block / full-block rendering with 24-bit color
+
+1. **Low-fidelity text mode**
+
+   - plain ASCII / reduced color fallback for hostile environments
 
 This keeps the app usable everywhere.
 
----
+______________________________________________________________________
 
 ## 8. Visual identity
 
@@ -204,35 +209,35 @@ This keeps the app usable everywhere.
 
 The application chrome should evoke Atari-era software:
 
-* strong borders
-* inverse-video menu selection
-* title bar
-* blocky labels
-* all-caps menu names by default
-* bright accent colors on dark backgrounds
-* optional phosphor-ish palettes
+- strong borders
+- inverse-video menu selection
+- title bar
+- blocky labels
+- all-caps menu names by default
+- bright accent colors on dark backgrounds
+- optional phosphor-ish palettes
 
 Suggested default palettes:
 
-* **Blue Theme**: dark blue background, light cyan text
-* **Green Screen Theme**: black background, green text
-* **Amber Theme**: black background, amber text
-* **ST Desktop Theme**: light background with darker UI framing
+- **Blue Theme**: dark blue background, light cyan text
+- **Green Screen Theme**: black background, green text
+- **Amber Theme**: black background, amber text
+- **ST Desktop Theme**: light background with darker UI framing
 
 ## 8.2 Typography
 
 Terminal:
 
-* use terminal font
-* assume monospace
-* avoid dependence on box-drawing behavior that fails in some environments without fallback
+- use terminal font
+- assume monospace
+- avoid dependence on box-drawing behavior that fails in some environments without fallback
 
 Tkinter:
 
-* use a monospace font by default for chrome
-* image area is not monospace-constrained
+- use a monospace font by default for chrome
+- image area is not monospace-constrained
 
----
+______________________________________________________________________
 
 ## 9. Main screens
 
@@ -240,53 +245,53 @@ Tkinter:
 
 Displays:
 
-* app title
-* subtitle like “RETRO IMAGE VIEWER”
-* version
-* short loading text
-* optional rotating hint
+- app title
+- subtitle like “RETRO IMAGE VIEWER”
+- version
+- short loading text
+- optional rotating hint
 
 ## 9.2 Main browser screen
 
 Contains:
 
-* top menu bar
-* current path
-* file list
-* filter indicator
-* preview metadata pane
-* status line
+- top menu bar
+- current path
+- file list
+- filter indicator
+- preview metadata pane
+- status line
 
 ## 9.3 Viewer screen
 
 Contains:
 
-* image viewport
-* current render mode
-* zoom level
-* palette/dither indicator
-* file name
-* dimensions
-* help strip at bottom
+- image viewport
+- current render mode
+- zoom level
+- palette/dither indicator
+- file name
+- dimensions
+- help strip at bottom
 
 ## 9.4 Help screen
 
 Contains:
 
-* keys
-* render mode descriptions
-* terminal capability explanation
-* supported formats
+- keys
+- render mode descriptions
+- terminal capability explanation
+- supported formats
 
 ## 9.5 About screen
 
 Contains:
 
-* app description
-* libraries used
-* detected capabilities
+- app description
+- libraries used
+- detected capabilities
 
----
+______________________________________________________________________
 
 ## 10. Menus
 
@@ -294,52 +299,52 @@ Suggested top-level menus:
 
 ### FILE
 
-* OPEN IMAGE
-* OPEN FOLDER
-* RECENT FILES
-* RESCAN DIRECTORY
-* IMAGE INFO
-* EXIT
+- OPEN IMAGE
+- OPEN FOLDER
+- RECENT FILES
+- RESCAN DIRECTORY
+- IMAGE INFO
+- EXIT
 
 ### VIEW
 
-* VIEW 2600 MODE
-* VIEW 800 MODE
-* VIEW ST MODE
-* VIEW NATIVE MODE
-* ZOOM IN
-* ZOOM OUT
-* FIT TO WINDOW
-* ACTUAL SIZE
-* TOGGLE PIXEL GRID
-* FULL SCREEN
+- VIEW 2600 MODE
+- VIEW 800 MODE
+- VIEW ST MODE
+- VIEW NATIVE MODE
+- ZOOM IN
+- ZOOM OUT
+- FIT TO WINDOW
+- ACTUAL SIZE
+- TOGGLE PIXEL GRID
+- FULL SCREEN
 
 ### BROWSE
 
-* NEXT IMAGE
-* PREVIOUS IMAGE
-* FIRST IMAGE
-* LAST IMAGE
-* GO TO FILE
-* FILTER BY EXTENSION
+- NEXT IMAGE
+- PREVIOUS IMAGE
+- FIRST IMAGE
+- LAST IMAGE
+- GO TO FILE
+- FILTER BY EXTENSION
 
 ### OPTIONS
 
-* THEME
-* DITHERING
-* PALETTE VARIANT
-* TERMINAL RENDERING MODE
-* SLIDESHOW DELAY
-* SHOW HIDDEN FILES
+- THEME
+- DITHERING
+- PALETTE VARIANT
+- TERMINAL RENDERING MODE
+- SLIDESHOW DELAY
+- SHOW HIDDEN FILES
 
 ### HELP
 
-* KEYBOARD HELP
-* RENDER MODES
-* TERMINAL SUPPORT
-* ABOUT
+- KEYBOARD HELP
+- RENDER MODES
+- TERMINAL SUPPORT
+- ABOUT
 
----
+______________________________________________________________________
 
 ## 11. Keyboard model
 
@@ -347,28 +352,28 @@ The app should be completely keyboard-usable.
 
 Suggested bindings:
 
-* `Left/Right/Up/Down` — navigate file list or pan image
-* `Enter` — open selected file
-* `Esc` — back/cancel/close menu
-* `Tab` — switch pane
-* `F1` — help
-* `F2` — file browser
-* `F3` — 2600 mode
-* `F4` — 800 mode
-* `F5` — ST mode
-* `F6` — native mode
-* `+` / `-` — zoom in/out
-* `[` / `]` — previous/next image
-* `D` — toggle dithering
-* `P` — cycle palette
-* `G` — toggle pixel grid
-* `S` — start/stop slideshow
-* `I` — image info
-* `Q` — quit
+- `Left/Right/Up/Down` — navigate file list or pan image
+- `Enter` — open selected file
+- `Esc` — back/cancel/close menu
+- `Tab` — switch pane
+- `F1` — help
+- `F2` — file browser
+- `F3` — 2600 mode
+- `F4` — 800 mode
+- `F5` — ST mode
+- `F6` — native mode
+- `+` / `-` — zoom in/out
+- `[` / `]` — previous/next image
+- `D` — toggle dithering
+- `P` — cycle palette
+- `G` — toggle pixel grid
+- `S` — start/stop slideshow
+- `I` — image info
+- `Q` — quit
 
 Tkinter should preserve these as far as practical.
 
----
+______________________________________________________________________
 
 ## 12. Supported file formats
 
@@ -376,24 +381,24 @@ SafariView should support whatever Pillow can decode reliably, with PNG, JPEG, G
 
 ### v1 required
 
-* PNG
-* JPEG
-* GIF
-* BMP
+- PNG
+- JPEG
+- GIF
+- BMP
 
 ### v1 desirable
 
-* TIFF
-* WebP
+- TIFF
+- WebP
 
 ### v1 out of scope
 
-* vector graphics as first-class citizens
-* video
+- vector graphics as first-class citizens
+- video
 
 Animated GIF support may be shown frame-by-frame later, but is optional for v1.
 
----
+______________________________________________________________________
 
 ## 13. Rendering modes
 
@@ -402,17 +407,17 @@ Animated GIF support may be shown frame-by-frame later, but is optional for v1.
 Each retro mode applies a pipeline:
 
 1. load source image
-2. rotate based on metadata if desired
-3. crop or fit
-4. downsample to target logical resolution
-5. reduce palette
-6. optionally dither
-7. scale to display target
-8. render via terminal or Tkinter backend
+1. rotate based on metadata if desired
+1. crop or fit
+1. downsample to target logical resolution
+1. reduce palette
+1. optionally dither
+1. scale to display target
+1. render via terminal or Tkinter backend
 
 The result must preserve the *aesthetic* of the chosen mode, not literal hardware behavior.
 
----
+______________________________________________________________________
 
 ## 13.2 2600 mode
 
@@ -420,23 +425,23 @@ Intent: exaggerated, chunky, dramatic, almost toy-like.
 
 Characteristics:
 
-* extremely low logical resolution
-* big visible pixels
-* very limited color palette
-* strong posterization
-* optional scanline feel
-* aggressive dithering allowed
+- extremely low logical resolution
+- big visible pixels
+- very limited color palette
+- strong posterization
+- optional scanline feel
+- aggressive dithering allowed
 
 Suggested default:
 
-* downsample to something tiny such as 40–80 logical pixels wide depending on viewport
-* palette restricted to a curated retro set
-* optional horizontal exaggeration to mimic old display weirdness
-* nearest-neighbor upscale only
+- downsample to something tiny such as 40–80 logical pixels wide depending on viewport
+- palette restricted to a curated retro set
+- optional horizontal exaggeration to mimic old display weirdness
+- nearest-neighbor upscale only
 
 This mode should look fun before it looks accurate.
 
----
+______________________________________________________________________
 
 ## 13.3 800 mode
 
@@ -444,20 +449,20 @@ Intent: richer than 2600, still obviously 8-bit.
 
 Characteristics:
 
-* more detail than 2600
-* palette-limited
-* visible blockiness
-* can include mode presets
+- more detail than 2600
+- palette-limited
+- visible blockiness
+- can include mode presets
 
 Suggested presets:
 
-* **800 GR.7-ish**
-* **800 GR.8-ish monochrome**
-* **800 colorful mixed mode look**
+- **800 GR.7-ish**
+- **800 GR.8-ish monochrome**
+- **800 colorful mixed mode look**
 
 The app does not need true hardware mode simulation, but should offer a few recognizable “personalities.”
 
----
+______________________________________________________________________
 
 ## 13.4 ST mode
 
@@ -465,15 +470,15 @@ Intent: cleaner, sharper, more late-80s desktop.
 
 Characteristics:
 
-* higher logical resolution
-* less aggressive chunking
-* reduced but broader palette
-* more faithful image composition
-* optional low/medium/high style presets
+- higher logical resolution
+- less aggressive chunking
+- reduced but broader palette
+- more faithful image composition
+- optional low/medium/high style presets
 
 This is the best retro mode for actually viewing photos or illustrations in a useful way.
 
----
+______________________________________________________________________
 
 ## 13.5 Native mode
 
@@ -481,10 +486,10 @@ Tkinter only, and optional in terminal where supported.
 
 Intent:
 
-* display the image without retro degradation
-* useful as a comparison mode
+- display the image without retro degradation
+- useful as a comparison mode
 
----
+______________________________________________________________________
 
 ## 14. Rendering backends
 
@@ -494,16 +499,16 @@ Used when terminal capability detection succeeds.
 
 Supports:
 
-* inline raster image output in supported terminals
-* fit-to-pane scaling
-* better fidelity than text-cell mode
+- inline raster image output in supported terminals
+- fit-to-pane scaling
+- better fidelity than text-cell mode
 
 Priority order:
 
 1. kitty graphics protocol
-2. iTerm2 inline images
-3. sixel
-4. fallback renderer
+1. iTerm2 inline images
+1. sixel
+1. fallback renderer
 
 This ordering may be configurable.
 
@@ -513,12 +518,12 @@ Used everywhere else.
 
 Techniques:
 
-* Unicode half blocks
-* full blocks
-* braille or shaded blocks optionally
-* 24-bit color where available
-* 256-color fallback
-* 16-color emergency fallback
+- Unicode half blocks
+- full blocks
+- braille or shaded blocks optionally
+- 24-bit color where available
+- 256-color fallback
+- 16-color emergency fallback
 
 This renderer must be deterministic and tested.
 
@@ -528,26 +533,30 @@ Displays the transformed PIL image in a resizable window or pane.
 
 Capabilities:
 
-* smooth resize
-* optional pixel-grid overlay
-* zoom and pan
-* better slideshow support
+- smooth resize
+- optional pixel-grid overlay
+- zoom and pan
+- better slideshow support
 
----
+______________________________________________________________________
 
 ## 15. Terminal capability detection
 
 On startup, SafariView should detect:
 
-* OS
-* terminal emulator hints from environment variables
-* color depth
-* Unicode capability assumptions
-* likely support for:
+- OS
 
-  * kitty graphics
-  * iTerm2 inline images
-  * sixel
+- terminal emulator hints from environment variables
+
+- color depth
+
+- Unicode capability assumptions
+
+- likely support for:
+
+  - kitty graphics
+  - iTerm2 inline images
+  - sixel
 
 The detection result should be viewable in **Help → Terminal Support**.
 
@@ -555,15 +564,15 @@ The user must be allowed to override auto-detection.
 
 Example override options:
 
-* FORCE BLOCK MODE
-* FORCE SIXEL
-* FORCE KITTY
-* FORCE ASCII
-* AUTO
+- FORCE BLOCK MODE
+- FORCE SIXEL
+- FORCE KITTY
+- FORCE ASCII
+- AUTO
 
 Because support is inconsistent, manual override is essential. `term-image` and similar tools already treat capability detection as a core feature. ([PyPI][1])
 
----
+______________________________________________________________________
 
 ## 16. File browser behavior
 
@@ -571,39 +580,39 @@ Because support is inconsistent, manual override is essential. `term-image` and 
 
 Show:
 
-* filename
-* type marker
-* size or dimensions when cheaply available
-* sort indicator
+- filename
+- type marker
+- size or dimensions when cheaply available
+- sort indicator
 
 ## 16.2 Sorting
 
 Support:
 
-* name
-* date
-* size
-* type
+- name
+- date
+- size
+- type
 
 ## 16.3 Filtering
 
 Support:
 
-* all files
-* known image files only
-* extension filter
+- all files
+- known image files only
+- extension filter
 
 ## 16.4 Preview behavior
 
 Selecting a file without opening it should show:
 
-* filename
-* dimensions if available
-* file size
-* format
-* modified date
+- filename
+- dimensions if available
+- file size
+- format
+- modified date
 
----
+______________________________________________________________________
 
 ## 17. Viewer behavior
 
@@ -611,26 +620,26 @@ Selecting a file without opening it should show:
 
 When an image is opened:
 
-* render in the current mode
-* fit to current viewport by default
-* update title/status bars
+- render in the current mode
+- fit to current viewport by default
+- update title/status bars
 
 ## 17.2 Navigation
 
 When browsing within a folder:
 
-* next/previous skips non-image files unless configured otherwise
-* wraparound optional
+- next/previous skips non-image files unless configured otherwise
+- wraparound optional
 
 ## 17.3 Zoom
 
 Support:
 
-* fit
-* 1x
-* 2x
-* 4x
-* custom step zoom
+- fit
+- 1x
+- 2x
+- 4x
+- custom step zoom
 
 For retro modes, zoom should preserve chunky nearest-neighbor scaling.
 
@@ -638,76 +647,76 @@ For retro modes, zoom should preserve chunky nearest-neighbor scaling.
 
 If zoomed beyond fit:
 
-* arrow keys pan
-* mouse drag in Tkinter optional
+- arrow keys pan
+- mouse drag in Tkinter optional
 
 ## 17.5 Slideshow
 
 Support:
 
-* start slideshow from current image
-* configurable delay
-* pause/resume
-* mode locked or per-image inherited
+- start slideshow from current image
+- configurable delay
+- pause/resume
+- mode locked or per-image inherited
 
----
+______________________________________________________________________
 
 ## 18. Dithering and palette rules
 
 Users should be able to choose:
 
-* no dithering
-* ordered dithering
-* Floyd–Steinberg or equivalent error diffusion
-* automatic per mode
+- no dithering
+- ordered dithering
+- Floyd–Steinberg or equivalent error diffusion
+- automatic per mode
 
 Users should also be able to select palette variants:
 
-* warm
-* cool
-* grayscale
-* “authentic-ish”
-* high contrast
+- warm
+- cool
+- grayscale
+- “authentic-ish”
+- high contrast
 
 The spec should allow palettes to be data-driven so new retro looks can be added without rewriting the pipeline.
 
----
+______________________________________________________________________
 
 ## 19. Metadata
 
 SafariView should expose light metadata:
 
-* format
-* width/height
-* mode
-* frame count if animated
-* file size
-* modified timestamp
+- format
+- width/height
+- mode
+- frame count if animated
+- file size
+- modified timestamp
 
 Optional future metadata:
 
-* EXIF summary
-* camera info
+- EXIF summary
+- camera info
 
----
+______________________________________________________________________
 
 ## 20. Configuration
 
 Config file should include:
 
-* default frontend
-* default render mode
-* theme
-* slideshow delay
-* last-opened folder
-* dithering default
-* palette default
-* terminal backend override
-* keybinding overrides
+- default frontend
+- default render mode
+- theme
+- slideshow delay
+- last-opened folder
+- dithering default
+- palette default
+- terminal backend override
+- keybinding overrides
 
 Use platform-appropriate config directories.
 
----
+______________________________________________________________________
 
 ## 21. Error handling
 
@@ -715,23 +724,23 @@ Errors should appear in retro dialog boxes.
 
 Cases:
 
-* unsupported file
-* corrupt image
-* permission denied
-* protocol rendering failure
-* terminal too small
-* missing optional dependency
+- unsupported file
+- corrupt image
+- permission denied
+- protocol rendering failure
+- terminal too small
+- missing optional dependency
 
 Behavior:
 
-* never crash to raw traceback in normal use
-* provide concise message
-* offer fallback when possible
+- never crash to raw traceback in normal use
+- provide concise message
+- offer fallback when possible
 
 Example:
 “INLINE IMAGE MODE FAILED. FALLING BACK TO BLOCK RENDERER.”
 
----
+______________________________________________________________________
 
 ## 22. Accessibility and usability
 
@@ -739,13 +748,13 @@ Even though the app is retro-themed, it should still be practical.
 
 Include:
 
-* high contrast themes
-* configurable key repeat sensitivity where relevant
-* option to reduce flashing
-* option to disable faux CRT effects
-* option to enlarge UI chrome in Tkinter
+- high contrast themes
+- configurable key repeat sensitivity where relevant
+- option to reduce flashing
+- option to disable faux CRT effects
+- option to enlarge UI chrome in Tkinter
 
----
+______________________________________________________________________
 
 ## 23. Proposed package layout
 
@@ -788,87 +797,87 @@ safariview/
   tests/
 ```
 
----
+______________________________________________________________________
 
 ## 24. Frontend parity requirements
 
 The two front ends must share:
 
-* same menu names
-* same mode names
-* same config
-* same render pipeline
-* same directory and image navigation rules
+- same menu names
+- same mode names
+- same config
+- same render pipeline
+- same directory and image navigation rules
 
 They may differ in:
 
-* actual image fidelity
-* mouse support
-* window resizing behavior
-* full-screen behavior
+- actual image fidelity
+- mouse support
+- window resizing behavior
+- full-screen behavior
 
----
+______________________________________________________________________
 
 ## 25. Suggested implementation phases
 
 ## Phase 1: core prototype
 
-* load images with Pillow
-* implement 2600/800/ST transforms
-* Tkinter proof of concept
-* save screenshots for comparison
+- load images with Pillow
+- implement 2600/800/ST transforms
+- Tkinter proof of concept
+- save screenshots for comparison
 
 ## Phase 2: terminal prototype
 
-* Textual shell
-* file browser
-* block-render fallback
-* status/help screens
+- Textual shell
+- file browser
+- block-render fallback
+- status/help screens
 
 ## Phase 3: protocol graphics
 
-* add `term-image`
-* capability detection
-* backend selection and override
+- add `term-image`
+- capability detection
+- backend selection and override
 
 ## Phase 4: polish
 
-* menus
-* dialogs
-* themes
-* slideshow
-* metadata panel
+- menus
+- dialogs
+- themes
+- slideshow
+- metadata panel
 
 ## Phase 5: packaging
 
-* cross-platform install
-* optional extras for terminal image support
+- cross-platform install
+- optional extras for terminal image support
 
----
+______________________________________________________________________
 
 ## 26. Acceptance criteria
 
 SafariView v1 is acceptable if:
 
 1. It runs on Windows, macOS, and Linux in at least one supported configuration.
-2. It can open common image formats via Pillow. ([Pillow (PIL Fork)][10])
-3. It has both terminal and Tkinter front ends.
-4. It offers 2600, 800, and ST visual modes.
-5. The terminal version works without inline graphics by using a cell renderer.
-6. The terminal version uses richer inline image protocols when available. ([PyPI][1])
-7. The UI is menu driven and keyboard navigable.
-8. The look and feel is recognizably retro.
+1. It can open common image formats via Pillow. ([Pillow (PIL Fork)][10])
+1. It has both terminal and Tkinter front ends.
+1. It offers 2600, 800, and ST visual modes.
+1. The terminal version works without inline graphics by using a cell renderer.
+1. The terminal version uses richer inline image protocols when available. ([PyPI][1])
+1. The UI is menu driven and keyboard navigable.
+1. The look and feel is recognizably retro.
 
----
+______________________________________________________________________
 
 ## 27. Recommendation
 
 For a real implementation, the safest stack is:
 
-* **Pillow** for image I/O and processing
-* **Textual** for terminal UI
-* **term-image** for terminal protocol display and fallback detection
-* **Tkinter + ImageTk** for desktop viewer
+- **Pillow** for image I/O and processing
+- **Textual** for terminal UI
+- **term-image** for terminal protocol display and fallback detection
+- **Tkinter + ImageTk** for desktop viewer
 
 That gives you the best balance of retro UI control, cross-platform behavior, and realistic terminal-image support today. ([PyPI][1])
 

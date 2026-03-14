@@ -226,3 +226,130 @@ msgstr "Nouvelle publication Mastodon"
 
 msgid "No Safari Fed session active"
 msgstr "Aucune session Safari Fed active"
+
+msgid "  Conversation turns: {turns}"
+msgstr "  Tours de conversation : {turns}"
+
+msgid "  Document: {doc}"
+msgstr "  Document : {doc}"
+
+msgid "  Topics loaded: {chunks}"
+msgstr "  Sujets chargés : {chunks}"
+
+msgid "*** BACKUP & RESTORE ***"
+msgstr "*** SAUVEGARDE ET RESTAURATION ***"
+
+msgid "*** DOS ***"
+msgstr "*** DOS ***"
+
+msgid "*** Tools ***"
+msgstr "*** Outils ***"
+
+msgid "*** Words ***"
+msgstr "*** Mots ***"
+
+msgid "=== SAFARI CHAT — KEY COMMANDS ==="
+msgstr "=== SAFARI CHAT — RACCOURCIS CLAVIER ==="
+
+msgid "CONVERSATION TREE"
+msgstr "ARBRE DE CONVERSATION"
+
+msgid "Execution cancelled"
+msgstr "Exécution annulée"
+
+msgid "Inserted slide break"
+msgstr "Saut de diapositive inséré"
+
+msgid "MEMORY"
+msgstr "MÉMOIRE"
+
+msgid "Macro cancelled"
+msgstr "Macro annulée"
+
+msgid "Macro ran: {name} (no output)"
+msgstr "Macro exécutée : {name} (aucune sortie)"
+
+msgid "Macro: {name} — {count} line(s) inserted"
+msgstr "Macro : {name} — {count} ligne(s) insérée(s)"
+
+msgid "No backup selected"
+msgstr "Aucune sauvegarde sélectionnée"
+
+msgid "No backups found."
+msgstr "Aucune sauvegarde trouvée."
+
+msgid "No conversation yet."
+msgstr "Aucune conversation pour le moment."
+
+msgid "No help document loaded."
+msgstr "Aucun document d'aide chargé."
+
+msgid "No runner available for this file type"
+msgstr "Aucun exécuteur disponible pour ce type de fichier"
+
+msgid "OPTIONS"
+msgstr "OPTIONS"
+
+msgid "PARSED TOPICS"
+msgstr "SUJETS ANALYSÉS"
+
+msgid "Press Escape to close"
+msgstr "Appuyez sur Échap pour fermer"
+
+msgid "Press Escape to close."
+msgstr "Appuyez sur Échap pour fermer."
+
+msgid "Program Input (use \\n for new lines)"
+msgstr "Entrée du programme (utilisez \\n pour les nouvelles lignes)"
+
+msgid "R=Resume editing  X=Discard  Esc=Back"
+msgstr "R=Reprendre l'édition  X=Ignorer  Échap=Retour"
+
+msgid "SAFETY"
+msgstr "SÉCURITÉ"
+
+msgid "SESSION INFO"
+msgstr "INFO SESSION"
+
+msgid "Start Safari Chat with a Markdown file:"
+msgstr "Démarrez Safari Chat avec un fichier Markdown :"
+
+msgid "TOPICS"
+msgstr "SUJETS"
+
+msgid "The conversation tree will appear here,"
+msgstr "L'arbre de conversation apparaîtra ici,"
+
+msgid "The document should be split into sections"
+msgstr "Le document doit être divisé en sections"
+
+msgid "Toot cancelled"
+msgstr "Publication annulée"
+
+msgid "Type a message at the USER> prompt"
+msgstr "Tapez un message à l'invite USER>"
+
+msgid "Unknown command: {cmd}. Try /help."
+msgstr "Commande inconnue : {cmd}. Essayez /help."
+
+msgid "Welcome. Type your question below."
+msgstr "Bienvenue. Tapez votre question ci-dessous."
+
+msgid "and branch structure."
+msgstr "et la structure des branches."
+
+msgid "and press Enter to start chatting."
+msgstr "et appuyez sur Entrée pour commencer à discuter."
+
+msgid "separated by --- lines."
+msgstr "séparées par des lignes ---."
+
+msgid "showing each turn with speaker, emotion,"
+msgstr "montrant chaque tour avec locuteur, émotion,"
+
+msgid " F1 Help | F2 Memory | ^T Topics | ^S Safety | ^O Options | ^Q Quit"
+msgstr " F1 Aide | F2 Mémoire | ^T Sujets | ^S Sécurité | ^O Options | ^Q Quitter"
+
+msgid " F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll"
+msgstr " F1 Aide  F2 Mémoire  ^T Sujets  ^S Sécurité  ^O Options  ^Q Quitter  PgUp/PgDn Défilement"
+

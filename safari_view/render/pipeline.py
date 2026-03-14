@@ -2,6 +2,7 @@
 SafariView Rendering Pipeline.
 Handles loading, transforming, and preparing images for different backends.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -63,16 +64,18 @@ class Pipeline:
         with Image.open(image_path) as img:
             # Handle orientation if needed (EXIF)
             img = self._prepare_image(img)
-            
+
             transformer = self.transformers.get(mode)
             if not transformer:
                 raise ValueError(f"No transformer for mode {mode}")
-            
+
             return transformer.transform(img, context)
 
     def _prepare_image(self, image: Image.Image) -> Image.Image:
         """Initial preparation (e.g., handles alpha by compositing onto solid background)."""
-        if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
+        if image.mode in ("RGBA", "LA") or (
+            image.mode == "P" and "transparency" in image.info
+        ):
             image = image.convert("RGBA")
             # Composite onto black to avoid junk colors from alpha-dropping
             background = Image.new("RGBA", image.size, (0, 0, 0, 255))

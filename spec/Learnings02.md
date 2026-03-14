@@ -27,8 +27,8 @@ So Safari Writer uses `Alt+H` for the replace prompt, and prompt editing only wa
 The editor needs three bottom rows to remain visible:
 
 1. message / prompt row
-2. status row
-3. help row
+1. status row
+1. help row
 
 If these are yielded as separate bottom-docked widgets, Textual docking order is easy to get wrong and bars can appear hidden or covered. The stable approach is:
 

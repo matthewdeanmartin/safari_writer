@@ -4,7 +4,7 @@ Welcome to Safari Writer, a word processor inspired by AtariWriter 80.
 This document covers Safari Writer, Safari DOS, Safari Chat, and Safari Fed.
 If something is frustrating, that is okay. Take it one step at a time.
 
----
+______________________________________________________________________
 
 ## Getting Started
 
@@ -15,16 +15,14 @@ To start the program, run **safari-writer** from the command line.
 You will see the Main Menu. From there you can create a new file,
 load an existing one, or explore other features.
 
-If you are new, try pressing **T** from the Main Menu to load a
-demo document. This will show you what formatted text looks like
-in the editor.
----
+## If you are new, try pressing **T** from the Main Menu to load a demo document. This will show you what formatted text looks like in the editor.
 
 ## Main Menu (How do I Save?)
 
 The Main Menu is the central hub of Safari Writer. Use it for **Document Actions** like creating, loading, and **Saving** your work. Press the highlighted letter to activate each option.
 
 **Document Actions:**
+
 - **C** **Create** File — start a blank document
 - **E** **Edit** File — return to your active document
 - **L** **Load** File — open a document from disk
@@ -33,50 +31,54 @@ The Main Menu is the central hub of Safari Writer. Use it for **Document Actions
 - **D** **Delete** File — move a file to Garbage (recoverable)
 
 **Need help with saving?**
-- [I am getting a Disk Full error](#Disk Full Error)
-- [I do not know where my file went](#Finding Files)
+
+- \[I am getting a Disk Full error\](#Disk Full Error)
+- \[I do not know where my file went\](#Finding Files)
 
 **Modules:**
+
 - **V** **Verify Spelling** — launch the Proofreader
 - **P** **Print** File — print or export your document
 - **G** **Global Format** — set margins, spacing, and layout
 - **M** **Mail Merge** — database and form letters
 
----
+______________________________________________________________________
 
 ## Disk Full Error
 
 If you see a "Disk Full" error, your storage device has no more
 room for new data. You have a few options:
 
-1.  **Delete** old files using the **D** command from the Main Menu.
-2.  **Insert** a different disk or use a different folder.
-3.  **Compress** your document by removing large images or unneeded text.
+1. **Delete** old files using the **D** command from the Main Menu.
+1. **Insert** a different disk or use a different folder.
+1. **Compress** your document by removing large images or unneeded text.
 
----
+______________________________________________________________________
 
 ## Finding Files
 
 If you saved a file but cannot find it, check the following:
 
-1.  **Current Folder:** Use the **1** command to see files in the current folder.
-2.  **External Drives:** Use the **2** command to check other drives.
-3.  **Search:** Use the Search function in **Safari DOS** (press **O**).
+1. **Current Folder:** Use the **1** command to see files in the current folder.
+1. **External Drives:** Use the **2** command to check other drives.
+1. **Search:** Use the Search function in **Safari DOS** (press **O**).
 
----
+______________________________________________________________________
 
 **File Browsing:**
+
 - **1** **Index** Current Folder — browse files here
 - **2** **Index** External Drive — browse other drives
 - **O** Open **Safari DOS** — full file manager
 - **F** **Folder** (New) — create a new directory
 
 **Other:**
+
 - **T** Try **Demo Mode** — load a sample document
 - **X** **Style Switcher** — choose a color theme
 - **Q** **Quit** — exit the program
 
----
+______________________________________________________________________
 
 ## Editor Basics
 
@@ -94,7 +96,7 @@ Press **Insert** to toggle between them.
 Press **Enter** for a new line. Press **Tab** to jump to the
 next tab stop. Press **Escape** to return to the Main Menu.
 
----
+______________________________________________________________________
 
 ## Cursor Movement
 
@@ -104,7 +106,7 @@ next tab stop. Press **Escape** to return to the Main Menu.
 - **Ctrl + Home / Ctrl + End** — jump to top or bottom of the file
 - **Page Up / Page Down** — scroll one page at a time
 
----
+______________________________________________________________________
 
 ## Selecting Text
 
@@ -117,7 +119,7 @@ Hold **Shift** while pressing movement keys to select text.
 Selected text is shown highlighted. Many commands act on the
 selection when one exists.
 
----
+______________________________________________________________________
 
 ## Deleting Text
 
@@ -127,7 +129,7 @@ selection when one exists.
 - **Ctrl + Shift + Delete** — delete from cursor to end of the file
 - **Ctrl + Z** — undo the last action
 
----
+______________________________________________________________________
 
 ## Cut, Copy, and Paste
 
@@ -138,7 +140,7 @@ selection when one exists.
 These work like any word processor. The clipboard holds one
 item at a time. Cutting or copying replaces whatever was there.
 
----
+______________________________________________________________________
 
 ## Word Count and Alphabetize
 
@@ -148,15 +150,17 @@ item at a time. Cutting or copying replaces whatever was there.
 Word count shows a message in the status bar. Alphabetize
 rearranges lines, which is useful for lists and glossaries.
 
----
+______________________________________________________________________
 
 ## Search and Replace
 
 **Finding text:**
+
 - **Ctrl + F** — prompts for a search string, then jumps to the first match
 - **F3** — find the next occurrence of the last search string
 
 **Replacing text:**
+
 - **Alt + H** — set the replacement string
 - **Alt + N** — replace the current match and find the next one
 - **Alt + R** — replace all occurrences from the cursor to the end of the file
@@ -164,31 +168,34 @@ rearranges lines, which is useful for lists and glossaries.
 The search is case-sensitive. If no match is found, the status
 bar will say so.
 
----
+______________________________________________________________________
 
----
+______________________________________________________________________
 
 ## Inline Formatting
 
 You can apply styles like **Bold**, **Underline**, and **Italics** to your text. Formatting codes appear as visible markers in the editor. They do not change what you see on screen, but they control how text looks when printed or exported.
 
 **Character formatting (toggle on and off):**
+
 - **Ctrl + B** — **Bold** (shows ← marker)
 - **Ctrl + U** — **Underline** (shows ▄ marker)
 - **Ctrl + G** — elongated / double-width (shows E marker)
-- **Ctrl + [** — superscript (shows ↑ marker)
-- **Ctrl + ]** — subscript (shows ↓ marker)
+- **Ctrl + \[** — superscript (shows ↑ marker)
+- **Ctrl + \]** — subscript (shows ↓ marker)
 
 **Paragraph formatting (placed at the start of a line):**
+
 - **Ctrl + E** — center the line (shows ↔ marker)
 - **Ctrl + R** — flush right / block right (shows →→ marker)
 
 **Special inserts:**
+
 - **Ctrl + M** — paragraph mark (auto-indent without a hard return)
 - **Alt + M** — mail merge field (type a field number 1-15 after the @ marker)
 - **Alt + F** — form printing blank (prompts for input at print time)
 
----
+______________________________________________________________________
 
 ## Document Structure
 
@@ -200,7 +207,7 @@ These markers control page layout and multi-file printing.
 - **Ctrl + Shift + E** — insert a page break (forces a new page)
 - **Ctrl + Shift + C** — chain print file (links another file for sequential printing)
 
----
+______________________________________________________________________
 
 ## Tab Stops
 
@@ -211,7 +218,7 @@ stop position.
 - **Ctrl + T** — toggle a tab stop at the current column
 - **Ctrl + Shift + T** — clear all custom tab stops (resets to default every 5 columns)
 
----
+______________________________________________________________________
 
 ## Case Toggling
 
@@ -219,7 +226,7 @@ stop position.
 - **Shift + F3** — toggle the case of the character at the cursor
 - **Insert** — toggle between Insert and Type-over mode
 
----
+______________________________________________________________________
 
 ## Global Format
 
@@ -231,30 +238,35 @@ and press **Enter** to confirm. Press **Escape** to cancel an edit.
 Press **Tab** to reset everything to factory defaults.
 
 **Margins:**
+
 - **T** Top Margin (default 12 half-lines = 1 inch)
 - **B** Bottom Margin (default 12)
 - **L** Left Margin (default 10 character spaces)
 - **R** Right Margin (default 70)
 
 **Spacing:**
+
 - **S** Line Spacing (2 = single, 4 = double, 6 = triple)
 - **D** Paragraph Spacing (default 2 half-lines)
 
 **Multi-Column Layout:**
+
 - **M** 2nd Left Margin (for a right-hand column)
 - **N** 2nd Right Margin
 
 **Typography:**
+
 - **G** Type Font (1=pica, 2=condensed, 3=proportional, 6=elite)
 - **I** Paragraph Indentation (0 = block style, default 5)
 - **J** Justification (0 = ragged right, 1 = justified)
 
 **Pagination:**
+
 - **Q** Page Number Start (default 1)
 - **Y** Page Length (default 132 half-lines for 8.5 x 11 paper)
 - **W** Page Wait (0 = off, 1 = pause between pages)
 
----
+______________________________________________________________________
 
 ## Printing and Exporting
 
@@ -268,13 +280,14 @@ Press **P** from the Main Menu or **Ctrl + P** in the editor.
 The ANSI preview shows pages with your margins, spacing, and
 formatting applied. Use Page Up and Page Down to navigate pages.
 
----
+______________________________________________________________________
 
 ## Proofreader
 
 Press **V** from the Main Menu to check your spelling.
 
 **Proofreader Menu:**
+
 - **H** Highlight Errors — scan the document and highlight misspelled words
 - **P** Print Errors — show a list of all misspelled words
 - **C** Correct Errors — stop at each error with options to fix it
@@ -283,6 +296,7 @@ Press **V** from the Main Menu to check your spelling.
 - **W** Write Personal Dictionary — save words you have accepted
 
 **During Correct Errors mode, at each misspelled word you can:**
+
 - Type a correction and confirm
 - Search the dictionary for suggestions
 - Keep the current spelling (accept it for this session)
@@ -290,7 +304,7 @@ Press **V** from the Main Menu to check your spelling.
 The proofreader uses a standard English dictionary. You can add
 words to a personal dictionary so they are not flagged again.
 
----
+______________________________________________________________________
 
 ## Mail Merge
 
@@ -298,6 +312,7 @@ Press **M** from the Main Menu to work with databases and
 form letters.
 
 **Mail Merge Menu:**
+
 - **C** Create File — start a new database
 - **E** Edit File — browse and modify records
 - **B** Build Subset — filter records by field range
@@ -309,27 +324,30 @@ form letters.
 - **R** Return — go back to the Main Menu
 
 **How mail merge works:**
+
 1. Create a database with field names (like Name, City, State).
-2. Enter records (one per person, company, etc.).
-3. In your document, insert merge fields with **Alt + M** and a
+1. Enter records (one per person, company, etc.).
+1. In your document, insert merge fields with **Alt + M** and a
    field number (1-15).
-4. Print with **P** from the Mail Merge menu. It prints one copy
+1. Print with **P** from the Mail Merge menu. It prints one copy
    of your document for each record, with data filled in.
 
 **Database limits:**
+
 - Maximum 255 records per file
 - Maximum 15 fields per record
 - Maximum 20 characters per field value
 - Maximum 12 characters per field name
 
 **Editing records:**
+
 - **Page Up / P** — previous record
 - **Page Down / N** — next record
 - **E** — edit all fields of the current record
 - **Up/Down** — select a field, then **Enter** to edit it
 - **Ctrl + D** — delete the current record
 
----
+______________________________________________________________________
 
 ## File Browsing
 
@@ -345,7 +363,7 @@ folder, or **2** to browse another drive.
 - **F** — create a new folder
 - **R** — return to the Main Menu
 
----
+______________________________________________________________________
 
 ## Style Switcher
 
@@ -358,7 +376,7 @@ Press **X** from the Main Menu to change the color theme.
 The theme changes are previewed live as you browse. Your choice
 persists across sessions.
 
----
+______________________________________________________________________
 
 ## Keyboard Quick Reference
 
@@ -393,7 +411,7 @@ Tab (jump), Ctrl+T (set/clear), Ctrl+Shift+T (clear all)
 Insert (mode toggle), Shift+F3 (case toggle), Ctrl+P (print),
 F1 (help), Escape (menu), Alt+W (word count), Alt+A (alphabetize)
 
----
+______________________________________________________________________
 
 ## Safari DOS File Manager
 
@@ -401,6 +419,7 @@ Safari DOS is a full file manager. Open it with **O** from the
 Safari Writer Main Menu, or run **safari-dos** from the command line.
 
 **Main Menu:**
+
 - **F** File List — browse the current folder
 - **D** Devices — select a different drive or volume
 - **G** Garbage — browse and recover deleted files
@@ -408,13 +427,14 @@ Safari Writer Main Menu, or run **safari-dos** from the command line.
 - **Y** Style Switcher — change the color theme
 - **Q** Quit
 
----
+______________________________________________________________________
 
 ## Safari DOS File Browser
 
 The file browser is where you manage files and folders.
 
 **Navigation:**
+
 - **Up / Down** — move through the file list
 - **Home / End** — jump to first or last item
 - **Page Up / Page Down** — jump several items
@@ -422,10 +442,12 @@ The file browser is where you manage files and folders.
 - **H** — jump to your home directory
 
 **Selecting files:**
+
 - **Space** — toggle selection on the current file
 - **A** — select all visible items
 
 **File operations:**
+
 - **C** — copy selected files to another folder
 - **M** — move selected files to another folder
 - **R** — rename the selected file
@@ -436,12 +458,13 @@ The file browser is where you manage files and folders.
 - **P** — toggle read-only protection on a file
 
 **View options:**
+
 - **.** — show or hide hidden files (dot-files)
 - **/** — filter files by name
 - **S** — cycle sort order (name, date, size, type)
 - **F** — open favorites list
 
----
+______________________________________________________________________
 
 ## Safari DOS Devices
 
@@ -452,7 +475,7 @@ and volumes.
 - **Enter** — open the drive in the file browser
 - **Escape** — go back
 
----
+______________________________________________________________________
 
 ## Safari DOS Garbage
 
@@ -466,7 +489,7 @@ Press **G** from the Safari DOS Main Menu to see deleted files.
 Deleted files stay in Garbage until you permanently remove them
 or restore them. This gives you a safety net.
 
----
+______________________________________________________________________
 
 ## Safari DOS Favorites
 
@@ -477,7 +500,7 @@ Favorites let you bookmark frequently-used folders.
 - **F** — toggle the current folder as a favorite (add or remove)
 - **Escape** — go back
 
----
+______________________________________________________________________
 
 ## Safari Fed Mastodon Client
 
@@ -489,7 +512,7 @@ Run **safari-fed** from the command line to start it. If no Mastodon
 credentials are configured it opens in demo mode with a seeded local
 packet so you can explore the interface.
 
----
+______________________________________________________________________
 
 ## Safari Fed Folders
 
@@ -503,7 +526,7 @@ Posts are organised into folders like a mail program. Use **Tab** and
 - **Sent** — posts you have sent this session
 - **Deferred** — posts pushed aside for later
 
----
+______________________________________________________________________
 
 ## Safari Fed Navigation
 
@@ -516,7 +539,7 @@ Posts are organised into folders like a mail program. Use **Tab** and
 - **N** — jump to Mentions folder
 - **Esc / Q** — return to the index or quit
 
----
+______________________________________________________________________
 
 ## Safari Fed Post Actions
 
@@ -530,7 +553,7 @@ Posts are organised into folders like a mail program. Use **Tab** and
 - **U** — sync from Mastodon (requires credentials)
 - **W** — export the selected post or thread to Safari Writer
 
----
+______________________________________________________________________
 
 ## Safari Fed Compose
 
@@ -544,7 +567,7 @@ editor opens inside Safari Fed.
 When launched from inside the full Safari Writer app, **C** and **R**
 open the full Safari Writer editor instead of the mini shell.
 
----
+______________________________________________________________________
 
 ## Safari Fed Multiple Accounts
 
@@ -555,9 +578,9 @@ its own folder state and compose buffer.
 - **1 through 9** — select an account by number
 
 To set up accounts, copy **.env.example** to **.env** and fill in
-your credentials using the MASTODON_ID_ pattern.
+your credentials using the MASTODON_ID\_ pattern.
 
----
+______________________________________________________________________
 
 ## Safari Fed Writer Handoff
 
@@ -568,14 +591,14 @@ reading notes, or drafting a blog post from a saved thread.
 In thread view the full thread tree is exported, not just the
 selected post.
 
----
+______________________________________________________________________
 
 ## Safari Fed Help
 
 Press **F1** or **?** inside Safari Fed to see the full key-command
 reference screen.
 
----
+______________________________________________________________________
 
 ## Safari Chat Help Assistant
 
@@ -586,7 +609,7 @@ is a pattern-matching chatbot with keyword-based retrieval.
 Run **safari-chat safari_help.md** from the command line to start
 it with this help file loaded.
 
----
+______________________________________________________________________
 
 ## Using Safari Chat
 
@@ -599,11 +622,12 @@ If it does not, it will ask you to rephrase or tell it more.
 The bot is designed to be patient and apologetic. If the app is
 frustrating, it will acknowledge that. It is on your side.
 
----
+______________________________________________________________________
 
 ## Safari Chat Commands
 
 **Keyboard shortcuts:**
+
 - **F1 / ?** — show help screen
 - **F2** — show the conversation tree / memory view
 - **Ctrl + T** — show parsed topics from the help document
@@ -617,6 +641,7 @@ Safari Chat avoids `Ctrl + H` and `Ctrl + M` because many terminals
 map them to **Backspace** and **Enter**.
 
 **Slash commands (type these at the prompt):**
+
 - **/topics** — list all topics from the help document
 - **/memory** — show the conversation tree
 - **/safety** — show safety notice
@@ -625,7 +650,7 @@ map them to **Backspace** and **Enter**.
 - **/help** — show help
 - **/quit** — exit
 
----
+______________________________________________________________________
 
 ## Safari Chat Distress Meter
 
@@ -641,7 +666,7 @@ conversation is going.
 As distress rises, the bot becomes more direct and less playful.
 It prioritizes clear next steps and reassurance.
 
----
+______________________________________________________________________
 
 ## Safari Chat Safety
 
@@ -649,11 +674,13 @@ Safari Chat is not a therapist, counselor, or crisis professional.
 It will never pretend to be one.
 
 If you express thoughts of self-harm or suicide, the bot will:
+
 1. Acknowledge what you are going through.
-2. Tell you clearly that it is not a professional.
-3. Encourage you to contact real help immediately.
+1. Tell you clearly that it is not a professional.
+1. Encourage you to contact real help immediately.
 
 **Crisis resources:**
+
 - **911** — emergency services (US)
 - **988** — Suicide and Crisis Lifeline (call or text, US)
 - **741741** — Crisis Text Line (text HOME)
@@ -663,7 +690,7 @@ If you express thoughts of self-harm or suicide, the bot will:
 If you are in crisis, please do not rely on this program.
 Contact a real person who can help you.
 
----
+______________________________________________________________________
 
 ## Command Line Usage
 
@@ -671,32 +698,37 @@ You can also use Safari Writer from the command line without
 the full interface.
 
 **Export commands:**
+
 - safari-writer export markdown INPUT -o OUTPUT
 - safari-writer export postscript INPUT -o OUTPUT
 - safari-writer export ansi INPUT
 
 **Spelling commands:**
+
 - safari-writer proof check INPUT
 - safari-writer proof list INPUT
 - safari-writer proof suggest WORD
 
 **Format commands:**
+
 - safari-writer format encode INPUT -o OUTPUT
 - safari-writer format decode INPUT -o OUTPUT
 - safari-writer format strip INPUT -o OUTPUT
 
 **Mail merge commands:**
+
 - safari-writer mail-merge inspect DATABASE
 - safari-writer mail-merge subset DATABASE --field N --low A --high E
 - safari-writer mail-merge append BASE OTHER -o OUTPUT
 - safari-writer mail-merge validate DATABASE
 
 **Safari Fed commands:**
+
 - safari-fed
 - safari-fed --folder Home|Mentions|Bookmarks|Drafts|Sent|Deferred
 - safari-fed --account NAME
 
----
+______________________________________________________________________
 
 ## File Types
 
@@ -710,7 +742,7 @@ Safari Writer can also open source code files with syntax
 highlighting: .py, .js, .rs, .go, .java, .c, .cpp, .h, .sql
 and others. These are read-only for reference.
 
----
+______________________________________________________________________
 
 ## Tips and Troubleshooting
 
@@ -751,14 +783,15 @@ on screen, or Markdown/PostScript to export to a file.
 **How do I undo?**
 Press **Ctrl + Z** to undo the last action in the editor.
 
----
+______________________________________________________________________
 
 ## About Safari Writer
 
-Safari Writer is a word processor, built with Python and the 
+Safari Writer is a word processor, built with Python and the
 Textual framework.
 
 It includes four applications:
+
 - **Safari Writer** — the word processor
 - **Safari DOS** — the file manager
 - **Safari Chat** — the help assistant
@@ -777,13 +810,13 @@ keyboard shortcuts, they can be very fast and satisfying to use.
 
 Take it one step at a time. You will get there.
 
----
+______________________________________________________________________
 
 # Safari Extended Modules Help
 
 This document covers additional modules in the Safari Suite: Safari ASM, Safari Basic, Safari Reader, Safari REPL, Safari Slides, and Safari View.
 
----
+______________________________________________________________________
 
 ## Safari ASM
 
@@ -791,11 +824,11 @@ This document covers additional modules in the Safari Suite: Safari ASM, Safari 
 
 Run **safari-asm** from the command line to start the interpreter.
 
-- [How do I run an ASM file?](#Running ASM Files)
-- [What is the syntax like?](#ASM Syntax)
-- [Can I use it with Safari Writer?](#ASM Integration)
+- \[How do I run an ASM file?\](#Running ASM Files)
+- \[What is the syntax like?\](#ASM Syntax)
+- \[Can I use it with Safari Writer?\](#ASM Integration)
 
----
+______________________________________________________________________
 
 ## Running ASM Files
 
@@ -805,16 +838,17 @@ To run a Safari ASM program, pass the filename as an argument:
 If no file is provided, it reads from **stdin**. You can pipe assembly code directly into it:
 `cat logic.asm | safari-asm`
 
-- [Tell me about syntax](#ASM Syntax)
-- [Go back to Safari ASM](#Safari ASM)
+- \[Tell me about syntax\](#ASM Syntax)
+- \[Go back to Safari ASM\](#Safari ASM)
 
----
+______________________________________________________________________
 
 ## ASM Syntax
 
 Safari ASM uses **mnemonic-style** commands that map to Python operations. While it looks like assembly, it is executing Python under the hood.
 
 **Example:**
+
 ```asm
 MOV R1, 10
 ADD R1, 5
@@ -823,18 +857,18 @@ PRINT R1
 
 Common mnemonics include `MOV`, `ADD`, `SUB`, `MUL`, `DIV`, `JMP`, and `CALL`.
 
-- [How does it integrate?](#ASM Integration)
-- [Go back to Safari ASM](#Safari ASM)
+- \[How does it integrate?\](#ASM Integration)
+- \[Go back to Safari ASM\](#Safari ASM)
 
----
+______________________________________________________________________
 
 ## ASM Integration
 
 Safari ASM can be used to write high-performance macros or data processing scripts that interact with Safari Writer documents. You can use it to automate complex formatting tasks or perform batch transformations on `.sfw` files.
 
-- [Go back to Safari ASM](#Safari ASM)
+- \[Go back to Safari ASM\](#Safari ASM)
 
----
+______________________________________________________________________
 
 ## Safari Base
 
@@ -842,10 +876,10 @@ Safari ASM can be used to write high-performance macros or data processing scrip
 
 Run **safari-base** to start the shell.
 
-- [How do I load a database?](#Loading Databases)
-- [What can I do in Safari Base?](#Base Operations)
+- \[How do I load a database?\](#Loading Databases)
+- \[What can I do in Safari Base?\](#Base Operations)
 
----
+______________________________________________________________________
 
 ## Loading Databases
 
@@ -854,22 +888,23 @@ You can open an existing SQLite database by passing the path as an argument:
 
 If no database is specified, Safari Base will start with an in-memory session.
 
-- [Tell me about operations](#Base Operations)
-- [Go back to Safari Base](#Safari Base)
+- \[Tell me about operations\](#Base Operations)
+- \[Go back to Safari Base\](#Safari Base)
 
----
+______________________________________________________________________
 
 ## Base Operations
 
 Safari Base allows you to perform standard database operations through its TUI:
-1.  **Browse** records in a table.
-2.  **Edit** field values.
-3.  **Search** and filter data.
-4.  **Export** tables to Safari Writer or CSV format.
 
-- [Go back to Safari Base](#Safari Base)
+1. **Browse** records in a table.
+1. **Edit** field values.
+1. **Search** and filter data.
+1. **Export** tables to Safari Writer or CSV format.
 
----
+- \[Go back to Safari Base\](#Safari Base)
+
+______________________________________________________________________
 
 ## Safari Basic
 
@@ -877,21 +912,22 @@ Safari Base allows you to perform standard database operations through its TUI:
 
 Unlike Safari REPL, Safari Basic is designed to be **embedded** within other applications.
 
-- [What is Safari REPL?](#Safari REPL)
-- [How do I write Basic macros?](#Basic Macros)
+- \[What is Safari REPL?\](#Safari REPL)
+- \[How do I write Basic macros?\](#Basic Macros)
 
----
+______________________________________________________________________
 
 ## Basic Macros
 
 Macros in Safari Basic use a subset of Atari BASIC. They are often used for:
+
 1. Customizing the **Main Menu**.
-2. Automating **Mail Merge** setups.
-3. Defining custom **Global Format** templates.
+1. Automating **Mail Merge** setups.
+1. Defining custom **Global Format** templates.
 
-- [Go back to Safari Basic](#Safari Basic)
+- \[Go back to Safari Basic\](#Safari Basic)
 
----
+______________________________________________________________________
 
 ## Safari REPL
 
@@ -899,10 +935,10 @@ Macros in Safari Basic use a subset of Atari BASIC. They are often used for:
 
 Run **safari-repl** to start the interactive session.
 
-- [How do I load a BAS file?](#Loading BASIC Files)
-- [Can I edit BASIC files in Safari Writer?](#BASIC Handoff)
+- \[How do I load a BAS file?\](#Loading BASIC Files)
+- \[Can I edit BASIC files in Safari Writer?\](#BASIC Handoff)
 
----
+______________________________________________________________________
 
 ## Loading BASIC Files
 
@@ -911,10 +947,10 @@ You can load a `.BAS` file directly into the REPL by passing it as a command-lin
 
 Inside the REPL, use the `LOAD` and `SAVE` commands to manage your programs.
 
-- [Tell me about handoff](#BASIC Handoff)
-- [Go back to Safari REPL](#Safari REPL)
+- \[Tell me about handoff\](#BASIC Handoff)
+- \[Go back to Safari REPL\](#Safari REPL)
 
----
+______________________________________________________________________
 
 ## BASIC Handoff
 
@@ -922,9 +958,9 @@ Safari REPL supports **Writer Handoff**. If you want to edit your BASIC code in 
 
 This allows you to use Safari Writer's search/replace and formatting tools on your source code.
 
-- [Go back to Safari REPL](#Safari REPL)
+- \[Go back to Safari REPL\](#Safari REPL)
 
----
+______________________________________________________________________
 
 ## Safari Reader
 
@@ -932,31 +968,36 @@ This allows you to use Safari Writer's search/replace and formatting tools on yo
 
 Run **safari-reader** to open your library.
 
-- [How do I navigate?](#Reader Navigation)
-- [Can I export to Safari Writer?](#Reader Handoff)
+- \[How do I navigate?\](#Reader Navigation)
+- \[Can I export to Safari Writer?\](#Reader Handoff)
 
----
+______________________________________________________________________
 
 ## Reader Navigation
 
 Safari Reader uses standard Safari Suite navigation keys for reading your **Books**:
+
 - **Up / Down** — scroll line by line
+
 - **Page Up / Page Down** — scroll page by page
+
 - **Home / End** — jump to start or end of the **Book**
+
 - **/** — **Search** for text within the current **Book**
 
-- [Tell me about export](#Reader Handoff)
-- [Go back to Safari Reader](#Safari Reader)
+- \[Tell me about export\](#Reader Handoff)
 
----
+- \[Go back to Safari Reader\](#Safari Reader)
+
+______________________________________________________________________
 
 ## Reader Handoff
 
 Like Safari Fed and Safari REPL, Safari Reader can **handoff** to Safari Writer. If you find a passage you want to quote or a section of documentation you want to edit, you can open it directly in the Safari Writer editor.
 
-- [Go back to Safari Reader](#Safari Reader)
+- \[Go back to Safari Reader\](#Safari Reader)
 
----
+______________________________________________________________________
 
 ## Safari Slides
 
@@ -964,29 +1005,35 @@ Like Safari Fed and Safari REPL, Safari Reader can **handoff** to Safari Writer.
 
 Run `safari-slides deck.md` to start a presentation.
 
-- [How do I control the slides?](#Slides Navigation)
-- [What is SlideMD?](#SlideMD Format)
+- \[How do I control the slides?\](#Slides Navigation)
+- \[What is SlideMD?\](#SlideMD Format)
 
----
+______________________________________________________________________
 
 ## Slides Navigation
 
 - **Right Arrow / Space** — next slide
+
 - **Left Arrow / Backspace** — previous slide
+
 - **Home** — first slide
+
 - **End** — last slide
+
 - **Esc / Q** — exit presentation
 
-- [Tell me about the format](#SlideMD Format)
-- [Go back to Safari Slides](#Safari Slides)
+- \[Tell me about the format\](#SlideMD Format)
 
----
+- \[Go back to Safari Slides\](#Safari Slides)
+
+______________________________________________________________________
 
 ## SlideMD Format
 
 **SlideMD** is standard Markdown with `---` used to separate slides.
 
 **Example:**
+
 ```markdown
 # Slide 1
 Welcome to my talk.
@@ -997,9 +1044,9 @@ Here are some points.
 - Point B
 ```
 
-- [Go back to Safari Slides](#Safari Slides)
+- \[Go back to Safari Slides\](#Safari Slides)
 
----
+______________________________________________________________________
 
 ## Safari View
 
@@ -1007,38 +1054,49 @@ Here are some points.
 
 Run `safari-view open image.png` to view a file.
 
-- [What are the render modes?](#View Render Modes)
-- [How do I use the TUI?](#View TUI)
-- [Can I use it from the command line?](#View CLI)
+- \[What are the render modes?\](#View Render Modes)
+- \[How do I use the TUI?\](#View TUI)
+- \[Can I use it from the command line?\](#View CLI)
 
----
+______________________________________________________________________
 
 ## View Render Modes
 
 Safari View supports several **Render Modes** that emulate classic hardware:
+
 - **2600** — ultra-low resolution, limited palette.
+
 - **800** — classic 8-bit computer aesthetics.
+
 - **ST** — 16-bit era graphics.
+
 - **Native** — high-quality rendering with retro dithering.
 
-- [Tell me about the TUI](#View TUI)
-- [Tell me about the CLI](#View CLI)
-- [Go back to Safari View](#Safari View)
+- \[Tell me about the TUI\](#View TUI)
 
----
+- \[Tell me about the CLI\](#View CLI)
+
+- \[Go back to Safari View\](#Safari View)
+
+______________________________________________________________________
 
 ## View TUI
 
 The **TUI (Terminal User Interface)** mode includes a file browser and a live preview pane.
+
 - **Space** — toggle browser visibility
+
 - **Arrows** — navigate folders
+
 - **Enter** — view the selected image
+
 - **M** — cycle through render modes live
 
-- [Tell me about the CLI](#View CLI)
-- [Go back to Safari View](#Safari View)
+- \[Tell me about the CLI\](#View CLI)
 
----
+- \[Go back to Safari View\](#Safari View)
+
+______________________________________________________________________
 
 ## View CLI Image Renderer
 
@@ -1047,5 +1105,6 @@ You can use the Safari View **Command Line** interface to **render** images dire
 
 This **CLI** mode is useful for applying a retro aesthetic to multiple images quickly from your terminal.
 
-- [Go back to Safari View](#Safari View)
----
+- \[Go back to Safari View\](#Safari View)
+
+______________________________________________________________________

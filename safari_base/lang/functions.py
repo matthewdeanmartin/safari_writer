@@ -23,6 +23,7 @@ def call_function(name: str, args: list[Any], env: "Environment") -> Any:
 
 # -- Database/navigation functions -------------------------------------------
 
+
 def _eof(args: list[Any], env: "Environment") -> bool:
     wa = env.current_work_area()
     return wa.eof if wa else True
@@ -55,6 +56,7 @@ def _deleted(args: list[Any], env: "Environment") -> bool:
 
 # -- String functions --------------------------------------------------------
 
+
 def _len(args: list[Any], env: "Environment") -> int:
     _check_args("LEN", args, 1)
     return len(str(args[0]))
@@ -65,12 +67,12 @@ def _substr(args: list[Any], env: "Environment") -> str:
     s = str(args[0])
     start = max(1, int(args[1])) - 1  # dBASE is 1-based
     length = int(args[2]) if len(args) > 2 else len(s) - start
-    return s[start:start + length]
+    return s[start : start + length]
 
 
 def _left(args: list[Any], env: "Environment") -> str:
     _check_args("LEFT", args, 2)
-    return str(args[0])[:int(args[1])]
+    return str(args[0])[: int(args[1])]
 
 
 def _right(args: list[Any], env: "Environment") -> str:
@@ -106,6 +108,7 @@ def _lower(args: list[Any], env: "Environment") -> str:
 
 
 # -- Conversion functions ----------------------------------------------------
+
 
 def _str_fn(args: list[Any], env: "Environment") -> str:
     _check_args("STR", args, 1, 3)
@@ -149,6 +152,7 @@ def _ctod(args: list[Any], env: "Environment") -> datetime.date:
 
 # -- Date functions ----------------------------------------------------------
 
+
 def _date(args: list[Any], env: "Environment") -> datetime.date:
     return datetime.date.today()
 
@@ -178,6 +182,7 @@ def _day(args: list[Any], env: "Environment") -> int:
 
 
 # -- Math functions (bonuses) ------------------------------------------------
+
 
 def _int_fn(args: list[Any], env: "Environment") -> int:
     _check_args("INT", args, 1)
@@ -212,6 +217,7 @@ def _type_fn(args: list[Any], env: "Environment") -> str:
 
 
 # -- Hash functions ----------------------------------------------------------
+
 
 def _hlen(args: list[Any], env: "Environment") -> int:
     """HLEN(hashname$) — return number of keys in a hashmap."""
@@ -260,13 +266,20 @@ def _hkeys(args: list[Any], env: "Environment") -> str:
 
 # -- Helpers -----------------------------------------------------------------
 
-def _check_args(name: str, args: list[Any], min_args: int, max_args: int | None = None) -> None:
+
+def _check_args(
+    name: str, args: list[Any], min_args: int, max_args: int | None = None
+) -> None:
     if max_args is None:
         max_args = min_args
     if len(args) < min_args or len(args) > max_args:
         if min_args == max_args:
-            raise DBaseError(f"{name}() requires {min_args} argument(s), got {len(args)}")
-        raise DBaseError(f"{name}() requires {min_args}-{max_args} arguments, got {len(args)}")
+            raise DBaseError(
+                f"{name}() requires {min_args} argument(s), got {len(args)}"
+            )
+        raise DBaseError(
+            f"{name}() requires {min_args}-{max_args} arguments, got {len(args)}"
+        )
 
 
 # -- Function dispatch table ------------------------------------------------

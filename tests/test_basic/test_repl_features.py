@@ -9,9 +9,11 @@ import io
 import os
 import tempfile
 import time
+
 import pytest
-from safari_basic.repl import SafariREPL, HELP_TOPICS, BASIC_KEYWORDS
-from safari_basic.interpreter import SafariBasic, BasicError
+
+from safari_basic.interpreter import BasicError, SafariBasic
+from safari_basic.repl import BASIC_KEYWORDS, HELP_TOPICS, SafariREPL
 
 
 def make_repl() -> tuple[SafariREPL, io.StringIO]:

@@ -7,10 +7,10 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Tokens
 # ---------------------------------------------------------------------------
+
 
 class TokenType(Enum):
     # Literals
@@ -40,8 +40,8 @@ class TokenType(Enum):
     # Punctuation
     LPAREN = auto()
     RPAREN = auto()
-    LBRACE = auto()   # {
-    RBRACE = auto()   # }
+    LBRACE = auto()  # {
+    RBRACE = auto()  # }
     COMMA = auto()
     SEMI = auto()  # line continuation
     ARROW = auto()  # ->
@@ -61,6 +61,7 @@ class Token:
 # ---------------------------------------------------------------------------
 # AST Expression nodes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class Expr:
@@ -90,6 +91,7 @@ class Ident(Expr):
 @dataclass
 class FieldRef(Expr):
     """alias->field qualified reference."""
+
     alias: str
     field_name: str  # renamed from 'field' to avoid shadowing
 
@@ -117,9 +119,11 @@ class UnaryOp(Expr):
 # AST Statement nodes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Stmt:
     """Base statement node."""
+
     line: int = 0
 
 
@@ -282,6 +286,7 @@ class AverageStmt(Stmt):
 @dataclass
 class PrintStmt(Stmt):
     """The ? command."""
+
     exprs: list[Expr] = field(default_factory=list)
 
 
@@ -413,9 +418,11 @@ class SetOrderStmt(Stmt):
 # User-defined functions and procedures (Safari BASIC extensions)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class FuncDefStmt(Stmt):
     """FUNC name(params) ... END FUNC"""
+
     name: str = ""
     params: list[str] = field(default_factory=list)
     body: list[Stmt] = field(default_factory=list)
@@ -424,6 +431,7 @@ class FuncDefStmt(Stmt):
 @dataclass
 class ProcDefStmt(Stmt):
     """PROC name(params) ... END PROC"""
+
     name: str = ""
     params: list[str] = field(default_factory=list)
     body: list[Stmt] = field(default_factory=list)
@@ -432,6 +440,7 @@ class ProcDefStmt(Stmt):
 @dataclass
 class DefFnStmt(Stmt):
     """DEF FN name(params) = expr  (one-liner function)"""
+
     name: str = ""
     params: list[str] = field(default_factory=list)
     expr: Expr = field(default_factory=lambda: NumberLit(0))
@@ -440,6 +449,7 @@ class DefFnStmt(Stmt):
 @dataclass
 class ProcCallStmt(Stmt):
     """A procedure call used as a statement: DOBOX(1)"""
+
     name: str = ""
     args: list[Expr] = field(default_factory=list)
 
@@ -448,15 +458,18 @@ class ProcCallStmt(Stmt):
 # Hashmaps (Safari BASIC extensions)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class DimHashStmt(Stmt):
     """DIM FOO{} — declare an empty hashmap."""
+
     name: str = ""
 
 
 @dataclass
 class HashAssignStmt(Stmt):
     """FOO("key") = expr — assign a value to a hashmap key."""
+
     name: str = ""
     key: Expr = field(default_factory=lambda: StringLit(""))
     expr: Expr = field(default_factory=lambda: NumberLit(0))
@@ -465,6 +478,7 @@ class HashAssignStmt(Stmt):
 @dataclass
 class ForEachStmt(Stmt):
     """FOR EACH K$ IN PRICES ... NEXT"""
+
     var: str = ""
     hashmap: str = ""
     body: list[Stmt] = field(default_factory=list)
@@ -473,6 +487,7 @@ class ForEachStmt(Stmt):
 @dataclass
 class HashAccessExpr(Expr):
     """FOO("key") as an expression — hashmap key lookup."""
+
     name: str = ""
     key: Expr = field(default_factory=lambda: StringLit(""))
 
@@ -481,9 +496,11 @@ class HashAccessExpr(Expr):
 # Command result
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class CommandResult:
     """Structured result from executing a command."""
+
     success: bool = True
     message: str = ""
     data: Any = None

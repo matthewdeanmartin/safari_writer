@@ -5,14 +5,9 @@ from __future__ import annotations
 import asyncio
 
 from safari_writer.app import SafariWriterApp
-from safari_writer.screens.main_menu import (
-    COL1_ITEMS,
-    COL2_ITEMS,
-    COL3_ITEMS,
-    MENU_ITEMS,
-    MainMenuScreen,
-    MenuItem,
-)
+from safari_writer.screens.main_menu import (COL1_ITEMS, COL2_ITEMS,
+                                             COL3_ITEMS, MENU_ITEMS,
+                                             MainMenuScreen, MenuItem)
 from safari_writer.state import AppState
 
 

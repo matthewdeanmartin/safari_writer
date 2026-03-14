@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
-from importlib import resources
 import math
 import os
-from pathlib import Path
 import shutil
 import sys
 import time
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
+from importlib import resources
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:

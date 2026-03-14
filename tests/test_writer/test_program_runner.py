@@ -1,11 +1,8 @@
 from pathlib import Path
 
 from safari_writer.file_types import resolve_file_profile
-from safari_writer.program_runner import (
-    is_runnable_path,
-    run_program_file,
-    run_program_source,
-)
+from safari_writer.program_runner import (is_runnable_path, run_program_file,
+                                          run_program_source)
 
 
 def test_is_runnable_path_recognizes_supported_extensions(tmp_path):

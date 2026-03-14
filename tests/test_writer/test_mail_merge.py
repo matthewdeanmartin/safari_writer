@@ -2,40 +2,27 @@
 
 import asyncio
 import json
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from textual.widgets import Static
-from safari_writer.app import SafariWriterApp
-from safari_writer.state import AppState
-from safari_writer.screens.mail_merge import (
-    MailMergeDB,
-    MailMergeHelpScreen,
-    MailMergeScreen,
-    FieldDef,
-    MAX_FIELDS,
-    MAX_RECORDS,
-    MAX_FIELD_NAME_LEN,
-    DEFAULT_FIELDS,
-    MODE_MAIN,
-    MODE_SCHEMA,
-    MODE_SCHEMA_EDIT,
-    MODE_ENTER,
-    MODE_ENTER_CONFIRM,
-    MODE_UPDATE,
-    MODE_UPDATE_DELETE,
-    MODE_UPDATE_EDIT,
-    MODE_SUBSET,
-    MODE_SUBSET_FIELD,
-    MODE_SAVE,
-    MODE_LOAD,
-    MODE_APPEND,
-    SCHEMA_ACTION_RENAME,
-    SCHEMA_ACTION_MAXLEN,
-    SCHEMA_ACTION_INSERT,
-    SCHEMA_ACTION_DELETE,
-    MM_CSS,
-)
 
+from safari_writer.app import SafariWriterApp
+from safari_writer.screens.mail_merge import (DEFAULT_FIELDS,
+                                              MAX_FIELD_NAME_LEN, MAX_FIELDS,
+                                              MAX_RECORDS, MM_CSS, MODE_APPEND,
+                                              MODE_ENTER, MODE_ENTER_CONFIRM,
+                                              MODE_LOAD, MODE_MAIN, MODE_SAVE,
+                                              MODE_SCHEMA, MODE_SCHEMA_EDIT,
+                                              MODE_SUBSET, MODE_SUBSET_FIELD,
+                                              MODE_UPDATE, MODE_UPDATE_DELETE,
+                                              MODE_UPDATE_EDIT,
+                                              SCHEMA_ACTION_DELETE,
+                                              SCHEMA_ACTION_INSERT,
+                                              SCHEMA_ACTION_MAXLEN,
+                                              SCHEMA_ACTION_RENAME, FieldDef,
+                                              MailMergeDB, MailMergeHelpScreen,
+                                              MailMergeScreen)
+from safari_writer.state import AppState
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -10,19 +10,10 @@ import math
 import re
 from collections import Counter
 
-from safari_chat.safety import (
-    crisis_response,
-    detect_crisis,
-    detect_refusal,
-    refusal_response,
-)
-from safari_chat.state import (
-    ConversationNode,
-    DistressLevel,
-    ResponseMode,
-    SafariChatState,
-    TopicChunk,
-)
+from safari_chat.safety import (crisis_response, detect_crisis, detect_refusal,
+                                refusal_response)
+from safari_chat.state import (ConversationNode, DistressLevel, ResponseMode,
+                               SafariChatState, TopicChunk)
 from safari_chat.synonyms import apply_variation
 
 __all__ = [

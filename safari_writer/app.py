@@ -2,85 +2,63 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from pathlib import Path
+from typing import Any
 
 from textual.app import App, ScreenStackError
 
 import safari_writer.locale_info as _locale_info
-from safari_writer.cli_types import StartupRequest
-from safari_writer.state import AppState
-from safari_writer.path_utils import leaf_name
-from safari_writer.screens.main_menu import MainMenuScreen
-from safari_writer.screens.editor import EditorScreen
-from safari_writer.screens.global_format import GlobalFormatScreen
-from safari_writer.screens.proofreader import ProofreaderScreen
-from safari_writer.screens.mail_merge import MailMergeScreen
-from safari_writer.screens.file_ops import FilePromptScreen, ConfirmScreen
-from safari_writer.screens.index_screen import (
-    IndexScreen,
-    DrivePickerScreen,
-    _find_external_drives,
-)
-from safari_writer.screens.print_screen import (
-    PrintScreen,
-    PrintPreviewScreen,
-    TootPreviewScreen,
-)
-from safari_writer.screens.git_screen import GitPublishScreen
-from safari_writer.screens.style_switcher import StyleSwitcherScreen
-from safari_writer.screens.doctor import DoctorScreen
-from safari_writer.document_io import (
-    load_demo_document_buffer,
-    load_demo_mail_merge_db,
-    load_document_buffer,
-    load_sfw_language,
-    serialize_document_buffer,
-)
-from safari_writer.file_types import StorageMode, resolve_file_profile
-from safari_writer.format_codec import strip_controls, has_controls, is_sfw
-from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
-from safari_writer.autosave import (
-    BACKUP_INTERVAL_SECONDS,
-    write_backup,
-    delete_backup,
-)
-from safari_writer.screens.backup_screen import BackupScreen
-from safari_dos.screens import (
-    SafariDosBrowserScreen,
-    SafariDosDevicesScreen,
-    SafariDosGarbageScreen,
-    SafariDosMainMenuScreen,
-)
-from safari_dos.services import (
-    list_favorites,
-    list_recent_documents,
-    list_recent_locations,
-    move_to_garbage,
-    record_recent_document,
-    record_recent_location,
-)
-from safari_dos.state import SafariDosState
 from safari_chat.engine import parse_document as parse_chat_document
 from safari_chat.screens import SafariChatMainScreen
 from safari_chat.state import SafariChatState
+from safari_dos.screens import (SafariDosBrowserScreen, SafariDosDevicesScreen,
+                                SafariDosGarbageScreen,
+                                SafariDosMainMenuScreen)
+from safari_dos.services import (list_favorites, list_recent_documents,
+                                 list_recent_locations, move_to_garbage,
+                                 record_recent_document,
+                                 record_recent_location)
+from safari_dos.state import SafariDosState
 from safari_fed.app import build_fed_state
 from safari_fed.screens import SafariFedMainScreen
 from safari_fed.state import SafariFedState
-from safari_repl.screens import ReplMainMenuScreen, ReplEditorScreen
-from safari_repl.state import ReplState
 from safari_reader.screens import SafariReaderMainMenuScreen
 from safari_reader.state import SafariReaderState
+from safari_repl.screens import ReplEditorScreen, ReplMainMenuScreen
+from safari_repl.state import ReplState
 from safari_slides.screens import SafariSlidesMainScreen
-from safari_slides.services import (
-    build_slidemd_from_writer,
-    default_slide_export_name,
-    slides_state_from_writer,
-)
+from safari_slides.services import (build_slidemd_from_writer,
+                                    default_slide_export_name,
+                                    slides_state_from_writer)
 from safari_slides.state import SafariSlidesState
-from safari_view.ui_terminal.textual_app import SafariViewScreen
 from safari_view.state import SafariViewState
+from safari_view.ui_terminal.textual_app import SafariViewScreen
+from safari_writer.autosave import (BACKUP_INTERVAL_SECONDS, delete_backup,
+                                    write_backup)
+from safari_writer.cli_types import StartupRequest
+from safari_writer.document_io import (load_demo_document_buffer,
+                                       load_demo_mail_merge_db,
+                                       load_document_buffer, load_sfw_language,
+                                       serialize_document_buffer)
+from safari_writer.file_types import StorageMode, resolve_file_profile
+from safari_writer.format_codec import has_controls, is_sfw, strip_controls
+from safari_writer.path_utils import leaf_name
+from safari_writer.screens.backup_screen import BackupScreen
+from safari_writer.screens.doctor import DoctorScreen
+from safari_writer.screens.editor import EditorScreen
+from safari_writer.screens.file_ops import ConfirmScreen, FilePromptScreen
+from safari_writer.screens.git_screen import GitPublishScreen
+from safari_writer.screens.global_format import GlobalFormatScreen
+from safari_writer.screens.index_screen import (DrivePickerScreen, IndexScreen,
+                                                _find_external_drives)
+from safari_writer.screens.mail_merge import MailMergeScreen
+from safari_writer.screens.main_menu import MainMenuScreen
+from safari_writer.screens.print_screen import (PrintPreviewScreen,
+                                                PrintScreen, TootPreviewScreen)
+from safari_writer.screens.proofreader import ProofreaderScreen
+from safari_writer.screens.style_switcher import StyleSwitcherScreen
+from safari_writer.state import AppState
+from safari_writer.themes import DEFAULT_THEME, THEMES, load_settings
 
 __all__ = ["SafariWriterApp"]
 
@@ -407,11 +385,14 @@ class SafariWriterApp(App):
 
             is_md = self.state.highlight_profile == HighlightProfile.MARKDOWN
             text = export_html(
-                self.state.buffer, self.state.fmt, self.state.mail_merge_db, is_markdown=is_md
+                self.state.buffer,
+                self.state.fmt,
+                self.state.mail_merge_db,
+                is_markdown=is_md,
             )
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported HTML: {filename}")
-            
+
             # Prompt to open with browser
             self._pending_html_path = Path(filename)
             self.push_screen(
@@ -424,6 +405,7 @@ class SafariWriterApp(App):
     def _on_html_open_confirm(self, confirmed: bool | None) -> None:
         if confirmed and hasattr(self, "_pending_html_path"):
             import webbrowser
+
             webbrowser.open(self._pending_html_path.as_uri())
         if hasattr(self, "_pending_html_path"):
             del self._pending_html_path
@@ -451,7 +433,10 @@ class SafariWriterApp(App):
 
             is_md = self.state.highlight_profile == HighlightProfile.MARKDOWN
             text = export_postscript(
-                self.state.buffer, self.state.fmt, self.state.mail_merge_db, is_markdown=is_md
+                self.state.buffer,
+                self.state.fmt,
+                self.state.mail_merge_db,
+                is_markdown=is_md,
             )
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported PostScript: {filename}")
@@ -467,7 +452,10 @@ class SafariWriterApp(App):
 
             is_md = self.state.highlight_profile == HighlightProfile.MARKDOWN
             pdf_bytes = export_pdf(
-                self.state.buffer, self.state.fmt, self.state.mail_merge_db, is_markdown=is_md
+                self.state.buffer,
+                self.state.fmt,
+                self.state.mail_merge_db,
+                is_markdown=is_md,
             )
             Path(filename).write_bytes(pdf_bytes)
             self.set_message(f"Exported PDF: {filename}")
@@ -986,7 +974,8 @@ class SafariWriterApp(App):
     def _action_safari_base(self) -> None:
         """Open Safari Base with the current mail-merge data."""
         from safari_base.bridge import mail_merge_to_session
-        from safari_base.database import ensure_database as ensure_base_database
+        from safari_base.database import \
+            ensure_database as ensure_base_database
         from safari_base.screen import SafariBaseScreen
 
         merge_db = self.state.mail_merge_db

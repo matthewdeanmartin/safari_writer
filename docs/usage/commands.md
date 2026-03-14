@@ -3,6 +3,7 @@
 Safari Writer is designed for fast, keyboard-driven editing.
 
 ## Navigation
+
 - **Arrow Keys** — Move one character or line.
 - **Shift + Arrow Keys** — Extend the selection.
 - **Shift + Home / End** — Extend selection to the start or end of the line.
@@ -15,6 +16,7 @@ Safari Writer is designed for fast, keyboard-driven editing.
 - **Ctrl + Shift + T** — Clear all custom tab stops.
 
 ## Selection & Editing
+
 - **Insert** — Toggle Insert / Type-over mode.
 - **Caps Lock** — Toggle uppercase / lowercase entry mode.
 - **Shift + F3** — Toggle the case of the character at the cursor.
@@ -28,6 +30,7 @@ Safari Writer is designed for fast, keyboard-driven editing.
 On many terminals, **Ctrl + M** may arrive as **Enter**. If that happens, use the formatting UI instead of relying on the raw key chord.
 
 ## Search and Replace
+
 - **Ctrl + F** — Find text.
 - **F3** — Find the next occurrence.
 - **Alt + H** — Set the replacement string.
@@ -35,17 +38,20 @@ On many terminals, **Ctrl + M** may arrive as **Enter**. If that happens, use th
 - **Alt + R** — Replace all occurrences.
 
 ## Formatting Codes
+
 These codes appear as visible markers in the editor.
+
 - **Ctrl + B** — Bold (← marker)
 - **Ctrl + U** — Underline (▄ marker)
 - **Ctrl + G** — Elongated (E marker)
-- **Ctrl + [** — Superscript (↑ marker)
-- **Ctrl + ]** — Subscript (↓ marker)
+- **Ctrl + \[** — Superscript (↑ marker)
+- **Ctrl + \]** — Subscript (↓ marker)
 - **Ctrl + E** — Center (↔ marker)
 - **Ctrl + R** — Flush Right (→→ marker)
 - **Alt + M** — Insert a mail merge field marker (`@`).
 
 ## Document Structure
+
 - **Ctrl + Shift + H** — Insert Header line.
 - **Ctrl + Shift + F** — Insert Footer line.
 - **Ctrl + Shift + S** — Insert Section heading.
@@ -54,6 +60,7 @@ These codes appear as visible markers in the editor.
 - **Alt + F** — Insert a form-printing blank.
 
 ## Other
+
 - **Alt + W** — Word count for the selection or whole file.
 - **Alt + A** — Alphabetize selected lines or the whole document.
 - **Ctrl + P** — Open the Print / Export menu.
@@ -63,6 +70,7 @@ These codes appear as visible markers in the editor.
 - **Escape** — Return to the main menu or previous screen.
 
 ## Document Structure
+
 - **Ctrl + Shift + H** — Insert Header line.
 - **Ctrl + Shift + F** — Insert Footer line.
 - **Ctrl + Shift + S** — Insert Section heading.

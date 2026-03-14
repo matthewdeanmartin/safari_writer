@@ -132,12 +132,15 @@ GO 1
         print(f"  Output: {r.data}")
         assert r.success
         # Widget was 9.99, 10% increase = 10.989
-        assert "10.989" in (r.data or "") or "10.99" in (r.data or ""), f"Unexpected: {r.data}"
+        assert "10.989" in (r.data or "") or "10.99" in (
+            r.data or ""
+        ), f"Unexpected: {r.data}"
 
         # -- Test 7: .prg file execution ------------------------------------
         print("\n=== 7. .prg file execution ===")
         prg_path = Path(tmpdir) / "report.prg"
-        prg_path.write_text("""\
+        prg_path.write_text(
+            """\
 * Report script
 ? "=== Product Report ==="
 GO TOP
@@ -147,7 +150,9 @@ DO WHILE .NOT. EOF()
 ENDDO
 ? "=== End Report ==="
 RETURN
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
         r = interp.run_program(prg_path)
         print(f"  Output:\n{r.data}")
         assert r.success

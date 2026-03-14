@@ -21,20 +21,16 @@ def mail_merge_to_session(db: MailMergeDB) -> BaseSession:
     The resulting session uses an in-memory SQLite database populated with
     the mail-merge schema and records.
     """
-    from safari_base.database import (
-        DEFAULT_ADDRESS_SCHEMA,
-        DEFAULT_TABLE_NAME,
-        BaseSession,
-        _quote_identifier,
-    )
+    from safari_base.database import (DEFAULT_ADDRESS_SCHEMA,
+                                      DEFAULT_TABLE_NAME, BaseSession,
+                                      _quote_identifier)
 
     connection = sqlite3.connect(":memory:")
 
     # Build schema from mail-merge fields
     schema = _fields_to_schema(db.fields, DEFAULT_ADDRESS_SCHEMA)
     column_sql = ", ".join(
-        f'{_quote_identifier(name)} TEXT NOT NULL DEFAULT ""'
-        for name, _width in schema
+        f'{_quote_identifier(name)} TEXT NOT NULL DEFAULT ""' for name, _width in schema
     )
     connection.execute(
         f"CREATE TABLE {_quote_identifier(DEFAULT_TABLE_NAME)} ({column_sql})"
@@ -62,7 +58,9 @@ def mail_merge_to_session(db: MailMergeDB) -> BaseSession:
     )
 
 
-def session_to_mail_merge(session: BaseSession, original: MailMergeDB | None = None) -> MailMergeDB:
+def session_to_mail_merge(
+    session: BaseSession, original: MailMergeDB | None = None
+) -> MailMergeDB:
     """Convert the current table of a BaseSession back into a MailMergeDB.
 
     If *original* is provided, field names are preserved from the original
@@ -79,7 +77,9 @@ def session_to_mail_merge(session: BaseSession, original: MailMergeDB | None = N
     fields: list[FieldDef] = []
     for idx, (col_name, width) in enumerate(schema):
         if original and idx < len(original.fields):
-            fields.append(FieldDef(original.fields[idx].name, original.fields[idx].max_len))
+            fields.append(
+                FieldDef(original.fields[idx].name, original.fields[idx].max_len)
+            )
         else:
             fields.append(FieldDef(col_name, width))
 

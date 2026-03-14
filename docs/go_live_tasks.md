@@ -14,15 +14,15 @@
 - execute all the example bas, asm, prg files
 
 Code Quality
+
 - Check unit tests. Any vacuous or low quality tests
 - Any tests that lack meaningful assertions
 - Ignored tests
 - Ignored mypy
 - Ignored lint
 
-
-----
+______________________________________________________________________
 
 - quality checks
 - slow checks, integration tests
-- 
+-

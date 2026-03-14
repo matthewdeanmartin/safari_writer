@@ -6,24 +6,20 @@ import os
 import shutil
 from pathlib import Path
 
-import safari_writer.locale_info as _locale_info
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
-from textual import events
 
-from safari_writer.mail_merge_db import (
-    DEFAULT_FIELDS as _DEFAULT_FIELDS,
-    MAX_FIELD_DATA_LEN,
-    MAX_FIELD_NAME_LEN,
-    MAX_FIELDS,
-    MAX_RECORDS as _MAX_RECORDS,
-    FieldDef,
-    MailMergeDB,
-    load_mail_merge_db,
-    save_mail_merge_db,
-)
+import safari_writer.locale_info as _locale_info
+from safari_writer.mail_merge_db import DEFAULT_FIELDS as _DEFAULT_FIELDS
+from safari_writer.mail_merge_db import (MAX_FIELD_DATA_LEN,
+                                         MAX_FIELD_NAME_LEN, MAX_FIELDS)
+from safari_writer.mail_merge_db import MAX_RECORDS as _MAX_RECORDS
+from safari_writer.mail_merge_db import (FieldDef, MailMergeDB,
+                                         load_mail_merge_db,
+                                         save_mail_merge_db)
 from safari_writer.state import AppState
 
 
@@ -362,7 +358,9 @@ class MailMergeScreen(Screen):
             subset_note = f"  SUBSET ACTIVE: {len(self._active_subset)} records"
         filename_note = f"  File: {self._db.filename or '(unsaved)'}"
         menu_lines = [f" {key}{label}" for key, label, _ in self.MENU_ITEMS]
-        return "\n".join([filename_note + subset_note, "", *menu_lines, "", "F1/?  Help"])
+        return "\n".join(
+            [filename_note + subset_note, "", *menu_lines, "", "F1/?  Help"]
+        )
 
     # ------------------------------------------------------------------
     # Mode entry helpers
@@ -1584,9 +1582,7 @@ class MailMergeScreen(Screen):
         self._mode = MODE_LOAD
         self._input_buf = ""
         self._set_body("Load database from file:\n\n> ")
-        self._set_message(
-            "Enter filename to load, or press 1 to browse, Esc to cancel"
-        )
+        self._set_message("Enter filename to load, or press 1 to browse, Esc to cancel")
         self._set_help(" Enter Load  1 Browse  Esc Cancel")
 
     def _enter_save(self) -> None:

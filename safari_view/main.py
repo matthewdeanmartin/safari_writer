@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import argparse
-from importlib import metadata
 import logging
-from pathlib import Path
 import sys
+from importlib import metadata
+from pathlib import Path
 
 from safari_view.render import RenderContext, RenderMode, create_pipeline
 from safari_view.state import SafariViewLaunchConfig, SafariViewState
@@ -293,10 +293,14 @@ def _resolve_startup_paths(
         if not selected_path.exists():
             raise FileNotFoundError(f"Path not found: {selected_path}")
         if current_path is None:
-            current_path = selected_path.parent if selected_path.is_file() else selected_path
+            current_path = (
+                selected_path.parent if selected_path.is_file() else selected_path
+            )
 
     if current_path is None:
-        current_path = image_path.parent if image_path is not None else Path.cwd().resolve()
+        current_path = (
+            image_path.parent if image_path is not None else Path.cwd().resolve()
+        )
 
     if not current_path.exists():
         raise FileNotFoundError(f"Path not found: {current_path}")

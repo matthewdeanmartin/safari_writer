@@ -6,16 +6,11 @@ from importlib.resources import files
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from safari_writer.file_types import resolve_file_profile, StorageMode
-from safari_writer.format_codec import (
-    decode_sfw,
-    encode_sfw,
-    extract_sfw_metadata,
-    has_controls,
-    inject_sfw_metadata,
-    is_sfw,
-    strip_controls,
-)
+from safari_writer.file_types import StorageMode, resolve_file_profile
+from safari_writer.format_codec import (decode_sfw, encode_sfw,
+                                        extract_sfw_metadata, has_controls,
+                                        inject_sfw_metadata, is_sfw,
+                                        strip_controls)
 from safari_writer.state import AppState
 
 if TYPE_CHECKING:
@@ -73,6 +68,7 @@ def load_demo_document_buffer(encoding: str = "utf-8") -> list[str]:
 def load_demo_mail_merge_db(encoding: str = "utf-8") -> "MailMergeDB":
     """Load the bundled demo mail merge database."""
     import json
+
     from safari_writer.mail_merge_db import MailMergeDB
 
     text = (

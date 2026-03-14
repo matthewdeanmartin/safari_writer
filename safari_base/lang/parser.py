@@ -4,21 +4,28 @@ from __future__ import annotations
 
 from safari_base.lang.errors import ParseError
 from safari_base.lang.lexer import tokenize
-from safari_base.lang.types import (
-    AppendBlankStmt, AppendFromStmt, AssignStmt, AverageStmt, BinOp,
-    CdStmt, CloseStmt, CommentStmt, ContinueStmt, CopyFileStmt,
-    CopyStructureStmt, CountStmt, CreateFromStmt, CreateTableStmt,
-    DefFnStmt, DeleteStmt, DimHashStmt, DirStmt, DisplayStructureStmt,
-    DoCaseStmt, DoProgramStmt, DoWhileStmt, EraseStmt, ExitStmt, Expr,
-    FieldRef, ForEachStmt, ForStmt, FuncCall, FuncDefStmt, GoStmt,
-    HashAccessExpr, HashAssignStmt, Ident, IfStmt, IndexOnStmt, ListStmt,
-    LocateStmt, LogicalLit, LoopStmt, MdStmt, NumberLit, PackStmt,
-    PrintStmt, ProcCallStmt, ProcDefStmt, QuitStmt, RdStmt, RecallStmt,
-    RenameStmt, ReplaceStmt, ReturnStmt, ScanStmt, SeekStmt, SelectStmt,
-    SetDefaultStmt, SetDeletedStmt, SetFilterStmt, SetOrderStmt, SetStmt,
-    SkipStmt, Stmt, StoreStmt, StringLit, SumStmt, Token, TokenType,
-    UnaryOp, UseStmt, ZapStmt,
-)
+from safari_base.lang.types import (AppendBlankStmt, AppendFromStmt,
+                                    AssignStmt, AverageStmt, BinOp, CdStmt,
+                                    CloseStmt, CommentStmt, ContinueStmt,
+                                    CopyFileStmt, CopyStructureStmt, CountStmt,
+                                    CreateFromStmt, CreateTableStmt, DefFnStmt,
+                                    DeleteStmt, DimHashStmt, DirStmt,
+                                    DisplayStructureStmt, DoCaseStmt,
+                                    DoProgramStmt, DoWhileStmt, EraseStmt,
+                                    ExitStmt, Expr, FieldRef, ForEachStmt,
+                                    ForStmt, FuncCall, FuncDefStmt, GoStmt,
+                                    HashAccessExpr, HashAssignStmt, Ident,
+                                    IfStmt, IndexOnStmt, ListStmt, LocateStmt,
+                                    LogicalLit, LoopStmt, MdStmt, NumberLit,
+                                    PackStmt, PrintStmt, ProcCallStmt,
+                                    ProcDefStmt, QuitStmt, RdStmt, RecallStmt,
+                                    RenameStmt, ReplaceStmt, ReturnStmt,
+                                    ScanStmt, SeekStmt, SelectStmt,
+                                    SetDefaultStmt, SetDeletedStmt,
+                                    SetFilterStmt, SetOrderStmt, SetStmt,
+                                    SkipStmt, Stmt, StoreStmt, StringLit,
+                                    SumStmt, Token, TokenType, UnaryOp,
+                                    UseStmt, ZapStmt)
 
 
 class Parser:
@@ -89,7 +96,9 @@ class Parser:
         if tok.type == TokenType.KEYWORD:
             # Allow keywords as identifiers in some contexts (e.g., file names)
             return self._advance().value
-        raise ParseError(f"Expected identifier but got {tok.type.name}", line_number=tok.line)
+        raise ParseError(
+            f"Expected identifier but got {tok.type.name}", line_number=tok.line
+        )
 
     # -- Expression parser (Pratt-style precedence climbing) -----------------
 
@@ -119,10 +128,14 @@ class Parser:
     def _parse_comparison(self) -> Expr:
         left = self._parse_addition()
         ops = {
-            TokenType.EQ: "=", TokenType.EQEQ: "==",
-            TokenType.NEQ: "<>", TokenType.BANGEQ: "!=",
-            TokenType.LT: "<", TokenType.LE: "<=",
-            TokenType.GT: ">", TokenType.GE: ">=",
+            TokenType.EQ: "=",
+            TokenType.EQEQ: "==",
+            TokenType.NEQ: "<>",
+            TokenType.BANGEQ: "!=",
+            TokenType.LT: "<",
+            TokenType.LE: "<=",
+            TokenType.GT: ">",
+            TokenType.GE: ">=",
         }
         for ttype, op_str in ops.items():
             if self._match_type(ttype):
@@ -221,7 +234,9 @@ class Parser:
                 return FieldRef(name, field_name)
             return Ident(name)
 
-        raise ParseError(f"Unexpected token: {tok.type.name} '{tok.value}'", line_number=tok.line)
+        raise ParseError(
+            f"Unexpected token: {tok.type.name} '{tok.value}'", line_number=tok.line
+        )
 
     # -- Statement parser ----------------------------------------------------
 
@@ -254,7 +269,10 @@ class Parser:
         # Assignment: ident = expr  (but only if next-next is =)
         if tok.type == TokenType.IDENT:
             # Lookahead for assignment
-            if self.pos + 1 < len(self.tokens) and self.tokens[self.pos + 1].type == TokenType.EQ:
+            if (
+                self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].type == TokenType.EQ
+            ):
                 name = self._advance().value
                 self._advance()  # consume =
                 expr = self._parse_expr()
@@ -271,12 +289,31 @@ class Parser:
 
         # Check if this keyword is actually being used as a variable assignment
         # e.g., "count = count + 1" where COUNT is a keyword
-        if (self.pos + 1 < len(self.tokens)
-                and self.tokens[self.pos + 1].type == TokenType.EQ
-                and kw not in ("IF", "DO", "FOR", "SCAN", "SET", "CREATE",
-                               "COPY", "INDEX", "DISPLAY", "ENDIF", "ENDDO",
-                               "ENDFOR", "ENDSCAN", "ENDCASE", "ELSE", "ELSEIF",
-                               "CASE", "OTHERWISE")):
+        if (
+            self.pos + 1 < len(self.tokens)
+            and self.tokens[self.pos + 1].type == TokenType.EQ
+            and kw
+            not in (
+                "IF",
+                "DO",
+                "FOR",
+                "SCAN",
+                "SET",
+                "CREATE",
+                "COPY",
+                "INDEX",
+                "DISPLAY",
+                "ENDIF",
+                "ENDDO",
+                "ENDFOR",
+                "ENDSCAN",
+                "ENDCASE",
+                "ELSE",
+                "ELSEIF",
+                "CASE",
+                "OTHERWISE",
+            )
+        ):
             name = self._advance().value
             self._advance()  # consume =
             expr = self._parse_expr()
@@ -421,7 +458,9 @@ class Parser:
                     )
                 val_expr = self._parse_expr()
                 self._skip_to_eol()
-                return HashAssignStmt(name=name.upper(), key=args[0], expr=val_expr, line=line)
+                return HashAssignStmt(
+                    name=name.upper(), key=args[0], expr=val_expr, line=line
+                )
             # Procedure call
             self._skip_to_eol()
             return ProcCallStmt(name=name.upper(), args=args, line=line)
@@ -523,7 +562,9 @@ class Parser:
             condition = self._parse_expr()
 
         self._skip_to_eol()
-        return ReplaceStmt(assignments=assignments, scope=scope, condition=condition, line=line)
+        return ReplaceStmt(
+            assignments=assignments, scope=scope, condition=condition, line=line
+        )
 
     def _parse_append(self, line: int) -> Stmt:
         self._advance()  # consume APPEND
@@ -646,7 +687,7 @@ class Parser:
                 type_char = type_tok[0].upper()
                 width = 10
                 decimals = 0
-                
+
                 # Check for (width, decimals)
                 if self._match_type(TokenType.LPAREN):
                     width = int(float(self._expect(TokenType.NUMBER).value))
@@ -658,7 +699,7 @@ class Parser:
                     width = int(float(self._advance().value))
                     if self._peek().type == TokenType.NUMBER:
                         decimals = int(float(self._advance().value))
-                
+
                 columns.append((col_name, type_char, width, decimals))
                 if not self._match_type(TokenType.COMMA):
                     break
@@ -700,14 +741,14 @@ class Parser:
         self._advance()  # consume INSERT
         self._expect(TokenType.KEYWORD, "INTO")
         table = self._read_ident_or_string()
-        
+
         fields: list[str] = []
         if self._match_type(TokenType.LPAREN):
             fields.append(self._read_ident_or_string())
             while self._match_type(TokenType.COMMA):
                 fields.append(self._read_ident_or_string())
             self._expect(TokenType.RPAREN)
-            
+
         self._expect(TokenType.KEYWORD, "VALUES")
         self._expect(TokenType.LPAREN)
         values: list[Expr] = []
@@ -715,7 +756,7 @@ class Parser:
         while self._match_type(TokenType.COMMA):
             values.append(self._parse_expr())
         self._expect(TokenType.RPAREN)
-        
+
         self._skip_to_eol()
         return InsertStmt(table=table, fields=fields, values=values, line=line)
 
@@ -804,8 +845,11 @@ class Parser:
         self._expect(TokenType.KEYWORD, "ENDIF")
         self._skip_to_eol()
         return IfStmt(
-            condition=condition, then_body=then_body,
-            elseif_clauses=elseif_clauses, else_body=else_body, line=line,
+            condition=condition,
+            then_body=then_body,
+            elseif_clauses=elseif_clauses,
+            else_body=else_body,
+            line=line,
         )
 
     def _parse_do(self, line: int) -> Stmt:

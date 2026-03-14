@@ -6,17 +6,17 @@ Safari Writer needs to handle two realities:
 
 1. **Plain text files** — the user opens a `.txt` or any other file and edits it as-is. No formatting codes, no special interpretation. What's on disk is what's in the buffer.
 
-2. **Formatted files** — the user writes a document with inline formatting (bold, underline, headers, footers, merge fields, page breaks, etc.). These formatting codes need to survive a save/load round-trip.
+1. **Formatted files** — the user writes a document with inline formatting (bold, underline, headers, footers, merge fields, page breaks, etc.). These formatting codes need to survive a save/load round-trip.
 
 The original AtariWriter 80 used a proprietary binary format with embedded control bytes. We are **not** supporting that format. Instead we define our own lightweight text-based encoding for formatted documents.
 
----
+______________________________________________________________________
 
 ## 2. File Extensions
 
 | Extension | Meaning |
 |-----------|---------|
-| `.sfw`    | **Safari Writer Formatted** — our native format with embedded control sequences encoded as human-inspectable escape tags |
+| `.sfw` | **Safari Writer Formatted** — our native format with embedded control sequences encoded as human-inspectable escape tags |
 | anything else (`.txt`, `.md`, `.log`, no extension, etc.) | **Plain text** — loaded and saved verbatim, no control-code interpretation |
 
 The extension is the sole discriminator. There is no magic-byte header or BOM.
@@ -32,7 +32,7 @@ The extension is the sole discriminator. There is no magic-byte header or BOM.
 
 When the user saves, the filename prompt pre-fills the current filename. Changing the extension changes the format. If a document with formatting is saved as `.txt`, the formatting is lost on disk (though it remains in the live buffer until the next load).
 
----
+______________________________________________________________________
 
 ## 3. Safari Writer Format (`.sfw`) Encoding
 
@@ -46,29 +46,30 @@ When the user saves, the filename prompt pre-fills the current filename. Changin
 
 Each internal control character is encoded as a **backslash-escaped tag**:
 
-| Internal byte | Buffer constant  | Tag in `.sfw` file | Notes |
+| Internal byte | Buffer constant | Tag in `.sfw` file | Notes |
 |---------------|------------------|---------------------|-------|
-| `\x01`        | `CTRL_BOLD`      | `\B`               | Bold toggle |
-| `\x02`        | `CTRL_UNDERLINE` | `\U`               | Underline toggle |
-| `\x03`        | `CTRL_CENTER`    | `\C`               | Center line |
-| `\x04`        | `CTRL_RIGHT`     | `\R`               | Flush right |
-| `\x05`        | `CTRL_ELONGATE`  | `\G`               | Elongated toggle |
-| `\x06`        | `CTRL_SUPER`     | `\^`               | Superscript toggle |
-| `\x07`        | `CTRL_SUB`       | `\v`               | Subscript toggle |
-| `\x10`        | `CTRL_PARA`      | `\P`               | Paragraph indent mark |
-| `\x11`        | `CTRL_MERGE`     | `\@`               | Mail merge field (followed by field number) |
-| `\x12`        | `CTRL_HEADER`    | `\H:`              | Header line marker |
-| `\x13`        | `CTRL_FOOTER`    | `\F:`              | Footer line marker |
-| `\x14`        | `CTRL_HEADING`   | `\S`               | Section heading (followed by level digit) |
-| `\x15`        | `CTRL_EJECT`     | `\E`               | Hard page break |
-| `\x16`        | `CTRL_CHAIN`     | `\>`               | Chain print file (followed by filename) |
-| `\x17`        | `CTRL_FORM`      | `\_`               | Form printing blank |
+| `\x01` | `CTRL_BOLD` | `\B` | Bold toggle |
+| `\x02` | `CTRL_UNDERLINE` | `\U` | Underline toggle |
+| `\x03` | `CTRL_CENTER` | `\C` | Center line |
+| `\x04` | `CTRL_RIGHT` | `\R` | Flush right |
+| `\x05` | `CTRL_ELONGATE` | `\G` | Elongated toggle |
+| `\x06` | `CTRL_SUPER` | `\^` | Superscript toggle |
+| `\x07` | `CTRL_SUB` | `\v` | Subscript toggle |
+| `\x10` | `CTRL_PARA` | `\P` | Paragraph indent mark |
+| `\x11` | `CTRL_MERGE` | `\@` | Mail merge field (followed by field number) |
+| `\x12` | `CTRL_HEADER` | `\H:` | Header line marker |
+| `\x13` | `CTRL_FOOTER` | `\F:` | Footer line marker |
+| `\x14` | `CTRL_HEADING` | `\S` | Section heading (followed by level digit) |
+| `\x15` | `CTRL_EJECT` | `\E` | Hard page break |
+| `\x16` | `CTRL_CHAIN` | `\>` | Chain print file (followed by filename) |
+| `\x17` | `CTRL_FORM` | `\_` | Form printing blank |
 
 Literal backslashes in user text are escaped as `\\`.
 
 ### Example
 
 Buffer contents (conceptual):
+
 ```
 \x12My Document Header
 \x01Hello\x01 world
@@ -77,6 +78,7 @@ This is \x02underlined\x02 text.
 ```
 
 Saved as `.sfw`:
+
 ```
 \H:My Document Header
 \BHello\B world
@@ -87,9 +89,9 @@ This is \Uunderlined\U text.
 ### Encoding/decoding rules
 
 1. **Encode** (buffer → disk): First escape all literal `\` as `\\`, then replace each control byte with its tag.
-2. **Decode** (disk → buffer): Scan for `\` sequences, convert recognized tags back to control bytes, convert `\\` back to `\`. Unrecognized `\X` sequences are left as-is (forward compatibility).
+1. **Decode** (disk → buffer): Scan for `\` sequences, convert recognized tags back to control bytes, convert `\\` back to `\`. Unrecognized `\X` sequences are left as-is (forward compatibility).
 
----
+______________________________________________________________________
 
 ## 4. Plain Text Mode Behavior
 
@@ -101,7 +103,7 @@ When working with a non-`.sfw` file:
 - If the user confirms, control characters are stripped and the plain text is written.
 - If the user declines, they return to the filename prompt where they can change the extension.
 
----
+______________________________________________________________________
 
 ## 5. Main Menu: Print Entry Point
 
@@ -111,7 +113,7 @@ No changes needed to `MainMenuScreen` menu items — "P" is already wired to `ac
 
 Additionally, `Ctrl+P` in the editor should also open the same Print/Export dialog (currently shows "not yet implemented").
 
----
+______________________________________________________________________
 
 ## 6. Print/Export Dialog
 
@@ -146,6 +148,7 @@ Opens a full-screen **read-only preview** (`PrintPreviewScreen`) showing the doc
 Global format settings (margins, spacing, page length, justification) are applied to compute pagination and layout.
 
 Navigation in preview:
+
 - `Page Up / Page Down` — scroll by pages
 - `Up / Down` — scroll by lines
 - `Home / End` — jump to start/end
@@ -157,21 +160,21 @@ Converts the document to Markdown syntax:
 
 | Safari Writer construct | Markdown output |
 |------------------------|-----------------|
-| Bold (`\B...\B`)       | `**...**` |
-| Underline (`\U...\U`)  | `<u>...</u>` (HTML in Markdown) |
-| Elongated              | `**...**` (treated as bold) |
-| Superscript            | `<sup>...</sup>` |
-| Subscript              | `<sub>...</sub>` |
-| Center                 | `<center>...</center>` |
-| Flush right            | Not representable — left as-is with a comment |
-| Header line            | Rendered as text at top (not mapped to `#` headings) |
-| Footer line            | Rendered as text at bottom |
+| Bold (`\B...\B`) | `**...**` |
+| Underline (`\U...\U`) | `<u>...</u>` (HTML in Markdown) |
+| Elongated | `**...**` (treated as bold) |
+| Superscript | `<sup>...</sup>` |
+| Subscript | `<sub>...</sub>` |
+| Center | `<center>...</center>` |
+| Flush right | Not representable — left as-is with a comment |
+| Header line | Rendered as text at top (not mapped to `#` headings) |
+| Footer line | Rendered as text at bottom |
 | Section heading (level N) | `#` repeated N times + auto-number + heading text |
-| Page break             | `---` (horizontal rule) |
-| Paragraph mark         | Blank line (paragraph separator) |
-| Chain file             | Ignored (comment appended) |
-| Form blank             | `[________]` |
-| Mail merge field       | `{{field_N}}` |
+| Page break | `---` (horizontal rule) |
+| Paragraph mark | Blank line (paragraph separator) |
+| Chain file | Ignored (comment appended) |
+| Form blank | `[________]` |
+| Mail merge field | `{{field_N}}` |
 
 The user is prompted for an output filename (pre-filled as `<current_name>.md`). The file is written as UTF-8.
 
@@ -212,18 +215,18 @@ The user is prompted for an output filename (pre-filled as `<current_name>.pdf`)
 If the document contains merge fields (`\@N`):
 
 1. The print dialog prompts: `"Mail Merge database file? (Enter to skip)"`
-2. If a database JSON is provided, the export iterates over all records (or the active subset), producing one copy per record with fields substituted.
-3. If skipped, merge fields render as `<<field_N>>` placeholders.
+1. If a database JSON is provided, the export iterates over all records (or the active subset), producing one copy per record with fields substituted.
+1. If skipped, merge fields render as `<<field_N>>` placeholders.
 
 ### Form printing at export time
 
 If the document contains form blanks (`\_`):
 
 1. In ANSI Preview: blanks render as `[________]`.
-2. In Markdown/PostScript export: same placeholder rendering.
-3. **Interactive form fill** (future, not in this spec): prompt the user to type values for each blank before exporting. Deferred to Phase 12.
+1. In Markdown/PostScript export: same placeholder rendering.
+1. **Interactive form fill** (future, not in this spec): prompt the user to type values for each blank before exporting. Deferred to Phase 12.
 
----
+______________________________________________________________________
 
 ## 7. Implementation Plan
 
@@ -247,13 +250,13 @@ If the document contains form blanks (`\_`):
 ### Phase ordering
 
 1. **`format_codec.py`** — encode/decode/strip. Unit-testable in isolation.
-2. **Update `app.py` load/save** — wire codec into file I/O path.
-3. **`PrintScreen` dialog** — the print/export modal.
-4. **ANSI Preview** — the most useful output for day-to-day use.
-5. **Markdown export** — straightforward text transform.
-6. **PostScript export** — most complex, requires page layout engine.
+1. **Update `app.py` load/save** — wire codec into file I/O path.
+1. **`PrintScreen` dialog** — the print/export modal.
+1. **ANSI Preview** — the most useful output for day-to-day use.
+1. **Markdown export** — straightforward text transform.
+1. **PostScript export** — most complex, requires page layout engine.
 
----
+______________________________________________________________________
 
 ## 8. Out of Scope
 

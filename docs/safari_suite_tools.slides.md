@@ -1,15 +1,8 @@
----
-title: The Safari Suite
-author: GitHub Copilot
-theme: classic-blue
-aspect: 4:3
-footer: Safari Writer Documentation Tour
-paginate: true
----
+______________________________________________________________________
 
-layout: title
-footer: Start Here
----
+## title: The Safari Suite author: GitHub Copilot theme: classic-blue aspect: 4:3 footer: Safari Writer Documentation Tour paginate: true
+
+## layout: title footer: Start Here
 
 # The Safari Suite
 
@@ -17,25 +10,25 @@ footer: Start Here
 
 Safari Writer, Safari DOS, Safari Chat, Safari Fed, Safari REPL, Safari Basic, Safari View, and Safari Slides
 
----
+______________________________________________________________________
 
 # What is the Safari suite?
 
 Safari Writer is the center of a family of text-mode tools inspired by AtariWriter-era software.
 
-+ Write and format documents in Safari Writer
-+ Browse and manage files in Safari DOS
-+ Get help from Safari Chat
-+ Read and post on Mastodon with Safari Fed
-+ Experiment with BASIC in Safari REPL and Safari Basic
-+ Preview images with Safari View
-+ Present decks with Safari Slides
+- Write and format documents in Safari Writer
+- Browse and manage files in Safari DOS
+- Get help from Safari Chat
+- Read and post on Mastodon with Safari Fed
+- Experiment with BASIC in Safari REPL and Safari Basic
+- Preview images with Safari View
+- Present decks with Safari Slides
 
 Note:
 
 This slide is based on the project README and docs index, which describe the suite as a set of keyboard-driven tools with a shared retro aesthetic.
 
----
+______________________________________________________________________
 
 # Start with the main launcher
 
@@ -56,7 +49,7 @@ safari-view
 safari-slides
 ```
 
----
+______________________________________________________________________
 
 # Safari Writer
 
@@ -72,7 +65,7 @@ Note:
 
 The README and usage docs position Safari Writer as the main shell and the place where the suite's features come together.
 
----
+______________________________________________________________________
 
 # Proofreader and mail merge
 
@@ -90,7 +83,7 @@ Press **M** for mail merge.
 - Insert merge markers with **Alt+M**
 - Print one copy of the document per record
 
----
+______________________________________________________________________
 
 # Safari DOS
 
@@ -111,7 +104,7 @@ Common browser keys:
 - **X** move to Garbage
 - **I** file information
 
----
+______________________________________________________________________
 
 # Safari Chat
 
@@ -124,7 +117,7 @@ Safari Chat is the built-in helper.
 
 Safari Chat is intentionally simple: it uses the documentation, not a large language model, to answer questions.
 
----
+______________________________________________________________________
 
 # Safari Fed
 
@@ -142,7 +135,7 @@ Helpful keys:
 - **T** thread view
 - **W** export the selected post or thread to Safari Writer
 
----
+______________________________________________________________________
 
 # Safari REPL and Safari Basic
 
@@ -159,7 +152,7 @@ Safari Basic is the interpreter and macro engine.
 - Run editor macros with **Ctrl+Backslash**
 - Run fediverse macros in Safari Fed with **~**
 
----
+______________________________________________________________________
 
 # Safari View and Safari Slides
 
@@ -175,23 +168,23 @@ Safari Slides handles presentation decks.
 - Export writer content to `.slides.md`
 - Use it as a lightweight terminal projector for docs, talks, and demos
 
----
+______________________________________________________________________
 
 # The suite works best as a chain
 
 Here are common handoff patterns:
 
-+ Write a draft in Safari Writer, then export to Markdown or PDF
-+ Open Safari DOS to load, save, rename, or recover files
-+ Move from Safari Fed into Safari Writer when a post becomes a longer draft
-+ Launch Safari REPL when you want to test or edit a BASIC macro
-+ Preview a presentation in Safari Slides before sharing it
+- Write a draft in Safari Writer, then export to Markdown or PDF
+- Open Safari DOS to load, save, rename, or recover files
+- Move from Safari Fed into Safari Writer when a post becomes a longer draft
+- Launch Safari REPL when you want to test or edit a BASIC macro
+- Preview a presentation in Safari Slides before sharing it
 
 Note:
 
 The suite is strongest when treated like a collection of linked rooms rather than isolated apps.
 
----
+______________________________________________________________________
 
 # Handy command-line entry points
 
@@ -213,7 +206,7 @@ safari-fed --folder Home
 safari-dos browse C:\work --show-hidden --sort date --descending
 ```
 
----
+______________________________________________________________________
 
 # Which tool should I use?
 
@@ -229,11 +222,9 @@ Use **Safari REPL** or **Safari Basic** when the task becomes programmable.
 
 Use **Safari View** for images and **Safari Slides** for decks.
 
----
+______________________________________________________________________
 
-layout: center
-footer: Explore the menus
----
+## layout: center footer: Explore the menus
 
 # Follow the menus
 

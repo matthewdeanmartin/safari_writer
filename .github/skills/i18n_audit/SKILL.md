@@ -1,7 +1,6 @@
----
-name: i18n_audit
-description: Audit and update release-ready internationalization strings without re-learning the repo's i18n basics.
----
+______________________________________________________________________
+
+## name: i18n_audit description: Audit and update release-ready internationalization strings without re-learning the repo's i18n basics.
 
 # i18n Audit
 
@@ -52,28 +51,28 @@ Read these before roaming:
 ## What is already true in this repo
 
 1. The repo does **not** have a separate i18n framework per module.
-2. The repo does **not** currently use a generated `.pot` workflow in day-to-day code.
-3. The repo **does** already ship real `.po` catalogs under `safari_writer\locales`.
-4. The repo **does** already resolve translations through `safari_writer.locale_info.get_translation()`.
-5. The repo **does** already support `SAFARI_LOCALE` overrides for testing and manual verification.
-6. The repo **does** already compile `.mo` files with a pure-Python script.
+1. The repo does **not** currently use a generated `.pot` workflow in day-to-day code.
+1. The repo **does** already ship real `.po` catalogs under `safari_writer\locales`.
+1. The repo **does** already resolve translations through `safari_writer.locale_info.get_translation()`.
+1. The repo **does** already support `SAFARI_LOCALE` overrides for testing and manual verification.
+1. The repo **does** already compile `.mo` files with a pure-Python script.
 
 ## Fast path: adding new translatable strings
 
 When the task is "make this UI text translatable" or "update translations for release", do this:
 
 1. Find the user-facing English string in code.
-2. Reuse the existing `_()` helper pattern in that file. If the file already has `_()`, use it. If not, add the same tiny wrapper rather than inventing a new helper style.
-3. Keep the English source string as the `msgid`.
-4. Add or update that same `msgid` in every existing catalog:
+1. Reuse the existing `_()` helper pattern in that file. If the file already has `_()`, use it. If not, add the same tiny wrapper rather than inventing a new helper style.
+1. Keep the English source string as the `msgid`.
+1. Add or update that same `msgid` in every existing catalog:
    - `safari_writer\locales\en\LC_MESSAGES\safari_writer.po`
    - `safari_writer\locales\eo\LC_MESSAGES\safari_writer.po`
    - `safari_writer\locales\es\LC_MESSAGES\safari_writer.po`
    - `safari_writer\locales\fr\LC_MESSAGES\safari_writer.po`
    - `safari_writer\locales\is\LC_MESSAGES\safari_writer.po`
    - `safari_writer\locales\ru\LC_MESSAGES\safari_writer.po`
-5. Run `make locale`.
-6. Run the i18n tests.
+1. Run `make locale`.
+1. Run the i18n tests.
 
 Do not only update one language and call it done for a release pass unless the user explicitly asks for partial coverage.
 
@@ -165,9 +164,9 @@ Default action:
 Start narrow before broad:
 
 1. Search the specific files above for new English user-facing strings.
-2. Search for local `_()` helpers and `get_translation()` usage.
-3. Search the locale catalogs for the exact `msgid`.
-4. Only then broaden to the rest of the repo for untranslated literals.
+1. Search for local `_()` helpers and `get_translation()` usage.
+1. Search the locale catalogs for the exact `msgid`.
+1. Only then broaden to the rest of the repo for untranslated literals.
 
 Useful patterns:
 
@@ -181,14 +180,14 @@ Useful patterns:
 After translation edits:
 
 1. Run `make locale`
-2. Run:
+1. Run:
 
 ```powershell
 uv run pytest tests\test_writer\test_locale_info.py tests\test_writer\test_i18n_integration.py
 ```
 
 3. If you changed runtime wiring, run the broader existing checks the task warrants, preferably `make check` if the change is substantial.
-4. Manually spot-check with `SAFARI_LOCALE` if needed.
+1. Manually spot-check with `SAFARI_LOCALE` if needed.
 
 Examples:
 

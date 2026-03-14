@@ -226,3 +226,130 @@ msgstr "Ný Mastodon-færsla"
 
 msgid "No Safari Fed session active"
 msgstr "Engin Safari Fed-lota virk"
+
+msgid "  Conversation turns: {turns}"
+msgstr "  Umferðir í samræðu: {turns}"
+
+msgid "  Document: {doc}"
+msgstr "  Skjal: {doc}"
+
+msgid "  Topics loaded: {chunks}"
+msgstr "  Hlaðin efni: {chunks}"
+
+msgid "*** BACKUP & RESTORE ***"
+msgstr "*** AFRIT OG ENDURHEIMT ***"
+
+msgid "*** DOS ***"
+msgstr "*** DOS ***"
+
+msgid "*** Tools ***"
+msgstr "*** Verkfæri ***"
+
+msgid "*** Words ***"
+msgstr "*** Orð ***"
+
+msgid "=== SAFARI CHAT — KEY COMMANDS ==="
+msgstr "=== SAFARI CHAT — LYKLASKIPANIR ==="
+
+msgid "CONVERSATION TREE"
+msgstr "SAMRÆÐUTRÉ"
+
+msgid "Execution cancelled"
+msgstr "Keyrsla hætt við"
+
+msgid "Inserted slide break"
+msgstr "Glæruskil sett inn"
+
+msgid "MEMORY"
+msgstr "MINNI"
+
+msgid "Macro cancelled"
+msgstr "Makró hætt við"
+
+msgid "Macro ran: {name} (no output)"
+msgstr "Makró keyrði: {name} (ekkert úttak)"
+
+msgid "Macro: {name} — {count} line(s) inserted"
+msgstr "Makró: {name} — {count} lína/línur sett inn"
+
+msgid "No backup selected"
+msgstr "Ekkert afrit valið"
+
+msgid "No backups found."
+msgstr "Engin afrit fundust."
+
+msgid "No conversation yet."
+msgstr "Engin samræða enn."
+
+msgid "No help document loaded."
+msgstr "Ekkert hjálparskjal hlaðið inn."
+
+msgid "No runner available for this file type"
+msgstr "Enginn keyrsluaðili tiltækur fyrir þessa skráargerð"
+
+msgid "OPTIONS"
+msgstr "VALKOSTIR"
+
+msgid "PARSED TOPICS"
+msgstr "GREIND EFNI"
+
+msgid "Press Escape to close"
+msgstr "Ýttu á Escape til að loka"
+
+msgid "Press Escape to close."
+msgstr "Ýttu á Escape til að loka."
+
+msgid "Program Input (use \\n for new lines)"
+msgstr "Inntak forrits (notaðu \\n fyrir nýjar línur)"
+
+msgid "R=Resume editing  X=Discard  Esc=Back"
+msgstr "R=Halda áfram að skrifa  X=Henda  Esc=Til baka"
+
+msgid "SAFETY"
+msgstr "ÖRYGGI"
+
+msgid "SESSION INFO"
+msgstr "UPPLÝSINGAR UM LOTU"
+
+msgid "Start Safari Chat with a Markdown file:"
+msgstr "Ræstu Safari Chat með Markdown-skrá:"
+
+msgid "TOPICS"
+msgstr "EFNI"
+
+msgid "The conversation tree will appear here,"
+msgstr "Samræðutréð birtist hér,"
+
+msgid "The document should be split into sections"
+msgstr "Skjalinu ætti að skipta í hluta"
+
+msgid "Toot cancelled"
+msgstr "Færslu hætt við"
+
+msgid "Type a message at the USER> prompt"
+msgstr "Skrifaðu skilaboð við USER>-vísinn"
+
+msgid "Unknown command: {cmd}. Try /help."
+msgstr "Óþekkt skipun: {cmd}. Prófaðu /help."
+
+msgid "Welcome. Type your question below."
+msgstr "Velkomin. Sláðu inn spurninguna þína hér fyrir neðan."
+
+msgid "and branch structure."
+msgstr "og greinastrúktúr."
+
+msgid "and press Enter to start chatting."
+msgstr "og ýttu á Enter til að hefja spjall."
+
+msgid "separated by --- lines."
+msgstr "aðskildir með --- línum."
+
+msgid "showing each turn with speaker, emotion,"
+msgstr "sem sýnir hverja umferð með talanda, tilfinningu,"
+
+msgid " F1 Help | F2 Memory | ^T Topics | ^S Safety | ^O Options | ^Q Quit"
+msgstr " F1 Hjálp | F2 Minni | ^T Efni | ^S Öryggi | ^O Valkostir | ^Q Hætta"
+
+msgid " F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll"
+msgstr " F1 Hjálp  F2 Minni  ^T Efni  ^S Öryggi  ^O Valkostir  ^Q Hætta  PgUp/PgDn Skruna"
+

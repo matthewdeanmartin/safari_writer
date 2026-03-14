@@ -5,29 +5,19 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from textual.widgets import Static
+
 from safari_writer.app import SafariWriterApp
 from safari_writer.document_io import load_demo_document_buffer
 from safari_writer.mail_merge_db import MailMergeDB
-from safari_writer.screens.editor import (
-    CTRL_BOLD,
-    CTRL_CENTER,
-    CTRL_CHAIN,
-    CTRL_EJECT,
-    CTRL_ELONGATE,
-    CTRL_FOOTER,
-    CTRL_FORM,
-    CTRL_HEADER,
-    CTRL_HEADING,
-    CTRL_MERGE,
-    CTRL_PARA,
-    CTRL_RIGHT,
-    CTRL_SUB,
-    CTRL_SUPER,
-    CTRL_UNDERLINE,
-)
+from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_CHAIN,
+                                          CTRL_EJECT, CTRL_ELONGATE,
+                                          CTRL_FOOTER, CTRL_FORM, CTRL_HEADER,
+                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
+                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
+                                          CTRL_UNDERLINE)
 from safari_writer.screens.main_menu import MENU_ITEMS, MainMenuScreen
 from safari_writer.state import AppState
-from textual.widgets import Static
 
 
 def test_main_menu_exposes_demo_mode():

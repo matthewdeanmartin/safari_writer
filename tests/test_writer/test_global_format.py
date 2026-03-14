@@ -1,16 +1,12 @@
 """Unit tests for GlobalFormatScreen parameter editing logic."""
 
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 
+from safari_writer.screens.global_format import (KEY_TO_PARAM, PARAMS, GFRow,
+                                                 GlobalFormatScreen)
 from safari_writer.state import GlobalFormat
-from safari_writer.screens.global_format import (
-    GlobalFormatScreen,
-    PARAMS,
-    KEY_TO_PARAM,
-    GFRow,
-)
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -60,9 +56,9 @@ class TestParamTable:
         fmt = GlobalFormat()
         for p in PARAMS:
             val = getattr(fmt, p.attr)
-            assert p.min_val <= val <= p.max_val, (
-                f"{p.key} default {val} out of [{p.min_val}, {p.max_val}]"
-            )
+            assert (
+                p.min_val <= val <= p.max_val
+            ), f"{p.key} default {val} out of [{p.min_val}, {p.max_val}]"
 
 
 # ---------------------------------------------------------------------------

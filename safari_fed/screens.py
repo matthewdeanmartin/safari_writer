@@ -11,13 +11,8 @@ from textual.screen import ModalScreen, Screen
 from textual.timer import Timer
 from textual.widgets import Static
 
-from safari_fed.state import (
-    FOLDER_ORDER,
-    FedPost,
-    SafariFedState,
-    render_post_for_writer,
-    render_thread_for_writer,
-)
+from safari_fed.state import (FOLDER_ORDER, FedPost, SafariFedState,
+                              render_post_for_writer, render_thread_for_writer)
 
 __all__ = ["FED_CSS", "FedHelpScreen", "SafariFedMainScreen"]
 
@@ -465,8 +460,8 @@ class SafariFedMainScreen(Screen[None]):
 
     def _run_macro(self) -> None:
         """Open the macro picker and run the selected .BAS file against the current post."""
-        from safari_writer.screens.macro_picker import MacroPickerScreen
         from safari_basic.runner import MacroRunner
+        from safari_writer.screens.macro_picker import MacroPickerScreen
 
         post = self.state.current_post()
         context = MacroRunner.build_context(

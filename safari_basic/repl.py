@@ -1,26 +1,81 @@
-import sys
-import re
-import os
 import json
+import os
+import re
+import sys
 import threading
 import time
 from pathlib import Path
-from typing import Optional, TextIO, List
-from safari_basic.interpreter import SafariBasic, BasicError
+from typing import List, Optional, TextIO
+
+from safari_basic.interpreter import BasicError, SafariBasic
 
 # Directory containing bundled example programs
 _EXAMPLES_DIR = Path(__file__).parent / "examples"
 
 # Keywords for tab completion
 BASIC_KEYWORDS = [
-    "ABS", "ASC", "CHR$", "CLR", "CLOSE", "CONT", "COS", "DIM", "END",
-    "EXP", "FOR", "GOSUB", "GOTO", "IF", "INPUT", "INT", "LEN", "LET",
-    "LIST", "LOG", "NEXT", "NEW", "OPEN", "PRINT", "READ", "REM",
-    "RENUMBER", "RESTORE", "RETURN", "RND", "RUN", "SAVE", "LOAD",
-    "SGN", "SIN", "SQR", "STEP", "STOP", "STR$", "TAN", "THEN",
-    "TO", "TRON", "TROFF", "UNDO", "REDO", "VAL", "VARS",
-    "BYE", "EXIT", "QUIT", "HELP", "EDIT", "DELETE", "FIND",
-    "REPLACE", "FILES", "DIR", "PWD", "CD", "AUTOSAVE", "EXAMPLES",
+    "ABS",
+    "ASC",
+    "CHR$",
+    "CLR",
+    "CLOSE",
+    "CONT",
+    "COS",
+    "DIM",
+    "END",
+    "EXP",
+    "FOR",
+    "GOSUB",
+    "GOTO",
+    "IF",
+    "INPUT",
+    "INT",
+    "LEN",
+    "LET",
+    "LIST",
+    "LOG",
+    "NEXT",
+    "NEW",
+    "OPEN",
+    "PRINT",
+    "READ",
+    "REM",
+    "RENUMBER",
+    "RESTORE",
+    "RETURN",
+    "RND",
+    "RUN",
+    "SAVE",
+    "LOAD",
+    "SGN",
+    "SIN",
+    "SQR",
+    "STEP",
+    "STOP",
+    "STR$",
+    "TAN",
+    "THEN",
+    "TO",
+    "TRON",
+    "TROFF",
+    "UNDO",
+    "REDO",
+    "VAL",
+    "VARS",
+    "BYE",
+    "EXIT",
+    "QUIT",
+    "HELP",
+    "EDIT",
+    "DELETE",
+    "FIND",
+    "REPLACE",
+    "FILES",
+    "DIR",
+    "PWD",
+    "CD",
+    "AUTOSAVE",
+    "EXAMPLES",
 ]
 
 # Per-topic help entries
@@ -48,7 +103,7 @@ HELP_TOPICS = {
     "PWD": "PWD\n  Print the current working directory.",
     "CD": 'CD "path"\n  Change the current working directory.',
     "AUTOSAVE": "AUTOSAVE ON / AUTOSAVE OFF\n  Enable or disable automatic saving every 15 seconds.\n  Requires a filename (use SAVE first).",
-    "PRINT": 'PRINT expr[;expr...]\n  Output values. Use ; to suppress newline, , for tab.\n  Shorthand: ? expr',
+    "PRINT": "PRINT expr[;expr...]\n  Output values. Use ; to suppress newline, , for tab.\n  Shorthand: ? expr",
     "INPUT": 'INPUT ["prompt";] var\n  Read a value from the user into a variable.',
     "IF": "IF expr THEN statement\nIF expr THEN line_number\n  Conditional execution. No ELSE clause.",
     "FOR": "FOR var = start TO end [STEP step]\n  Begin a counted loop. Must be closed with NEXT var.",
@@ -64,7 +119,7 @@ HELP_TOPICS = {
     "CLOSE": "CLOSE #fd\n  Close an open file.",
     "BYE": "BYE\n  Exit the REPL. Also: EXIT, QUIT",
     "HELP": "HELP [topic]\n  Show help. HELP alone lists commands.\n  HELP PRINT shows details for PRINT.",
-    "EXAMPLES": 'EXAMPLES\n  List bundled demo programs.\n  Use EXAMPLES <name> to load one, e.g. EXAMPLES HELLO',
+    "EXAMPLES": "EXAMPLES\n  List bundled demo programs.\n  Use EXAMPLES <name> to load one, e.g. EXAMPLES HELLO",
 }
 
 
@@ -72,7 +127,9 @@ class SafariREPL:
     HISTORY_FILE = ".safari_history"
     MAX_HISTORY = 500
 
-    def __init__(self, out_stream: Optional[TextIO] = None, in_stream: Optional[TextIO] = None):
+    def __init__(
+        self, out_stream: Optional[TextIO] = None, in_stream: Optional[TextIO] = None
+    ):
         self.interpreter = SafariBasic(out_stream=out_stream, in_stream=in_stream)
         self.out_stream = self.interpreter.out_stream
         self.in_stream = self.interpreter.in_stream
@@ -87,17 +144,19 @@ class SafariREPL:
         try:
             path = os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
             if os.path.exists(path):
-                with open(path, 'r', encoding='utf-8') as f:
-                    self.history = [l.rstrip('\n') for l in f.readlines()][-self.MAX_HISTORY:]
+                with open(path, "r", encoding="utf-8") as f:
+                    self.history = [l.rstrip("\n") for l in f.readlines()][
+                        -self.MAX_HISTORY :
+                    ]
         except Exception:
             pass
 
     def _save_history(self):
         try:
             path = os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
-            with open(path, 'w', encoding='utf-8') as f:
-                for entry in self.history[-self.MAX_HISTORY:]:
-                    f.write(entry + '\n')
+            with open(path, "w", encoding="utf-8") as f:
+                for entry in self.history[-self.MAX_HISTORY :]:
+                    f.write(entry + "\n")
         except Exception:
             pass
 
@@ -105,7 +164,7 @@ class SafariREPL:
         if line and (not self.history or self.history[-1] != line):
             self.history.append(line)
 
-    def print_out(self, text: str, end: str = '\n'):
+    def print_out(self, text: str, end: str = "\n"):
         self.out_stream.write(text + end)
         self.out_stream.flush()
 
@@ -129,14 +188,14 @@ class SafariREPL:
                     results.append(s)
         # Filename completion
         try:
-            directory = '.'
+            directory = "."
             file_prefix = prefix
-            if '/' in prefix or '\\' in prefix:
+            if "/" in prefix or "\\" in prefix:
                 directory = os.path.dirname(prefix)
                 file_prefix = os.path.basename(prefix)
             for entry in os.listdir(directory):
                 if entry.upper().startswith(file_prefix.upper()):
-                    full = os.path.join(directory, entry) if directory != '.' else entry
+                    full = os.path.join(directory, entry) if directory != "." else entry
                     results.append(full)
         except Exception:
             pass
@@ -154,7 +213,7 @@ class SafariREPL:
         self._add_history(line)
 
         # Check for line number (Program Mode)
-        match = re.match(r'^(\d+)\s*(.*)', line)
+        match = re.match(r"^(\d+)\s*(.*)", line)
         if match:
             num = int(match.group(1))
             text = match.group(2).strip()
@@ -190,10 +249,12 @@ class SafariREPL:
             try:
                 # Check for RUN <line>
                 parts = line.split()
-                start_line = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else None
+                start_line = (
+                    int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else None
+                )
                 self.interpreter.run_program(start_line)
             except BasicError:
-                pass # Already printed
+                pass  # Already printed
             except Exception as e:
                 self.print_out(f"INTERNAL ERROR: {e}")
             return True
@@ -269,7 +330,11 @@ class SafariREPL:
             self._do_replace(line)
             return True
 
-        if upper_line in ("FILES", "DIR") or upper_line.startswith("FILES ") or upper_line.startswith("DIR "):
+        if (
+            upper_line in ("FILES", "DIR")
+            or upper_line.startswith("FILES ")
+            or upper_line.startswith("DIR ")
+        ):
             self._do_files(line)
             return True
 
@@ -293,7 +358,7 @@ class SafariREPL:
         try:
             self.interpreter.execute_immediate(line)
         except BasicError:
-            pass # Already printed
+            pass  # Already printed
         except Exception as e:
             self.print_out(f"INTERNAL ERROR: {e}")
 
@@ -302,7 +367,7 @@ class SafariREPL:
     def _do_list(self, line: str):
         parts = line.upper().replace("LIST", "").strip().split(",")
         start = 0
-        end = float('inf')
+        end = float("inf")
 
         if parts[0].strip():
             try:
@@ -318,7 +383,7 @@ class SafariREPL:
                 except ValueError:
                     pass
             else:
-                end = float('inf')
+                end = float("inf")
 
         for num in self.interpreter.line_order:
             if start <= num <= end:
@@ -326,14 +391,18 @@ class SafariREPL:
 
     def _do_load(self, line: str):
         match = re.search(r'["\'](.*?)["\']', line)
-        filename = match.group(1) if match else line.split()[-1] if len(line.split()) > 1 else self.current_filename
+        filename = (
+            match.group(1)
+            if match
+            else line.split()[-1] if len(line.split()) > 1 else self.current_filename
+        )
 
         if not filename:
             self.print_out("LOAD REQUIRES FILENAME")
             return
 
         try:
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 self.interpreter.reset()
                 for l in f:
                     self.process_line(l.strip())
@@ -345,14 +414,18 @@ class SafariREPL:
 
     def _do_save(self, line: str):
         match = re.search(r'["\'](.*?)["\']', line)
-        filename = match.group(1) if match else line.split()[-1] if len(line.split()) > 1 else self.current_filename
+        filename = (
+            match.group(1)
+            if match
+            else line.split()[-1] if len(line.split()) > 1 else self.current_filename
+        )
 
         if not filename:
             self.print_out("SAVE REQUIRES FILENAME")
             return
 
         try:
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(filename, "w", encoding="utf-8") as f:
                 for num in self.interpreter.line_order:
                     f.write(f"{num} {self.interpreter.lines[num]}\n")
                 self.current_filename = filename
@@ -363,7 +436,9 @@ class SafariREPL:
 
     def _do_renumber(self, line: str):
         # REN start,step,from
-        params = line.upper().replace("RENUMBER", "").replace("REN", "").strip().split(",")
+        params = (
+            line.upper().replace("RENUMBER", "").replace("REN", "").strip().split(",")
+        )
         start = 10
         step = 10
         from_line = 0
@@ -390,7 +465,7 @@ class SafariREPL:
             if isinstance(val, str):
                 self.print_out(f'{name} = "{val}"')
             else:
-                self.print_out(f'{name} = {val}')
+                self.print_out(f"{name} = {val}")
         for name, arr in sorted(self.interpreter.arrays.items()):
             self.print_out(f"{name}({len(arr)-1}) = [ARRAY]")
 
@@ -467,7 +542,9 @@ class SafariREPL:
         for num in self.interpreter.line_order:
             source = self.interpreter.lines[num]
             # Case-insensitive replace
-            new_source = re.sub(re.escape(old_text), new_text, source, flags=re.IGNORECASE)
+            new_source = re.sub(
+                re.escape(old_text), new_text, source, flags=re.IGNORECASE
+            )
             if new_source != source:
                 self.interpreter.lines[num] = new_source
                 count += 1
@@ -482,10 +559,13 @@ class SafariREPL:
         parts = line.split(maxsplit=1)
         pattern = parts[1].strip() if len(parts) > 1 else None
         try:
-            entries = sorted(os.listdir('.'))
+            entries = sorted(os.listdir("."))
             if pattern:
                 import fnmatch
-                entries = [e for e in entries if fnmatch.fnmatch(e.upper(), pattern.upper())]
+
+                entries = [
+                    e for e in entries if fnmatch.fnmatch(e.upper(), pattern.upper())
+                ]
             for entry in entries:
                 if os.path.isdir(entry):
                     self.print_out(f"  <DIR>  {entry}")
@@ -535,7 +615,7 @@ class SafariREPL:
     def _do_autosave_tick(self):
         if self._autosave_enabled and self.current_filename and self.modified:
             try:
-                with open(self.current_filename, 'w', encoding='utf-8') as f:
+                with open(self.current_filename, "w", encoding="utf-8") as f:
                     for num in self.interpreter.line_order:
                         f.write(f"{num} {self.interpreter.lines[num]}\n")
                 self.modified = False
@@ -616,13 +696,16 @@ class SafariREPL:
             desc = ""
             try:
                 first_line = ex.read_text(encoding="utf-8").split("\n", 1)[0]
-                rem_match = re.match(r'^\d+\s+REM\s+[-—]*\s*(.*?)\s*[-—]*\s*$', first_line, re.IGNORECASE)
+                rem_match = re.match(
+                    r"^\d+\s+REM\s+[-—]*\s*(.*?)\s*[-—]*\s*$", first_line, re.IGNORECASE
+                )
                 if rem_match:
                     desc = f"  - {rem_match.group(1)}"
             except Exception:
                 pass
             self.print_out(f"  {ex.stem.upper()}{desc}")
         self.print_out(f"\nTYPE EXAMPLES <NAME> TO LOAD ONE")
+
 
 def main():
     repl = SafariREPL()
@@ -638,6 +721,7 @@ def main():
         except KeyboardInterrupt:
             print("\nBREAK")
             repl.interpreter.stopped = True
+
 
 if __name__ == "__main__":
     main()

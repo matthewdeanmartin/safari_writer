@@ -2,6 +2,7 @@
 SafariView Terminal UI.
 The primary Textual application for browsing and viewing images.
 """
+
 from __future__ import annotations
 
 import logging
@@ -10,17 +11,11 @@ from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import (
-    DirectoryTree,
-    Footer,
-    Header,
-    Static,
-)
+from textual.widgets import DirectoryTree, Footer, Header, Static
 
+from safari_view.render import RenderContext, RenderMode, create_pipeline
 from safari_view.state import SafariViewLaunchConfig, SafariViewState
-from safari_view.render import create_pipeline, RenderContext, RenderMode
 from safari_view.ui_terminal.widgets import ChunkyImage
-
 
 _log = logging.getLogger("safari_view.ui_terminal")
 
@@ -94,7 +89,9 @@ class SafariViewScreen(Screen):
         """Handle terminal resize by refreshing the image."""
         self._refresh_image()
 
-    def on_directory_tree_file_selected(self, event: DirectoryTree.FileSelected) -> None:
+    def on_directory_tree_file_selected(
+        self, event: DirectoryTree.FileSelected
+    ) -> None:
         """Called when a file is selected in the directory tree."""
         self._last_selected_path = event.path
         self._load_and_render_image(event.path)
@@ -224,7 +221,7 @@ class SafariViewScreen(Screen):
                 dithering=self.state.dithering,
                 pixel_grid=self.state.pixel_grid,
             )
-            
+
             # Process image through pipeline
             transformed = self.pipeline.process(path, self.state.render_mode, context)
 

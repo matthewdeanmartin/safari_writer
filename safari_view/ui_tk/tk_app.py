@@ -2,17 +2,18 @@
 SafariView Tkinter Desktop UI.
 Provides a higher-fidelity windowed image viewer.
 """
+
 from __future__ import annotations
 
 import sys
 import tkinter as tk
-from tkinter import filedialog, messagebox
 from pathlib import Path
+from tkinter import filedialog, messagebox
 
 from PIL import ImageTk
 
+from safari_view.render import RenderContext, RenderMode, create_pipeline
 from safari_view.state import SafariViewState
-from safari_view.render import create_pipeline, RenderContext, RenderMode
 
 
 class SafariViewTkApp:
@@ -21,7 +22,7 @@ class SafariViewTkApp:
     def __init__(self, state: SafariViewState | None = None) -> None:
         self.state = state or SafariViewState()
         self.pipeline = create_pipeline()
-        
+
         self.root = tk.Tk()
         self.root.title("SafariView - Retro Image Viewer")
         self.root.geometry("800x600")
@@ -29,33 +30,41 @@ class SafariViewTkApp:
 
         self._setup_menu()
         self._setup_ui()
-        
+
         self.tk_image = None
         self.current_path = self.state.current_path
-        
+
         if self.state.current_image_path:
             self._load_and_render_image(self.state.current_image_path)
 
     def _setup_menu(self) -> None:
         menubar = tk.Menu(self.root)
-        
+
         file_menu = tk.Menu(menubar, tearoff=0)
         file_menu.add_command(label="Open Image...", command=self._on_open_file)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
         menubar.add_cascade(label="FILE", menu=file_menu)
-        
+
         view_menu = tk.Menu(menubar, tearoff=0)
-        view_menu.add_command(label="2600 Mode (F3)", command=lambda: self._set_mode(RenderMode.MODE_2600))
-        view_menu.add_command(label="800 Mode (F4)", command=lambda: self._set_mode(RenderMode.MODE_800))
-        view_menu.add_command(label="ST Mode (F5)", command=lambda: self._set_mode(RenderMode.MODE_ST))
-        view_menu.add_command(label="Native Mode (F6)", command=lambda: self._set_mode(RenderMode.NATIVE))
+        view_menu.add_command(
+            label="2600 Mode (F3)", command=lambda: self._set_mode(RenderMode.MODE_2600)
+        )
+        view_menu.add_command(
+            label="800 Mode (F4)", command=lambda: self._set_mode(RenderMode.MODE_800)
+        )
+        view_menu.add_command(
+            label="ST Mode (F5)", command=lambda: self._set_mode(RenderMode.MODE_ST)
+        )
+        view_menu.add_command(
+            label="Native Mode (F6)", command=lambda: self._set_mode(RenderMode.NATIVE)
+        )
         view_menu.add_separator()
         view_menu.add_checkbutton(label="Dithering", command=self._toggle_dithering)
         menubar.add_cascade(label="VIEW", menu=view_menu)
-        
+
         self.root.config(menu=menubar)
-        
+
         # Bind keys
         self.root.bind("<F3>", lambda e: self._set_mode(RenderMode.MODE_2600))
         self.root.bind("<F4>", lambda e: self._set_mode(RenderMode.MODE_800))
@@ -74,8 +83,8 @@ class SafariViewTkApp:
             title="Select Image",
             filetypes=(
                 ("Image files", "*.png *.jpg *.jpeg *.gif *.bmp *.webp"),
-                ("All files", "*.*")
-            )
+                ("All files", "*.*"),
+            ),
         )
         if filename:
             path = Path(filename)
@@ -100,12 +109,12 @@ class SafariViewTkApp:
     def _load_and_render_image(self, path: Path) -> None:
         try:
             self.state.current_image_path = path
-            
+
             # Target dimensions from canvas
             self.root.update_idletasks()
             w = self.canvas.winfo_width()
             h = self.canvas.winfo_height()
-            
+
             if w < 10 or h < 10:
                 w, h = 800, 600
 
@@ -115,15 +124,17 @@ class SafariViewTkApp:
                 dithering=self.state.dithering,
                 pixel_grid=self.state.pixel_grid,
             )
-            
+
             transformed = self.pipeline.process(path, self.state.render_mode, context)
-            
+
             self.tk_image = ImageTk.PhotoImage(transformed)
             self.canvas.delete("all")
-            self.canvas.create_image(w // 2, h // 2, image=self.tk_image, anchor=tk.CENTER)
-            
+            self.canvas.create_image(
+                w // 2, h // 2, image=self.tk_image, anchor=tk.CENTER
+            )
+
             self.root.title(f"SafariView - {path.name} [{self.state.render_mode.name}]")
-            
+
         except Exception as e:
             messagebox.showerror("Error", f"Could not load image: {e}")
 

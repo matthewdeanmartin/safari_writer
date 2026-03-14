@@ -44,11 +44,13 @@ visible window. This is the same technique used by the ANSI preview screen
 (`PrintPreviewScreen` in `screens/print_screen.py`).
 
 Advantages:
+
 - No base-class change required; stays a plain `Widget`.
 - Simple to understand and debug.
 - Performance win: only visible lines are rendered.
 
 Disadvantage:
+
 - You manage scroll state yourself (trivial in practice).
 
 ### 2. Inherit from ScrollView and use render_line()

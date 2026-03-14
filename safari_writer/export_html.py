@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 __all__ = ["export_html"]
 
+
 def export_html(
     buffer: list[str],
     fmt: GlobalFormat,
@@ -20,7 +21,7 @@ def export_html(
     is_markdown: bool = False,
 ) -> str:
     """Convert a document buffer to HTML.
-    
+
     If is_markdown is True, treats buffer as raw Markdown.
     Otherwise, converts Safari Writer formatting to HTML.
     """
@@ -28,11 +29,12 @@ def export_html(
         md_text = "\n".join(buffer)
     else:
         from safari_writer.export_md import export_markdown
+
         md_text = export_markdown(buffer, fmt, db)
-    
+
     # Simple Markdown to HTML converter
     html_content = _md_to_html(md_text)
-    
+
     return f"""<!DOCTYPE html>
 <html>
 <head>
@@ -70,14 +72,15 @@ def export_html(
 </html>
 """
 
+
 def _md_to_html(md: str) -> str:
     """Very basic Markdown to HTML conversion using regex."""
     # This is not a full-featured parser, but covers basics for Safari Writer needs.
-    
+
     lines = md.splitlines()
     html_lines = []
     in_list = False
-    
+
     for line in lines:
         # Headings
         if line.startswith("#"):
@@ -93,7 +96,7 @@ def _md_to_html(md: str) -> str:
             content = line[level:].strip()
             html_lines.append(f"<h{level}>{html.escape(content)}</h{level}>")
             continue
-            
+
         # Horizontal rule
         if line.strip() == "---":
             if in_list:
@@ -101,7 +104,7 @@ def _md_to_html(md: str) -> str:
                 in_list = False
             html_lines.append("<hr>")
             continue
-            
+
         # Lists (very basic)
         if line.strip().startswith("- ") or line.strip().startswith("* "):
             if not in_list:
@@ -111,9 +114,9 @@ def _md_to_html(md: str) -> str:
             html_lines.append(f"  <li>{_render_inline_html(content)}</li>")
             continue
         elif in_list and line.strip():
-             # Continuation of list?
-             html_lines.append(f"  {_render_inline_html(line.strip())}")
-             continue
+            # Continuation of list?
+            html_lines.append(f"  {_render_inline_html(line.strip())}")
+            continue
         elif in_list:
             html_lines.append("</ul>")
             in_list = False
@@ -123,16 +126,17 @@ def _md_to_html(md: str) -> str:
             html_lines.append(f"<p>{_render_inline_html(line)}</p>")
         else:
             html_lines.append("")
-            
+
     if in_list:
         html_lines.append("</ul>")
-        
+
     return "\n".join(html_lines)
+
 
 def _render_inline_html(text: str) -> str:
     """Render inline markdown (bold, italic, links, etc) to HTML."""
     t = html.escape(text)
-    
+
     # Bold: **text**
     t = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", t)
     # Italic: *text* (be careful with bold)
@@ -140,11 +144,13 @@ def _render_inline_html(text: str) -> str:
     # Underline (if present in MD via <u>)
     # Links: [text](url)
     t = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2">\1</a>', t)
-    
+
     # Safari Writer specific tags if they survived export_md
-    t = t.replace("&lt;center&gt;", '<div style="text-align: center;">').replace("&lt;/center&gt;", "</div>")
+    t = t.replace("&lt;center&gt;", '<div style="text-align: center;">').replace(
+        "&lt;/center&gt;", "</div>"
+    )
     t = t.replace("&lt;u&gt;", "<u>").replace("&lt;/u&gt;", "</u>")
     t = t.replace("&lt;sup&gt;", "<sup>").replace("&lt;/sup&gt;", "</sup>")
     t = t.replace("&lt;sub&gt;", "<sub>").replace("&lt;/sub&gt;", "</sub>")
-    
+
     return t

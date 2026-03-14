@@ -10,24 +10,12 @@ from safari_writer.state import GlobalFormat
 if TYPE_CHECKING:
     from safari_writer.mail_merge_db import MailMergeDB
 
-from safari_writer.screens.editor import (
-    CTRL_BOLD,
-    CTRL_UNDERLINE,
-    CTRL_CENTER,
-    CTRL_RIGHT,
-    CTRL_ELONGATE,
-    CTRL_SUPER,
-    CTRL_SUB,
-    CTRL_PARA,
-    CTRL_MERGE,
-    CTRL_HEADER,
-    CTRL_FOOTER,
-    CTRL_HEADING,
-    CTRL_EJECT,
-    CTRL_CHAIN,
-    CTRL_FORM,
-    TOGGLE_MARKERS,
-)
+from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_CHAIN,
+                                          CTRL_EJECT, CTRL_ELONGATE,
+                                          CTRL_FOOTER, CTRL_FORM, CTRL_HEADER,
+                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
+                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
+                                          CTRL_UNDERLINE, TOGGLE_MARKERS)
 
 __all__ = ["export_markdown"]
 

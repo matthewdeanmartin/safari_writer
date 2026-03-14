@@ -1,92 +1,101 @@
 # Safari Writer - Implementation TODO
 
 ## Architecture Notes
+
 - Framework: Python + Textual (TUI)
 - "What you see is what you mean" — inline control chars displayed as symbols, not rendered
 - Three main app screens: Main Menu, Editor, and module screens (Global Format, Proofreader, Mail Merge)
 
----
+______________________________________________________________________
 
 ## Phase 1: Project Scaffold
 
 - done
----
+
+______________________________________________________________________
 
 ## Phase 2: Main Menu Screen
 
 - done
----
+
+______________________________________________________________________
 
 ## Phase 3: Editor Screen (Core)
 
-- done 
----
+- done
+
+______________________________________________________________________
 
 ## Phase 4: Block Operations
 
--  done
----
+- done
+
+______________________________________________________________________
 
 ## Phase 5: Search & Replace
 
 - done
----
+
+______________________________________________________________________
 
 ## Phase 6: Inline Formatting
 
 - [ ] Mid-document global format override (inline margin/spacing change)
----
+
+______________________________________________________________________
 
 ## Phase 7: Global Format Screen
 
 - done
----
+
+______________________________________________________________________
 
 ## Phase 8: File Operations
 
 - [x] Replace the current ad-hoc file/index actions with a Safari DOS handoff entry point from Safari Writer
 - [x] Route load/save/save-as folder picking through Safari DOS once the integration contract exists
 
----
+______________________________________________________________________
 
 ## Phase 9: Print / Export (see spec/07_file_format_and_print.md)
 
 - [x] Mail merge injection at print/export time (iterate loaded DB records, substitute @N fields)
 
----
+______________________________________________________________________
 
 ## Phase 10: Proofreader Module
 
 - [ ] Manual dictionary creation via editor (space/CR-separated word list) — use editor directly
 
----
+______________________________________________________________________
 
 ## Phase 11: Mail Merge Module
 
 - [x] **Document integration**:
   - [x] At print time: iterate records from loaded DB, inject field values into @N placeholders (Phase 9)
 
----
+______________________________________________________________________
 
 ## Phase 12: Polish & Edge Cases
 
 - [ ] Double-column layout rendering (M/N margins in preview and PostScript)
 - [x] Mail merge injection at print/export time — iterate records, substitute `@N` fields
 - [ ] Mid-document global format override (inline margin/spacing change, new control chars)
----
+
+______________________________________________________________________
 
 ## Phase 13: CLI Interface
 
 - basically done
 
----
+______________________________________________________________________
 
 ## Phase 14: Safari DOS Module
 
 - [x] Create an independent `safari_dos` module/package instead of folding the feature into `safari_writer`
 - [x] Add a standalone app entry point (`safari-dos`) so Safari DOS can launch directly without opening Safari Writer first
 - [x] Add a module entry path (`python -m safari_dos` or equivalent) for direct invocation during development/tests
-- [ ] Define the Safari DOS <-> Safari Writer handoff contract:
+- [ ] Define the Safari DOS \<-> Safari Writer handoff contract:
   - [x] decide whether integration is in-process, subprocess-based, or both
   - [x] preserve current folder/project context when handing off between apps
   - [x] support opening a selected document in Safari Writer from Safari DOS

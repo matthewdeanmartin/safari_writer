@@ -5,12 +5,13 @@ Usage:
 Compiles every safari_writer/locales/*/LC_MESSAGES/safari_writer.po
 into the corresponding safari_writer.mo binary.
 """
+
 from __future__ import annotations
 
-import struct
 import array
 import os
 import re
+import struct
 from pathlib import Path
 
 MAGIC = 0x950412DE  # little-endian MO magic number
@@ -52,7 +53,7 @@ def _parse_po(po_text: str) -> list[tuple[str, str]]:
             msgstr = ""
             in_msgid = True
             in_msgstr = False
-            in_header = (msgid == "")
+            in_header = msgid == ""
         elif line.startswith("msgstr "):
             msgstr = _unescape(line[8:-1])
             in_msgid = False
@@ -91,7 +92,7 @@ def compile_po(po_path: Path, mo_path: Path) -> None:
     trans_table_offset = orig_table_offset + n * 8
     strings_offset = trans_table_offset + n * 8
 
-    orig_table: list[tuple[int, int]] = []   # (length, offset) per msgid
+    orig_table: list[tuple[int, int]] = []  # (length, offset) per msgid
     trans_table: list[tuple[int, int]] = []  # (length, offset) per msgstr
     strings = bytearray()
 
@@ -117,7 +118,9 @@ def compile_po(po_path: Path, mo_path: Path) -> None:
 
     mo_path.parent.mkdir(parents=True, exist_ok=True)
     mo_path.write_bytes(bytes(buf))
-    print(f"  compiled {po_path.relative_to(Path.cwd())} -> {mo_path.name}  ({n} messages)")
+    print(
+        f"  compiled {po_path.relative_to(Path.cwd())} -> {mo_path.name}  ({n} messages)"
+    )
 
 
 def main() -> None:

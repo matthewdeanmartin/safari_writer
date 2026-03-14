@@ -4,7 +4,7 @@
 
 Safari Writer internationalization, implemented in three progressive levels. Each level is independently shippable. The guiding principle is **transparent OS-native locale detection** — the app reads the user's locale from the operating system and adapts, with no manual configuration required (but with an override escape hatch).
 
----
+______________________________________________________________________
 
 ## Level 0: Locale Detection Foundation
 
@@ -22,11 +22,11 @@ def get_locale() -> str:
 Detection order:
 
 1. **Explicit override** — environment variable `SAFARI_LOCALE` (e.g. `SAFARI_LOCALE=fr_FR`). This is the escape hatch for testing, CI, and users whose OS locale doesn't reflect their preference.
-2. **OS-native query** (cross-platform):
+1. **OS-native query** (cross-platform):
    - **Windows**: `ctypes.windll.kernel32.GetUserDefaultUILanguage()` → map the LCID to an IETF tag. Fall back to `locale.getdefaultlocale()`.
    - **macOS**: Read `defaults read .GlobalPreferences AppleLanguages` (returns an ordered list). Parse the first entry. Fall back to `locale.getdefaultlocale()`.
    - **Linux / other**: `locale.getdefaultlocale()`, or parse `$LANG` / `$LC_ALL` / `$LC_MESSAGES`.
-3. **Fallback**: `en_US`.
+1. **Fallback**: `en_US`.
 
 The result is cached at startup and exposed as `locale_info.LOCALE` (the full tag, e.g. `fr_FR`) and convenience properties `locale_info.LANGUAGE` (`fr`) and `locale_info.REGION` (`FR`).
 
@@ -38,7 +38,7 @@ If `~/.safari_writer/config.toml` (or the app's future config system) contains a
 SAFARI_LOCALE env var  >  config file  >  OS detection  >  en_US
 ```
 
----
+______________________________________________________________________
 
 ## Level 1: Multilingual Spell Check
 
@@ -100,7 +100,7 @@ When present, the Proofreader uses that language instead of the OS locale. The G
 
 Personal dictionaries are plain word lists. They apply regardless of the active language. No changes needed.
 
----
+______________________________________________________________________
 
 ## Level 2: Localized System Clock & Date/Time Formatting
 
@@ -148,7 +148,7 @@ Replace all hardcoded `strftime` calls with `locale_info.format_datetime()`. The
 
 Respect the OS convention. Most locales already handle this via `%X`. For the Main Menu clock specifically, if the user's locale uses 12-hour time, show AM/PM. No app-level toggle — just follow the OS.
 
----
+______________________________________________________________________
 
 ## Level 3: Localized UI Strings
 
@@ -270,7 +270,7 @@ For interpolated strings, use named placeholders so translators can reorder:
 _("File '{filename}' saved ({size} bytes)")
 ```
 
----
+______________________________________________________________________
 
 ## Cross-Cutting Concerns
 

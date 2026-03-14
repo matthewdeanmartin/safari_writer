@@ -1,12 +1,13 @@
 """
 SafariView 800 Rendering Mode.
 """
+
 from __future__ import annotations
 
 from PIL import Image
 
+from safari_view.render.palettes import apply_palette, get_atari_800_palette
 from safari_view.render.pipeline import ImageTransformer, RenderContext
-from safari_view.render.palettes import get_atari_800_palette, apply_palette
 
 
 class Mode800Transformer(ImageTransformer):
@@ -26,7 +27,9 @@ class Mode800Transformer(ImageTransformer):
         logical_height = max(1, int(logical_width * aspect_ratio))
 
         # Step 2: Downsample
-        small_img = image.resize((logical_width, logical_height), Image.Resampling.NEAREST)
+        small_img = image.resize(
+            (logical_width, logical_height), Image.Resampling.NEAREST
+        )
 
         # Step 3: Apply palette
         palette_data = get_atari_800_palette()

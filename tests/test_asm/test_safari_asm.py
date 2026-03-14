@@ -7,10 +7,11 @@ import math
 from pathlib import Path
 
 import pytest
+
 import safari_asm
 from safari_asm import SafariAsmInterpreter, parse_args
-from safari_asm.parser import parse_source
 from safari_asm.main import main as safari_asm_main
+from safari_asm.parser import parse_source
 
 EXAMPLE_DIR = Path(__file__).resolve().parents[2] / "safari_asm" / "example"
 
@@ -170,9 +171,9 @@ def test_example_folder_contains_copious_scripts():
 def test_all_example_scripts_parse():
     for path in sorted(EXAMPLE_DIR.glob("*.asm")):
         program = parse_source(path.read_text(encoding="utf-8"), source_name=str(path))
-        assert program.instructions, (
-            f"{path.name} should contain executable instructions"
-        )
+        assert (
+            program.instructions
+        ), f"{path.name} should contain executable instructions"
 
 
 @pytest.mark.parametrize(
@@ -189,15 +190,13 @@ def test_all_example_scripts_run(
 
 
 def test_hello_world_program():
-    _, stdout, stderr = run_program(
-        """
+    _, stdout, stderr = run_program("""
         .TEXT
         MAIN:
             LDA #"HELLO, WORLD!"
             OUTLN A
             HALT
-        """
-    )
+        """)
 
     assert stdout == "HELLO, WORLD!\n"
     assert stderr == ""
@@ -254,8 +253,7 @@ def test_example_echo_and_count_stdin_runs():
 
 
 def test_numeric_loop_and_case_insensitive_aliases():
-    _, stdout, _ = run_program(
-        """
+    _, stdout, _ = run_program("""
         .data
         i: .var
 
@@ -272,8 +270,7 @@ def test_numeric_loop_and_case_insensitive_aliases():
             branch loop
         done:
             stop
-        """
-    )
+        """)
 
     assert stdout.splitlines() == ["1", "2", "3"]
 
@@ -289,8 +286,7 @@ def test_example_loop_stack_and_subroutine_run():
 
 
 def test_subroutine_stack_and_return_value():
-    _, stdout, _ = run_program(
-        """
+    _, stdout, _ = run_program("""
         .DATA
         NAME: .VAR
 
@@ -309,8 +305,7 @@ def test_subroutine_stack_and_return_value():
             CAT A, NAME
             PLA
             RTS
-        """
-    )
+        """)
 
     assert stdout == "MATT\n"
 
@@ -326,8 +321,7 @@ def test_example_collections_and_csv_examples_run():
 
 
 def test_split_get_put_join_and_replace():
-    interpreter, stdout, _ = run_program(
-        """
+    interpreter, stdout, _ = run_program("""
         .DATA
         ITEMS: .LIST "RED", "GREEN"
         SETTINGS: .MAP "MODE", "FAST"
@@ -343,8 +337,7 @@ def test_split_get_put_join_and_replace():
             JOIN A, ITEMS, #"|"
             OUTLN A
             HALT
-        """
-    )
+        """)
 
     assert stdout == "RED|GREEN\n"
     assert interpreter.variables["SETTINGS"]["DEBUG"] is True
@@ -473,8 +466,7 @@ def test_example_python_bridge_error_and_text_pipeline_run():
 
 
 def test_pycall_failure_sets_error_for_berr():
-    interpreter, stdout, stderr = run_program(
-        """
+    interpreter, stdout, stderr = run_program("""
         .TEXT
         MAIN:
             PYCALL A, #"missing:thing"
@@ -485,8 +477,7 @@ def test_pycall_failure_sets_error_for_berr():
             ERRMSG X
             ERRLN X
             HALT
-        """
-    )
+        """)
 
     assert stdout == ""
     assert "No module named" in stderr

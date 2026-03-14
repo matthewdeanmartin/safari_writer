@@ -4,22 +4,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import safari_writer.locale_info as _locale_info
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
-from textual import events
-from safari_writer.proofing import (
-    check_word as _check_word,
-    dict_lookup as _dict_lookup,
-    extract_words as _extract_words,
-    load_personal_dictionary,
-    make_checker as _make_checker,
-)
+
+import safari_writer.locale_info as _locale_info
+from safari_writer.proofing import check_word as _check_word
+from safari_writer.proofing import dict_lookup as _dict_lookup
+from safari_writer.proofing import extract_words as _extract_words
+from safari_writer.proofing import load_personal_dictionary
+from safari_writer.proofing import make_checker as _make_checker
 from safari_writer.state import AppState
 from safari_writer.typed import SpellChecker, WordMatch
-
 
 _DEFAULT_PERSONAL_DICT = "personal.dict"
 
@@ -242,8 +240,9 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def _enter_menu(self) -> None:
-        from safari_writer.locale_info import LOCALE
         from textual.containers import Vertical
+
+        from safari_writer.locale_info import LOCALE
 
         self._mode = MODE_MENU
         lang = self._state.doc_language or LOCALE

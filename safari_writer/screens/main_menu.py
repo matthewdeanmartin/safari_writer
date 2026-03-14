@@ -8,8 +8,8 @@ from textual.screen import Screen
 from textual.timer import Timer
 from textual.widgets import Static
 
-from safari_writer.path_utils import leaf_name
 import safari_writer.locale_info as _locale_info
+from safari_writer.path_utils import leaf_name
 
 
 def _(s: str) -> str:
@@ -368,8 +368,9 @@ class MainMenuScreen(Screen):
         return f" {self._message}" if self._message else self._status_text()
 
     def _context_text(self) -> str:
-        from safari_writer.locale_info import LANGUAGE
         from pathlib import Path
+
+        from safari_writer.locale_info import LANGUAGE
 
         state = self.app.state  # type: ignore[attr-defined]
 

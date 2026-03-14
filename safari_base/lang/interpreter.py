@@ -9,30 +9,35 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from safari_base.lang.dbf_adapter import (
-    TableHandle, copy_structure, create_table, open_table,
-)
+from safari_base.lang.dbf_adapter import (TableHandle, copy_structure,
+                                          create_table, open_table)
 from safari_base.lang.environment import Environment
-from safari_base.lang.errors import (
-    DBaseError, NoTableError, ParseError, UnsafeCommandError,
-)
+from safari_base.lang.errors import (DBaseError, NoTableError, ParseError,
+                                     UnsafeCommandError)
 from safari_base.lang.functions import call_function
 from safari_base.lang.parser import parse, parse_command
-from safari_base.lang.types import (
-    AppendBlankStmt, AppendFromStmt, AssignStmt, AverageStmt, BinOp,
-    CdStmt, CloseStmt, CommandResult, CommentStmt, ContinueStmt,
-    CopyFileStmt, CopyStructureStmt, CountStmt, CreateFromStmt,
-    CreateTableStmt, DefFnStmt, DeleteStmt, DimHashStmt, DirStmt,
-    DisplayStructureStmt, DoCaseStmt, DoProgramStmt, DoWhileStmt,
-    EraseStmt, ExitStmt, Expr, FieldRef, ForEachStmt, ForStmt,
-    FuncCall, FuncDefStmt, GoStmt, HashAssignStmt, Ident, IfStmt,
-    IndexOnStmt, ListStmt, LocateStmt, LogicalLit, LoopStmt, MdStmt,
-    NumberLit, PackStmt, PrintStmt, ProcCallStmt, ProcDefStmt,
-    QuitStmt, RdStmt, RecallStmt, RenameStmt, ReplaceStmt,
-    ReturnStmt, ScanStmt, SeekStmt, SelectStmt, SetDefaultStmt,
-    SetDeletedStmt, SetFilterStmt, SetOrderStmt, SetStmt, SkipStmt,
-    Stmt, StoreStmt, StringLit, SumStmt, UnaryOp, UseStmt, ZapStmt,
-)
+from safari_base.lang.types import (AppendBlankStmt, AppendFromStmt,
+                                    AssignStmt, AverageStmt, BinOp, CdStmt,
+                                    CloseStmt, CommandResult, CommentStmt,
+                                    ContinueStmt, CopyFileStmt,
+                                    CopyStructureStmt, CountStmt,
+                                    CreateFromStmt, CreateTableStmt, DefFnStmt,
+                                    DeleteStmt, DimHashStmt, DirStmt,
+                                    DisplayStructureStmt, DoCaseStmt,
+                                    DoProgramStmt, DoWhileStmt, EraseStmt,
+                                    ExitStmt, Expr, FieldRef, ForEachStmt,
+                                    ForStmt, FuncCall, FuncDefStmt, GoStmt,
+                                    HashAssignStmt, Ident, IfStmt, IndexOnStmt,
+                                    ListStmt, LocateStmt, LogicalLit, LoopStmt,
+                                    MdStmt, NumberLit, PackStmt, PrintStmt,
+                                    ProcCallStmt, ProcDefStmt, QuitStmt,
+                                    RdStmt, RecallStmt, RenameStmt,
+                                    ReplaceStmt, ReturnStmt, ScanStmt,
+                                    SeekStmt, SelectStmt, SetDefaultStmt,
+                                    SetDeletedStmt, SetFilterStmt,
+                                    SetOrderStmt, SetStmt, SkipStmt, Stmt,
+                                    StoreStmt, StringLit, SumStmt, UnaryOp,
+                                    UseStmt, ZapStmt)
 
 
 class _LoopSignal(Exception):
@@ -45,6 +50,7 @@ class _ExitSignal(Exception):
 
 class _ReturnSignal(Exception):
     """Internal signal for RETURN statement."""
+
     def __init__(self, value: Any = None) -> None:
         self.value = value
 
@@ -71,7 +77,9 @@ class Interpreter:
         except DBaseError as e:
             return CommandResult(success=False, message=str(e))
 
-    def run_program(self, path: Path | str, args: list[str] | None = None) -> CommandResult:
+    def run_program(
+        self, path: Path | str, args: list[str] | None = None
+    ) -> CommandResult:
         """Execute a .prg file (program mode)."""
         p = Path(path)
         if not p.suffix:
@@ -86,7 +94,9 @@ class Interpreter:
         source = p.read_text(encoding="utf-8")
         return self.run_source(source, program_name=p.stem, args=args)
 
-    def run_source(self, source: str, program_name: str = "<input>", args: list[str] | None = None) -> CommandResult:
+    def run_source(
+        self, source: str, program_name: str = "<input>", args: list[str] | None = None
+    ) -> CommandResult:
         """Execute dBASE source code directly (embedded mode)."""
         try:
             stmts = parse(source)
@@ -227,7 +237,9 @@ class Interpreter:
         if isinstance(stmt, ForEachStmt):
             return self._exec_for_each(stmt)
 
-        return CommandResult(success=False, message=f"Unhandled statement: {type(stmt).__name__}")
+        return CommandResult(
+            success=False, message=f"Unhandled statement: {type(stmt).__name__}"
+        )
 
     # -- Expression evaluation -----------------------------------------------
 
@@ -245,9 +257,13 @@ class Interpreter:
         if isinstance(expr, FuncCall):
             # Check for hashmap access: NAME(key) where NAME is a dict variable
             name_upper = expr.name.upper()
-            if name_upper in self.env.variables and isinstance(self.env.variables[name_upper], dict):
+            if name_upper in self.env.variables and isinstance(
+                self.env.variables[name_upper], dict
+            ):
                 if len(expr.args) != 1:
-                    raise DBaseError(f"Hash access {expr.name}() requires exactly 1 key")
+                    raise DBaseError(
+                        f"Hash access {expr.name}() requires exactly 1 key"
+                    )
                 key = str(self._eval(expr.args[0]))
                 hmap = self.env.variables[name_upper]
                 if key not in hmap:
@@ -316,7 +332,9 @@ class Interpreter:
         if op == "<=":
             return self._compare_lt(left, right) or self._compare_eq(left, right)
         if op == ">":
-            return not self._compare_lt(left, right) and not self._compare_eq(left, right)
+            return not self._compare_lt(left, right) and not self._compare_eq(
+                left, right
+            )
         if op == ">=":
             return not self._compare_lt(left, right)
 
@@ -375,7 +393,9 @@ class Interpreter:
         handle = TableHandle(raw_table, alias, stmt.exclusive)
         handle.go_top()
         self.env.open_table(handle)
-        return CommandResult(message=f"Table {alias} opened with {handle.record_count} records")
+        return CommandResult(
+            message=f"Table {alias} opened with {handle.record_count} records"
+        )
 
     def _exec_select(self, stmt: SelectStmt) -> CommandResult:
         self.env.select_area(stmt.area)
@@ -426,9 +446,13 @@ class Interpreter:
                         wa.set_field(field_name, val)
                     count += 1
                 wa.skip(1)
-            return CommandResult(message=f"{count} records replaced", rows_affected=count)
+            return CommandResult(
+                message=f"{count} records replaced", rows_affected=count
+            )
         else:
-            if stmt.condition is not None and not self._truthy(self._eval(stmt.condition)):
+            if stmt.condition is not None and not self._truthy(
+                self._eval(stmt.condition)
+            ):
                 return CommandResult(message="Condition not met")
             for field_name, expr in stmt.assignments:
                 val = self._eval(expr)
@@ -450,7 +474,9 @@ class Interpreter:
                     wa.delete_current()
                     count += 1
                 wa.skip(1)
-            return CommandResult(message=f"{count} records deleted", rows_affected=count)
+            return CommandResult(
+                message=f"{count} records deleted", rows_affected=count
+            )
         else:
             wa.delete_current()
             return CommandResult(message="Record deleted", rows_affected=1)
@@ -465,7 +491,9 @@ class Interpreter:
                     wa.recall_current()
                     count += 1
                 wa.skip(1)
-            return CommandResult(message=f"{count} records recalled", rows_affected=count)
+            return CommandResult(
+                message=f"{count} records recalled", rows_affected=count
+            )
         else:
             wa.recall_current()
             return CommandResult(message="Record recalled", rows_affected=1)
@@ -473,7 +501,9 @@ class Interpreter:
     def _exec_pack(self, stmt: PackStmt) -> CommandResult:
         wa = self.env.require_work_area()
         removed = wa.pack()
-        return CommandResult(message=f"{removed} records removed", rows_affected=removed)
+        return CommandResult(
+            message=f"{removed} records removed", rows_affected=removed
+        )
 
     def _exec_zap(self, stmt: ZapStmt) -> CommandResult:
         if not self.env.unsafe:
@@ -512,7 +542,9 @@ class Interpreter:
     def _exec_seek(self, stmt: SeekStmt) -> CommandResult:
         wa = self.env.require_work_area()
         if wa._order is None:
-            raise DBaseError("No active order for SEEK — use INDEX ON first", code="NO_ORDER")
+            raise DBaseError(
+                "No active order for SEEK — use INDEX ON first", code="NO_ORDER"
+            )
         target = self._eval(stmt.expr)
         # Linear search in the ordered records
         for idx in wa._order:
@@ -558,35 +590,41 @@ class Interpreter:
         wa._order_tag = stmt.tag or "default"
         wa._recno = saved_recno
         wa._eof = saved_recno >= wa.record_count
-        return CommandResult(message=f"Index created: {wa._order_tag} ({len(keys)} keys)")
+        return CommandResult(
+            message=f"Index created: {wa._order_tag} ({len(keys)} keys)"
+        )
 
     def _exec_insert(self, stmt: InsertStmt) -> CommandResult:
         """Execute modern INSERT INTO table (fields) VALUES (values)"""
         # Save current work area
         old_area = self.env.active_area
-        
+
         try:
             # If table is specified, USE it
             if stmt.table:
                 self._exec_use(UseStmt(table=stmt.table))
-            
+
             wa = self.env.require_work_area()
-            
+
             if len(stmt.fields) != len(stmt.values):
-                raise DBaseError(f"Field count ({len(stmt.fields)}) does not match value count ({len(stmt.values)})")
-            
+                raise DBaseError(
+                    f"Field count ({len(stmt.fields)}) does not match value count ({len(stmt.values)})"
+                )
+
             # Evaluate values before appending
             evaled_values = [self._eval(v) for v in stmt.values]
-            
+
             # Append record
             recno = wa.append_blank()
-            
+
             # Set fields
             for field_name, val in zip(stmt.fields, evaled_values):
                 wa.set_field(field_name, val)
-                
-            return CommandResult(message=f"Record {recno} inserted into {wa.alias}", rows_affected=1)
-            
+
+            return CommandResult(
+                message=f"Record {recno} inserted into {wa.alias}", rows_affected=1
+            )
+
         finally:
             # Restore work area
             self.env.select_area(old_area)
@@ -606,7 +644,9 @@ class Interpreter:
             if self.env.deleted_on and wa.is_deleted():
                 wa.skip(1)
                 continue
-            if stmt.condition is not None and not self._truthy(self._eval(stmt.condition)):
+            if stmt.condition is not None and not self._truthy(
+                self._eval(stmt.condition)
+            ):
                 wa.skip(1)
                 continue
             values = []
@@ -773,7 +813,9 @@ class Interpreter:
             if self.env.deleted_on and wa.is_deleted():
                 wa.skip(1)
                 continue
-            if stmt.condition is not None and not self._truthy(self._eval(stmt.condition)):
+            if stmt.condition is not None and not self._truthy(
+                self._eval(stmt.condition)
+            ):
                 wa.skip(1)
                 continue
             count += 1
@@ -787,7 +829,9 @@ class Interpreter:
                 break
             wa.skip(1)
 
-        return CommandResult(message=f"SCAN completed ({count} records)", rows_affected=count)
+        return CommandResult(
+            message=f"SCAN completed ({count} records)", rows_affected=count
+        )
 
     def _exec_do_program(self, stmt: DoProgramStmt) -> CommandResult:
         return self.run_program(stmt.program, [str(self._eval(a)) for a in stmt.args])
@@ -819,7 +863,9 @@ class Interpreter:
         self._call_user_func(user_fn, args)
         return CommandResult()
 
-    def _call_user_func(self, defn: FuncDefStmt | ProcDefStmt | DefFnStmt, args: list[Any]) -> Any:
+    def _call_user_func(
+        self, defn: FuncDefStmt | ProcDefStmt | DefFnStmt, args: list[Any]
+    ) -> Any:
         """Execute a user-defined function/procedure and return the result."""
         params = defn.params
         if len(args) != len(params):
@@ -865,8 +911,12 @@ class Interpreter:
 
     def _exec_hash_assign(self, stmt: HashAssignStmt) -> CommandResult:
         name_upper = stmt.name.upper()
-        if name_upper not in self.env.variables or not isinstance(self.env.variables[name_upper], dict):
-            raise DBaseError(f"{stmt.name} is not a hashmap — use DIM {stmt.name}{{}} first")
+        if name_upper not in self.env.variables or not isinstance(
+            self.env.variables[name_upper], dict
+        ):
+            raise DBaseError(
+                f"{stmt.name} is not a hashmap — use DIM {stmt.name}{{}} first"
+            )
         key = str(self._eval(stmt.key))
         val = self._eval(stmt.expr)
         self.env.variables[name_upper][key] = val
@@ -874,7 +924,9 @@ class Interpreter:
 
     def _exec_for_each(self, stmt: ForEachStmt) -> CommandResult:
         name_upper = stmt.hashmap.upper()
-        if name_upper not in self.env.variables or not isinstance(self.env.variables[name_upper], dict):
+        if name_upper not in self.env.variables or not isinstance(
+            self.env.variables[name_upper], dict
+        ):
             raise DBaseError(f"{stmt.hashmap} is not a hashmap")
         hmap = self.env.variables[name_upper]
         iterations = 0

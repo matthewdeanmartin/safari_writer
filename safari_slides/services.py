@@ -68,8 +68,7 @@ def load_presentation(path: Path) -> Presentation:
 def build_welcome_deck() -> Presentation:
     """Return a small built-in deck for empty launches."""
 
-    return parse_slidemd(
-        """---
+    return parse_slidemd("""---
 title: Safari Slides
 theme: classic-blue
 aspect: 4:3
@@ -94,8 +93,7 @@ A keyboard-first presentation viewer with Atari-era flavor.
 Note:
 
 Use Safari Writer's Print / Export menu to preview or export decks.
-"""
-    )
+""")
 
 
 def default_slide_export_name(filename: str) -> str:
@@ -169,7 +167,9 @@ def slides_state_from_writer(state: AppState) -> SafariSlidesState:
 
 
 def _sections_from_markdown(markdown: str) -> list[list[str]]:
-    raw_sections = [section.strip("\n") for section in re.split(r"(?m)^---\s*$", markdown)]
+    raw_sections = [
+        section.strip("\n") for section in re.split(r"(?m)^---\s*$", markdown)
+    ]
     sections = [section.splitlines() for section in raw_sections if section.strip()]
     if len(sections) > 1:
         return sections
@@ -232,4 +232,3 @@ def _normalize_section(section: list[str], index: int) -> list[str]:
     if first_non_empty.startswith("#"):
         return section
     return [f"# Slide {index}", ""] + section
-

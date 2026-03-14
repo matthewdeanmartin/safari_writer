@@ -1,10 +1,11 @@
 """Tests for search, replace, and tab-stop logic."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from safari_writer.state import AppState
+import pytest
+
 from safari_writer.screens.editor import EditorArea
+from safari_writer.state import AppState
 
 
 def make_editor(text: str = "") -> EditorArea:

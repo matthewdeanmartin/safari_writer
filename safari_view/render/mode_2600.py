@@ -1,13 +1,14 @@
 """
 SafariView 2600 Rendering Mode.
 """
+
 from __future__ import annotations
 
 from PIL import Image
 
-from safari_view.render.pipeline import ImageTransformer, RenderContext
-from safari_view.render.palettes import get_atari_2600_palette, apply_palette
 from safari_view.render.effects import apply_pixel_grid
+from safari_view.render.palettes import apply_palette, get_atari_2600_palette
+from safari_view.render.pipeline import ImageTransformer, RenderContext
 
 
 class Mode2600Transformer(ImageTransformer):
@@ -27,7 +28,9 @@ class Mode2600Transformer(ImageTransformer):
         logical_height = max(1, int(logical_width * aspect_ratio))
 
         # Step 2: Downsample (nearest neighbor for chunkiness)
-        small_img = image.resize((logical_width, logical_height), Image.Resampling.NEAREST)
+        small_img = image.resize(
+            (logical_width, logical_height), Image.Resampling.NEAREST
+        )
 
         # Step 3: Apply palette
         palette_data = get_atari_2600_palette()
@@ -46,9 +49,9 @@ class Mode2600Transformer(ImageTransformer):
             final_h = int(final_w * aspect_ratio)
 
         upscaled = result.resize((final_w, final_h), Image.Resampling.NEAREST)
-        
+
         # Step 6: Post-processing (pixel grid)
         if context.pixel_grid:
             upscaled = apply_pixel_grid(upscaled, logical_width, logical_height)
-            
+
         return upscaled

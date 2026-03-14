@@ -2,7 +2,7 @@ I looked up both pieces: the Python `dbf` library and the dBASE/xBase command la
 
 Below is a compact implementation spec for a **headless dBASE III+ execution engine** aimed at “DML + DDL + easy OS-ish commands,” using Python and `dbf` as the DBF layer.
 
----
+______________________________________________________________________
 
 # Spec: Headless dBASE III+ Executor
 
@@ -10,18 +10,18 @@ Below is a compact implementation spec for a **headless dBASE III+ execution eng
 
 Implement a headless interpreter for a practical subset of **dBASE III+ style xBase code** that can:
 
-* create and modify `.dbf` tables,
-* open tables into dBASE-style work areas,
-* read, navigate, search, and update records,
-* execute `.prg` scripts and single commands,
-* support structured control flow,
-* support a small, easy-to-implement OS/file subset.
+- create and modify `.dbf` tables,
+- open tables into dBASE-style work areas,
+- read, navigate, search, and update records,
+- execute `.prg` scripts and single commands,
+- support structured control flow,
+- support a small, easy-to-implement OS/file subset.
 
 This runtime is **not** a full interactive clone of the original product. It is a scriptable batch/CLI execution engine for modern machines.
 
 dBASE historically combined a command prompt, procedural language, and navigational database commands such as `USE`, `SKIP`, `GO`, `REPLACE`, and `STORE`, and scripts were commonly run via `DO`. The common portability center of gravity for xBase dialects is close to dBASE III+ style command syntax. ([Wikipedia][2])
 
----
+______________________________________________________________________
 
 ## 2. Backend choice
 
@@ -37,28 +37,28 @@ Use Python package `dbf` as the primary DBF backend.
 
 The engine must **not** rely on the backend for persistent index support, because `dbf` does not support index files. If indexed behavior is needed, implement it in the interpreter as:
 
-* temporary in-memory orderings,
-* optional generated sidecar index files later,
-* or leave commands like `INDEX ON` as partially supported / deferred. ([PyPI][1])
+- temporary in-memory orderings,
+- optional generated sidecar index files later,
+- or leave commands like `INDEX ON` as partially supported / deferred. ([PyPI][1])
 
----
+______________________________________________________________________
 
 ## 3. Non-goals
 
 Do **not** implement in v1:
 
-* screen/form/report designers,
-* `@ ... SAY/GET`,
-* macros that execute arbitrary Python,
-* graphics, hardware, printer, or DOS-shell integration,
-* network/multiuser locking beyond a simple single-process model,
-* full SQL layer,
-* full compatibility with every clone,
-* obscure commands whose main purpose was UI or hardware control.
+- screen/form/report designers,
+- `@ ... SAY/GET`,
+- macros that execute arbitrary Python,
+- graphics, hardware, printer, or DOS-shell integration,
+- network/multiuser locking beyond a simple single-process model,
+- full SQL layer,
+- full compatibility with every clone,
+- obscure commands whose main purpose was UI or hardware control.
 
 dBASE Plus documents a much larger modern language and also includes a later “Local SQL” layer, but this spec is intentionally targeting the older xBase command model instead of the full later product. ([dBase.com][3])
 
----
+______________________________________________________________________
 
 ## 4. Execution model
 
@@ -69,102 +69,105 @@ Support three modes:
 1. **Command mode**
    Execute one command string.
 
-2. **Program mode**
+1. **Program mode**
    Execute a `.prg` file with line-oriented commands.
 
-3. **Embedded mode**
+1. **Embedded mode**
    Python API for host applications:
 
-   * `execute(command: str) -> Result`
-   * `run_program(path: Path, args: list[str]) -> Result`
+   - `execute(command: str) -> Result`
+   - `run_program(path: Path, args: list[str]) -> Result`
 
 ### 4.2 State
 
 Interpreter state must include:
 
-* current working directory,
-* current default DBF directory,
-* memory variables,
-* active work area number,
-* map of open work areas,
-* current relation/order/filter state per work area,
-* procedure call stack,
-* error state and `ON ERROR` hook later.
+- current working directory,
+- current default DBF directory,
+- memory variables,
+- active work area number,
+- map of open work areas,
+- current relation/order/filter state per work area,
+- procedure call stack,
+- error state and `ON ERROR` hook later.
 
 ### 4.3 Work areas
 
 Model dBASE work areas explicitly:
 
-* multiple open tables,
-* one active area at a time,
-* `SELECT n` changes active area,
-* `USE` opens a table in current area unless otherwise specified.
+- multiple open tables,
+- one active area at a time,
+- `SELECT n` changes active area,
+- `USE` opens a table in current area unless otherwise specified.
 
 The xBase family is built around the notion of an active table/work area plus record-pointer navigation commands such as `GO`, `SKIP`, `LOCATE`, and `SEEK`. ([Wikipedia][2])
 
----
+______________________________________________________________________
 
 ## 5. Language surface
 
 ## 5.1 Source format
 
-* ASCII/UTF-8 text source.
-* Case-insensitive keywords.
-* End of line terminates a command unless continued with `;`.
-* Comments:
+- ASCII/UTF-8 text source.
 
-  * `*` in column 1,
-  * `&&` inline comment,
-  * `NOTE` line comment optional.
+- Case-insensitive keywords.
+
+- End of line terminates a command unless continued with `;`.
+
+- Comments:
+
+  - `*` in column 1,
+  - `&&` inline comment,
+  - `NOTE` line comment optional.
 
 ## 5.2 Identifiers
 
-* Unquoted identifiers are case-insensitive.
-* Table aliases and memvar names are normalized internally.
-* Field names should follow dBASE-ish naming restrictions, but modern implementation may allow a somewhat relaxed parser and validate on table creation.
+- Unquoted identifiers are case-insensitive.
+- Table aliases and memvar names are normalized internally.
+- Field names should follow dBASE-ish naming restrictions, but modern implementation may allow a somewhat relaxed parser and validate on table creation.
 
 ## 5.3 Literals
 
 Support:
 
-* strings: `"hello"` and `'hello'`
-* numerics: integers and decimals
-* logical: `.T.`, `.F.`
-* date literals: `CTOD("YYYY-MM-DD")` at minimum, optionally `{^YYYY-MM-DD}` as an extension
-* null: optional extension only if backend supports it
+- strings: `"hello"` and `'hello'`
+- numerics: integers and decimals
+- logical: `.T.`, `.F.`
+- date literals: `CTOD("YYYY-MM-DD")` at minimum, optionally `{^YYYY-MM-DD}` as an extension
+- null: optional extension only if backend supports it
 
 ## 5.4 Expressions
 
 Support:
 
-* arithmetic: `+ - * / ^`
-* comparison: `= == <> != < <= > >=`
-* logical: `.AND. .OR. .NOT.`
-* string concatenation: `+`
-* parentheses
-* field references
-* memvar references
-* function calls
+- arithmetic: `+ - * / ^`
+- comparison: `= == <> != < <= > >=`
+- logical: `.AND. .OR. .NOT.`
+- string concatenation: `+`
+- parentheses
+- field references
+- memvar references
+- function calls
 
----
+______________________________________________________________________
 
 ## 6. Program structure
 
 Support:
 
-* straight-line command scripts,
-* `DO <program>`
-* `RETURN`
-* `IF / ELSE / ELSEIF / ENDIF`
-* `DO CASE / CASE / OTHERWISE / ENDCASE`
-* `DO WHILE / ENDDO`
-* `FOR / TO / STEP / ENDFOR`
-* `SCAN / ENDSCAN`
-* `EXIT`, `LOOP`
+- straight-line command scripts,
+- `DO <program>`
+- `RETURN`
+- `IF / ELSE / ELSEIF / ENDIF`
+- `DO CASE / CASE / OTHERWISE / ENDCASE`
+- `DO WHILE / ENDDO`
+- `FOR / TO / STEP / ENDFOR`
+- `SCAN / ENDSCAN`
+- `EXIT`, `LOOP`
 
 Later dBASE documentation still describes the core control structures in ways consistent with the classic xBase model: `IF...ENDIF`, `DO CASE...ENDCASE`, `DO WHILE...ENDDO`, and `SCAN...ENDSCAN`. `SCAN` is specifically described as a structured alternative to record-by-record looping with `SKIP`/`EOF()`. ([dBase.com][4])
 
----
+______________________________________________________________________
 
 ## 7. Data model
 
@@ -176,11 +179,11 @@ Primary unit is a `.dbf` table, optionally with memo sidecar files.
 
 At minimum:
 
-* Character
-* Numeric
-* Date
-* Logical
-* Memo
+- Character
+- Numeric
+- Date
+- Logical
+- Memo
 
 These are the practical dBASE III-era core types and align with ordinary DBF support expectations. The Python `dbf` package also supports memos and nulls. ([PyPI][1])
 
@@ -188,14 +191,14 @@ These are the practical dBASE III-era core types and align with ordinary DBF sup
 
 Honor dBASE deleted-record semantics:
 
-* `DELETE` marks record deleted,
-* `RECALL` unmarks,
-* `PACK` physically removes deleted records,
-* `SET DELETED ON|OFF` controls visibility.
+- `DELETE` marks record deleted,
+- `RECALL` unmarks,
+- `PACK` physically removes deleted records,
+- `SET DELETED ON|OFF` controls visibility.
 
 dBASE materials and later dBASE docs preserve `PACK` as the physical removal operation for rows marked deleted. ([dBase.com][5])
 
----
+______________________________________________________________________
 
 ## 8. DDL commands to support
 
@@ -209,7 +212,7 @@ CREATE <table>
 
 Headless behavior:
 
-* if run without a UI structure editor, it must be paired with a structured spec format in script, or support only:
+- if run without a UI structure editor, it must be paired with a structured spec format in script, or support only:
 
 ```text
 CREATE <table> FROM <structure_table>
@@ -230,8 +233,8 @@ This is an implementation extension, not historical syntax, but it makes headles
 
 Also support structure-extended workflow:
 
-* `COPY STRUCTURE EXTENDED TO ...`
-* `CREATE ... FROM ...`
+- `COPY STRUCTURE EXTENDED TO ...`
+- `CREATE ... FROM ...`
 
 dBASE help for later versions documents `CREATE ... STRUCTURE EXTENDED` and structure-driven creation; older tutorials also describe `COPY TO ... STRUCTURE EXTENDED` / `CREATE ... FROM ...` workflows. ([dBase.com][6])
 
@@ -251,14 +254,14 @@ This is another headless extension. The legacy command opened a structure editor
 
 Support:
 
-* `COPY STRUCTURE TO <newtable>`
-* `COPY STRUCTURE EXTENDED TO <newtable>`
+- `COPY STRUCTURE TO <newtable>`
+- `COPY STRUCTURE EXTENDED TO <newtable>`
 
 ## 8.4 `ZAP`
 
 Optional. If supported, require an unsafe mode flag because it destroys all records.
 
----
+______________________________________________________________________
 
 ## 9. DML and navigational commands
 
@@ -316,9 +319,9 @@ SEEK <expr>
 
 Semantics:
 
-* works only when an active order exists,
-* v1 order may be in-memory only,
-* if no active order, raise runtime error.
+- works only when an active order exists,
+- v1 order may be in-memory only,
+- if no active order, raise runtime error.
 
 `SEEK` is a standard indexed search command in xBase-family documentation. ([dBase.com][10])
 
@@ -372,7 +375,7 @@ SUM balance TO total FOR active
 AVERAGE balance TO avg FOR active
 ```
 
----
+______________________________________________________________________
 
 ## 10. Index support
 
@@ -380,75 +383,75 @@ Because `dbf` lacks persistent index-file support, define three levels:
 
 ### v1 required
 
-* `SET ORDER TO` on interpreter-managed in-memory order
-* `INDEX ON <expr> TAG <name>` creates transient order for current session only
+- `SET ORDER TO` on interpreter-managed in-memory order
+- `INDEX ON <expr> TAG <name>` creates transient order for current session only
 
 ### v1 optional
 
-* save order metadata in sidecar JSON
+- save order metadata in sidecar JSON
 
 ### v2
 
-* persistent `.ndx`/`.mdx`-like compatibility layer if desired
+- persistent `.ndx`/`.mdx`-like compatibility layer if desired
 
 This limitation comes directly from the Python backend choice. ([PyPI][1])
 
----
+______________________________________________________________________
 
 ## 11. Variables and memory
 
 Support:
 
-* `STORE <expr> TO <var>`
-* simple assignment extension: `<var> = <expr>`
-* `PRIVATE` optional later
-* `PUBLIC` optional later
-* parameters to `DO <program> WITH ...`
+- `STORE <expr> TO <var>`
+- simple assignment extension: `<var> = <expr>`
+- `PRIVATE` optional later
+- `PUBLIC` optional later
+- parameters to `DO <program> WITH ...`
 
 dBASE historically uses memory variables alongside field references, and `STORE` is part of that classic model. ([Wikipedia][2])
 
----
+______________________________________________________________________
 
 ## 12. Functions to support in v1
 
 ## 12.1 Logical/database
 
-* `EOF()`
-* `BOF()`
-* `FOUND()`
-* `RECNO()`
-* `RECCOUNT()`
-* `DELETED()`
+- `EOF()`
+- `BOF()`
+- `FOUND()`
+- `RECNO()`
+- `RECCOUNT()`
+- `DELETED()`
 
 ## 12.2 String
 
-* `LEN()`
-* `SUBSTR()`
-* `LEFT()`
-* `RIGHT()`
-* `LTRIM()`
-* `RTRIM()`
-* `TRIM()`
-* `UPPER()`
-* `LOWER()`
+- `LEN()`
+- `SUBSTR()`
+- `LEFT()`
+- `RIGHT()`
+- `LTRIM()`
+- `RTRIM()`
+- `TRIM()`
+- `UPPER()`
+- `LOWER()`
 
 ## 12.3 Conversion
 
-* `STR()`
-* `VAL()`
-* `DTOC()`
-* `CTOD()`
+- `STR()`
+- `VAL()`
+- `DTOC()`
+- `CTOD()`
 
 ## 12.4 Date
 
-* `DATE()`
-* `YEAR()`
-* `MONTH()`
-* `DAY()`
+- `DATE()`
+- `YEAR()`
+- `MONTH()`
+- `DAY()`
 
 These categories match the well-known dBASE model of field manipulation plus string, numeric, and date functions. ([Wikipedia][2])
 
----
+______________________________________________________________________
 
 ## 13. OS / filesystem commands
 
@@ -475,13 +478,13 @@ ERASE <file>
 
 ### 13.3 Safety rules
 
-* sandbox root configurable,
-* no command may escape sandbox unless explicitly enabled,
-* `ERASE`, `RD`, and `ZAP` disabled by default unless `unsafe=True`.
+- sandbox root configurable,
+- no command may escape sandbox unless explicitly enabled,
+- `ERASE`, `RD`, and `ZAP` disabled by default unless `unsafe=True`.
 
 The spec is intentionally stricter than original DOS-era behavior.
 
----
+______________________________________________________________________
 
 ## 14. Control-flow syntax
 
@@ -548,7 +551,7 @@ SCAN [FOR <expr>] [WHILE <expr>]
 ENDSCAN
 ```
 
----
+______________________________________________________________________
 
 ## 15. Error handling
 
@@ -556,40 +559,40 @@ ENDSCAN
 
 Raise structured errors with:
 
-* code,
-* message,
-* source line,
-* command text,
-* current program,
-* current work area.
+- code,
+- message,
+- source line,
+- command text,
+- current program,
+- current work area.
 
 ## 15.2 Script behavior
 
 Two modes:
 
-* **fail-fast** default,
-* `ON ERROR` hook later.
+- **fail-fast** default,
+- `ON ERROR` hook later.
 
 ## 15.3 Common errors
 
-* no active work area,
-* table not found,
-* field not found,
-* invalid record number,
-* exclusive access required,
-* no active order for `SEEK`,
-* parse error,
-* unsafe command disabled.
+- no active work area,
+- table not found,
+- field not found,
+- invalid record number,
+- exclusive access required,
+- no active order for `SEEK`,
+- parse error,
+- unsafe command disabled.
 
----
+______________________________________________________________________
 
 ## 16. Output model
 
 Because this is headless, commands that historically displayed to the console should produce one of:
 
-* plain text table output,
-* JSON rows,
-* Python object result.
+- plain text table output,
+- JSON rows,
+- Python object result.
 
 Recommended CLI flags:
 
@@ -601,11 +604,11 @@ Recommended CLI flags:
 
 Examples:
 
-* `LIST` returns rows,
-* `DISPLAY STRUCTURE` returns table metadata,
-* `COUNT TO x` stores variable and also returns numeric result in command mode.
+- `LIST` returns rows,
+- `DISPLAY STRUCTURE` returns table metadata,
+- `COUNT TO x` stores variable and also returns numeric result in command mode.
 
----
+______________________________________________________________________
 
 ## 17. Grammar sketch
 
@@ -670,7 +673,7 @@ command        := use_cmd
                 | loop_cmd ;
 ```
 
----
+______________________________________________________________________
 
 ## 18. Semantic rules
 
@@ -678,11 +681,11 @@ command        := use_cmd
 
 Every open work area has:
 
-* record pointer,
-* deleted visibility,
-* filter expression,
-* active order,
-* EOF/BOF state.
+- record pointer,
+- deleted visibility,
+- filter expression,
+- active order,
+- EOF/BOF state.
 
 ## 18.2 Field resolution
 
@@ -693,10 +696,10 @@ Qualified names like `cust->name` are nice to have in v1.1.
 
 Support common dBASE-ish scopes:
 
-* `ALL`
-* `NEXT n`
-* `RECORD n`
-* `REST`
+- `ALL`
+- `NEXT n`
+- `RECORD n`
+- `REST`
 
 These scopes are frequently paired with commands such as `COUNT`, `REPLACE`, and `LOCATE` in dBASE documentation/tutorial material. ([Studocu][14])
 
@@ -704,7 +707,7 @@ These scopes are frequently paired with commands such as `COUNT`, `REPLACE`, and
 
 If `SET DELETED ON`, deleted rows are skipped by navigation and set operations unless explicitly addressed.
 
----
+______________________________________________________________________
 
 ## 19. Suggested command subset for v1
 
@@ -712,65 +715,65 @@ If you want the first version to be implementable quickly, this is the right cut
 
 ### Core table/session
 
-* `USE`
-* `SELECT`
-* `CLOSE`
-* `SET DEFAULT TO`
-* `SET DELETED ON|OFF`
+- `USE`
+- `SELECT`
+- `CLOSE`
+- `SET DEFAULT TO`
+- `SET DELETED ON|OFF`
 
 ### DDL
 
-* `CREATE TABLE ...`
-* `COPY STRUCTURE TO`
-* `COPY STRUCTURE EXTENDED TO`
-* `CREATE FROM`
-* `MODIFY STRUCTURE` headless extension
+- `CREATE TABLE ...`
+- `COPY STRUCTURE TO`
+- `COPY STRUCTURE EXTENDED TO`
+- `CREATE FROM`
+- `MODIFY STRUCTURE` headless extension
 
 ### DML
 
-* `APPEND BLANK`
-* `REPLACE`
-* `DELETE`
-* `RECALL`
-* `PACK`
-* `LIST`
-* `DISPLAY STRUCTURE`
-* `COUNT`
-* `SUM`
+- `APPEND BLANK`
+- `REPLACE`
+- `DELETE`
+- `RECALL`
+- `PACK`
+- `LIST`
+- `DISPLAY STRUCTURE`
+- `COUNT`
+- `SUM`
 
 ### Navigation/query
 
-* `GO TOP`
-* `GO BOTTOM`
-* `GO n`
-* `SKIP`
-* `LOCATE FOR`
-* `CONTINUE`
-* `SCAN ... ENDSCAN`
-* `SEEK` with transient order support
+- `GO TOP`
+- `GO BOTTOM`
+- `GO n`
+- `SKIP`
+- `LOCATE FOR`
+- `CONTINUE`
+- `SCAN ... ENDSCAN`
+- `SEEK` with transient order support
 
 ### Language
 
-* `STORE`
-* assignment
-* `IF`
-* `DO CASE`
-* `DO WHILE`
-* `FOR`
-* `DO program`
-* `RETURN`
-* `EXIT`
-* `LOOP`
+- `STORE`
+- assignment
+- `IF`
+- `DO CASE`
+- `DO WHILE`
+- `FOR`
+- `DO program`
+- `RETURN`
+- `EXIT`
+- `LOOP`
 
 ### Easy OS
 
-* `DIR`
-* `CD`
-* `SET DEFAULT TO`
-* `RENAME`
-* `COPY FILE`
+- `DIR`
+- `CD`
+- `SET DEFAULT TO`
+- `RENAME`
+- `COPY FILE`
 
----
+______________________________________________________________________
 
 ## 20. Example script
 
@@ -790,7 +793,7 @@ ENDSCAN
 COPY STRUCTURE TO customers_empty
 ```
 
----
+______________________________________________________________________
 
 ## 21. Implementation notes for the clankers
 
@@ -799,19 +802,19 @@ COPY STRUCTURE TO customers_empty
 Use a real parser, not regex soup.
 Good options:
 
-* Lark
-* ANTLR grammar
-* hand-written Pratt parser for expressions + recursive descent for statements
+- Lark
+- ANTLR grammar
+- hand-written Pratt parser for expressions + recursive descent for statements
 
 ## 21.2 Runtime
 
 Use explicit objects:
 
-* `Interpreter`
-* `WorkArea`
-* `TableHandle`
-* `Environment`
-* `CommandResult`
+- `Interpreter`
+- `WorkArea`
+- `TableHandle`
+- `Environment`
+- `CommandResult`
 
 ## 21.3 Table abstraction
 
@@ -821,26 +824,29 @@ Hide `dbf` behind an adapter so you can later swap backend or add index sidecars
 
 You’ll want:
 
-* parser golden tests,
-* command semantic tests,
-* DBF fixture tests,
-* script integration tests,
-* compatibility tests against known dBASE examples.
+- parser golden tests,
+- command semantic tests,
+- DBF fixture tests,
+- script integration tests,
+- compatibility tests against known dBASE examples.
 
----
+______________________________________________________________________
 
 ## 22. Recommendation
 
 My recommendation is:
 
-* use `dbf` for `.dbf/.dbt` file handling,
-* define a **strict dBASE III+ subset**,
-* add **two intentional headless extensions**:
+- use `dbf` for `.dbf/.dbt` file handling,
 
-  * `CREATE TABLE ... (...)`
-  * headless `MODIFY STRUCTURE ...`
-* defer real persistent index compatibility,
-* keep OS commands sandboxed and small.
+- define a **strict dBASE III+ subset**,
+
+- add **two intentional headless extensions**:
+
+  - `CREATE TABLE ... (...)`
+  - headless `MODIFY STRUCTURE ...`
+
+- defer real persistent index compatibility,
+
+- keep OS commands sandboxed and small.
 
 That gives you something implementable without pretending you’re recreating every corner of vintage dBASE.
-

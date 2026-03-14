@@ -2,7 +2,7 @@
 
 This document covers additional modules in the Safari Suite: Safari ASM, Safari Basic, Safari Reader, Safari REPL, Safari Slides, and Safari View.
 
----
+______________________________________________________________________
 
 ## Safari ASM
 
@@ -10,11 +10,11 @@ This document covers additional modules in the Safari Suite: Safari ASM, Safari 
 
 Run **safari-asm** from the command line to start the interpreter.
 
-- [How do I run an ASM file?](#Running ASM Files)
-- [What is the syntax like?](#ASM Syntax)
-- [Can I use it with Safari Writer?](#ASM Integration)
+- \[How do I run an ASM file?\](#Running ASM Files)
+- \[What is the syntax like?\](#ASM Syntax)
+- \[Can I use it with Safari Writer?\](#ASM Integration)
 
----
+______________________________________________________________________
 
 ## Running ASM Files
 
@@ -24,16 +24,17 @@ To run a Safari ASM program, pass the filename as an argument:
 If no file is provided, it reads from **stdin**. You can pipe assembly code directly into it:
 `cat logic.asm | safari-asm`
 
-- [Tell me about syntax](#ASM Syntax)
-- [Go back to Safari ASM](#Safari ASM)
+- \[Tell me about syntax\](#ASM Syntax)
+- \[Go back to Safari ASM\](#Safari ASM)
 
----
+______________________________________________________________________
 
 ## ASM Syntax
 
 Safari ASM uses **mnemonic-style** commands that map to Python operations. While it looks like assembly, it is executing Python under the hood.
 
 **Example:**
+
 ```asm
 MOV R1, 10
 ADD R1, 5
@@ -42,18 +43,18 @@ PRINT R1
 
 Common mnemonics include `MOV`, `ADD`, `SUB`, `MUL`, `DIV`, `JMP`, and `CALL`.
 
-- [How does it integrate?](#ASM Integration)
-- [Go back to Safari ASM](#Safari ASM)
+- \[How does it integrate?\](#ASM Integration)
+- \[Go back to Safari ASM\](#Safari ASM)
 
----
+______________________________________________________________________
 
 ## ASM Integration
 
 Safari ASM can be used to write high-performance macros or data processing scripts that interact with Safari Writer documents. You can use it to automate complex formatting tasks or perform batch transformations on `.sfw` files.
 
-- [Go back to Safari ASM](#Safari ASM)
+- \[Go back to Safari ASM\](#Safari ASM)
 
----
+______________________________________________________________________
 
 ## Safari Base
 
@@ -61,10 +62,10 @@ Safari ASM can be used to write high-performance macros or data processing scrip
 
 Run **safari-base** to start the shell.
 
-- [How do I load a database?](#Loading Databases)
-- [What can I do in Safari Base?](#Base Operations)
+- \[How do I load a database?\](#Loading Databases)
+- \[What can I do in Safari Base?\](#Base Operations)
 
----
+______________________________________________________________________
 
 ## Loading Databases
 
@@ -73,22 +74,23 @@ You can open an existing SQLite database by passing the path as an argument:
 
 If no database is specified, Safari Base will start with an in-memory session.
 
-- [Tell me about operations](#Base Operations)
-- [Go back to Safari Base](#Safari Base)
+- \[Tell me about operations\](#Base Operations)
+- \[Go back to Safari Base\](#Safari Base)
 
----
+______________________________________________________________________
 
 ## Base Operations
 
 Safari Base allows you to perform standard database operations through its TUI:
-1.  **Browse** records in a table.
-2.  **Edit** field values.
-3.  **Search** and filter data.
-4.  **Export** tables to Safari Writer or CSV format.
 
-- [Go back to Safari Base](#Safari Base)
+1. **Browse** records in a table.
+1. **Edit** field values.
+1. **Search** and filter data.
+1. **Export** tables to Safari Writer or CSV format.
 
----
+- \[Go back to Safari Base\](#Safari Base)
+
+______________________________________________________________________
 
 ## Safari Basic
 
@@ -96,21 +98,22 @@ Safari Base allows you to perform standard database operations through its TUI:
 
 Unlike Safari REPL, Safari Basic is designed to be **embedded** within other applications.
 
-- [What is Safari REPL?](#Safari REPL)
-- [How do I write Basic macros?](#Basic Macros)
+- \[What is Safari REPL?\](#Safari REPL)
+- \[How do I write Basic macros?\](#Basic Macros)
 
----
+______________________________________________________________________
 
 ## Basic Macros
 
 Macros in Safari Basic use a subset of Atari BASIC. They are often used for:
+
 1. Customizing the **Main Menu**.
-2. Automating **Mail Merge** setups.
-3. Defining custom **Global Format** templates.
+1. Automating **Mail Merge** setups.
+1. Defining custom **Global Format** templates.
 
-- [Go back to Safari Basic](#Safari Basic)
+- \[Go back to Safari Basic\](#Safari Basic)
 
----
+______________________________________________________________________
 
 ## Safari REPL
 
@@ -118,10 +121,10 @@ Macros in Safari Basic use a subset of Atari BASIC. They are often used for:
 
 Run **safari-repl** to start the interactive session.
 
-- [How do I load a BAS file?](#Loading BASIC Files)
-- [Can I edit BASIC files in Safari Writer?](#BASIC Handoff)
+- \[How do I load a BAS file?\](#Loading BASIC Files)
+- \[Can I edit BASIC files in Safari Writer?\](#BASIC Handoff)
 
----
+______________________________________________________________________
 
 ## Loading BASIC Files
 
@@ -130,10 +133,10 @@ You can load a `.BAS` file directly into the REPL by passing it as a command-lin
 
 Inside the REPL, use the `LOAD` and `SAVE` commands to manage your programs.
 
-- [Tell me about handoff](#BASIC Handoff)
-- [Go back to Safari REPL](#Safari REPL)
+- \[Tell me about handoff\](#BASIC Handoff)
+- \[Go back to Safari REPL\](#Safari REPL)
 
----
+______________________________________________________________________
 
 ## BASIC Handoff
 
@@ -141,9 +144,9 @@ Safari REPL supports **Writer Handoff**. If you want to edit your BASIC code in 
 
 This allows you to use Safari Writer's search/replace and formatting tools on your source code.
 
-- [Go back to Safari REPL](#Safari REPL)
+- \[Go back to Safari REPL\](#Safari REPL)
 
----
+______________________________________________________________________
 
 ## Safari Reader
 
@@ -151,31 +154,36 @@ This allows you to use Safari Writer's search/replace and formatting tools on yo
 
 Run **safari-reader** to open your library.
 
-- [How do I navigate?](#Reader Navigation)
-- [Can I export to Safari Writer?](#Reader Handoff)
+- \[How do I navigate?\](#Reader Navigation)
+- \[Can I export to Safari Writer?\](#Reader Handoff)
 
----
+______________________________________________________________________
 
 ## Reader Navigation
 
 Safari Reader uses standard Safari Suite navigation keys:
+
 - **Up / Down** — scroll line by line
+
 - **Page Up / Page Down** — scroll page by page
+
 - **Home / End** — jump to start or end of the book
+
 - **/** — search for text within the current book
 
-- [Tell me about export](#Reader Handoff)
-- [Go back to Safari Reader](#Safari Reader)
+- \[Tell me about export\](#Reader Handoff)
 
----
+- \[Go back to Safari Reader\](#Safari Reader)
+
+______________________________________________________________________
 
 ## Reader Handoff
 
 Like Safari Fed and Safari REPL, Safari Reader can **handoff** to Safari Writer. If you find a passage you want to quote or a section of documentation you want to edit, you can open it directly in the Safari Writer editor.
 
-- [Go back to Safari Reader](#Safari Reader)
+- \[Go back to Safari Reader\](#Safari Reader)
 
----
+______________________________________________________________________
 
 ## Safari Slides
 
@@ -183,29 +191,35 @@ Like Safari Fed and Safari REPL, Safari Reader can **handoff** to Safari Writer.
 
 Run `safari-slides deck.md` to start a presentation.
 
-- [How do I control the slides?](#Slides Navigation)
-- [What is SlideMD?](#SlideMD Format)
+- \[How do I control the slides?\](#Slides Navigation)
+- \[What is SlideMD?\](#SlideMD Format)
 
----
+______________________________________________________________________
 
 ## Slides Navigation
 
 - **Right Arrow / Space** — next slide
+
 - **Left Arrow / Backspace** — previous slide
+
 - **Home** — first slide
+
 - **End** — last slide
+
 - **Esc / Q** — exit presentation
 
-- [Tell me about the format](#SlideMD Format)
-- [Go back to Safari Slides](#Safari Slides)
+- \[Tell me about the format\](#SlideMD Format)
 
----
+- \[Go back to Safari Slides\](#Safari Slides)
+
+______________________________________________________________________
 
 ## SlideMD Format
 
 **SlideMD** is standard Markdown with `---` used to separate slides.
 
 **Example:**
+
 ```markdown
 # Slide 1
 Welcome to my talk.
@@ -216,9 +230,9 @@ Here are some points.
 - Point B
 ```
 
-- [Go back to Safari Slides](#Safari Slides)
+- \[Go back to Safari Slides\](#Safari Slides)
 
----
+______________________________________________________________________
 
 ## Safari View
 
@@ -226,38 +240,49 @@ Here are some points.
 
 Run `safari-view open image.png` to view a file.
 
-- [What are the render modes?](#View Render Modes)
-- [How do I use the TUI?](#View TUI)
-- [Can I use it from the command line?](#View CLI)
+- \[What are the render modes?\](#View Render Modes)
+- \[How do I use the TUI?\](#View TUI)
+- \[Can I use it from the command line?\](#View CLI)
 
----
+______________________________________________________________________
 
 ## View Render Modes
 
 Safari View supports several **Render Modes** that emulate classic hardware:
+
 - **2600** — ultra-low resolution, limited palette.
+
 - **800** — classic 8-bit computer aesthetics.
+
 - **ST** — 16-bit era graphics.
+
 - **Native** — high-quality rendering with retro dithering.
 
-- [Tell me about the TUI](#View TUI)
-- [Tell me about the CLI](#View CLI)
-- [Go back to Safari View](#Safari View)
+- \[Tell me about the TUI\](#View TUI)
 
----
+- \[Tell me about the CLI\](#View CLI)
+
+- \[Go back to Safari View\](#Safari View)
+
+______________________________________________________________________
 
 ## View TUI
 
 The **TUI (Terminal User Interface)** mode includes a file browser and a live preview pane.
+
 - **Space** — toggle browser visibility
+
 - **Arrows** — navigate folders
+
 - **Enter** — view the selected image
+
 - **M** — cycle through render modes live
 
-- [Tell me about the CLI](#View CLI)
-- [Go back to Safari View](#Safari View)
+- \[Tell me about the CLI\](#View CLI)
 
----
+- \[Go back to Safari View\](#Safari View)
+
+______________________________________________________________________
 
 ## View CLI
 
@@ -266,5 +291,6 @@ You can use Safari View to **render** images directly to files from the command 
 
 This is useful for batch processing images into a retro aesthetic.
 
-- [Go back to Safari View](#Safari View)
----
+- \[Go back to Safari View\](#Safari View)
+
+______________________________________________________________________

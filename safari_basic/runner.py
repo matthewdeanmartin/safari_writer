@@ -6,7 +6,8 @@ import io
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from safari_basic.interpreter import SafariBasic, BasicError
+from safari_basic.interpreter import BasicError, SafariBasic
+
 if TYPE_CHECKING:
     from safari_basic.context import MacroContext
 
@@ -92,6 +93,7 @@ class MacroRunner:
         current_post: object | None = None,
     ) -> MacroContext:
         from safari_basic.context import MacroContext
+
         return MacroContext(
             document_lines=list(document_lines),
             cursor_row=cursor_row,

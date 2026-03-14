@@ -11,15 +11,15 @@ the Main Menu first and sign in to your Mastodon account.
 ## Posting the current document
 
 1. Write your post in the editor as a normal document.
-2. Press **Ctrl+P** (or **P** from the Main Menu) to open the Print / Export menu.
-3. Press **T** — "Post to Mastodon (Toot)".
-4. A full-screen **Toot Preview** opens showing:
+1. Press **Ctrl+P** (or **P** from the Main Menu) to open the Print / Export menu.
+1. Press **T** — "Post to Mastodon (Toot)".
+1. A full-screen **Toot Preview** opens showing:
    - The account you are posting as.
    - The document title (if the file has been saved).
    - A character count against the 500-character limit. The count turns **red** if
      you exceed the limit.
    - A spell-check report in the lower pane.
-5. Press **Enter** or **O** to send the toot, or **Esc** / **Q** to cancel.
+1. Press **Enter** or **O** to send the toot, or **Esc** / **Q** to cancel.
 
 > **Tip:** Keep your post under 500 characters. The preview shows
 > `chars/500 OVER n` in red when you are over the limit.
@@ -30,11 +30,11 @@ Inside Safari Fed you can compose new posts and replies directly in the Safari
 Writer editor:
 
 1. Open Safari Fed from the Main Menu (**Safari Fed** option).
-2. Navigate to a post you want to reply to and press the reply key.
-3. Safari Writer opens the editor pre-filled with a quote of the post and
+1. Navigate to a post you want to reply to and press the reply key.
+1. Safari Writer opens the editor pre-filled with a quote of the post and
    `@author` on the last line.
-4. Type your reply.
-5. Press **Ctrl+P** to send, or **Esc** to go back to Safari Fed without posting.
+1. Type your reply.
+1. Press **Ctrl+P** to send, or **Esc** to go back to Safari Fed without posting.
 
 ## Spell-check on toots
 

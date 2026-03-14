@@ -14,7 +14,7 @@ from pathlib import Path
 # Ensure the repo root is on sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from safari_base.lang import Environment, Interpreter, CommandResult
+from safari_base.lang import CommandResult, Environment, Interpreter
 
 
 def check(result: CommandResult, label: str) -> None:
@@ -31,30 +31,36 @@ def main() -> int:
 
         print("=== 1. CREATE TABLE ===")
         r = interp.execute(
-            'CREATE TABLE customers (cust_id C(10), name C(40), balance N(12,2), active L, joined D)'
+            "CREATE TABLE customers (cust_id C(10), name C(40), balance N(12,2), active L, joined D)"
         )
         check(r, "CREATE TABLE customers")
 
         print("\n=== 2. APPEND + REPLACE ===")
         r = interp.execute("APPEND BLANK")
         check(r, "APPEND BLANK #1")
-        r = interp.execute('REPLACE cust_id WITH "C001", name WITH "Alice", balance WITH 1500.50')
+        r = interp.execute(
+            'REPLACE cust_id WITH "C001", name WITH "Alice", balance WITH 1500.50'
+        )
         check(r, "REPLACE #1")
-        r = interp.execute('REPLACE active WITH .T.')
+        r = interp.execute("REPLACE active WITH .T.")
         check(r, "REPLACE active #1")
 
         r = interp.execute("APPEND BLANK")
         check(r, "APPEND BLANK #2")
-        r = interp.execute('REPLACE cust_id WITH "C002", name WITH "Bob", balance WITH 800.00')
+        r = interp.execute(
+            'REPLACE cust_id WITH "C002", name WITH "Bob", balance WITH 800.00'
+        )
         check(r, "REPLACE #2")
-        r = interp.execute('REPLACE active WITH .T.')
+        r = interp.execute("REPLACE active WITH .T.")
         check(r, "REPLACE active #2")
 
         r = interp.execute("APPEND BLANK")
         check(r, "APPEND BLANK #3")
-        r = interp.execute('REPLACE cust_id WITH "C003", name WITH "Carol", balance WITH 2000.00')
+        r = interp.execute(
+            'REPLACE cust_id WITH "C003", name WITH "Carol", balance WITH 2000.00'
+        )
         check(r, "REPLACE #3")
-        r = interp.execute('REPLACE active WITH .F.')
+        r = interp.execute("REPLACE active WITH .F.")
         check(r, "REPLACE active #3")
 
         print("\n=== 3. NAVIGATION ===")

@@ -5,13 +5,13 @@ Safari Writer and Safari Fed can run BASIC macros — small `.BAS` programs that
 ## Quick start
 
 1. Place a `.BAS` file in `~/.safari/macros/`.
-2. In the **editor**, press **Ctrl+Backslash** to open the macro picker.
-3. In **Safari Fed**, press **~** to open the macro picker against the current post.
-4. Use **Up/Down** to select a macro and press **Enter**.
+1. In the **editor**, press **Ctrl+Backslash** to open the macro picker.
+1. In **Safari Fed**, press **~** to open the macro picker against the current post.
+1. Use **Up/Down** to select a macro and press **Enter**.
 
 The macro's `PRINT` output is inserted at the cursor (editor) or saved as a new draft (Fed).
 
----
+______________________________________________________________________
 
 ## Writing a macro
 
@@ -25,7 +25,7 @@ Macros are plain-text files with line-numbered Atari BASIC. The first `REM` line
 
 Save this as `~/.safari/macros/greeting.bas` and run it from the editor with **Ctrl+Backslash**. The two lines will be inserted at the cursor.
 
----
+______________________________________________________________________
 
 ## Pre-injected variables
 
@@ -58,7 +58,7 @@ The runner injects the following read-only variables before your macro runs. No 
 
 Post variables are available in editor macros too if the editor was opened via a Fed handoff, but they will be empty strings/zeros otherwise.
 
----
+______________________________________________________________________
 
 ## Example macros
 
@@ -130,7 +130,7 @@ Press **~** in Safari Fed on any post, select this macro, and the output is save
 
 > **Note:** `SEL1$` is always the first selected line. For a proper loop over all selections use `SEL1$`, `SEL2$`, etc. as separate variables — the interpreter does not support dynamic variable names.
 
----
+______________________________________________________________________
 
 ## BASIC language reference
 
@@ -154,13 +154,14 @@ String functions: `LEN`, `LEFT$`, `RIGHT$`, `MID$`, `STR$`, `VAL`, `CHR$`, `ASC`
 Math functions: `SIN`, `COS`, `TAN`, `ABS`, `INT`, `SQR`, `SGN`, `EXP`, `LOG`, `RND`.
 
 > **Important:** User-defined string variables (variables you declare yourself, not the pre-injected ones) must be dimensioned with `DIM` before assignment:
+>
 > ```basic
 > 10 DIM RESULT$(200)
 > 20 RESULT$ = "Hello"
 > 30 PRINT RESULT$
 > ```
 
----
+______________________________________________________________________
 
 ## Macro picker keys
 
@@ -170,7 +171,7 @@ Math functions: `SIN`, `COS`, `TAN`, `ABS`, `INT`, `SQR`, `SGN`, `EXP`, `LOG`, `
 | Enter | Run selected macro |
 | Escape | Cancel |
 
----
+______________________________________________________________________
 
 ## Macro directory
 
@@ -184,7 +185,7 @@ The default macro directory is `~/.safari/macros/`. You can change it by setting
 
 The directory is created automatically if it does not exist.
 
----
+______________________________________________________________________
 
 ## Error handling
 

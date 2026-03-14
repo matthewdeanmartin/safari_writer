@@ -112,7 +112,7 @@ class EditorScreen(Screen):
 
 2. **BINDINGS**: Define key bindings as a class attribute.
 
-3. **compose()**: Use `ComposeResult` as the return type annotation.
+1. **compose()**: Use `ComposeResult` as the return type annotation.
 
 ```python
 from textual.app import ComposeResult
@@ -220,22 +220,22 @@ tests/
 ## Adding a New Screen
 
 1. Create `safari_writer/screens/new_feature.py`
-2. Define CSS as `NEW_FEATURE_CSS` at module level
-3. Define mode constants (e.g., `MODE_VIEW = "view"`)
-4. Create class inheriting from `Screen`
-5. Add BINDINGS, compose(), and handlers
-6. Add docstrings to everything
-7. Register in `app.py` if accessible from main menu
-8. Write tests in `tests/test_new_feature.py`
+1. Define CSS as `NEW_FEATURE_CSS` at module level
+1. Define mode constants (e.g., `MODE_VIEW = "view"`)
+1. Create class inheriting from `Screen`
+1. Add BINDINGS, compose(), and handlers
+1. Add docstrings to everything
+1. Register in `app.py` if accessible from main menu
+1. Write tests in `tests/test_new_feature.py`
 
 ## Adding a New Test
 
 1. Create `tests/test_feature.py` (or add to existing test file)
-2. Import the module under test
-3. Import `pytest` and `unittest.mock`
-4. Write helper constructors like `make_editor`
-5. Organize tests into classes by feature
-6. Use descriptive test method names: `test_*_does_*`
+1. Import the module under test
+1. Import `pytest` and `unittest.mock`
+1. Write helper constructors like `make_editor`
+1. Organize tests into classes by feature
+1. Use descriptive test method names: `test_*_does_*`
 
 ## What NOT to Do
 

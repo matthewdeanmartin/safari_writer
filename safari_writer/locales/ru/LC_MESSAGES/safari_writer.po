@@ -226,3 +226,130 @@ msgstr "Новая запись Mastodon"
 
 msgid "No Safari Fed session active"
 msgstr "Нет активной сессии Safari Fed"
+
+msgid "  Conversation turns: {turns}"
+msgstr "  Ходы диалога: {turns}"
+
+msgid "  Document: {doc}"
+msgstr "  Документ: {doc}"
+
+msgid "  Topics loaded: {chunks}"
+msgstr "  Загружено тем: {chunks}"
+
+msgid "*** BACKUP & RESTORE ***"
+msgstr "*** РЕЗЕРВНАЯ КОПИЯ И ВОССТАНОВЛЕНИЕ ***"
+
+msgid "*** DOS ***"
+msgstr "*** DOS ***"
+
+msgid "*** Tools ***"
+msgstr "*** ИНСТРУМЕНТЫ ***"
+
+msgid "*** Words ***"
+msgstr "*** СЛОВА ***"
+
+msgid "=== SAFARI CHAT — KEY COMMANDS ==="
+msgstr "=== SAFARI CHAT — КЛАВИШНЫЕ КОМАНДЫ ==="
+
+msgid "CONVERSATION TREE"
+msgstr "ДЕРЕВО ДИАЛОГА"
+
+msgid "Execution cancelled"
+msgstr "Выполнение отменено"
+
+msgid "Inserted slide break"
+msgstr "Разрыв слайда вставлен"
+
+msgid "MEMORY"
+msgstr "ПАМЯТЬ"
+
+msgid "Macro cancelled"
+msgstr "Макрос отменен"
+
+msgid "Macro ran: {name} (no output)"
+msgstr "Макрос выполнен: {name} (без вывода)"
+
+msgid "Macro: {name} — {count} line(s) inserted"
+msgstr "Макрос: {name} — вставлено строк: {count}"
+
+msgid "No backup selected"
+msgstr "Резервная копия не выбрана"
+
+msgid "No backups found."
+msgstr "Резервные копии не найдены."
+
+msgid "No conversation yet."
+msgstr "Диалога пока нет."
+
+msgid "No help document loaded."
+msgstr "Документ справки не загружен."
+
+msgid "No runner available for this file type"
+msgstr "Для этого типа файла нет доступного средства запуска"
+
+msgid "OPTIONS"
+msgstr "ПАРАМЕТРЫ"
+
+msgid "PARSED TOPICS"
+msgstr "РАЗОБРАННЫЕ ТЕМЫ"
+
+msgid "Press Escape to close"
+msgstr "Нажмите Escape, чтобы закрыть"
+
+msgid "Press Escape to close."
+msgstr "Нажмите Escape, чтобы закрыть."
+
+msgid "Program Input (use \\n for new lines)"
+msgstr "Ввод программы (используйте \\n для новых строк)"
+
+msgid "R=Resume editing  X=Discard  Esc=Back"
+msgstr "R=Продолжить редактирование  X=Отбросить  Esc=Назад"
+
+msgid "SAFETY"
+msgstr "БЕЗОПАСНОСТЬ"
+
+msgid "SESSION INFO"
+msgstr "СВЕДЕНИЯ О СЕАНСЕ"
+
+msgid "Start Safari Chat with a Markdown file:"
+msgstr "Запустите Safari Chat с Markdown-файлом:"
+
+msgid "TOPICS"
+msgstr "ТЕМЫ"
+
+msgid "The conversation tree will appear here,"
+msgstr "Здесь появится дерево диалога,"
+
+msgid "The document should be split into sections"
+msgstr "Документ должен быть разделен на разделы"
+
+msgid "Toot cancelled"
+msgstr "Публикация отменена"
+
+msgid "Type a message at the USER> prompt"
+msgstr "Введите сообщение в строке USER>"
+
+msgid "Unknown command: {cmd}. Try /help."
+msgstr "Неизвестная команда: {cmd}. Попробуйте /help."
+
+msgid "Welcome. Type your question below."
+msgstr "Добро пожаловать. Введите ваш вопрос ниже."
+
+msgid "and branch structure."
+msgstr "и структуру ветвей."
+
+msgid "and press Enter to start chatting."
+msgstr "и нажмите Enter, чтобы начать чат."
+
+msgid "separated by --- lines."
+msgstr "разделенными строками ---."
+
+msgid "showing each turn with speaker, emotion,"
+msgstr "показывая каждый ход с участником, эмоцией,"
+
+msgid " F1 Help | F2 Memory | ^T Topics | ^S Safety | ^O Options | ^Q Quit"
+msgstr " F1 Справка | F2 Память | ^T Темы | ^S Безопасность | ^O Параметры | ^Q Выход"
+
+msgid " F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll"
+msgstr " F1 Справка  F2 Память  ^T Темы  ^S Безопасность  ^O Параметры  ^Q Выход  PgUp/PgDn Прокрутка"
+

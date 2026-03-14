@@ -10,23 +10,23 @@ The workflow has three main components:
 
 1. **Mail Merge Database File**
 
-   * Contains records (rows).
-   * Each record contains fields (columns).
+   - Contains records (rows).
+   - Each record contains fields (columns).
 
-2. **Document Template**
+1. **Document Template**
 
-   * A normal text document.
-   * Contains placeholders referencing fields in the database.
+   - A normal text document.
+   - Contains placeholders referencing fields in the database.
 
-3. **Merge Engine**
+1. **Merge Engine**
 
-   * Iterates records.
-   * Substitutes fields into the template.
-   * Produces printed output.
+   - Iterates records.
+   - Substitutes fields into the template.
+   - Produces printed output.
 
-A database file contains **up to ~255 records per file**, depending on memory availability. 
+A database file contains **up to ~255 records per file**, depending on memory availability.
 
----
+______________________________________________________________________
 
 # System Architecture
 
@@ -66,7 +66,7 @@ Template {
 }
 ```
 
----
+______________________________________________________________________
 
 # Application Flow
 
@@ -84,9 +84,9 @@ Main Menu
   └─ Return to AtariWriter
 ```
 
-This is the **Mail Merge menu screen** shown after loading the Mail Merge module. 
+This is the **Mail Merge menu screen** shown after loading the Mail Merge module.
 
----
+______________________________________________________________________
 
 # Screen Layout
 
@@ -121,7 +121,7 @@ BYTES FREE   = memory remaining
 RECORDS FREE = remaining record capacity
 ```
 
----
+______________________________________________________________________
 
 # Loading Mail Merge
 
@@ -134,14 +134,16 @@ Main Menu → MAIL MERGE
 Program behavior:
 
 1. Load Mail Merge program from disk.
-2. Display:
+
+1. Display:
 
    ```
    LOADING MAIL MERGE
    ```
-3. Show Mail Merge menu.
 
----
+1. Show Mail Merge menu.
+
+______________________________________________________________________
 
 # Creating a Mail Merge File
 
@@ -180,7 +182,7 @@ Field length
 
 The system uses **fixed-width fields**.
 
----
+______________________________________________________________________
 
 ### Internal Representation
 
@@ -199,7 +201,7 @@ FieldDefinitions = [
 ]
 ```
 
----
+______________________________________________________________________
 
 ### Finalizing the Record Format
 
@@ -216,7 +218,7 @@ Y → database initialized
 N → continue editing definitions
 ```
 
----
+______________________________________________________________________
 
 # Editing Records
 
@@ -228,7 +230,7 @@ E → Edit File
 
 This opens the **record editor**.
 
----
+______________________________________________________________________
 
 ## Record Editing Screen
 
@@ -250,20 +252,20 @@ HOME PHONE:   555-9988
 COMMENTS:
 ```
 
----
+______________________________________________________________________
 
 # Record Navigation
 
 Typical navigation keys:
 
-| Key             | Action     |
+| Key | Action |
 | --------------- | ---------- |
-| ↑ ↓             | Move field |
-| ENTER           | Edit field |
-| NEXT RECORD     | Advance    |
-| PREVIOUS RECORD | Go back    |
-| NEW RECORD      | Add        |
-| DELETE RECORD   | Remove     |
+| ↑ ↓ | Move field |
+| ENTER | Edit field |
+| NEXT RECORD | Advance |
+| PREVIOUS RECORD | Go back |
+| NEW RECORD | Add |
+| DELETE RECORD | Remove |
 
 Implementation concept:
 
@@ -272,7 +274,7 @@ currentRecordIndex++
 currentRecordIndex--
 ```
 
----
+______________________________________________________________________
 
 # Adding Records
 
@@ -292,7 +294,7 @@ Example:
 records.push(new Record())
 ```
 
----
+______________________________________________________________________
 
 # Deleting Records
 
@@ -306,7 +308,7 @@ Implementation:
 records.remove(index)
 ```
 
----
+______________________________________________________________________
 
 # Building Subsets
 
@@ -335,7 +337,7 @@ subset = records.filter(condition)
 
 Subset is used for printing.
 
----
+______________________________________________________________________
 
 # Appending Files
 
@@ -357,7 +359,7 @@ for each record:
     add to current database
 ```
 
----
+______________________________________________________________________
 
 # Saving Files
 
@@ -380,7 +382,7 @@ serialize(Database)
 write(file)
 ```
 
----
+______________________________________________________________________
 
 # Loading Files
 
@@ -398,7 +400,7 @@ FILE TO LOAD: D1:CLIENTS
 
 Program loads database structure + records.
 
----
+______________________________________________________________________
 
 # Index Drive
 
@@ -419,7 +421,7 @@ PROSPECTS
 MEMBERS
 ```
 
----
+______________________________________________________________________
 
 # Printing / Mail Merge
 
@@ -431,7 +433,7 @@ P → Print File
 
 This triggers the **actual mail merge process**.
 
----
+______________________________________________________________________
 
 # Mail Merge Execution
 
@@ -443,7 +445,7 @@ Template document
 Printer
 ```
 
----
+______________________________________________________________________
 
 ## Merge Character
 
@@ -461,7 +463,7 @@ Sincerely,
 ACME Corp
 ```
 
----
+______________________________________________________________________
 
 ## Merge Algorithm
 
@@ -479,7 +481,7 @@ for record in selectedRecords:
     print(output)
 ```
 
----
+______________________________________________________________________
 
 # Print Workflow
 
@@ -497,7 +499,7 @@ NUMBER OF COPIES?
 
 Then system prints **one merged document per record**.
 
----
+______________________________________________________________________
 
 # Full Workflow Example
 
@@ -539,7 +541,7 @@ P → Print File
 
 System prints one letter per record.
 
----
+______________________________________________________________________
 
 # Internal Memory Limits
 
@@ -557,7 +559,7 @@ Memory display example:
 255 RECORDS FREE
 ```
 
----
+______________________________________________________________________
 
 # Developer Notes
 
@@ -565,14 +567,14 @@ Memory display example:
 
 The system is:
 
-* **Flat-file database**
-* **Fixed-width fields**
-* **Record-oriented**
-* **Template substitution engine**
+- **Flat-file database**
+- **Fixed-width fields**
+- **Record-oriented**
+- **Template substitution engine**
 
 No SQL, no indexing.
 
----
+______________________________________________________________________
 
 ## Data Storage Model
 
@@ -593,7 +595,7 @@ Example record storage:
 
 Fixed byte offsets.
 
----
+______________________________________________________________________
 
 # Minimal Modern Reimplementation
 
@@ -610,7 +612,7 @@ class MailMerge:
             print(output)
 ```
 
----
+______________________________________________________________________
 
 # Key Takeaways
 

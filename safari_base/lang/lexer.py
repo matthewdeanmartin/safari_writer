@@ -8,21 +8,96 @@ from safari_base.lang.errors import ParseError
 from safari_base.lang.types import Token, TokenType
 
 # Keywords that must be recognized as such (case-insensitive)
-KEYWORDS = frozenset({
-    "ALL", "ALIAS", "AND", "APPEND", "AVERAGE", "BLANK", "BOTTOM", "CASE",
-    "CD", "CLOSE", "CONTINUE", "COPY", "COUNT", "CREATE", "DEF", "DELETE",
-    "DIM", "DIR", "DISPLAY", "DO", "EACH", "ELSE", "ELSEIF", "END",
-    "ENDCASE", "ENDDO", "ENDFOR", "ENDIF", "ENDSCAN", "ERASE", "EXCLUSIVE",
-    "EXIT", "EXTENDED", "FILE", "FIELDS", "FILTER", "FN", "FOR", "FROM",
-    "IF", "IN", "INDEX", "LIST", "LOCATE", "LOOP",
-    "FUNC", "MD", "MODIFY", "NEXT", "NOT", "NOTE", "ON", "OR", "ORDER",
-    "OTHERWISE", "PACK", "PRINT", "PROC", "QUIT", "RD", "RECALL", "RENAME",
-    "REPLACE", "REST", "RETURN", "SCAN", "SEEK", "SELECT", "SET", "SKIP",
-    "STEP", "STORE", "STRUCTURE", "SUM", "TABLE", "TAG", "TO", "TOP",
-    "USE", "WHILE", "WITH", "ZAP", "DEFAULT", "DELETED", "RECORD",
-
-    "AVERAGE",
-})
+KEYWORDS = frozenset(
+    {
+        "ALL",
+        "ALIAS",
+        "AND",
+        "APPEND",
+        "AVERAGE",
+        "BLANK",
+        "BOTTOM",
+        "CASE",
+        "CD",
+        "CLOSE",
+        "CONTINUE",
+        "COPY",
+        "COUNT",
+        "CREATE",
+        "DEF",
+        "DELETE",
+        "DIM",
+        "DIR",
+        "DISPLAY",
+        "DO",
+        "EACH",
+        "ELSE",
+        "ELSEIF",
+        "END",
+        "ENDCASE",
+        "ENDDO",
+        "ENDFOR",
+        "ENDIF",
+        "ENDSCAN",
+        "ERASE",
+        "EXCLUSIVE",
+        "EXIT",
+        "EXTENDED",
+        "FILE",
+        "FIELDS",
+        "FILTER",
+        "FN",
+        "FOR",
+        "FROM",
+        "IF",
+        "IN",
+        "INDEX",
+        "LIST",
+        "LOCATE",
+        "LOOP",
+        "FUNC",
+        "MD",
+        "MODIFY",
+        "NEXT",
+        "NOT",
+        "NOTE",
+        "ON",
+        "OR",
+        "ORDER",
+        "OTHERWISE",
+        "PACK",
+        "PRINT",
+        "PROC",
+        "QUIT",
+        "RD",
+        "RECALL",
+        "RENAME",
+        "REPLACE",
+        "REST",
+        "RETURN",
+        "SCAN",
+        "SEEK",
+        "SELECT",
+        "SET",
+        "SKIP",
+        "STEP",
+        "STORE",
+        "STRUCTURE",
+        "SUM",
+        "TABLE",
+        "TAG",
+        "TO",
+        "TOP",
+        "USE",
+        "WHILE",
+        "WITH",
+        "ZAP",
+        "DEFAULT",
+        "DELETED",
+        "RECORD",
+        "AVERAGE",
+    }
+)
 
 
 def tokenize(source: str, start_line: int = 1) -> list[Token]:
@@ -67,7 +142,7 @@ def tokenize(source: str, start_line: int = 1) -> list[Token]:
                 continue
 
             # Inline comment &&
-            if line[pos:pos + 2] == "&&":
+            if line[pos : pos + 2] == "&&":
                 break  # rest of line is comment
 
             # Line continuation ;
@@ -82,7 +157,7 @@ def tokenize(source: str, start_line: int = 1) -> list[Token]:
                 end = line.find(quote, pos + 1)
                 if end == -1:
                     end = len(line)
-                tokens.append(Token(TokenType.STRING, line[pos + 1:end], line_num))
+                tokens.append(Token(TokenType.STRING, line[pos + 1 : end], line_num))
                 pos = end + 1
                 continue
 
@@ -117,16 +192,18 @@ def tokenize(source: str, start_line: int = 1) -> list[Token]:
                     pos += 5
                     continue
                 # Lone dot — might be part of a decimal, treat as error context
-                raise ParseError(f"Unexpected '.' at position {pos}", line_number=line_num)
+                raise ParseError(
+                    f"Unexpected '.' at position {pos}", line_number=line_num
+                )
 
             # Arrow ->
-            if line[pos:pos + 2] == "->":
+            if line[pos : pos + 2] == "->":
                 tokens.append(Token(TokenType.ARROW, "->", line_num))
                 pos += 2
                 continue
 
             # Two-char operators
-            two = line[pos:pos + 2]
+            two = line[pos : pos + 2]
             if two == "==":
                 tokens.append(Token(TokenType.EQEQ, "==", line_num))
                 pos += 2

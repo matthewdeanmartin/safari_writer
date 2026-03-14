@@ -226,3 +226,130 @@ msgstr "New Mastodon Post"
 
 msgid "No Safari Fed session active"
 msgstr "No Safari Fed session active"
+
+msgid "  Conversation turns: {turns}"
+msgstr "  Conversation turns: {turns}"
+
+msgid "  Document: {doc}"
+msgstr "  Document: {doc}"
+
+msgid "  Topics loaded: {chunks}"
+msgstr "  Topics loaded: {chunks}"
+
+msgid "*** BACKUP & RESTORE ***"
+msgstr "*** BACKUP & RESTORE ***"
+
+msgid "*** DOS ***"
+msgstr "*** DOS ***"
+
+msgid "*** Tools ***"
+msgstr "*** Tools ***"
+
+msgid "*** Words ***"
+msgstr "*** Words ***"
+
+msgid "=== SAFARI CHAT — KEY COMMANDS ==="
+msgstr "=== SAFARI CHAT — KEY COMMANDS ==="
+
+msgid "CONVERSATION TREE"
+msgstr "CONVERSATION TREE"
+
+msgid "Execution cancelled"
+msgstr "Execution cancelled"
+
+msgid "Inserted slide break"
+msgstr "Inserted slide break"
+
+msgid "MEMORY"
+msgstr "MEMORY"
+
+msgid "Macro cancelled"
+msgstr "Macro cancelled"
+
+msgid "Macro ran: {name} (no output)"
+msgstr "Macro ran: {name} (no output)"
+
+msgid "Macro: {name} — {count} line(s) inserted"
+msgstr "Macro: {name} — {count} line(s) inserted"
+
+msgid "No backup selected"
+msgstr "No backup selected"
+
+msgid "No backups found."
+msgstr "No backups found."
+
+msgid "No conversation yet."
+msgstr "No conversation yet."
+
+msgid "No help document loaded."
+msgstr "No help document loaded."
+
+msgid "No runner available for this file type"
+msgstr "No runner available for this file type"
+
+msgid "OPTIONS"
+msgstr "OPTIONS"
+
+msgid "PARSED TOPICS"
+msgstr "PARSED TOPICS"
+
+msgid "Press Escape to close"
+msgstr "Press Escape to close"
+
+msgid "Press Escape to close."
+msgstr "Press Escape to close."
+
+msgid "Program Input (use \\n for new lines)"
+msgstr "Program Input (use \\n for new lines)"
+
+msgid "R=Resume editing  X=Discard  Esc=Back"
+msgstr "R=Resume editing  X=Discard  Esc=Back"
+
+msgid "SAFETY"
+msgstr "SAFETY"
+
+msgid "SESSION INFO"
+msgstr "SESSION INFO"
+
+msgid "Start Safari Chat with a Markdown file:"
+msgstr "Start Safari Chat with a Markdown file:"
+
+msgid "TOPICS"
+msgstr "TOPICS"
+
+msgid "The conversation tree will appear here,"
+msgstr "The conversation tree will appear here,"
+
+msgid "The document should be split into sections"
+msgstr "The document should be split into sections"
+
+msgid "Toot cancelled"
+msgstr "Toot cancelled"
+
+msgid "Type a message at the USER> prompt"
+msgstr "Type a message at the USER> prompt"
+
+msgid "Unknown command: {cmd}. Try /help."
+msgstr "Unknown command: {cmd}. Try /help."
+
+msgid "Welcome. Type your question below."
+msgstr "Welcome. Type your question below."
+
+msgid "and branch structure."
+msgstr "and branch structure."
+
+msgid "and press Enter to start chatting."
+msgstr "and press Enter to start chatting."
+
+msgid "separated by --- lines."
+msgstr "separated by --- lines."
+
+msgid "showing each turn with speaker, emotion,"
+msgstr "showing each turn with speaker, emotion,"
+
+msgid " F1 Help | F2 Memory | ^T Topics | ^S Safety | ^O Options | ^Q Quit"
+msgstr " F1 Help | F2 Memory | ^T Topics | ^S Safety | ^O Options | ^Q Quit"
+
+msgid " F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll"
+msgstr " F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll"
+

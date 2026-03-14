@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from importlib import resources
 
-from safari_writer.splash import (
-    DEFAULT_SPLASH_STYLE,
-    SPLASH_DURATION_SECONDS,
-    maybe_show_splash,
-    resolve_splash_style,
-    should_show_splash,
-)
+from safari_writer.splash import (DEFAULT_SPLASH_STYLE,
+                                  SPLASH_DURATION_SECONDS, maybe_show_splash,
+                                  resolve_splash_style, should_show_splash)
 
 
 class FakeStream:

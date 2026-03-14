@@ -7,11 +7,11 @@ Safari Writer should include a built-in **Demo Mode** that opens a bundled sampl
 The demo serves two purposes at once:
 
 1. it is a **guided getting-started document** for new users; and
-2. it is a **live showcase of editor features**, especially the formatting and structure controls that are normally represented by in-band markers.
+1. it is a **live showcase of editor features**, especially the formatting and structure controls that are normally represented by in-band markers.
 
 This spec defines the user-facing behavior for that demo mode and requires implementation in this phase.
 
----
+______________________________________________________________________
 
 ## 2. Goals
 
@@ -28,7 +28,7 @@ This spec defines the user-facing behavior for that demo mode and requires imple
 - No special editor-only rendering path just for the demo.
 - No hidden or partial marker set: the same control characters used by normal documents must be used by the demo document.
 
----
+______________________________________________________________________
 
 ## 3. Entry Point
 
@@ -51,13 +51,13 @@ The feature should feel like a first-class part of the product, not a hidden deb
 Choosing Demo Mode must:
 
 1. load the bundled demo document into application state;
-2. reset the cursor to the top of the document;
-3. clear the modified flag on initial load; and
-4. enter the normal editor screen.
+1. reset the cursor to the top of the document;
+1. clear the modified flag on initial load; and
+1. enter the normal editor screen.
 
 The editor experience after load is otherwise the standard editor experience.
 
----
+______________________________________________________________________
 
 ## 4. Bundled Demo Document
 
@@ -83,7 +83,7 @@ The bundled demo document is treated as a **loaded copy**, not as a package asse
 
 This avoids any implication that the installed demo asset itself is being edited directly.
 
----
+______________________________________________________________________
 
 ## 5. Demo Content Requirements
 
@@ -131,11 +131,11 @@ If Safari Writer later gains additional supported markers, the demo document sho
 The demo should be organized into short sections such as:
 
 1. welcome / orientation;
-2. navigation and editing basics;
-3. inline formatting examples;
-4. document-structure examples;
-5. print / export hints;
-6. a safe “try editing here” area.
+1. navigation and editing basics;
+1. inline formatting examples;
+1. document-structure examples;
+1. print / export hints;
+1. a safe “try editing here” area.
 
 This structure keeps the file readable while still exercising the feature set.
 
@@ -156,7 +156,7 @@ Preferred examples:
 - a heading example that demonstrates auto-numbering;
 - a chain-print line that references another plausible filename.
 
----
+______________________________________________________________________
 
 ## 6. Interaction Expectations
 
@@ -178,7 +178,7 @@ Recommended messaging inside the document:
 - users can save a copy if they want to keep changes;
 - users can reopen Demo Mode at any time to get a fresh bundled version.
 
----
+______________________________________________________________________
 
 ## 7. Error Handling
 
@@ -195,7 +195,7 @@ If the bundled demo document cannot be loaded, the application must fail visibly
 - routing to the editor with no explanation;
 - pretending Demo Mode succeeded when the demo resource was unavailable.
 
----
+______________________________________________________________________
 
 ## 8. Testing Expectations
 
@@ -209,7 +209,7 @@ The implementation should include automated coverage for:
 
 Tests should prefer existing non-UI seams where possible.
 
----
+______________________________________________________________________
 
 ## 9. Documentation Expectations
 

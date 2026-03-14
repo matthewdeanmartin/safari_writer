@@ -8,15 +8,9 @@ from unittest.mock import patch
 
 import pytest
 
-from safari_writer.locale_info import (
-    _normalize_tag,
-    available_languages,
-    format_datetime,
-    get_locale,
-    get_translation,
-    refresh,
-)
-
+from safari_writer.locale_info import (_normalize_tag, available_languages,
+                                       format_datetime, get_locale,
+                                       get_translation, refresh)
 
 # ---------------------------------------------------------------------------
 # _normalize_tag
@@ -159,6 +153,16 @@ class TestGetTranslation:
         trans = get_translation("es")
         result = trans.gettext("Create File")
         assert result == "Crear archivo"
+
+    def test_french_chat_welcome_string(self):
+        trans = get_translation("fr")
+        result = trans.gettext("Welcome. Type your question below.")
+        assert result == "Bienvenue. Tapez votre question ci-dessous."
+
+    def test_spanish_runner_message(self):
+        trans = get_translation("es")
+        result = trans.gettext("No runner available for this file type")
+        assert result == "No hay ejecutor disponible para este tipo de archivo"
 
     def test_po_fallback_when_mo_missing(self, tmp_path, monkeypatch):
         locale_dir = tmp_path / "locales" / "fr" / "LC_MESSAGES"

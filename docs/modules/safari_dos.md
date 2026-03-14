@@ -3,6 +3,7 @@
 Safari DOS is a full-featured file manager integrated with Safari Writer.
 
 ## Main Menu
+
 - **F** — Browse your file list.
 - **D** — Select different devices and volumes.
 - **G** — Browse the Garbage folder for deleted files.
@@ -11,7 +12,9 @@ Safari DOS is a full-featured file manager integrated with Safari Writer.
 - **Q / Esc** — Quit Safari DOS.
 
 ## File Browser
+
 Manage your files with these keyboard shortcuts:
+
 - **Up / Down** — Move the cursor.
 - **Home / End** — Jump to the first or last item.
 - **PageUp / PageDown** — Scroll by a page.
@@ -39,17 +42,22 @@ Manage your files with these keyboard shortcuts:
 - **G** — Open the Garbage listing.
 
 ## Selection and picker mode
+
 - **T** — Toggle the current item selection.
 - **A** — Select all items.
 - **Tab** — Choose the current folder when DOS is being used as a folder picker.
 
 ## Garbage Recovery
+
 Deleted files stay in the Garbage folder until you manually empty it or restore them.
+
 - **Enter** — Restore the selected file.
 - **Delete** — Permanently remove the file.
 
 ## Favorites
+
 Bookmark frequently-used folders for quick access.
+
 - **F** — Toggle the current folder as a favorite.
 - **Enter** — Open the selected favorite.
 

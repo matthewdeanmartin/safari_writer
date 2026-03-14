@@ -3,41 +3,29 @@
 from __future__ import annotations
 
 import importlib
+import unittest.mock as mock
 from pathlib import Path
 
 import safari_dos
-from safari_dos.main import main as safari_dos_main, parse_args
-from safari_dos.state import SafariDosLaunchConfig, SafariDosState
+from safari_dos.main import main as safari_dos_main
+from safari_dos.main import parse_args
 from safari_dos.screens import InputScreen, SafariDosBrowserScreen
-from safari_dos.services import (
-    copy_paths,
-    create_folder,
-    discover_locations,
-    duplicate_path,
-    get_entry_info,
-    get_preview_text,
-    list_favorites,
-    list_directory,
-    list_garbage,
-    list_recent_documents,
-    list_recent_locations,
-    move_paths,
-    move_to_garbage,
-    record_recent_document,
-    record_recent_location,
-    rename_path,
-    restore_from_garbage,
-    set_protected,
-    toggle_favorite,
-    unzip_path,
-    zip_paths,
-)
-import unittest.mock as mock
-from safari_dos.state import SafariDosExitRequest
+from safari_dos.services import (copy_paths, create_folder, discover_locations,
+                                 duplicate_path, get_entry_info,
+                                 get_preview_text, list_directory,
+                                 list_favorites, list_garbage,
+                                 list_recent_documents, list_recent_locations,
+                                 move_paths, move_to_garbage,
+                                 record_recent_document,
+                                 record_recent_location, rename_path,
+                                 restore_from_garbage, set_protected,
+                                 toggle_favorite, unzip_path, zip_paths)
+from safari_dos.state import (SafariDosExitRequest, SafariDosLaunchConfig,
+                              SafariDosState)
 from safari_writer.app import SafariWriterApp
 from safari_writer.program_runner import ProgramExecutionResult
-from safari_writer.screens.output_screen import OutputScreen
 from safari_writer.screens.file_ops import FilePromptScreen
+from safari_writer.screens.output_screen import OutputScreen
 
 
 def test_public_exports_are_explicit():
@@ -408,7 +396,7 @@ def test_main_run_executes_program_and_prints_output(monkeypatch, tmp_path, caps
 
 def test_dos_help_screen_is_modal():
     """Safari DOS help screen is a ModalScreen with full key reference."""
-    from safari_dos.screens import SafariDosHelpScreen, DOS_HELP_CONTENT
+    from safari_dos.screens import DOS_HELP_CONTENT, SafariDosHelpScreen
 
     screen = SafariDosHelpScreen()
     assert isinstance(screen, SafariDosHelpScreen)
@@ -480,8 +468,8 @@ def test_dos_browser_run_selected_prompts_for_stdin(monkeypatch, tmp_path):
     screen._selected_index = 0
     pushed: list[object] = []
     fake_app = mock.MagicMock()
-    fake_app.push_screen.side_effect = (
-        lambda screen_obj, callback=None: pushed.append((screen_obj, callback))
+    fake_app.push_screen.side_effect = lambda screen_obj, callback=None: pushed.append(
+        (screen_obj, callback)
     )
 
     with mock.patch.object(

@@ -1,5 +1,6 @@
-import unittest
 import math
+import unittest
+
 from safari_basic.atari_basic import AtariBasic
 
 

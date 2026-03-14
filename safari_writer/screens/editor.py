@@ -17,25 +17,23 @@ import os
 from pathlib import Path
 from typing import Protocol, cast
 
-import safari_writer.locale_info as _locale_info
-from textual.app import ComposeResult
-from textual.screen import Screen, ModalScreen
-from textual.widgets import Static
-from textual.widget import Widget
 from textual import events
+from textual.app import ComposeResult
 from textual.containers import Container
+from textual.screen import ModalScreen, Screen
+from textual.widget import Widget
+from textual.widgets import Static
 
+import safari_writer.locale_info as _locale_info
 from safari_writer.file_types import FileProfile, HighlightProfile, StorageMode
-from safari_writer.program_runner import (
-    decode_stdin_text,
-    is_runnable_profile,
-    program_may_need_stdin,
-    run_program_source,
-)
+from safari_writer.program_runner import (decode_stdin_text,
+                                          is_runnable_profile,
+                                          program_may_need_stdin,
+                                          run_program_source)
 from safari_writer.screens.file_ops import FilePromptScreen
+from safari_writer.screens.output_screen import OutputScreen
 from safari_writer.state import AppState
 from safari_writer.syntax_highlight import create_highlighter
-from safari_writer.screens.output_screen import OutputScreen
 
 
 def _(s: str) -> str:
@@ -467,7 +465,8 @@ class EditorArea(Widget, can_focus=True):
         return cast(_EditorApp, self.app)
 
     def _is_slide_document(self) -> bool:
-        from safari_slides.services import is_slide_filename, looks_like_slide_markdown
+        from safari_slides.services import (is_slide_filename,
+                                            looks_like_slide_markdown)
 
         return is_slide_filename(self.state.filename) or looks_like_slide_markdown(
             "\n".join(self.state.buffer)
@@ -634,9 +633,10 @@ class EditorArea(Widget, can_focus=True):
         # For syntax-highlighted plain files, build Rich markup from the
         # highlighted Text object while overlaying cursor/selection.
         if hl_text is not None and not s.allows_formatting:
-            return self._render_highlighted_line(
-                hl_text, line, row, sel_start, sel_end
-            ), fmt_state
+            return (
+                self._render_highlighted_line(hl_text, line, row, sel_start, sel_end),
+                fmt_state,
+            )
 
         out = ""
         for col, ch in enumerate(line):
@@ -1670,8 +1670,8 @@ class EditorArea(Widget, can_focus=True):
 
     def _run_macro(self) -> None:
         """Open the macro picker and run the selected .BAS file."""
-        from safari_writer.screens.macro_picker import MacroPickerScreen
         from safari_basic.runner import MacroRunner
+        from safari_writer.screens.macro_picker import MacroPickerScreen
 
         s = self.state
         sel_start = s.selection_anchor
@@ -1691,14 +1691,16 @@ class EditorArea(Widget, can_focus=True):
             from pathlib import Path as _Path
 
             if not isinstance(path, _Path):
-                self._set_screen_message("Macro cancelled")
+                self._set_screen_message(_("Macro cancelled"))
                 return
             output, error = MacroRunner.run(path, context)
             if error:
                 self._set_screen_message(error)
                 return
             if not output:
-                self._set_screen_message(f"Macro ran: {path.stem} (no output)")
+                self._set_screen_message(
+                    _("Macro ran: {name} (no output)").format(name=path.stem)
+                )
                 return
             # Insert output at cursor position (same logic as _paste for multi-line)
             self._push_undo("macro")
@@ -1722,7 +1724,9 @@ class EditorArea(Widget, can_focus=True):
                 s.cursor_col = len(lines[-1])
             s.modified = True
             self._set_screen_message(
-                f"Macro: {path.stem} — {len(lines)} line(s) inserted"
+                _("Macro: {name} — {count} line(s) inserted").format(
+                    name=path.stem, count=len(lines)
+                )
             )
             self.refresh()
             self._update_status()
@@ -1737,10 +1741,12 @@ class EditorArea(Widget, can_focus=True):
             return
 
         source = "\n".join(self.state.buffer)
-        working_path = Path(self.state.filename).resolve() if self.state.filename else None
+        working_path = (
+            Path(self.state.filename).resolve() if self.state.filename else None
+        )
         if program_may_need_stdin(source, profile):
             self.app.push_screen(
-                FilePromptScreen("Program Input (use \\n for new lines)"),
+                FilePromptScreen(_("Program Input (use \\n for new lines)")),
                 callback=lambda value: self._run_program_with_stdin(
                     source,
                     profile,
@@ -1764,7 +1770,7 @@ class EditorArea(Widget, can_focus=True):
         raw_stdin: str | None,
     ) -> None:
         if raw_stdin is None:
-            self._set_screen_message("Execution cancelled")
+            self._set_screen_message(_("Execution cancelled"))
             return
         self._show_program_output(
             source,
@@ -1819,7 +1825,7 @@ class EditorArea(Widget, can_focus=True):
         s.cursor_row = min(row + 2, len(s.buffer) - 1)
         s.cursor_col = 0
         s.modified = True
-        self._set_screen_message("Inserted slide break")
+        self._set_screen_message(_("Inserted slide break"))
 
 
 class EditorScreen(Screen):
@@ -1907,7 +1913,8 @@ class EditorScreen(Screen):
             self.query_one("#tab-bar", Static).update(self._tab_bar_text())
 
     def _help_bar_text(self) -> str:
-        from safari_slides.services import is_slide_filename, looks_like_slide_markdown
+        from safari_slides.services import (is_slide_filename,
+                                            looks_like_slide_markdown)
 
         fed_active = (
             hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active  # type: ignore[attr-defined]

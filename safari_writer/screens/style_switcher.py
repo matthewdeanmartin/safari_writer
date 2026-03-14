@@ -2,20 +2,14 @@
 
 from __future__ import annotations
 
+from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual import events
 from textual.widgets import Static
 
-from safari_writer.themes import (
-    THEMES,
-    THEME_LABELS,
-    DEFAULT_THEME,
-    save_settings,
-    load_settings,
-)
-
+from safari_writer.themes import (DEFAULT_THEME, THEME_LABELS, THEMES,
+                                  load_settings, save_settings)
 
 SS_CSS = """
 StyleSwitcherScreen {

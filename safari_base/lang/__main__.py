@@ -22,7 +22,8 @@ def main(argv: list[str] | None = None) -> int:
         description="Safari Base dBASE III+ language processor",
     )
     parser.add_argument(
-        "--work-dir", "-w",
+        "--work-dir",
+        "-w",
         default=".",
         help="Working directory (default: current directory)",
     )

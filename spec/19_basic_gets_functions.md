@@ -1,11 +1,11 @@
 Here’s a plausible “ATARI BASIC, but with functions” flavor that tries to keep the old vibe:
 
-* line numbers stay
-* `PROC` is for side-effect routines
-* `FUNC` returns a value
-* arguments are simple and positional
-* return values use `RETURN`
-* still feels like old BASIC, not modern Python
+- line numbers stay
+- `PROC` is for side-effect routines
+- `FUNC` returns a value
+- arguments are simple and positional
+- return values use `RETURN`
+- still feels like old BASIC, not modern Python
 
 ## 1. Tiny math function
 
@@ -153,10 +153,10 @@ If I were trying to make it feel like real ATARI BASIC evolved naturally, I’d 
 
 Because it feels like:
 
-* readable for beginners
-* still line-number friendly
-* easy to `LIST`
-* easy to implement in an interpreter
+- readable for beginners
+- still line-number friendly
+- easy to `LIST`
+- easy to implement in an interpreter
 
 ## 9. One more fun example: user-defined command feel
 
@@ -174,8 +174,8 @@ Because it feels like:
 
 My guess is that “imaginary ATARI BASIC with functions” would feel best if it mixed:
 
-* `DEF FN` for one-liners
-* `FUNC ... END FUNC` for real value-returning routines
-* `PROC ... END PROC` for structured replacements for `GOSUB`
+- `DEF FN` for one-liners
+- `FUNC ... END FUNC` for real value-returning routines
+- `PROC ... END PROC` for structured replacements for `GOSUB`
 
 If you want, I can do one more pass and show what a **full tiny program** would look like in this style, like a little game or utility.

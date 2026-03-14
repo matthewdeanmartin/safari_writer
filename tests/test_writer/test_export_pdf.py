@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from safari_writer.export_pdf import export_pdf
 from safari_writer.mail_merge_db import FieldDef, MailMergeDB
-from safari_writer.screens.editor import CTRL_BOLD, CTRL_EJECT, CTRL_HEADER, CTRL_MERGE
+from safari_writer.screens.editor import (CTRL_BOLD, CTRL_EJECT, CTRL_HEADER,
+                                          CTRL_MERGE)
 from safari_writer.state import GlobalFormat
 
 

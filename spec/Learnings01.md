@@ -25,7 +25,8 @@ The `event.text` in the Paste event contains whatever is on the **system clipboa
 
 1. **BINDINGS with `priority=True`** on `EditorArea` for `ctrl+c`, `ctrl+v`, `ctrl+x`. This overrides Textual's system `ctrl+c` binding and provides action methods for cut/copy/paste.
 
-2. **`on_paste` handler** that:
+1. **`on_paste` handler** that:
+
    - Catches the terminal's bracketed paste event (which is what Ctrl+V actually produces)
    - **Ignores** `event.text` (the system clipboard / terminal junk)
    - Calls `_paste()` to insert from the **internal** app clipboard

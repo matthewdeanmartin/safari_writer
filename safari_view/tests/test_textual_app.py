@@ -1,18 +1,17 @@
 """
 Tests for the SafariView Textual application sizing behavior.
 """
+
 from __future__ import annotations
 
 import asyncio
 
 from PIL import Image
 
-from safari_view.ui_terminal.textual_app import (
-    MIN_RENDER_HEIGHT_ROWS,
-    MIN_RENDER_WIDTH,
-    SafariViewApp,
-    resolve_render_target,
-)
+from safari_view.ui_terminal.textual_app import (MIN_RENDER_HEIGHT_ROWS,
+                                                 MIN_RENDER_WIDTH,
+                                                 SafariViewApp,
+                                                 resolve_render_target)
 from safari_view.ui_terminal.widgets import ChunkyImage
 
 

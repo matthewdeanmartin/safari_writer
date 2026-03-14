@@ -226,3 +226,130 @@ msgstr "Nova Mastodon-Afiŝo"
 
 msgid "No Safari Fed session active"
 msgstr "Neniu Safari Fed-sesio aktiva"
+
+msgid "  Conversation turns: {turns}"
+msgstr "  Konversaciaj vicoj: {turns}"
+
+msgid "  Document: {doc}"
+msgstr "  Dokumento: {doc}"
+
+msgid "  Topics loaded: {chunks}"
+msgstr "  Ŝargitaj temoj: {chunks}"
+
+msgid "*** BACKUP & RESTORE ***"
+msgstr "*** REZERVA KOPIO KAJ RESTARIGO ***"
+
+msgid "*** DOS ***"
+msgstr "*** DOS ***"
+
+msgid "*** Tools ***"
+msgstr "*** ILOJ ***"
+
+msgid "*** Words ***"
+msgstr "*** VORTOJ ***"
+
+msgid "=== SAFARI CHAT — KEY COMMANDS ==="
+msgstr "=== SAFARI CHAT — KLAVAJ KOMANDOJ ==="
+
+msgid "CONVERSATION TREE"
+msgstr "KONVERSACIA ARBO"
+
+msgid "Execution cancelled"
+msgstr "Ekzekuto nuligita"
+
+msgid "Inserted slide break"
+msgstr "Enmetita lumbilda paŭzo"
+
+msgid "MEMORY"
+msgstr "MEMORO"
+
+msgid "Macro cancelled"
+msgstr "Makroo nuligita"
+
+msgid "Macro ran: {name} (no output)"
+msgstr "Makroo rulita: {name} (sen eligo)"
+
+msgid "Macro: {name} — {count} line(s) inserted"
+msgstr "Makroo: {name} — {count} linio(j) enmetitaj"
+
+msgid "No backup selected"
+msgstr "Neniu rezerva kopio elektita"
+
+msgid "No backups found."
+msgstr "Neniuj rezervaj kopioj trovitaj."
+
+msgid "No conversation yet."
+msgstr "Ankoraŭ neniu konversacio."
+
+msgid "No help document loaded."
+msgstr "Neniu helpdokumento ŝargita."
+
+msgid "No runner available for this file type"
+msgstr "Neniu rulilo disponebla por ĉi tiu dosiertipo"
+
+msgid "OPTIONS"
+msgstr "OPCIOJ"
+
+msgid "PARSED TOPICS"
+msgstr "ANALIZITAJ TEMOJ"
+
+msgid "Press Escape to close"
+msgstr "Premu Esc por fermi"
+
+msgid "Press Escape to close."
+msgstr "Premu Esc por fermi."
+
+msgid "Program Input (use \\n for new lines)"
+msgstr "Programa enigo (uzu \\n por novaj linioj)"
+
+msgid "R=Resume editing  X=Discard  Esc=Back"
+msgstr "R=Rekomenci redaktadon  X=Forĵeti  Esc=Reen"
+
+msgid "SAFETY"
+msgstr "SEKURECO"
+
+msgid "SESSION INFO"
+msgstr "SEANCA INFORMO"
+
+msgid "Start Safari Chat with a Markdown file:"
+msgstr "Lanĉu Safari Chat per Markdown-dosiero:"
+
+msgid "TOPICS"
+msgstr "TEMOJ"
+
+msgid "The conversation tree will appear here,"
+msgstr "La konversacia arbo aperos ĉi tie,"
+
+msgid "The document should be split into sections"
+msgstr "La dokumento devas esti dividita en sekciojn"
+
+msgid "Toot cancelled"
+msgstr "Afiŝo nuligita"
+
+msgid "Type a message at the USER> prompt"
+msgstr "Tajpu mesaĝon ĉe la USER>-invito"
+
+msgid "Unknown command: {cmd}. Try /help."
+msgstr "Nekonata komando: {cmd}. Provu /help."
+
+msgid "Welcome. Type your question below."
+msgstr "Bonvenon. Tajpu vian demandon sube."
+
+msgid "and branch structure."
+msgstr "kaj branĉostrukturon."
+
+msgid "and press Enter to start chatting."
+msgstr "kaj premu Enter por ekbabili."
+
+msgid "separated by --- lines."
+msgstr "apartigitaj per --- linioj."
+
+msgid "showing each turn with speaker, emotion,"
+msgstr "montrante ĉiun vicon kun parolanto, emocio,"
+
+msgid " F1 Help | F2 Memory | ^T Topics | ^S Safety | ^O Options | ^Q Quit"
+msgstr " F1 Helpo | F2 Memoro | ^T Temoj | ^S Sekureco | ^O Opcioj | ^Q Eliri"
+
+msgid " F1 Help  F2 Memory  ^T Topics  ^S Safety  ^O Options  ^Q Quit  PgUp/PgDn Scroll"
+msgstr " F1 Helpo  F2 Memoro  ^T Temoj  ^S Sekureco  ^O Opcioj  ^Q Eliri  PgUp/PgDn Rulumi"
+

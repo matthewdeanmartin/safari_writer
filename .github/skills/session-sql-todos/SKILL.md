@@ -1,7 +1,6 @@
----
-name: session-sql-todos
-description: Use for session SQL todo tracking or when 0 rows look wrong.
----
+______________________________________________________________________
+
+## name: session-sql-todos description: Use for session SQL todo tracking or when 0 rows look wrong.
 
 # Session SQL TODOs
 

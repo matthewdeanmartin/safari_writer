@@ -46,4 +46,3 @@ def main(argv: list[str] | None = None) -> int:
     app = SafariSlidesApp(source_path=source_path)
     app.run()
     return 0
-

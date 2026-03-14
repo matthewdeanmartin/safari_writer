@@ -14,7 +14,8 @@ import re
 from rich.style import Style
 from rich.text import Text
 
-from safari_writer.file_types import FileProfile, HighlightProfile, PYGMENTS_LEXER_MAP
+from safari_writer.file_types import (PYGMENTS_LEXER_MAP, FileProfile,
+                                      HighlightProfile)
 
 __all__ = [
     "highlight_line",

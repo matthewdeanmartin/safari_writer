@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -33,6 +32,13 @@ __all__ = [
     "SafariChatSafetyScreen",
     "SafariChatTopicsScreen",
 ]
+
+
+def _(s: str) -> str:
+    from safari_writer.locale_info import get_translation
+
+    return get_translation().gettext(s)
+
 
 # ---------------------------------------------------------------------------
 # CSS (AtariWriter / DOS aesthetic)
@@ -167,16 +173,19 @@ class SafariChatMainScreen(Screen):
             id="chat-distress-bar",
         )
         yield Static(
-            CHAT_MENU_BAR,
+            _(CHAT_MENU_BAR),
             id="chat-menu-bar",
         )
         yield VerticalScroll(
-            Static("Welcome. Type your question below.\n", id="chat-transcript-text"),
+            Static(
+                _("Welcome. Type your question below.") + "\n",
+                id="chat-transcript-text",
+            ),
             id="chat-transcript",
         )
         yield Static("USER> ", id="chat-input-bar")
         yield Static(
-            CHAT_COMMAND_BAR,
+            _(CHAT_COMMAND_BAR),
             id="chat-command-bar",
         )
 
@@ -237,7 +246,9 @@ class SafariChatMainScreen(Screen):
         else:
             # Unknown command — echo help.
             self.state.add_node(
-                "bot", f"Unknown command: {cmd}. Try /help.", intent="system"
+                "bot",
+                _("Unknown command: {cmd}. Try /help.").format(cmd=cmd),
+                intent="system",
             )
             self._refresh_transcript()
 
@@ -261,7 +272,9 @@ class SafariChatMainScreen(Screen):
             lines.append(f"{prefix}> {node.raw_text}")
         content = "\n".join(lines) if lines else "Welcome. Type your question below."
         widget = self.query_one("#chat-transcript-text", Static)
-        widget.update(content + "\n")
+        widget.update(
+            (content if lines else _("Welcome. Type your question below.")) + "\n"
+        )
         # Scroll to bottom.
         scroll = self.query_one("#chat-transcript", VerticalScroll)
         scroll.scroll_end(animate=False)
@@ -314,15 +327,15 @@ class SafariChatTopicsScreen(ModalScreen[None]):
         self.state = state
 
     def compose(self) -> ComposeResult:
-        lines: list[str] = ["PARSED TOPICS", "=" * 40, ""]
+        lines: list[str] = [_("PARSED TOPICS"), "=" * 40, ""]
         if not self.state.chunks:
-            lines.append("No help document loaded.")
+            lines.append(_("No help document loaded."))
             lines.append("")
-            lines.append("Start Safari Chat with a Markdown file:")
+            lines.append(_("Start Safari Chat with a Markdown file:"))
             lines.append("  safari-chat path/to/help.md")
             lines.append("")
-            lines.append("The document should be split into sections")
-            lines.append("separated by --- lines.")
+            lines.append(_("The document should be split into sections"))
+            lines.append(_("separated by --- lines."))
         else:
             for chunk in self.state.chunks:
                 heading = chunk.heading or "(no heading)"
@@ -331,9 +344,9 @@ class SafariChatTopicsScreen(ModalScreen[None]):
                 lines.append(f"      Keywords: {kw}")
                 lines.append("")
         lines.append("")
-        lines.append("Press Escape to close.")
+        lines.append(_("Press Escape to close."))
         with VerticalScroll(classes="modal-container"):
-            yield Static("TOPICS", classes="modal-title")
+            yield Static(_("TOPICS"), classes="modal-title")
             yield Static("\n".join(lines), classes="modal-body")
 
     def action_dismiss_modal(self) -> None:
@@ -356,16 +369,16 @@ class SafariChatMemoryScreen(ModalScreen[None]):
         self.state = state
 
     def compose(self) -> ComposeResult:
-        lines: list[str] = ["CONVERSATION TREE", "=" * 40, ""]
+        lines: list[str] = [_("CONVERSATION TREE"), "=" * 40, ""]
         if not self.state.conversation:
-            lines.append("No conversation yet.")
+            lines.append(_("No conversation yet."))
             lines.append("")
-            lines.append("Type a message at the USER> prompt")
-            lines.append("and press Enter to start chatting.")
+            lines.append(_("Type a message at the USER> prompt"))
+            lines.append(_("and press Enter to start chatting."))
             lines.append("")
-            lines.append("The conversation tree will appear here,")
-            lines.append("showing each turn with speaker, emotion,")
-            lines.append("and branch structure.")
+            lines.append(_("The conversation tree will appear here,"))
+            lines.append(_("showing each turn with speaker, emotion,"))
+            lines.append(_("and branch structure."))
         else:
             for node in self.state.conversation:
                 indent = "  " * node.branch_depth
@@ -376,9 +389,9 @@ class SafariChatMemoryScreen(ModalScreen[None]):
                 emo = f" [{node.emotion}]" if node.emotion else ""
                 lines.append(f"{indent}#{node.node_id} {speaker}{emo}: {text}")
         lines.append("")
-        lines.append("Press Escape to close.")
+        lines.append(_("Press Escape to close."))
         with VerticalScroll(classes="modal-container"):
-            yield Static("MEMORY", classes="modal-title")
+            yield Static(_("MEMORY"), classes="modal-title")
             yield Static("\n".join(lines), classes="modal-body")
 
     def action_dismiss_modal(self) -> None:
@@ -415,7 +428,7 @@ class SafariChatSafetyScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(classes="modal-container"):
-            yield Static("SAFETY", classes="modal-title")
+            yield Static(_("SAFETY"), classes="modal-title")
             yield Static(self._SAFETY_TEXT, classes="modal-body")
 
     def action_dismiss_modal(self) -> None:
@@ -446,22 +459,28 @@ class SafariChatOptionsScreen(ModalScreen[None]):
         chunks = len(self.state.chunks)
         turns = len(self.state.conversation)
         return (
-            "OPTIONS\n"
-            "=" * 40 + "\n\n"
-            f"[S] Synonym Variation: {syn_status}\n\n"
-            f"Retrieval Strictness: {self.state.retrieval_strictness:.2f}\n"
-            f"Distress Level:       {self.state.distress_level.value}\n"
-            f"Distress Score:       {self.state.distress_score:.2f}\n\n"
-            "SESSION INFO\n"
-            f"  Document: {doc}\n"
-            f"  Topics loaded: {chunks}\n"
-            f"  Conversation turns: {turns}\n\n"
-            "Press Escape to close."
+            _("OPTIONS")
+            + "\n"
+            + "=" * 40
+            + "\n\n"
+            + f"[S] Synonym Variation: {syn_status}\n\n"
+            + f"Retrieval Strictness: {self.state.retrieval_strictness:.2f}\n"
+            + f"Distress Level:       {self.state.distress_level.value}\n"
+            + f"Distress Score:       {self.state.distress_score:.2f}\n\n"
+            + _("SESSION INFO")
+            + "\n"
+            + _("  Document: {doc}").format(doc=doc)
+            + "\n"
+            + _("  Topics loaded: {chunks}").format(chunks=chunks)
+            + "\n"
+            + _("  Conversation turns: {turns}").format(turns=turns)
+            + "\n\n"
+            + _("Press Escape to close.")
         )
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(classes="modal-container"):
-            yield Static("OPTIONS", classes="modal-title")
+            yield Static(_("OPTIONS"), classes="modal-title")
             yield Static(self._build_text(), id="options-body", classes="modal-body")
 
     def action_toggle_synonyms(self) -> None:
@@ -524,10 +543,10 @@ class SafariChatHelpScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(classes="modal-container"):
-            yield Static("=== SAFARI CHAT — KEY COMMANDS ===", classes="modal-title")
+            yield Static(_("=== SAFARI CHAT — KEY COMMANDS ==="), classes="modal-title")
             yield Static(CHAT_HELP_CONTENT, classes="modal-body")
             yield Static(
-                "Press Escape to close",
+                _("Press Escape to close"),
                 classes="modal-body",
             )
 

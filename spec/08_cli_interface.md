@@ -5,11 +5,11 @@
 Safari Writer currently starts directly into the Textual application and always lands on the Main Menu. This spec defines a future **argparse-based** CLI that supports:
 
 1. **direct-entry TUI startup** — the user can launch the app straight into the editor, proofreader, global format, mail merge, print/export flow, or file browser; and
-2. **headless operation** — the user can run non-interactive commands for export, proofing, format conversion, and mail-merge inspection without booting Textual.
+1. **headless operation** — the user can run non-interactive commands for export, proofing, format conversion, and mail-merge inspection without booting Textual.
 
 This document is a behavior spec only. It does **not** require implementation in this phase.
 
----
+______________________________________________________________________
 
 ## 2. Design Goals
 
@@ -27,7 +27,7 @@ This document is a behavior spec only. It does **not** require implementation in
 - No implementation-specific code in this spec.
 - No shell-specific completion scripts in the first CLI pass.
 
----
+______________________________________________________________________
 
 ## 3. Invocation Model
 
@@ -69,7 +69,7 @@ safari-writer tui edit --file draft.sfw
 
 If the bare positional form is supported, it must be limited to exactly one file path and must not conflict with explicit subcommands.
 
----
+______________________________________________________________________
 
 ## 4. Global Options
 
@@ -90,7 +90,7 @@ These options apply before the first subcommand.
 - `--cwd` affects path resolution for both headless commands and TUI startup requests.
 - TUI commands may accept `--quiet` / `--verbose` syntactically, but they do not need to change runtime behavior in the initial implementation.
 
----
+______________________________________________________________________
 
 ## 5. Command Tree
 
@@ -126,7 +126,7 @@ safari-writer
 
 The `tui` branch is for direct-entry interactive use. All other top-level branches are headless.
 
----
+______________________________________________________________________
 
 ## 6. TUI Commands
 
@@ -287,7 +287,7 @@ safari-writer tui index-external
 
 - If no external drives are available, the startup request should still succeed and land on the same fallback/message path the TUI would normally use.
 
----
+______________________________________________________________________
 
 ## 7. Headless Export Commands
 
@@ -349,7 +349,7 @@ This is the headless counterpart to preview rendering. It exists primarily for s
 - `--page N` restricts output to a single rendered page when supported.
 - If `--page` is out of range, return a non-zero exit code.
 
----
+______________________________________________________________________
 
 ## 8. Headless Proof Commands
 
@@ -392,7 +392,7 @@ safari-writer proof suggest WORD
 - Exit `0` whether or not suggestions exist.
 - Exit non-zero only when the spell backend cannot be initialized and strict behavior is requested in a later phase.
 
----
+______________________________________________________________________
 
 ## 9. Headless Format Commands
 
@@ -425,7 +425,7 @@ safari-writer format strip INPUT [-o OUTPUT]
 - Remove inline formatting control codes and write plain text.
 - Default output path is `<input-stem>.txt`.
 
----
+______________________________________________________________________
 
 ## 10. Headless Mail-Merge Commands
 
@@ -477,7 +477,7 @@ safari-writer mail-merge validate DATABASE
 - Confirm structural validity: field count, max lengths, record width consistency, record limit, and JSON shape.
 - Exit `0` for valid data, `1` for invalid data, `2` for execution failures.
 
----
+______________________________________________________________________
 
 ## 11. Parser and Dispatch Requirements
 
@@ -503,12 +503,12 @@ Recommended parser layout:
 The future implementation should separate the CLI into three layers:
 
 1. **parser layer** — builds `argparse` objects and parses argv;
-2. **request layer** — converts parsed args into typed startup/export/proof/mail-merge requests;
-3. **execution layer** — performs TUI launch or headless work and returns an exit code.
+1. **request layer** — converts parsed args into typed startup/export/proof/mail-merge requests;
+1. **execution layer** — performs TUI launch or headless work and returns an exit code.
 
 This keeps parser tests, request-conversion tests, and execution tests independent.
 
----
+______________________________________________________________________
 
 ## 12. TUI Startup Request Model
 
@@ -524,7 +524,7 @@ Direct-entry behavior should not be expressed as raw parser conditionals scatter
 
 The app should receive this object at construction time and use it in `on_mount()` to decide which screen to push first.
 
----
+______________________________________________________________________
 
 ## 13. Exit Codes
 
@@ -536,7 +536,7 @@ The app should receive this object at construction time and use it in `on_mount(
 
 The implementation should keep exit code meanings stable across commands.
 
----
+______________________________________________________________________
 
 ## 14. Error Handling Rules
 
@@ -549,7 +549,7 @@ The implementation should keep exit code meanings stable across commands.
 
 Example: `safari-writer tui proofreader --mode correct --file missing.sfw` must fail clearly, not quietly land on the main menu.
 
----
+______________________________________________________________________
 
 ## 15. Pytest Testability Requirements
 
@@ -594,7 +594,7 @@ The eventual CLI implementation should be designed so tests can exercise parser 
 - printing directly from business-logic helpers instead of using injected streams or returned values
 - entangling parser construction with Textual app imports when tests only need parser coverage
 
----
+______________________________________________________________________
 
 ## 16. Help and Documentation Expectations
 
@@ -614,7 +614,7 @@ safari-writer proof list draft.sfw --json
 safari-writer mail-merge inspect contacts.json
 ```
 
----
+______________________________________________________________________
 
 ## 17. Phased Delivery Guidance
 

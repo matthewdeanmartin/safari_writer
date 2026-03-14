@@ -247,7 +247,7 @@ class ReplEditorScreen(Screen):
         self._repl = SafariREPL(out_stream=self._buf)
         self._input_buffer = ""
         self._history_cursor = -1  # -1 means at the bottom (new input)
-        self._temp_input = "" # Store what user typed before browsing history
+        self._temp_input = ""  # Store what user typed before browsing history
         self._pending_output: list[str] = list(state.output_lines)
 
         # If a file is already loaded, load its program lines into the interpreter
@@ -271,7 +271,9 @@ class ReplEditorScreen(Screen):
         self._repl.current_filename = str(path)
         self._repl.modified = False
         self._pending_output.append(f"Loaded: {path.name}")
-        self._pending_output.append(f"{len(self._repl.interpreter.line_order)} line(s) in program.")
+        self._pending_output.append(
+            f"{len(self._repl.interpreter.line_order)} line(s) in program."
+        )
 
     def compose(self) -> ComposeResult:
         with Container(id="repl-container"):
@@ -309,7 +311,9 @@ class ReplEditorScreen(Screen):
 
     def _render_status(self) -> str:
         line_count = len(self._repl.interpreter.line_order)
-        file_name = self._state.loaded_path.name if self._state.loaded_path else "Untitled"
+        file_name = (
+            self._state.loaded_path.name if self._state.loaded_path else "Untitled"
+        )
         modified = " *" if self._repl.modified else ""
         return f" {file_name}{modified}  {line_count} lines  Esc back  F2 LIST  F5 RUN  F9 Writer"
 
@@ -381,12 +385,12 @@ class ReplEditorScreen(Screen):
             event.stop()
         elif event.key == "backspace":
             self._input_buffer = self._input_buffer[:-1]
-            self._history_cursor = -1 # Editing breaks history link
+            self._history_cursor = -1  # Editing breaks history link
             self._refresh_input()
             event.stop()
         elif event.character and event.character.isprintable():
             self._input_buffer += event.character
-            self._history_cursor = -1 # Editing breaks history link
+            self._history_cursor = -1  # Editing breaks history link
             self._refresh_input()
             event.stop()
 

@@ -13,14 +13,13 @@ from typing import Any
 
 import dbf  # type: ignore[import-untyped]
 
-
 # Map single-char type codes to dbf field spec format
 _TYPE_MAP = {
-    "C": "C",       # Character
-    "N": "N",       # Numeric
-    "D": "D",       # Date
-    "L": "L",       # Logical
-    "M": "M",       # Memo
+    "C": "C",  # Character
+    "N": "N",  # Numeric
+    "D": "D",  # Date
+    "L": "L",  # Logical
+    "M": "M",  # Memo
 }
 
 
@@ -100,9 +99,10 @@ class TableHandle:
         """Go to 1-based record number."""
         if n < 1 or n > self.record_count:
             from safari_base.lang.errors import DBaseError
+
             raise DBaseError(f"Record number {n} out of range (1-{self.record_count})")
         self._recno = n - 1
-        self._bof = (self._recno == 0)
+        self._bof = self._recno == 0
         self._eof = False
 
     def skip(self, count: int = 1) -> None:
@@ -119,7 +119,7 @@ class TableHandle:
         else:
             self._recno = new_pos
             self._eof = False
-            self._bof = (new_pos == 0)
+            self._bof = new_pos == 0
 
     def current_record(self) -> dbf.Record | None:
         if self._eof or self.record_count == 0:
@@ -131,6 +131,7 @@ class TableHandle:
         rec = self.current_record()
         if rec is None:
             from safari_base.lang.errors import NoTableError
+
             raise NoTableError("No current record (EOF)")
         name_upper = field_name.upper()
         for fn in self.table.field_names:
@@ -149,6 +150,7 @@ class TableHandle:
                     return ""
                 return str(val)
         from safari_base.lang.errors import FieldNotFoundError
+
         raise FieldNotFoundError(field_name, self.alias)
 
     def set_field(self, field_name: str, value: Any) -> None:
@@ -156,6 +158,7 @@ class TableHandle:
         rec = self.current_record()
         if rec is None:
             from safari_base.lang.errors import NoTableError
+
             raise NoTableError("No current record (EOF)")
         name_upper = field_name.upper()
         for fn in self.table.field_names:
@@ -163,6 +166,7 @@ class TableHandle:
                 dbf.write(rec, **{fn: value})
                 return
         from safari_base.lang.errors import FieldNotFoundError
+
         raise FieldNotFoundError(field_name, self.alias)
 
     def has_field(self, field_name: str) -> bool:
@@ -174,7 +178,7 @@ class TableHandle:
         self.table.append()
         self._recno = self.record_count - 1
         self._eof = False
-        self._bof = (self._recno == 0)
+        self._bof = self._recno == 0
         return self.recno
 
     def delete_current(self) -> None:
@@ -251,7 +255,9 @@ def open_table(path: str, exclusive: bool = False) -> dbf.Table:
     return table
 
 
-def copy_structure(source_handle: TableHandle, target_path: str, extended: bool = False) -> dbf.Table:
+def copy_structure(
+    source_handle: TableHandle, target_path: str, extended: bool = False
+) -> dbf.Table:
     """Copy the structure of an open table to a new file."""
     if extended:
         # Create a structure-extended table (field definitions as records)

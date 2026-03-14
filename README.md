@@ -7,7 +7,7 @@ Main goals
 - Better notepad
 - Can post to Mastodon with spellcheck
 - Can be used to read long documents
-- Supports feature set of AtariWriter and adjacent applications, including database, image viewer, file browser 
+- Supports feature set of AtariWriter and adjacent applications, including database, image viewer, file browser
 - 1980 Retro UI, Retro scripting languages
 - Modern features, modern keybindings
 
@@ -35,7 +35,7 @@ safari-view open images\frog.png --mode st --no-dithering
 safari-view render images\frog.png --mode 2600 --width 160 --height 192 --output out\frog-2600.png
 ```
 
-Follow the menus. 
+Follow the menus.
 
 ## Features
 
@@ -69,26 +69,29 @@ Dual licensed with a Shareware license. Dual meaning, you pick which of the two 
 
 Safari Writer automatically uses your operating system's locale. If you want to run the app in a different language, set the `SAFARI_LOCALE` environment variable before launching.
 
-| Code | Language   |
+| Code | Language |
 |------|------------|
-| `en` | English    |
-| `eo` | Esperanto  |
-| `es` | Spanish    |
-| `fr` | French     |
-| `is` | Icelandic  |
-| `ru` | Russian    |
+| `en` | English |
+| `eo` | Esperanto |
+| `es` | Spanish |
+| `fr` | French |
+| `is` | Icelandic |
+| `ru` | Russian |
 
 **Linux / macOS:**
+
 ```bash
 SAFARI_LOCALE=eo safari-writer
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 $env:SAFARI_LOCALE="eo"; safari-writer
 ```
 
 **Windows (Command Prompt):**
+
 ```cmd
 set SAFARI_LOCALE=eo && safari-writer
 ```

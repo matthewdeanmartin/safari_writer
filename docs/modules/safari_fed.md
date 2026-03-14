@@ -20,12 +20,14 @@ If no Mastodon credentials are configured, Safari Fed opens in demo mode with a 
 Copy `.env.example` to `.env` and fill in your credentials.
 
 **Single account (legacy pattern):**
+
 ```
 MASTODON_BASE_URL=https://mastodon.social
 MASTODON_ACCESS_TOKEN=your_access_token_here
 ```
 
 **Multiple accounts:**
+
 ```
 MASTODON_ID_MAIN_BASE_URL=https://mastodon.social
 MASTODON_ID_MAIN_ACCESS_TOKEN=your_main_access_token

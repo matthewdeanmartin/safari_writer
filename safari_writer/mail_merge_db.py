@@ -7,7 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import cast
 
-from safari_writer.typed import MailMergeData, MailMergeFieldInfo, MailMergeInspectInfo
+from safari_writer.typed import (MailMergeData, MailMergeFieldInfo,
+                                 MailMergeInspectInfo)
 
 __all__ = [
     "DEFAULT_FIELDS",

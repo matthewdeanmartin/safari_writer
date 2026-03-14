@@ -102,7 +102,7 @@ class ProgramEditorScreen(Screen[bool]):
         # Editor state
         self._lines: list[str] = []
         self._cursor_line = 0  # 0-based line index
-        self._cursor_col = 0   # 0-based column index
+        self._cursor_col = 0  # 0-based column index
         self._scroll_offset = 0  # first visible line
         self._insert_mode = True
         self._dirty = False
@@ -188,7 +188,10 @@ class ProgramEditorScreen(Screen[bool]):
         key = event.key
         _log.debug(
             "editor key=%s char=%r line=%s col=%s",
-            key, event.character, self._cursor_line, self._cursor_col,
+            key,
+            event.character,
+            self._cursor_line,
+            self._cursor_col,
         )
 
         if self._show_help:
@@ -369,7 +372,7 @@ class ProgramEditorScreen(Screen[bool]):
         if self._cursor_col > 0:
             line = self._current_line()
             col = self._cursor_col
-            self._lines[self._cursor_line] = line[:col - 1] + line[col:]
+            self._lines[self._cursor_line] = line[: col - 1] + line[col:]
             self._cursor_col -= 1
             self._dirty = True
         elif self._cursor_line > 0:
@@ -388,7 +391,7 @@ class ProgramEditorScreen(Screen[bool]):
         line = self._current_line()
         col = self._cursor_col
         if col < len(line):
-            self._lines[self._cursor_line] = line[:col] + line[col + 1:]
+            self._lines[self._cursor_line] = line[:col] + line[col + 1 :]
             self._dirty = True
         elif self._cursor_line < len(self._lines) - 1:
             # Join with next line
@@ -414,7 +417,7 @@ class ProgramEditorScreen(Screen[bool]):
     def _delete_to_eol(self) -> None:
         """Delete from cursor to end of line (Ctrl+K)."""
         line = self._current_line()
-        self._lines[self._cursor_line] = line[:self._cursor_col]
+        self._lines[self._cursor_line] = line[: self._cursor_col]
         self._dirty = True
         self._refresh()
 
@@ -470,8 +473,10 @@ class ProgramEditorScreen(Screen[bool]):
                         # Cursor on a character — show it highlighted
                         before = display_text[:col]
                         cursor_char = display_text[col]
-                        after = display_text[col + 1:]
-                        display_text = f"{before}[reverse]{cursor_char}[/reverse]{after}"
+                        after = display_text[col + 1 :]
+                        display_text = (
+                            f"{before}[reverse]{cursor_char}[/reverse]{after}"
+                        )
                     elif col == len(display_text):
                         # Cursor at end of line
                         display_text += "[reverse] [/reverse]"
@@ -498,29 +503,31 @@ class ProgramEditorScreen(Screen[bool]):
         )
 
     def _render_help_text(self) -> str:
-        return "\n".join([
-            "",
-            "  Program Editor Help",
-            "",
-            "  Navigation:",
-            "    Arrow keys     Move cursor",
-            "    Home / End     Start / end of line",
-            "    PgUp / PgDn    Page up / down",
-            "    Ctrl+Home      Top of file",
-            "    Ctrl+End       End of file",
-            "",
-            "  Editing:",
-            "    Enter          New line",
-            "    Backspace      Delete character left",
-            "    Delete         Delete character right",
-            "    Tab            Insert 4 spaces",
-            "    Insert         Toggle insert / overwrite",
-            "    Ctrl+Y         Delete entire line",
-            "    Ctrl+K         Delete to end of line",
-            "",
-            "  File:",
-            "    F2 / Ctrl+S    Save file",
-            "    F3 / Esc       Exit editor",
-            "",
-            "  Press any key to dismiss this help.",
-        ])
+        return "\n".join(
+            [
+                "",
+                "  Program Editor Help",
+                "",
+                "  Navigation:",
+                "    Arrow keys     Move cursor",
+                "    Home / End     Start / end of line",
+                "    PgUp / PgDn    Page up / down",
+                "    Ctrl+Home      Top of file",
+                "    Ctrl+End       End of file",
+                "",
+                "  Editing:",
+                "    Enter          New line",
+                "    Backspace      Delete character left",
+                "    Delete         Delete character right",
+                "    Tab            Insert 4 spaces",
+                "    Insert         Toggle insert / overwrite",
+                "    Ctrl+Y         Delete entire line",
+                "    Ctrl+K         Delete to end of line",
+                "",
+                "  File:",
+                "    F2 / Ctrl+S    Save file",
+                "    F3 / Esc       Exit editor",
+                "",
+                "  Press any key to dismiss this help.",
+            ]
+        )

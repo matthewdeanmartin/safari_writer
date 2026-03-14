@@ -1,7 +1,6 @@
----
-name: shortcut_audit
-description: Audit keyboard shortcuts for consistency, Textual conflicts, missing bindings, and documentation drift across app modules.
----
+______________________________________________________________________
+
+## name: shortcut_audit description: Audit keyboard shortcuts for consistency, Textual conflicts, missing bindings, and documentation drift across app modules.
 
 # Shortcut Audit
 
@@ -17,14 +16,17 @@ This skill is optimized to minimize repo re-reading. Start with the narrow file 
 ## What to check
 
 1. **Missing shortcuts**
+
    - A help screen, menu bar, command bar, spec, or docs page mentions a shortcut that is not actually implemented.
    - A screen has important actions with no accessible binding or `on_key()` path.
 
-2. **Inconsistent shortcuts**
+1. **Inconsistent shortcuts**
+
    - Code, in-app help, and docs disagree on key names or behavior.
    - One module documents a shortcut differently from another place describing the same feature.
 
-3. **Textual and terminal conflicts**
+1. **Textual and terminal conflicts**
+
    - Rebindings collide with common Textual defaults or terminal aliases.
    - Especially watch for `Ctrl+I` = `Tab`, `Ctrl+J` = `Enter`, and `Ctrl+M` = `Enter` on many terminals.
 
@@ -160,12 +162,12 @@ Many screens already include a header comment describing these hazards. If you s
 ## Minimal audit workflow
 
 1. Read the module's primary shortcut file from the list above.
-2. Compare:
+1. Compare:
    - `BINDINGS`
    - `on_key()`
    - in-file help constants or menu/footer text
-3. Read the matching docs/spec files that describe the same module.
-4. Report:
+1. Read the matching docs/spec files that describe the same module.
+1. Report:
    - missing shortcuts,
    - mismatched labels,
    - duplicate or conflicting bindings,

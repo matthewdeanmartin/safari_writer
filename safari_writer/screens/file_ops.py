@@ -1,10 +1,9 @@
 """File operations — filename prompt and confirmation screens."""
 
+from textual import events
 from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.widgets import Static
-from textual import events
-
 
 FP_CSS = """
 FilePromptScreen, ConfirmScreen {

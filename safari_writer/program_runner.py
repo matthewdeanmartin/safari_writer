@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import io
-from pathlib import Path
 import re
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
+from pathlib import Path
 
-from safari_writer.file_types import FileProfile, HighlightProfile, resolve_file_profile
+from safari_writer.file_types import (FileProfile, HighlightProfile,
+                                      resolve_file_profile)
 
 __all__ = [
     "decode_stdin_text",
@@ -256,7 +257,11 @@ def _run_base(
         base_interp = BaseInterpreter(env)
         base_result = base_interp.run_source(source, program_name=program_name)
         output = base_result.data or base_result.message or ""
-        if base_result.message and base_result.data and base_result.message != base_result.data:
+        if (
+            base_result.message
+            and base_result.data
+            and base_result.message != base_result.data
+        ):
             output = f"{base_result.message}\n\n{base_result.data}"
         return ProgramExecutionResult(
             title="SAFARI BASE OUTPUT",

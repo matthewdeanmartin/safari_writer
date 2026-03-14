@@ -10,7 +10,7 @@ or produce a draft post in Safari Fed.
 The interpreter is intentionally minimal: a Atari BASIC subset plus custom
 `WRITER.*`, `DOCUMENT.*`, `SELECTION.*`, and `POST.*` extensions.
 
----
+______________________________________________________________________
 
 ## 1. Macro File Format
 
@@ -29,7 +29,7 @@ The interpreter is intentionally minimal: a Atari BASIC subset plus custom
 70 PRINT DOCUMENT.LINE(CURSOR.ROW - 1)
 ```
 
----
+______________________________________________________________________
 
 ## 2. Module Layout
 
@@ -52,7 +52,7 @@ macros/            # example macros shipped with the project
   format_quotes.bas
 ```
 
----
+______________________________________________________________________
 
 ## 3. MacroContext
 
@@ -77,7 +77,7 @@ class MacroContext:
 - `ReplaceAll(old: str, new: str)`
 - `InsertFormatMarker(marker: str)`
 
----
+______________________________________________________________________
 
 ## 4. Custom BASIC Variables and Commands
 
@@ -109,7 +109,7 @@ scanner can parse them as standard tokens.
 | `PFAVES` | Favourite count (numeric) |
 | `PLINE1$` … `PLINE9$` | Individual post content lines |
 
----
+______________________________________________________________________
 
 ## 5. BASIC Subset — Phase 1 (MVP)
 
@@ -140,11 +140,11 @@ scanner can parse them as standard tokens.
 - `POST.*` variables from Fed context
 - File I/O: `OPEN #1, "file.txt"` / `PRINT #1, expr` / `CLOSE #1` (sandboxed to macros dir)
 
----
+______________________________________________________________________
 
 ## 6. Execution Flow
 
-### From EditorScreen (Ctrl+\)
+### From EditorScreen (Ctrl+)
 
 ```
 Ctrl+\ pressed in EditorScreen
@@ -175,7 +175,7 @@ Ctrl+\ pressed in EditorScreen
   → status: "Macro output saved as draft"
 ```
 
----
+______________________________________________________________________
 
 ## 7. MacroPickerScreen
 
@@ -185,7 +185,7 @@ Ctrl+\ pressed in EditorScreen
 - Displays filename and first `REM` line as description.
 - Returns `Path` to chosen file or `None` on cancel.
 
----
+______________________________________________________________________
 
 ## 8. Error Handling
 
@@ -194,7 +194,7 @@ Ctrl+\ pressed in EditorScreen
 - No output is inserted if the macro errors out.
 - Missing macros directory: status line warns, picker shows empty list with hint.
 
----
+______________________________________________________________________
 
 ## 9. Settings
 
@@ -206,11 +206,12 @@ New keys in `~/.safari/settings.json`:
 }
 ```
 
----
+______________________________________________________________________
 
 ## 10. Example Macros
 
 ### `post_header.bas`
+
 ```basic
 10 REM Insert a formatted header from the current Fed post
 20 PRINT "## "; PAUTHOR$; " ("; PHANDLE$; ")"
@@ -225,6 +226,7 @@ New keys in `~/.safari/settings.json`:
 ```
 
 ### `thread_export.bas`
+
 ```basic
 10 REM Export current Fed post as a plain-text quote block
 20 PRINT "> "; PHANDLE$; " wrote:"
@@ -237,6 +239,7 @@ New keys in `~/.safari/settings.json`:
 ```
 
 ### `doc_stats.bas`
+
 ```basic
 10 REM Print document line count and cursor position
 20 PRINT "Document lines: "; STR$(DOCLINES)

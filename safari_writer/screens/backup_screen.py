@@ -8,10 +8,10 @@ from typing import Callable
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Static, ListView, ListItem, Label
+from textual.widgets import Label, ListItem, ListView, Static
 
 import safari_writer.locale_info as _locale_info
-from safari_writer.autosave import BackupMeta, list_backups, delete_backup
+from safari_writer.autosave import BackupMeta, delete_backup, list_backups
 
 
 def _(s: str) -> str:

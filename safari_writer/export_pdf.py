@@ -6,7 +6,8 @@ from dataclasses import dataclass, field
 from io import BytesIO
 from typing import TYPE_CHECKING
 
-from reportlab.pdfbase.pdfmetrics import stringWidth  # type: ignore[import-untyped]
+from reportlab.pdfbase.pdfmetrics import \
+    stringWidth  # type: ignore[import-untyped]
 from reportlab.pdfgen.canvas import Canvas  # type: ignore[import-untyped]
 
 from safari_writer.heading_numbering import next_heading_number
@@ -16,18 +17,12 @@ if TYPE_CHECKING:
     from safari_writer.export_ps import _Span
     from safari_writer.mail_merge_db import MailMergeDB
 
-from safari_writer.export_ps import _FONTS, _PAGE_H, _PAGE_W, _parse_spans, _strip
-from safari_writer.screens.editor import (
-    CTRL_CENTER,
-    CTRL_CHAIN,
-    CTRL_EJECT,
-    CTRL_FOOTER,
-    CTRL_HEADER,
-    CTRL_HEADING,
-    CTRL_MERGE,
-    CTRL_PARA,
-    CTRL_RIGHT,
-)
+from safari_writer.export_ps import (_FONTS, _PAGE_H, _PAGE_W, _parse_spans,
+                                     _strip)
+from safari_writer.screens.editor import (CTRL_CENTER, CTRL_CHAIN, CTRL_EJECT,
+                                          CTRL_FOOTER, CTRL_HEADER,
+                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
+                                          CTRL_RIGHT)
 
 __all__ = ["export_pdf"]
 
@@ -55,6 +50,7 @@ def export_pdf(
 
     if is_markdown:
         from safari_writer.export_ps import _markdown_to_sfw_like_buffer
+
         buffer = _markdown_to_sfw_like_buffer(buffer)
 
     has_merge = any(CTRL_MERGE in line for line in buffer)

@@ -8,9 +8,9 @@ remote triggers a site build.
 ## Quick workflow
 
 1. Write your blog post and save it inside your blog's git repository.
-2. Press **Ctrl+P** (or **P** from the Main Menu) to open the Print / Export menu.
-3. Press **G** — "Git Publish (commit & push)".
-4. The Git Publish screen opens with two panes:
+1. Press **Ctrl+P** (or **P** from the Main Menu) to open the Print / Export menu.
+1. Press **G** — "Git Publish (commit & push)".
+1. The Git Publish screen opens with two panes:
    - **Status** — the current working tree (staged, modified, and untracked files).
    - **Recent Commits** — the last 20 commits in the repository.
 
@@ -59,10 +59,10 @@ my-blog/
 **Recommended workflow:**
 
 1. Write your post in Safari Writer and save it as `content/posts/my-article.md`.
-2. Export to Markdown first if you wrote in `.sfw` format (**M** in the Print menu),
+1. Export to Markdown first if you wrote in `.sfw` format (**M** in the Print menu),
    then save the `.md` file inside `content/`.
-3. Open Git Publish (**G**), stage (**A**), commit (**C**), and push (**P**).
-4. Your CI/CD pipeline (GitHub Actions, Netlify, etc.) picks up the push and
+1. Open Git Publish (**G**), stage (**A**), commit (**C**), and push (**P**).
+1. Your CI/CD pipeline (GitHub Actions, Netlify, etc.) picks up the push and
    rebuilds the site automatically.
 
 > **Push = Publish.** Pressing **P** in Git Publish runs `git push` to the

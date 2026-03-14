@@ -221,13 +221,13 @@ It does **not** yet match the spec for screen layout, keybindings, command langu
 ## Suggested implementation order
 
 1. layout stuff
-2. Add work areas, `_d_deleted`, and environment settings.
-3. Build the real command parser / dispatcher.
-4. Upgrade browse into a true interactive grid.
-5. Implement full edit / append / structure screens.
-6. Add ASSIST workflows.
-7. Add `SET` commands and command-output modes.
-8. Add `.prg` / `READ` language support.
+1. Add work areas, `_d_deleted`, and environment settings.
+1. Build the real command parser / dispatcher.
+1. Upgrade browse into a true interactive grid.
+1. Implement full edit / append / structure screens.
+1. Add ASSIST workflows.
+1. Add `SET` commands and command-output modes.
+1. Add `.prg` / `READ` language support.
 
 ## Bottom line
 

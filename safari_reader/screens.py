@@ -8,34 +8,16 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Center, Vertical
 from textual.screen import Screen
-from textual.widgets import (
-    Static,
-    Label,
-    ListView,
-    ListItem,
-    Input,
-)
+from textual.widgets import Input, Label, ListItem, ListView, Static
 from textual.worker import Worker, WorkerState
 
-from safari_reader.state import (
-    BookMeta,
-    Bookmark,
-    SafariReaderState,
-)
-from safari_reader.services import (
-    add_book_to_library,
-    delete_book,
-    download_gutenberg_text,
-    format_book_text,
-    gutenberg_book_detail,
-    import_local_file,
-    load_library,
-    open_book,
-    save_library,
-    save_reading_state,
-    search_gutenberg,
-    top_gutenberg,
-)
+from safari_reader.services import (add_book_to_library, delete_book,
+                                    download_gutenberg_text, format_book_text,
+                                    gutenberg_book_detail, import_local_file,
+                                    load_library, open_book, save_library,
+                                    save_reading_state, search_gutenberg,
+                                    top_gutenberg)
+from safari_reader.state import Bookmark, BookMeta, SafariReaderState
 
 __all__ = [
     "SafariReaderMainMenuScreen",

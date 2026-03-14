@@ -5,10 +5,10 @@ See spec/10_file_type_awareness.md for the full design.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import PurePosixPath
-import os
 
 __all__ = [
     "FileProfile",

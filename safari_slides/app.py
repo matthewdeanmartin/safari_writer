@@ -52,4 +52,3 @@ class SafariSlidesApp(App[None]):
         """Exit the standalone app."""
 
         self.exit()
-

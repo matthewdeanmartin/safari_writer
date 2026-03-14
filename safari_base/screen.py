@@ -12,7 +12,7 @@ from textual.containers import Container
 from textual.screen import Screen
 from textual.widgets import Static
 
-from safari_base.database import BaseSession, DEFAULT_ADDRESS_SCHEMA
+from safari_base.database import DEFAULT_ADDRESS_SCHEMA, BaseSession
 from safari_base.lang.interpreter import Interpreter
 from safari_base.program_editor import ProgramEditorScreen
 
@@ -35,26 +35,38 @@ TARGET_HEIGHT = 34
 
 # ASSIST menu categories — modeled after dBASE III Plus
 _ASSIST_CATEGORIES: list[tuple[str, list[tuple[str, str]]]] = [
-    ("Set Up", [
-        ("Browse", "BROWSE"),
-        ("Tables", "TABLES"),
-        ("Use <table>", "USE"),
-    ]),
-    ("Update", [
-        ("Append", "APPEND"),
-        ("Edit", "EDIT"),
-        ("Delete", "DELETE"),
-    ]),
-    ("Retrieve", [
-        ("List", "LIST"),
-        ("Display", "DISPLAY"),
-        ("Structure", "STRUCTURE"),
-    ]),
-    ("Tools", [
-        ("Commands", "COMMANDS"),
-        ("Help", "HELP"),
-        ("Quit", "QUIT"),
-    ]),
+    (
+        "Set Up",
+        [
+            ("Browse", "BROWSE"),
+            ("Tables", "TABLES"),
+            ("Use <table>", "USE"),
+        ],
+    ),
+    (
+        "Update",
+        [
+            ("Append", "APPEND"),
+            ("Edit", "EDIT"),
+            ("Delete", "DELETE"),
+        ],
+    ),
+    (
+        "Retrieve",
+        [
+            ("List", "LIST"),
+            ("Display", "DISPLAY"),
+            ("Structure", "STRUCTURE"),
+        ],
+    ),
+    (
+        "Tools",
+        [
+            ("Commands", "COMMANDS"),
+            ("Help", "HELP"),
+            ("Quit", "QUIT"),
+        ],
+    ),
 ]
 
 
@@ -177,7 +189,9 @@ class SafariBaseScreen(Screen[None]):
             self._cursor_row,
             self._row_offset,
         )
-        if self._view_mode == "append" and self._handle_append_key(key, event.character):
+        if self._view_mode == "append" and self._handle_append_key(
+            key, event.character
+        ):
             return
         if self._view_mode == "assist" and self._handle_assist_key(key):
             return
@@ -232,7 +246,14 @@ class SafariBaseScreen(Screen[None]):
         if key == "down":
             self._move_cursor(1)
             return
-        if key in {"left", "right", "home", "end", "tab", "shift+tab"} and self._handle_browse_navigation(key):
+        if key in {
+            "left",
+            "right",
+            "home",
+            "end",
+            "tab",
+            "shift+tab",
+        } and self._handle_browse_navigation(key):
             return
         if key == "pageup":
             self._move_cursor(-self._visible_rows())
@@ -450,7 +471,9 @@ class SafariBaseScreen(Screen[None]):
             else:
                 header_parts.append(cat_name.center(cat_width))
         lines.append(" ".join(header_parts))
-        lines.append("-" * (cat_width * len(_ASSIST_CATEGORIES) + len(_ASSIST_CATEGORIES) - 1))
+        lines.append(
+            "-" * (cat_width * len(_ASSIST_CATEGORIES) + len(_ASSIST_CATEGORIES) - 1)
+        )
 
         # Items for current category
         _cat_name, items = _ASSIST_CATEGORIES[self._assist_category]
@@ -458,11 +481,13 @@ class SafariBaseScreen(Screen[None]):
             marker = ">" if idx == self._assist_item else " "
             lines.append(f" {marker} {label}")
 
-        lines.extend([
-            "",
-            " Left/Right select category    Up/Down select item",
-            " Enter execute                  Esc cancel",
-        ])
+        lines.extend(
+            [
+                "",
+                " Left/Right select category    Up/Down select item",
+                " Enter execute                  Esc cancel",
+            ]
+        )
         return "\n".join(lines)
 
     def _show_assist(self) -> None:
@@ -626,7 +651,9 @@ class SafariBaseScreen(Screen[None]):
             if self._cursor_col > end:
                 self._col_offset = self._cursor_col
                 while True:
-                    visible_names, _visible_widths, start = self._visible_browse_columns()
+                    visible_names, _visible_widths, start = (
+                        self._visible_browse_columns()
+                    )
                     end = start + len(visible_names) - 1
                     if self._cursor_col <= end or self._col_offset <= 0:
                         break
@@ -731,7 +758,7 @@ class SafariBaseScreen(Screen[None]):
             self._message = "DO requires a filename"
             self._refresh()
             return
-        
+
         name = filename.strip().strip('"').strip("'")
         if "." not in name:
             name += ".prg"
@@ -750,10 +777,10 @@ class SafariBaseScreen(Screen[None]):
         # Run the interpreter
         interpreter = Interpreter()
         interpreter.env.work_dir = work_dir
-        
+
         # Use a temporary output capture
         result = interpreter.run_program(file_path)
-        
+
         if result.success:
             output = result.data or ""
             lines = output.splitlines()
@@ -814,7 +841,11 @@ class SafariBaseScreen(Screen[None]):
             self._show_assist()
             return False
         if verb == "LIST":
-            self._show_report("LIST", self._list_report_lines(), f"Listed {self.session.current_table}")
+            self._show_report(
+                "LIST",
+                self._list_report_lines(),
+                f"Listed {self.session.current_table}",
+            )
             return False
         if verb == "DISPLAY":
             self._show_report(
@@ -931,7 +962,9 @@ class SafariBaseScreen(Screen[None]):
 
     def _list_report_lines(self) -> list[str]:
         columns = self.session.current_columns()
-        rows = self.session.browse_rows(limit=max(1, self._visible_rows() - 3), offset=0)
+        rows = self.session.browse_rows(
+            limit=max(1, self._visible_rows() - 3), offset=0
+        )
         lines = [f" LIST {self.session.current_table}", ""]
         if not rows:
             lines.append(" <no records>")
@@ -944,7 +977,9 @@ class SafariBaseScreen(Screen[None]):
 
     def _display_report_lines(self) -> list[str]:
         columns = self.session.current_columns()
-        rows = self.session.browse_rows(limit=max(1, self._visible_rows() // 2), offset=0)
+        rows = self.session.browse_rows(
+            limit=max(1, self._visible_rows() // 2), offset=0
+        )
         lines = [f" DISPLAY {self.session.current_table}", ""]
         if not rows:
             lines.append(" <no records>")
@@ -1004,7 +1039,9 @@ class SafariBaseScreen(Screen[None]):
 
         header_cells = ["REC#".ljust(5)]
         divider_cells = ["".ljust(5, "-")]
-        for column_index, (name, width) in enumerate(zip(visible_columns, adjusted_widths), start=start_col):
+        for column_index, (name, width) in enumerate(
+            zip(visible_columns, adjusted_widths), start=start_col
+        ):
             if column_index == self._cursor_col:
                 header_cells.append(self._focus_cell(name, width))
             else:
@@ -1023,8 +1060,13 @@ class SafariBaseScreen(Screen[None]):
             pointer = ">" if absolute_index == self._cursor_row else " "
             row_cells = [f"{pointer}{str(rowid).rjust(4)}"]
             visible_values = values[start_col : start_col + len(adjusted_widths)]
-            for column_index, (value, width) in enumerate(zip(visible_values, adjusted_widths), start=start_col):
-                if absolute_index == self._cursor_row and column_index == self._cursor_col:
+            for column_index, (value, width) in enumerate(
+                zip(visible_values, adjusted_widths), start=start_col
+            ):
+                if (
+                    absolute_index == self._cursor_row
+                    and column_index == self._cursor_col
+                ):
                     row_cells.append(self._focus_cell(value, width))
                 else:
                     row_cells.append(value[:width].ljust(width))
@@ -1097,7 +1139,9 @@ class SafariBaseScreen(Screen[None]):
             marker = ">" if index == self._append_field_idx else " "
             value = self._append_record[index]
             max_len = self._field_max_length(field_name)
-            lines.append(f" {marker} {field_name:<10}: {value:<28} [{len(value):>2}/{max_len}]")
+            lines.append(
+                f" {marker} {field_name:<10}: {value:<28} [{len(value):>2}/{max_len}]"
+            )
         lines.extend(
             [
                 "",

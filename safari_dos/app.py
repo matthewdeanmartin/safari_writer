@@ -6,20 +6,14 @@ from pathlib import Path
 
 from textual.app import App
 
-from safari_dos.screens import (
-    SafariDosBrowserScreen,
-    SafariDosDevicesScreen,
-    SafariDosFavoritesScreen,
-    SafariDosGarbageScreen,
-    SafariDosHelpScreen,
-    SafariDosMainMenuScreen,
-)
-from safari_dos.services import (
-    list_favorites,
-    list_recent_documents,
-    list_recent_locations,
-)
-from safari_dos.state import SafariDosExitRequest, SafariDosLaunchConfig, SafariDosState
+from safari_dos.screens import (SafariDosBrowserScreen, SafariDosDevicesScreen,
+                                SafariDosFavoritesScreen,
+                                SafariDosGarbageScreen, SafariDosHelpScreen,
+                                SafariDosMainMenuScreen)
+from safari_dos.services import (list_favorites, list_recent_documents,
+                                 list_recent_locations)
+from safari_dos.state import (SafariDosExitRequest, SafariDosLaunchConfig,
+                              SafariDosState)
 
 __all__ = ["SafariDosApp"]
 
@@ -47,7 +41,7 @@ class SafariDosApp(App[SafariDosExitRequest | None]):
         self.launch_config = launch_config or SafariDosLaunchConfig()
 
     def on_mount(self) -> None:
-        from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
+        from safari_writer.themes import DEFAULT_THEME, THEMES, load_settings
 
         for theme in THEMES.values():
             self.register_theme(theme)

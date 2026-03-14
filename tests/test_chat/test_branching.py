@@ -37,6 +37,7 @@ If you lost your file:
 2. Check external drives.
 """
 
+
 class TestBranchParsing:
     def test_extracts_branches(self) -> None:
         chunks = parse_document(BRANCH_DOC)
@@ -51,11 +52,12 @@ class TestBranchParsing:
         assert len(chunks[1].branches) == 0
         assert len(chunks[2].branches) == 0
 
+
 class TestBranchingLogic:
     def test_branch_labels_in_response(self) -> None:
         chunks = parse_document(BRANCH_DOC)
         state = SafariChatState(chunks=chunks)
-        
+
         mode, resp, cids = plan_response("tell me about the main menu", state)
         assert mode == ResponseMode.GROUNDED
         assert "Disk Full error" in resp
@@ -64,13 +66,13 @@ class TestBranchingLogic:
     def test_exact_branch_match_navigation(self) -> None:
         chunks = parse_document(BRANCH_DOC)
         state = SafariChatState(chunks=chunks)
-        
+
         # 1. Ask about 'Main Menu' to set the context (retrieved_chunk_ids)
         plan_response("main menu", state)
-        
+
         # 2. Select a branch exactly
         mode, resp, cids = plan_response("Disk Full error", state)
-        
+
         # Should land in the target chunk
         assert mode == ResponseMode.GROUNDED
         assert "Your storage device is full" in resp
@@ -79,23 +81,26 @@ class TestBranchingLogic:
     def test_branch_match_case_insensitive(self) -> None:
         chunks = parse_document(BRANCH_DOC)
         state = SafariChatState(chunks=chunks)
-        
+
         plan_response("main menu", state)
-        
+
         # Use different casing
         mode, resp, cids = plan_response("DISK FULL ERROR", state)
-        
+
         assert mode == ResponseMode.GROUNDED
         assert "Your storage device is full" in resp
 
     def test_no_match_falls_back_to_retrieval(self) -> None:
         chunks = parse_document(BRANCH_DOC)
         state = SafariChatState(chunks=chunks)
-        
+
         plan_response("main menu", state)
-        
+
         # Typo should not trigger exact branch match but might still hit retrieval
         mode, resp, cids = plan_response("Disk Full errrr", state)
-        
+
         # It should still find the chunk via keyword retrieval if threshold allows
-        assert "Your storage device is full" in resp or "I found help under \"Disk Full Error\"" in resp
+        assert (
+            "Your storage device is full" in resp
+            or 'I found help under "Disk Full Error"' in resp
+        )

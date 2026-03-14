@@ -24,7 +24,7 @@ class MacroContext:
 
     # --- Document snapshot (read-only inside the macro) ---
     document_lines: list[str] = field(default_factory=list)
-    cursor_row: int = 0   # 0-based at invocation
+    cursor_row: int = 0  # 0-based at invocation
     cursor_col: int = 0
 
     # Selection bounds — (row, col) or None

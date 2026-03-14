@@ -6,40 +6,44 @@ Safari ASM is a retro-styled programming language with the look and feel of 6502
 
 Safari ASM is intended for:
 
-* terminal applications
-* stdin/stdout tools
-* file and text processing
-* simple automation
-* educational and nostalgic programming
-* playful “assembler-feeling” development without true hardware limits
+- terminal applications
+- stdin/stdout tools
+- file and text processing
+- simple automation
+- educational and nostalgic programming
+- playful “assembler-feeling” development without true hardware limits
 
 Safari ASM is not a CPU emulator, not a real assembler, and not constrained by the numeric, memory, or device limits of vintage hardware.
 
 Its aesthetic goals are:
 
-* mnemonic-heavy source code
-* labels
-* semicolon comments
-* directives
-* registers
-* branch-oriented control flow
-* source that looks like assembly language
-* output and examples that preserve the same retro feel
+- mnemonic-heavy source code
+- labels
+- semicolon comments
+- directives
+- registers
+- branch-oriented control flow
+- source that looks like assembly language
+- output and examples that preserve the same retro feel
 
 Its usability goals are:
 
-* easier writing over strict authenticity
-* first-class strings and text handling
-* strong stdin/stdout support
-* symbolic variables instead of raw memory addresses
-* multiple mnemonics for the same operation:
+- easier writing over strict authenticity
 
-  * one traditional
-  * one friendly / longer form
+- first-class strings and text handling
+
+- strong stdin/stdout support
+
+- symbolic variables instead of raw memory addresses
+
+- multiple mnemonics for the same operation:
+
+  - one traditional
+  - one friendly / longer form
 
 Safari ASM is expected to be interpreted, though an implementation may also transpile to Python internally.
 
----
+______________________________________________________________________
 
 ## 2. Design Principles
 
@@ -62,22 +66,22 @@ When there is a choice between strict assembler realism and easier authoring, Sa
 
 Examples of this principle:
 
-* registers may hold strings, integers, booleans, lists, maps, or other runtime values
-* variables are symbolic by name
-* branch instructions may work on modern comparison results
-* string handling is built in
-* aliases are supported for user friendliness
+- registers may hold strings, integers, booleans, lists, maps, or other runtime values
+- variables are symbolic by name
+- branch instructions may work on modern comparison results
+- string handling is built in
+- aliases are supported for user friendliness
 
 ### 2.3 Terminal-first language
 
 Safari ASM favors:
 
-* reading from stdin
-* writing to stdout and stderr
-* line-oriented processing
-* command-line arguments
-* text files
-* practical console tools
+- reading from stdin
+- writing to stdout and stderr
+- line-oriented processing
+- command-line arguments
+- text files
+- practical console tools
 
 ### 2.4 Python runtime
 
@@ -85,7 +89,7 @@ Safari ASM runs on a Python implementation. The runtime may internally represent
 
 Safari ASM also provides `PYCALL` for invoking Python callables. Compatibility of return values is implementation-defined and may be handwaved where reasonable.
 
----
+______________________________________________________________________
 
 ## 3. Lexical Structure
 
@@ -161,15 +165,15 @@ ADD #5              ; add 5 to A
 
 Safari ASM is not restricted to 8-bit numeric ranges.
 
----
+______________________________________________________________________
 
 ## 4. Program Structure
 
 A Safari ASM source file consists of:
 
-* optional directives
-* zero or more variable / constant declarations
-* one or more labels and instructions
+- optional directives
+- zero or more variable / constant declarations
+- one or more labels and instructions
 
 Typical structure:
 
@@ -190,7 +194,7 @@ MAIN:                   ; label MAIN
 
 Sections are mostly stylistic and organizational rather than true memory segments.
 
----
+______________________________________________________________________
 
 ## 5. Values and Data Model
 
@@ -198,14 +202,14 @@ Safari ASM supports modern dynamic values.
 
 A register, variable, or Python bridge call may hold:
 
-* integer
-* floating point number
-* string
-* boolean
-* list
-* map / dictionary
-* null-like value
-* implementation-defined runtime object
+- integer
+- floating point number
+- string
+- boolean
+- list
+- map / dictionary
+- null-like value
+- implementation-defined runtime object
 
 Safari ASM does not require the programmer to manually manage bytes, addresses, or real hardware memory.
 
@@ -217,15 +221,15 @@ LDX #3              ; X holds an integer
 LDY #TRUE           ; Y holds a boolean
 ```
 
----
+______________________________________________________________________
 
 ## 6. Registers
 
 Safari ASM defines the following primary registers:
 
-* `A` — accumulator, preferred default working register
-* `X` — index / auxiliary register
-* `Y` — index / auxiliary register
+- `A` — accumulator, preferred default working register
+- `X` — index / auxiliary register
+- `Y` — index / auxiliary register
 
 These registers are general-purpose and may hold any runtime value.
 
@@ -247,7 +251,7 @@ TAY                 ; TAY = transfer A to Y
 TYA                 ; TYA = transfer Y to A
 ```
 
----
+______________________________________________________________________
 
 ## 7. Flags and Conditions
 
@@ -255,10 +259,10 @@ Safari ASM maintains logical condition state for branching.
 
 An implementation should support at least the following branch-relevant states:
 
-* equality / inequality result
-* ordering comparisons where meaningful
-* truthy / falsy or empty / non-empty tests
-* error state for operations that can fail
+- equality / inequality result
+- ordering comparisons where meaningful
+- truthy / falsy or empty / non-empty tests
+- error state for operations that can fail
 
 The exact internal flag model need not match real 6502 semantics.
 
@@ -270,7 +274,7 @@ BEQ OK              ; BEQ = branch if equal to label OK
 BNE NOPE            ; BNE = branch if not equal to label NOPE
 ```
 
----
+______________________________________________________________________
 
 ## 8. Addressing Style
 
@@ -306,14 +310,14 @@ STA ROW,Y           ; store A into ROW at index Y
 
 This is a modern indexed collection operation, not raw memory indexing.
 
----
+______________________________________________________________________
 
 ## 9. Multiple Mnemonics
 
 Safari ASM supports two mnemonic styles for many instructions:
 
-* a traditional short form
-* a friendly longer form
+- a traditional short form
+- a friendly longer form
 
 Both forms are equivalent.
 
@@ -328,27 +332,27 @@ Implementations should accept both forms. Documentation may show both.
 
 ### 9.1 Examples of mnemonic pairs
 
-| Traditional | Friendly   | Meaning                         |
+| Traditional | Friendly | Meaning |
 | ----------- | ---------- | ------------------------------- |
-| `LDA`       | `LOADA`    | load value into A               |
-| `LDX`       | `LOADX`    | load value into X               |
-| `LDY`       | `LOADY`    | load value into Y               |
-| `STA`       | `STOREA`   | store A into destination        |
-| `STX`       | `STOREX`   | store X into destination        |
-| `STY`       | `STOREY`   | store Y into destination        |
-| `JMP`       | `JUMP`     | unconditional jump              |
-| `JSR`       | `CALL`     | call subroutine                 |
-| `RTS`       | `RETURN`   | return from subroutine          |
-| `CMP`       | `COMPARE`  | compare values                  |
-| `OUT`       | `PRINT`    | output without newline          |
-| `OUTLN`     | `PRINTLN`  | output with newline             |
-| `INP`       | `INPUT`    | read line from stdin            |
-| `ERR`       | `EPRINT`   | write to stderr without newline |
-| `ERRLN`     | `EPRINTLN` | write to stderr with newline    |
-| `HALT`      | `STOP`     | stop program                    |
-| `BRA`       | `BRANCH`   | unconditional branch            |
-| `MOV`       | `MOVE`     | move one value to another       |
-| `CAT`       | `CONCAT`   | concatenate values              |
+| `LDA` | `LOADA` | load value into A |
+| `LDX` | `LOADX` | load value into X |
+| `LDY` | `LOADY` | load value into Y |
+| `STA` | `STOREA` | store A into destination |
+| `STX` | `STOREX` | store X into destination |
+| `STY` | `STOREY` | store Y into destination |
+| `JMP` | `JUMP` | unconditional jump |
+| `JSR` | `CALL` | call subroutine |
+| `RTS` | `RETURN` | return from subroutine |
+| `CMP` | `COMPARE` | compare values |
+| `OUT` | `PRINT` | output without newline |
+| `OUTLN` | `PRINTLN` | output with newline |
+| `INP` | `INPUT` | read line from stdin |
+| `ERR` | `EPRINT` | write to stderr without newline |
+| `ERRLN` | `EPRINTLN` | write to stderr with newline |
+| `HALT` | `STOP` | stop program |
+| `BRA` | `BRANCH` | unconditional branch |
+| `MOV` | `MOVE` | move one value to another |
+| `CAT` | `CONCAT` | concatenate values |
 
 Example:
 
@@ -357,7 +361,7 @@ PRINT #"HELLO"      ; friendly mnemonic, print without newline
 OUTLN #" WORLD"     ; traditional mnemonic, print with newline
 ```
 
----
+______________________________________________________________________
 
 ## 10. Directives
 
@@ -455,7 +459,7 @@ Optionally declares the entry label.
 
 If `.ENTRY` is omitted, the implementation may use the first executable label.
 
----
+______________________________________________________________________
 
 ## 11. Variables and Constants
 
@@ -478,7 +482,7 @@ LDA #"MATT"         ; load immediate string MATT into A
 STA NAME            ; store A into variable NAME
 ```
 
----
+______________________________________________________________________
 
 ## 12. Instruction Set
 
@@ -551,7 +555,7 @@ Implementations may define exact source/destination operand ordering, but should
 
 because it is easier for most people to write and read.
 
----
+______________________________________________________________________
 
 ## 12.2 Register transfer instructions
 
@@ -587,7 +591,7 @@ Transfer `Y` to `A`.
 TYA                 ; copy Y into A
 ```
 
----
+______________________________________________________________________
 
 ## 12.3 Arithmetic instructions
 
@@ -662,7 +666,7 @@ DEC COUNT           ; decrement variable COUNT by 1
 
 Friendly synonym may be supported as `DECREMENT`.
 
----
+______________________________________________________________________
 
 ## 12.4 Comparison and testing instructions
 
@@ -694,7 +698,7 @@ Optionally obtain or test runtime type.
 TYPE A              ; inspect the type of A, implementation-defined result
 ```
 
----
+______________________________________________________________________
 
 ## 12.5 Branch and jump instructions
 
@@ -779,7 +783,7 @@ OPEN FH, #"missing.txt", #"r" ; open file for reading
 BERR OPENFAIL                 ; branch if open failed
 ```
 
----
+______________________________________________________________________
 
 ## 12.6 Call and return instructions
 
@@ -822,7 +826,7 @@ GREET:
 NAME: .VAR              ; variable NAME
 ```
 
----
+______________________________________________________________________
 
 ## 12.7 Stack instructions
 
@@ -892,7 +896,7 @@ Pop a value into a register or destination.
 POP A               ; pop top of stack into A
 ```
 
----
+______________________________________________________________________
 
 ## 12.8 Text and collection instructions
 
@@ -1010,7 +1014,7 @@ Replace text in a string.
 REPL A, A, #"CAT", #"DOG" ; replace CAT with DOG in A
 ```
 
----
+______________________________________________________________________
 
 ## 12.9 Input and output instructions
 
@@ -1061,7 +1065,7 @@ Write value to stderr with newline.
 ERRLN #"BAD INPUT"  ; write BAD INPUT to stderr with newline
 ```
 
----
+______________________________________________________________________
 
 ## 12.10 File instructions
 
@@ -1103,7 +1107,7 @@ Close a file handle.
 CLOSE FH             ; close file handle FH
 ```
 
----
+______________________________________________________________________
 
 ## 12.11 Runtime and utility instructions
 
@@ -1148,7 +1152,7 @@ HALT                 ; stop execution immediately
 STOP                 ; friendly form, stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 12.12 Python bridge instruction
 
@@ -1160,9 +1164,9 @@ Safari ASM includes `PYCALL` as an escape hatch into Python functionality.
 
 The implementation may support one or more of these forms:
 
-* `PYCALL destination, callable_name`
-* `PYCALL destination, callable_name, arg1, arg2, ...`
-* `PYCALL A, #"module:function", X, Y`
+- `PYCALL destination, callable_name`
+- `PYCALL destination, callable_name, arg1, arg2, ...`
+- `PYCALL A, #"module:function", X, Y`
 
 The exact callable-resolution rules are implementation-defined.
 
@@ -1195,18 +1199,18 @@ PYCALL A, #"missing:thing"    ; attempt Python callable
 BERR PYFAIL                   ; branch if Python call failed
 ```
 
----
+______________________________________________________________________
 
 ## 13. Output Aesthetics
 
 Safari ASM source and examples should preserve retro aesthetics:
 
-* uppercase-friendly style
-* labels at left margin
-* aligned operands where practical
-* semicolon comments explaining instructions
-* compact vertical rhythm
-* mnemonic-heavy feel
+- uppercase-friendly style
+- labels at left margin
+- aligned operands where practical
+- semicolon comments explaining instructions
+- compact vertical rhythm
+- mnemonic-heavy feel
 
 Preferred style:
 
@@ -1226,7 +1230,7 @@ MAIN:
     STOP              ; friendly form: stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 14. Errors
 
@@ -1234,12 +1238,12 @@ Operations that fail should set an error condition visible to control flow.
 
 Example operations that may fail:
 
-* `OPEN`
-* `READLN`
-* `WRITELN`
-* `PYCALL`
-* collection access
-* conversions
+- `OPEN`
+- `READLN`
+- `WRITELN`
+- `PYCALL`
+- collection access
+- conversions
 
 Preferred branch:
 
@@ -1257,16 +1261,16 @@ ERRMSG A            ; load most recent error message into A
 ERRLN A             ; print error message to stderr
 ```
 
----
+______________________________________________________________________
 
 ## 15. Recommended Calling Convention
 
 Safari ASM recommends the following simple convention:
 
-* input arguments may be passed in `A`, `X`, `Y`, or named variables
-* return value should be placed in `A`
-* subroutines may preserve or clobber registers unless documented otherwise
-* stack usage is allowed when helpful
+- input arguments may be passed in `A`, `X`, `Y`, or named variables
+- return value should be placed in `A`
+- subroutines may preserve or clobber registers unless documented otherwise
+- stack usage is allowed when helpful
 
 Example:
 
@@ -1288,7 +1292,7 @@ MAKEGREETING:
 NAME: .VAR               ; scratch variable NAME
 ```
 
----
+______________________________________________________________________
 
 ## 16. Example Programs
 
@@ -1314,7 +1318,7 @@ MAIN:
     STOP                   ; friendly form: stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.2 Prompt for a name
 
@@ -1338,7 +1342,7 @@ MAIN:
     HALT                ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.3 Echo stdin until EOF
 
@@ -1354,7 +1358,7 @@ DONE:
     HALT                ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.4 Count lines from stdin
 
@@ -1380,7 +1384,7 @@ REPORT:
     HALT               ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.5 Numeric loop
 
@@ -1406,7 +1410,7 @@ DONE:
     HALT              ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.6 File copy
 
@@ -1456,7 +1460,7 @@ USAGE:
     HALT                             ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.7 Split CSV-like input
 
@@ -1482,7 +1486,7 @@ DONE:
     HALT                 ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.8 PYCALL example with Python `len`
 
@@ -1505,7 +1509,7 @@ MAIN:
     HALT                   ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.9 PYCALL example with Python module function
 
@@ -1522,7 +1526,7 @@ FAIL:
     HALT                         ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 16.10 Friendly-style example
 
@@ -1549,51 +1553,51 @@ NONAME:
     STOP                         ; stop execution
 ```
 
----
+______________________________________________________________________
 
 ## 17. Implementation Guidance
 
 An implementation of Safari ASM should prefer:
 
-* forgiving parsing
-* line-oriented execution model
-* clear runtime errors
-* branchable error state
-* dynamic values
-* simple calling conventions
-* modern text/file semantics
-* nostalgic output formatting in examples and diagnostics where possible
+- forgiving parsing
+- line-oriented execution model
+- clear runtime errors
+- branchable error state
+- dynamic values
+- simple calling conventions
+- modern text/file semantics
+- nostalgic output formatting in examples and diagnostics where possible
 
 An implementation may:
 
-* interpret directly
-* transpile to Python AST or Python source
-* internally normalize friendly mnemonics into traditional mnemonics
-* internally represent labels, variables, and registers as Python objects
+- interpret directly
+- transpile to Python AST or Python source
+- internally normalize friendly mnemonics into traditional mnemonics
+- internally represent labels, variables, and registers as Python objects
 
 An implementation should not require:
 
-* real machine code generation
-* true memory addresses
-* cycle accuracy
-* hardware registers
-* 8-bit overflow behavior unless in an optional compatibility mode
+- real machine code generation
+- true memory addresses
+- cycle accuracy
+- hardware registers
+- 8-bit overflow behavior unless in an optional compatibility mode
 
----
+______________________________________________________________________
 
 ## 18. Summary
 
 Safari ASM is a retro assembly-flavored scripting language with:
 
-* Atari/6502-inspired source aesthetics
-* symbolic variables
-* registers `A`, `X`, `Y`
-* directives such as `.DATA`, `.TEXT`, `.VAR`, `.CONST`
-* multiple mnemonic styles
-* terminal-first design
-* file and text handling
-* Python escape hatch via `PYCALL`
-* easier modern semantics chosen over strict historical fidelity
+- Atari/6502-inspired source aesthetics
+- symbolic variables
+- registers `A`, `X`, `Y`
+- directives such as `.DATA`, `.TEXT`, `.VAR`, `.CONST`
+- multiple mnemonic styles
+- terminal-first design
+- file and text handling
+- Python escape hatch via `PYCALL`
+- easier modern semantics chosen over strict historical fidelity
 
 Minimal example:
 

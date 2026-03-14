@@ -5,12 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import TYPE_CHECKING
 
-from safari_writer.file_types import (
-    FileProfile,
-    HighlightProfile,
-    StorageMode,
-    resolve_file_profile,
-)
+from safari_writer.file_types import (FileProfile, HighlightProfile,
+                                      StorageMode, resolve_file_profile)
 
 __all__ = ["AppState", "GlobalFormat"]
 
@@ -131,7 +127,7 @@ class AppState:
     @property
     def bytes_free(self) -> int:
         """Available disk space on the volume containing the working directory."""
-        import shutil
         import os
+        import shutil
 
         return shutil.disk_usage(os.getcwd()).free

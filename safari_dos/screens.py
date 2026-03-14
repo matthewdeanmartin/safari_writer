@@ -24,38 +24,22 @@ from textual.containers import Container
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 
-from safari_writer.program_runner import (
-    decode_stdin_text,
-    is_runnable_path,
-    path_may_need_stdin,
-    run_program_file,
-)
-from safari_writer.screens.output_screen import OutputScreen
-from safari_dos.services import (
-    CODE_EXTENSIONS,
-    DirectoryEntry,
-    copy_paths,
-    create_folder,
-    discover_locations,
-    duplicate_path,
-    format_timestamp,
-    get_entry_info,
-    get_preview_syntax,
-    list_favorites,
-    list_directory,
-    list_recent_documents,
-    list_recent_locations,
-    move_paths,
-    move_to_garbage,
-    record_recent_document,
-    record_recent_location,
-    rename_path,
-    set_protected,
-    toggle_favorite,
-    unzip_path,
-    zip_paths,
-)
+from safari_dos.services import (CODE_EXTENSIONS, DirectoryEntry, copy_paths,
+                                 create_folder, discover_locations,
+                                 duplicate_path, format_timestamp,
+                                 get_entry_info, get_preview_syntax,
+                                 list_directory, list_favorites,
+                                 list_recent_documents, list_recent_locations,
+                                 move_paths, move_to_garbage,
+                                 record_recent_document,
+                                 record_recent_location, rename_path,
+                                 set_protected, toggle_favorite, unzip_path,
+                                 zip_paths)
 from safari_dos.state import SafariDosState
+from safari_writer.program_runner import (decode_stdin_text, is_runnable_path,
+                                          path_may_need_stdin,
+                                          run_program_file)
+from safari_writer.screens.output_screen import OutputScreen
 
 __all__ = [
     "ConfirmScreen",

@@ -5,8 +5,8 @@
 Safari Writer already distinguishes `.sfw` files from everything else when loading and saving documents. This spec extends that behavior into a full **file type awareness** model that controls:
 
 1. whether Safari Writer formatting codes are allowed in the buffer;
-2. how the editor labels the current document mode; and
-3. how text is colorized inside the Textual UI.
+1. how the editor labels the current document mode; and
+1. how text is colorized inside the Textual UI.
 
 The key rule is simple:
 
@@ -15,7 +15,7 @@ The key rule is simple:
 
 This spec also requires **Textual-compatible colorization** so code files such as `.py` render with syntax highlighting, while prose-oriented files such as `.en.md` and `.en.txt` receive English-aware highlighting.
 
----
+______________________________________________________________________
 
 ## 2. Relationship to Existing Specs
 
@@ -26,7 +26,7 @@ This spec **refines and partially supersedes Spec 07**:
 
 The old plain-text rule said formatting commands could still insert control codes into non-`.sfw` buffers and those codes would be stripped only on save. That is no longer sufficient. Under this spec, non-`.sfw` documents are plain text **throughout the editing session**, not just on disk.
 
----
+______________________________________________________________________
 
 ## 3. Design Goals
 
@@ -43,7 +43,7 @@ The old plain-text rule said formatting commands could still insert control code
 - No spellcheck replacement is required here; Proofreader remains a separate feature.
 - No binary file support is added.
 
----
+______________________________________________________________________
 
 ## 4. Core Concepts
 
@@ -72,7 +72,7 @@ Examples:
 | `chapter.en.txt` | plain | english-text |
 | `chapter.en.md` | plain | english-markdown |
 
----
+______________________________________________________________________
 
 ## 5. Filename Classification Rules
 
@@ -96,8 +96,8 @@ Examples:
 Highlight profile is determined by suffix pattern, using these rules in order:
 
 1. If the final suffix is `.sfw`, use `safari-writer`.
-2. Otherwise, inspect the final suffix for a base text/code type.
-3. If the filename also includes a penultimate natural-language suffix such as `.en`, use that as a prose overlay when supported.
+1. Otherwise, inspect the final suffix for a base text/code type.
+1. If the filename also includes a penultimate natural-language suffix such as `.en`, use that as a prose overlay when supported.
 
 ### 5.3 Base highlight types
 
@@ -135,7 +135,7 @@ Initial required support:
 
 If a language overlay is unknown or unsupported, the app falls back to the base highlight profile without failing to open the file.
 
----
+______________________________________________________________________
 
 ## 6. Load and Save Semantics
 
@@ -173,8 +173,8 @@ This last rule is important: a Save As from `draft.sfw` to `draft.txt` is not ju
 If the current buffer contains Safari Writer formatting and the user saves to a non-`.sfw` filename:
 
 1. the app must warn that Safari Writer formatting will be removed;
-2. the user may cancel and choose a `.sfw` filename instead; and
-3. if the user confirms, formatting controls are removed from both the saved output and the live buffer.
+1. the user may cancel and choose a `.sfw` filename instead; and
+1. if the user confirms, formatting controls are removed from both the saved output and the live buffer.
 
 Recommended message:
 
@@ -183,7 +183,7 @@ Safari Writer formatting is only preserved in .sfw files.
 Saving as plain text will remove formatting codes. Continue?
 ```
 
----
+______________________________________________________________________
 
 ## 7. Editor Behavior by Storage Mode
 
@@ -211,7 +211,7 @@ For a plain-mode document:
 - cut/copy/paste within the editor must not introduce Safari Writer control characters; and
 - loading, editing, and saving the file must preserve its identity as a plain-text document.
 
----
+______________________________________________________________________
 
 ## 8. Status Bar and User Feedback
 
@@ -242,7 +242,7 @@ Examples:
 - `"Saved [SFW]: C:\\docs\\letter.sfw"`
 - `"Converted document to plain text mode: C:\\docs\\letter.txt"`
 
----
+______________________________________________________________________
 
 ## 9. Textual-Compatible Colorization
 
@@ -264,10 +264,10 @@ The editor must **not** depend on raw ANSI escape sequences embedded in the docu
 The rendered line should support these visual layers:
 
 1. base text content
-2. file-type syntax highlighting
-3. Safari Writer formatting visualization (formatted mode only)
-4. selection highlighting
-5. cursor highlighting
+1. file-type syntax highlighting
+1. Safari Writer formatting visualization (formatted mode only)
+1. selection highlighting
+1. cursor highlighting
 
 Cursor and selection styling must remain legible even when syntax highlighting is active.
 
@@ -275,7 +275,7 @@ Cursor and selection styling must remain legible even when syntax highlighting i
 
 Highlight colors must respect the current Textual theme or style palette rather than hard-coding terminal-specific ANSI assumptions. The same file should remain readable under all built-in Safari Writer themes.
 
----
+______________________________________________________________________
 
 ## 10. Highlighting Requirements by File Type
 
@@ -330,7 +330,7 @@ For `.en.txt`:
 - prose tokens such as URLs, email addresses, dates, and editorial markers should still be highlighted; and
 - normal sentence text must remain readable without turning the screen into a rainbow of low-value token classes.
 
----
+______________________________________________________________________
 
 ## 11. Behavior for `.sfw` Rendering
 
@@ -344,7 +344,7 @@ This keeps the mental model clear: `.sfw` is a formatted writing format, not a g
 
 Future work may add optional content-type metadata inside `.sfw`, but that is outside the scope of this spec.
 
----
+______________________________________________________________________
 
 ## 12. Suggested Implementation Shape
 
@@ -371,21 +371,21 @@ Where `FileProfile` contains at least:
 - `display_name`
 - `allows_formatting_codes`
 
----
+______________________________________________________________________
 
 ## 13. Acceptance Criteria
 
 The feature is complete when all of the following are true:
 
 1. Opening `notes.sfw` enables Safari Writer formatting behavior and shows Safari Writer formatting markers.
-2. Opening `notes.txt` disables Safari Writer formatting insertion and treats the file as plain text for the whole session.
-3. Opening `script.py` shows Python-oriented syntax highlighting in the editor.
-4. Opening `chapter.en.md` shows Markdown structure highlighting plus English prose highlighting outside code spans.
-5. Opening `chapter.en.txt` shows English prose highlighting without enabling Safari Writer formatting.
-6. Saving a formatted `.sfw` document as `.txt` warns the user and, if confirmed, converts the live document into plain mode.
-7. Editor rendering uses Textual/Rich-compatible styling rather than raw ANSI escape sequences for normal editing display.
+1. Opening `notes.txt` disables Safari Writer formatting insertion and treats the file as plain text for the whole session.
+1. Opening `script.py` shows Python-oriented syntax highlighting in the editor.
+1. Opening `chapter.en.md` shows Markdown structure highlighting plus English prose highlighting outside code spans.
+1. Opening `chapter.en.txt` shows English prose highlighting without enabling Safari Writer formatting.
+1. Saving a formatted `.sfw` document as `.txt` warns the user and, if confirmed, converts the live document into plain mode.
+1. Editor rendering uses Textual/Rich-compatible styling rather than raw ANSI escape sequences for normal editing display.
 
----
+______________________________________________________________________
 
 ## 14. Test Scenarios
 
@@ -396,4 +396,3 @@ At minimum, automated tests should cover:
 - rejection of formatting insertion in plain mode;
 - status text or UI labels that reflect both storage mode and highlight profile; and
 - rendering-layer behavior where syntax highlighting coexists with selection and cursor styling.
-

@@ -6,28 +6,28 @@ This document specifies a modern REPL for an ATARI BASIC–inspired language. Th
 
 The REPL must support both:
 
-* **program mode**, where numbered lines are entered, listed, edited, saved, loaded, renumbered, and run
-* **immediate mode**, where unnumbered commands and expressions are executed directly
+- **program mode**, where numbered lines are entered, listed, edited, saved, loaded, renumbered, and run
+- **immediate mode**, where unnumbered commands and expressions are executed directly
 
 The system should feel recognizably like an 8-bit BASIC environment, but be safer, friendlier, and more productive on modern machines.
 
----
+______________________________________________________________________
 
 ## 2. Design Goals
 
 The REPL shall:
 
-* preserve the line-numbered workflow of classic BASIC
-* support traditional commands such as `LIST`, `RUN`, `NEW`, `SAVE`, `LOAD`, and `REN`
-* allow fast experimentation in immediate mode
-* improve error messages and editability
-* support modern conveniences without breaking the retro feel
-* remain keyboard-centric and text-oriented
-* avoid requiring external editors for normal use
+- preserve the line-numbered workflow of classic BASIC
+- support traditional commands such as `LIST`, `RUN`, `NEW`, `SAVE`, `LOAD`, and `REN`
+- allow fast experimentation in immediate mode
+- improve error messages and editability
+- support modern conveniences without breaking the retro feel
+- remain keyboard-centric and text-oriented
+- avoid requiring external editors for normal use
 
 The REPL should feel like a complete working environment, not merely a command prompt.
 
----
+______________________________________________________________________
 
 ## 3. Core Concepts
 
@@ -37,8 +37,8 @@ A BASIC program is stored as an ordered collection of source lines.
 
 Each stored line has:
 
-* a positive integer line number
-* a source text payload
+- a positive integer line number
+- a source text payload
 
 Example:
 
@@ -73,32 +73,32 @@ LIST 100,200
 
 Immediate mode is used for:
 
-* REPL commands
-* one-off BASIC statements
-* variable inspection
-* quick arithmetic or experimentation
+- REPL commands
+- one-off BASIC statements
+- variable inspection
+- quick arithmetic or experimentation
 
 ### 3.3 Program Mode
 
 Any input line beginning with a valid line number is stored in the current program rather than executed immediately.
 
----
+______________________________________________________________________
 
 ## 4. REPL States
 
 The REPL has one active session with the following state:
 
-* current in-memory program
-* current variables and arrays
-* runtime status
-* current working filename, if any
-* options and preferences
-* command history
-* undo/redo history for source changes
+- current in-memory program
+- current variables and arrays
+- runtime status
+- current working filename, if any
+- options and preferences
+- command history
+- undo/redo history for source changes
 
 The REPL should keep source editing state separate from runtime variable state where practical.
 
----
+______________________________________________________________________
 
 ## 5. Prompt and Interaction Model
 
@@ -126,9 +126,9 @@ The REPL may support multiline entry for modern usability, but the default exper
 
 Multiline input should be optional and especially useful for:
 
-* entering long statements
-* editing compound constructs
-* pasting larger blocks
+- entering long statements
+- editing compound constructs
+- pasting larger blocks
 
 If multiline input is supported, it must still compile back into numbered stored lines or explicit immediate blocks.
 
@@ -136,15 +136,15 @@ If multiline input is supported, it must still compile back into numbered stored
 
 The REPL should support:
 
-* up/down command history
-* left/right cursor movement
-* Home/End
-* insert/delete
-* Ctrl+C to interrupt a running program
-* tab completion where appropriate
-* recall of prior entered lines for editing
+- up/down command history
+- left/right cursor movement
+- Home/End
+- insert/delete
+- Ctrl+C to interrupt a running program
+- tab completion where appropriate
+- recall of prior entered lines for editing
 
----
+______________________________________________________________________
 
 ## 6. Traditional BASIC Commands
 
@@ -154,11 +154,11 @@ Displays stored program lines.
 
 ### Required behaviors
 
-* `LIST` lists the whole program
-* `LIST n` lists line `n`
-* `LIST n,m` lists inclusive range from `n` to `m`
-* `LIST n,` lists from `n` to end
-* `LIST ,m` lists from start through `m`
+- `LIST` lists the whole program
+- `LIST n` lists line `n`
+- `LIST n,m` lists inclusive range from `n` to `m`
+- `LIST n,` lists from `n` to end
+- `LIST ,m` lists from start through `m`
 
 Examples:
 
@@ -172,12 +172,12 @@ LIST ,90
 
 ### Modern enhancements
 
-* optional syntax highlighting
-* optional line wrapping
-* optional pager for long listings
-* optional current-line marker in debugging contexts
+- optional syntax highlighting
+- optional line wrapping
+- optional pager for long listings
+- optional current-line marker in debugging contexts
 
----
+______________________________________________________________________
 
 ## 6.2 `RUN`
 
@@ -185,14 +185,14 @@ Executes the current program from the beginning.
 
 ### Required behaviors
 
-* clears runtime execution position
-* initializes control flow state
-* by default preserves or resets variables according to configured compatibility mode
+- clears runtime execution position
+- initializes control flow state
+- by default preserves or resets variables according to configured compatibility mode
 
 Two modes are recommended:
 
-* **classic mode**: `RUN` clears variable state
-* **modern mode**: behavior configurable, but default should be explicit and documented
+- **classic mode**: `RUN` clears variable state
+- **modern mode**: behavior configurable, but default should be explicit and documented
 
 ### Optional extension
 
@@ -202,7 +202,7 @@ RUN n
 
 may begin execution at line `n` for debugging or development use, but this is a modern extension and should be clearly marked as such.
 
----
+______________________________________________________________________
 
 ## 6.3 `NEW`
 
@@ -210,9 +210,9 @@ Clears the in-memory program.
 
 ### Required behaviors
 
-* deletes all stored lines
-* resets modified/dirty flag
-* should warn before destructive action if there are unsaved changes
+- deletes all stored lines
+- resets modified/dirty flag
+- should warn before destructive action if there are unsaved changes
 
 Example:
 
@@ -228,7 +228,7 @@ UNSAVED PROGRAM. REALLY NEW? (Y/N)
 
 A configuration option may disable confirmation.
 
----
+______________________________________________________________________
 
 ## 6.4 `SAVE`
 
@@ -243,9 +243,9 @@ SAVE
 
 Behavior:
 
-* `SAVE "filename.bas"` saves to specified file and makes it current
-* `SAVE` saves to current associated filename if one exists
-* if no current filename exists, REPL should prompt for one or raise a clear error
+- `SAVE "filename.bas"` saves to specified file and makes it current
+- `SAVE` saves to current associated filename if one exists
+- if no current filename exists, REPL should prompt for one or raise a clear error
 
 ### Save format
 
@@ -264,7 +264,7 @@ Optional alternate formats may be supported later, but plain text source is mand
 
 Saving should be atomic where practical.
 
----
+______________________________________________________________________
 
 ## 6.5 `LOAD`
 
@@ -279,8 +279,8 @@ LOAD
 
 Behavior:
 
-* `LOAD "filename.bas"` loads the named program
-* `LOAD` may reload current associated filename if one exists
+- `LOAD "filename.bas"` loads the named program
+- `LOAD` may reload current associated filename if one exists
 
 ### Safety
 
@@ -290,12 +290,12 @@ If unsaved changes exist, the REPL should warn before replacing the current in-m
 
 Must clearly report:
 
-* file not found
-* parse errors
-* duplicate or invalid line numbers
-* unsupported encoding
+- file not found
+- parse errors
+- duplicate or invalid line numbers
+- unsupported encoding
 
----
+______________________________________________________________________
 
 ## 6.6 `REN` / `RENUMBER`
 
@@ -314,19 +314,19 @@ REN start,step,from
 
 Recommended semantics:
 
-* `REN` renumbers all lines starting at 10 with step 10
-* `REN start,step` renumbers all lines starting at `start` incrementing by `step`
-* `REN start,step,from` renumbers only lines at or after `from`
+- `REN` renumbers all lines starting at 10 with step 10
+- `REN start,step` renumbers all lines starting at `start` incrementing by `step`
+- `REN start,step,from` renumbers only lines at or after `from`
 
 ### Required behavior
 
 Renumbering must update all line-number references in the program, including at least:
 
-* `GOTO`
-* `GOSUB`
-* `THEN` line targets
-* `RESTORE` targets if supported
-* `TRAP` targets if supported
+- `GOTO`
+- `GOSUB`
+- `THEN` line targets
+- `RESTORE` targets if supported
+- `TRAP` targets if supported
 
 If some references cannot be safely rewritten, the command must fail with a diagnostic rather than silently corrupting control flow.
 
@@ -338,7 +338,7 @@ The REPL should report what happened, for example:
 RENUMBERED 42 LINES
 ```
 
----
+______________________________________________________________________
 
 ## 7. Additional Traditional Commands Worth Supporting
 
@@ -366,7 +366,7 @@ At least one of these shall exist. Alias support is recommended.
 
 Stored comment lines must behave as normal BASIC source comments.
 
----
+______________________________________________________________________
 
 ## 8. Modern REPL Features
 
@@ -378,11 +378,11 @@ The REPL should remember previous immediate commands and optionally previous sto
 
 Required:
 
-* up/down recall
-* persistent history between sessions, optional
-* searchable history, optional but recommended
+- up/down recall
+- persistent history between sessions, optional
+- searchable history, optional but recommended
 
----
+______________________________________________________________________
 
 ## 8.2 Line Editing Shortcut
 
@@ -402,27 +402,27 @@ ED 120
 
 Behavior:
 
-* retrieves stored line 120 into editable input
-* after editing and submit, replaces line 120
-* if canceled, makes no change
+- retrieves stored line 120 into editable input
+- after editing and submit, replaces line 120
+- if canceled, makes no change
 
 This is one of the most valuable modern improvements.
 
----
+______________________________________________________________________
 
 ## 8.3 Tab Completion
 
 Recommended completion targets:
 
-* REPL commands
-* BASIC keywords
-* intrinsic function names
-* filenames in `SAVE`, `LOAD`, `MERGE`, etc.
-* line numbers in commands like `LIST`, `DELETE`, `EDIT`
+- REPL commands
+- BASIC keywords
+- intrinsic function names
+- filenames in `SAVE`, `LOAD`, `MERGE`, etc.
+- line numbers in commands like `LIST`, `DELETE`, `EDIT`
 
 Tab completion should never alter source unexpectedly.
 
----
+______________________________________________________________________
 
 ## 8.4 Better Error Messages
 
@@ -430,10 +430,10 @@ The REPL should improve upon terse vintage errors while optionally supporting cl
 
 Each error should ideally include:
 
-* error category
-* offending line number if relevant
-* source excerpt if relevant
-* human-readable explanation
+- error category
+- offending line number if relevant
+- source excerpt if relevant
+- human-readable explanation
 
 Example:
 
@@ -447,7 +447,7 @@ A compatibility option may additionally show:
 ERROR 12
 ```
 
----
+______________________________________________________________________
 
 ## 8.5 Source Undo/Redo
 
@@ -462,17 +462,17 @@ REDO
 
 Undoable operations should include:
 
-* line insertion
-* line replacement
-* line deletion
-* renumbering
-* load
-* merge
-* delete range
+- line insertion
+- line replacement
+- line deletion
+- renumbering
+- load
+- merge
+- delete range
 
 This is a major modern safety improvement.
 
----
+______________________________________________________________________
 
 ## 8.6 Dirty/Modified State
 
@@ -480,19 +480,19 @@ The REPL should track whether the current program differs from the last saved or
 
 The UI should make this visible, for example in a status line or prompt decoration.
 
----
+______________________________________________________________________
 
 ## 8.7 Autosave / Recovery
 
 Recommended modern feature:
 
-* optional periodic autosave
-* crash recovery file
-* prompt to restore recovered program on startup
+- optional periodic autosave
+- crash recovery file
+- prompt to restore recovered program on startup
 
 This must not overwrite the canonical saved source without consent.
 
----
+______________________________________________________________________
 
 ## 8.8 Search
 
@@ -505,13 +505,13 @@ FIND "GOTO"
 
 Behavior:
 
-* searches program source text
-* displays matching lines
-* case sensitivity configurable
+- searches program source text
+- displays matching lines
+- case sensitivity configurable
 
 Very useful in larger programs.
 
----
+______________________________________________________________________
 
 ## 8.9 Replace
 
@@ -523,7 +523,7 @@ REPLACE "FOO","BAR"
 
 This should preview changes or require confirmation.
 
----
+______________________________________________________________________
 
 ## 8.10 Delete Range
 
@@ -537,7 +537,7 @@ Deletes a range of stored lines.
 
 Should be undoable.
 
----
+______________________________________________________________________
 
 ## 8.11 Merge
 
@@ -551,10 +551,10 @@ Loads lines from another source file into the current program without discarding
 
 Conflicts should be explicit:
 
-* overwrite existing lines by line number, with warning or option
-* or fail unless forced
+- overwrite existing lines by line number, with warning or option
+- or fail unless forced
 
----
+______________________________________________________________________
 
 ## 8.12 Export Without Line Numbers
 
@@ -568,7 +568,7 @@ Exports source in a modern readable form, optionally stripping line numbers.
 
 This is useful for documentation or migration, but should not replace normal `SAVE`.
 
----
+______________________________________________________________________
 
 ## 8.13 Session Transcript Logging
 
@@ -581,7 +581,7 @@ TRANSCRIPT OFF
 
 Logs interactive session input/output for teaching, debugging, or demos.
 
----
+______________________________________________________________________
 
 ## 8.14 Help System
 
@@ -596,16 +596,16 @@ HELP ERRORS
 
 The REPL should include a built-in help system covering:
 
-* commands
-* syntax
-* functions
-* statements
-* examples
-* error messages
+- commands
+- syntax
+- functions
+- statements
+- examples
+- error messages
 
 This matters a lot for usability.
 
----
+______________________________________________________________________
 
 ## 9. Inspection and Debugging Features
 
@@ -630,7 +630,7 @@ VARS A*
 
 for prefix filtering.
 
----
+______________________________________________________________________
 
 ## 9.2 Breakpoints
 
@@ -644,7 +644,7 @@ BREAK LIST
 
 If breakpoints are implemented, execution should stop before the targeted line executes.
 
----
+______________________________________________________________________
 
 ## 9.3 Single-Step Execution
 
@@ -658,7 +658,7 @@ CONT
 
 Useful for debugging control flow.
 
----
+______________________________________________________________________
 
 ## 9.4 Trace Mode
 
@@ -673,7 +673,7 @@ TRON VARS
 
 At minimum, line-number tracing is sufficient.
 
----
+______________________________________________________________________
 
 ## 9.5 Stack/Call Inspection
 
@@ -685,7 +685,7 @@ STACK
 
 showing active return stack.
 
----
+______________________________________________________________________
 
 ## 10. File Handling Requirements
 
@@ -703,12 +703,12 @@ The REPL should read both LF and CRLF text files.
 
 Suggested default program extension:
 
-* `.bas`
+- `.bas`
 
 Other accepted extensions may include:
 
-* `.lst`
-* `.txt`
+- `.lst`
+- `.txt`
 
 ## 10.4 Safe Writes
 
@@ -718,10 +718,10 @@ Saves should use temp-file-plus-rename where possible.
 
 Optional feature:
 
-* keep numbered backup generations
-* or write `.bak` on overwrite
+- keep numbered backup generations
+- or write `.bak` on overwrite
 
----
+______________________________________________________________________
 
 ## 11. Compatibility Modes
 
@@ -731,26 +731,26 @@ The REPL should support at least two modes.
 
 Prioritizes classic behavior:
 
-* terse messages
-* stricter syntax rules
-* classic `READY`
-* `RUN` clears variables
-* minimal prompting
+- terse messages
+- stricter syntax rules
+- classic `READY`
+- `RUN` clears variables
+- minimal prompting
 
 ### 11.2 Enhanced Mode
 
 Prioritizes modern usability:
 
-* helpful diagnostics
-* undo/redo
-* autosave
-* completions
-* search/edit helpers
-* optional syntax coloring
+- helpful diagnostics
+- undo/redo
+- autosave
+- completions
+- search/edit helpers
+- optional syntax coloring
 
 The mode should be obvious and configurable.
 
----
+______________________________________________________________________
 
 ## 12. Suggested Command Set
 
@@ -758,47 +758,47 @@ This is a recommended command inventory.
 
 ### Core
 
-* `LIST`
-* `RUN`
-* `NEW`
-* `SAVE`
-* `LOAD`
-* `REN` / `RENUMBER`
-* `CLR`
-* `CONT`
-* `BYE` / `EXIT`
+- `LIST`
+- `RUN`
+- `NEW`
+- `SAVE`
+- `LOAD`
+- `REN` / `RENUMBER`
+- `CLR`
+- `CONT`
+- `BYE` / `EXIT`
 
 ### Editing
 
-* `EDIT`
-* `DELETE`
-* `FIND`
-* `REPLACE`
-* `MERGE`
-* `UNDO`
-* `REDO`
+- `EDIT`
+- `DELETE`
+- `FIND`
+- `REPLACE`
+- `MERGE`
+- `UNDO`
+- `REDO`
 
 ### Debugging
 
-* `TRON`
-* `TROFF`
-* `BREAK`
-* `STEP`
-* `NEXT`
-* `VARS`
-* `STACK`
+- `TRON`
+- `TROFF`
+- `BREAK`
+- `STEP`
+- `NEXT`
+- `VARS`
+- `STACK`
 
 ### Help / Utility
 
-* `HELP`
-* `STATUS`
-* `FILES`
-* `PWD`
-* `CD`
+- `HELP`
+- `STATUS`
+- `FILES`
+- `PWD`
+- `CD`
 
 The last few are optional if the REPL wants light operating-environment support.
 
----
+______________________________________________________________________
 
 ## 13. Status Display
 
@@ -806,12 +806,12 @@ A one-line status area is recommended.
 
 It may show:
 
-* current filename
-* modified flag
-* mode
-* trace status
-* line count
-* last error
+- current filename
+- modified flag
+- mode
+- trace status
+- line count
+- last error
 
 Example:
 
@@ -821,41 +821,41 @@ Example:
 
 This is a modern addition but highly worthwhile.
 
----
+______________________________________________________________________
 
 ## 14. Errors and Recovery
 
 The REPL shall distinguish between:
 
-* syntax errors while storing source
-* runtime errors during execution
-* command errors
-* file system errors
-* internal REPL failures
+- syntax errors while storing source
+- runtime errors during execution
+- command errors
+- file system errors
+- internal REPL failures
 
 Required recovery behavior:
 
-* source should not be lost on a runtime error
-* syntax error in one stored line should not corrupt other lines
-* interrupted execution should return to prompt safely
-* failed renumbering should leave program unchanged
+- source should not be lost on a runtime error
+- syntax error in one stored line should not corrupt other lines
+- interrupted execution should return to prompt safely
+- failed renumbering should leave program unchanged
 
----
+______________________________________________________________________
 
 ## 15. Non-Goals
 
 This REPL spec does not require:
 
-* graphics commands
-* sound commands
-* cassette/tape operations
-* hardware memory pokes
-* machine-language integration
-* platform-specific device syntax
+- graphics commands
+- sound commands
+- cassette/tape operations
+- hardware memory pokes
+- machine-language integration
+- platform-specific device syntax
 
 Those may exist elsewhere in the language or implementation, but they are outside this REPL specification.
 
----
+______________________________________________________________________
 
 ## 16. Example Session
 
@@ -889,44 +889,44 @@ RUN
 HELLO
 ```
 
----
+______________________________________________________________________
 
 ## 17. Recommended Minimum Viable Feature Set
 
 If implementing in phases, the first complete usable version should include:
 
-* numbered line entry
-* immediate execution
-* `LIST`
-* `RUN`
-* `NEW`
-* `SAVE`
-* `LOAD`
-* `REN` / `RENUMBER`
-* line deletion by entering bare line number
-* command history
-* interrupt with Ctrl+C
-* clear error reporting
-* unsaved-change warning
+- numbered line entry
+- immediate execution
+- `LIST`
+- `RUN`
+- `NEW`
+- `SAVE`
+- `LOAD`
+- `REN` / `RENUMBER`
+- line deletion by entering bare line number
+- command history
+- interrupt with Ctrl+C
+- clear error reporting
+- unsaved-change warning
 
 After that, the most valuable next additions are:
 
-* `EDIT`
-* `UNDO`
-* `FIND`
-* `HELP`
-* `TRON` / `TROFF`
-* `VARS`
+- `EDIT`
+- `UNDO`
+- `FIND`
+- `HELP`
+- `TRON` / `TROFF`
+- `VARS`
 
----
+______________________________________________________________________
 
 ## 18. Implementation Guidance for Feel
 
 To preserve the intended atmosphere, the REPL should:
 
-* keep commands short and keyboard-friendly
-* favor fast interaction over menus
-* preserve line numbers as first-class
-* use minimal but readable output
-* avoid overly chatty prompts unless help mode is enabled
-* allow modern features, but not force them into every interaction
+- keep commands short and keyboard-friendly
+- favor fast interaction over menus
+- preserve line numbers as first-class
+- use minimal but readable output
+- avoid overly chatty prompts unless help mode is enabled
+- allow modern features, but not force them into every interaction

@@ -74,4 +74,3 @@ class SafariSlidesState:
             return
         self.current_slide_index = self.slide_count - 1
         self.fragment_step = self.current_slide.fragment_count
-

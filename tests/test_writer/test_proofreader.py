@@ -1,27 +1,22 @@
 """Unit tests for ProofreaderScreen logic."""
 
-import pytest
-from unittest.mock import MagicMock, patch, mock_open
 import asyncio
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
 
 from safari_writer.app import SafariWriterApp
+from safari_writer.screens.proofreader import (MODE_CORRECT,
+                                               MODE_CORRECT_CONFIRM,
+                                               MODE_CORRECT_MENU,
+                                               MODE_CORRECT_WORD,
+                                               MODE_DICT_RESULTS,
+                                               MODE_DICT_SEARCH,
+                                               MODE_HIGHLIGHT, MODE_MENU,
+                                               MODE_PRINT, ProofreaderScreen,
+                                               _check_word, _dict_lookup,
+                                               _extract_words)
 from safari_writer.state import AppState
-from safari_writer.screens.proofreader import (
-    ProofreaderScreen,
-    _check_word,
-    _extract_words,
-    _dict_lookup,
-    MODE_MENU,
-    MODE_HIGHLIGHT,
-    MODE_PRINT,
-    MODE_CORRECT,
-    MODE_CORRECT_MENU,
-    MODE_CORRECT_WORD,
-    MODE_CORRECT_CONFIRM,
-    MODE_DICT_SEARCH,
-    MODE_DICT_RESULTS,
-)
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -17,31 +17,20 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from safari_writer.mail_merge_db import (
-    FieldDef,
-    MailMergeDB,
-    apply_mail_merge_to_buffer,
-    save_mail_merge_db,
-    load_mail_merge_db,
-)
-from safari_writer.screens.editor import CTRL_MERGE
-from safari_writer.screens.print_screen import (
-    _apply_record,
-    _buffer_has_merge_markers,
-    _render_with_mail_merge,
-)
 from safari_writer.export_md import export_markdown
 from safari_writer.export_ps import export_postscript
+from safari_writer.mail_merge_db import (FieldDef, MailMergeDB,
+                                         apply_mail_merge_to_buffer,
+                                         load_mail_merge_db,
+                                         save_mail_merge_db)
+from safari_writer.screens.editor import CTRL_MERGE
+from safari_writer.screens.mail_merge import (MODE_ENTER, MODE_ENTER_CONFIRM,
+                                              MODE_LOAD, MODE_MAIN, MODE_SAVE,
+                                              MODE_UPDATE, MailMergeScreen)
+from safari_writer.screens.print_screen import (_apply_record,
+                                                _buffer_has_merge_markers,
+                                                _render_with_mail_merge)
 from safari_writer.state import AppState, GlobalFormat
-from safari_writer.screens.mail_merge import (
-    MailMergeScreen,
-    MODE_MAIN,
-    MODE_ENTER,
-    MODE_ENTER_CONFIRM,
-    MODE_UPDATE,
-    MODE_SAVE,
-    MODE_LOAD,
-)
 
 MERGE = CTRL_MERGE  # "\x11"
 
@@ -403,9 +392,9 @@ def _enter_record_via_ui(
         _press(screen, "enter")
 
     # After last field, should be in MODE_ENTER_CONFIRM
-    assert screen._mode == MODE_ENTER_CONFIRM, (
-        f"Expected MODE_ENTER_CONFIRM after last field, got {screen._mode}"
-    )
+    assert (
+        screen._mode == MODE_ENTER_CONFIRM
+    ), f"Expected MODE_ENTER_CONFIRM after last field, got {screen._mode}"
     # Confirm with 'y' to save the record
     _press(screen, "y")
     # Now in "Enter another? Y/N" state (still MODE_ENTER_CONFIRM but
@@ -413,9 +402,9 @@ def _enter_record_via_ui(
     assert screen._mode == MODE_ENTER_CONFIRM
     # Press 'n' to decline entering another and return to main menu
     _press(screen, "n")
-    assert screen._mode == MODE_MAIN, (
-        f"Expected MODE_MAIN after declining another, got {screen._mode}"
-    )
+    assert (
+        screen._mode == MODE_MAIN
+    ), f"Expected MODE_MAIN after declining another, got {screen._mode}"
 
 
 class TestE2EUI:

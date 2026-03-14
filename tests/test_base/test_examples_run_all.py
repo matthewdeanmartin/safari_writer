@@ -8,7 +8,6 @@ import pytest
 from safari_base.lang.environment import Environment
 from safari_base.lang.interpreter import Interpreter
 
-
 EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "safari_base" / "examples"
 EXAMPLE_PROGRAMS = sorted(EXAMPLES_DIR.glob("*.prg"), key=lambda path: path.name)
 

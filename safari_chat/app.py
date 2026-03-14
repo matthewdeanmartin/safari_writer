@@ -37,7 +37,7 @@ class SafariChatApp(App[None]):
         )
 
     def on_mount(self) -> None:
-        from safari_writer.themes import THEMES, DEFAULT_THEME, load_settings
+        from safari_writer.themes import DEFAULT_THEME, THEMES, load_settings
 
         for theme in THEMES.values():
             self.register_theme(theme)

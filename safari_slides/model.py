@@ -82,4 +82,3 @@ class Presentation:
 
     metadata: PresentationMetadata = field(default_factory=PresentationMetadata)
     slides: tuple[Slide, ...] = ()
-

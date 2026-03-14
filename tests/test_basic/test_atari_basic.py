@@ -1,7 +1,9 @@
-import unittest
 import io
 import os
-from safari_basic.interpreter import SafariBasic as AtariBasic, BasicError
+import unittest
+
+from safari_basic.interpreter import BasicError
+from safari_basic.interpreter import SafariBasic as AtariBasic
 
 
 class TestAtariBasic(unittest.TestCase):

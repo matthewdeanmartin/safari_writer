@@ -1,12 +1,13 @@
 """
 SafariView ST and Native Rendering Modes.
 """
+
 from __future__ import annotations
 
 from PIL import Image
 
+from safari_view.render.palettes import apply_palette, get_atari_800_palette
 from safari_view.render.pipeline import ImageTransformer, RenderContext
-from safari_view.render.palettes import get_atari_800_palette, apply_palette
 
 
 class ModeSTTransformer(ImageTransformer):
@@ -25,7 +26,9 @@ class ModeSTTransformer(ImageTransformer):
         logical_height = max(1, int(logical_width * aspect_ratio))
 
         # Step 2: Downsample
-        small_img = image.resize((logical_width, logical_height), Image.Resampling.BICUBIC)
+        small_img = image.resize(
+            (logical_width, logical_height), Image.Resampling.BICUBIC
+        )
 
         # Step 3: Apply palette (using 800 palette for now as placeholder)
         palette_data = get_atari_800_palette()
@@ -55,7 +58,7 @@ class NativeTransformer(ImageTransformer):
         """
         aspect_ratio = image.height / image.width
         target_aspect = context.target_height / context.target_width
-        
+
         if aspect_ratio > target_aspect:
             final_h = context.target_height
             final_w = int(final_h / aspect_ratio)

@@ -4,12 +4,8 @@ import pytest
 from rich.text import Text
 
 from safari_writer.file_types import resolve_file_profile
-from safari_writer.syntax_highlight import (
-    Highlighter,
-    create_highlighter,
-    highlight_buffer,
-    highlight_line,
-)
+from safari_writer.syntax_highlight import (Highlighter, create_highlighter,
+                                            highlight_buffer, highlight_line)
 
 
 class TestHighlighterCreation:
@@ -144,8 +140,9 @@ class TestEditorPlainModeFormatGuard:
 
     def test_insert_control_rejected_in_plain_mode(self):
         from unittest.mock import MagicMock, patch
+
+        from safari_writer.screens.editor import CTRL_BOLD, EditorArea
         from safari_writer.state import AppState
-        from safari_writer.screens.editor import EditorArea, CTRL_BOLD
 
         state = AppState()
         state.filename = "test.txt"
@@ -167,8 +164,9 @@ class TestEditorPlainModeFormatGuard:
 
     def test_insert_control_allowed_in_sfw_mode(self):
         from unittest.mock import MagicMock, patch
+
+        from safari_writer.screens.editor import CTRL_BOLD, EditorArea
         from safari_writer.state import AppState
-        from safari_writer.screens.editor import EditorArea, CTRL_BOLD
 
         state = AppState()
         state.filename = "test.sfw"

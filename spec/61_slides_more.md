@@ -1,6 +1,6 @@
 Below is the **addendum specification** describing how a **reference implementation of SlideMD** could be built. This focuses on **architecture, parsing, rendering, and export pipelines**, while remaining implementation-agnostic enough that different languages could implement it.
 
----
+______________________________________________________________________
 
 # SlideMD Reference Implementation Addendum
 
@@ -8,7 +8,7 @@ Below is the **addendum specification** describing how a **reference implementat
 
 Version: 0.1
 
----
+______________________________________________________________________
 
 # 1. Overview
 
@@ -37,12 +37,12 @@ Renderer Renderer Renderer Renderer
 The reference implementation consists of **five major subsystems**.
 
 1. Markdown parsing
-2. Slide segmentation
-3. Directive processing
-4. Presentation model creation
-5. Output renderers
+1. Slide segmentation
+1. Directive processing
+1. Presentation model creation
+1. Output renderers
 
----
+______________________________________________________________________
 
 # 2. Parsing Strategy
 
@@ -52,11 +52,11 @@ Instead it uses an existing Markdown parser.
 
 Recommended options:
 
-| Language | Library          |
+| Language | Library |
 | -------- | ---------------- |
-| Python   | `markdown-it-py` |
-| Python   | `mistune`        |
-| Python   | `markdown`       |
+| Python | `markdown-it-py` |
+| Python | `mistune` |
+| Python | `markdown` |
 
 Preferred:
 
@@ -66,11 +66,11 @@ markdown-it-py
 
 Reasons:
 
-* extensible token system
-* plugins
-* CommonMark compliance
+- extensible token system
+- plugins
+- CommonMark compliance
 
----
+______________________________________________________________________
 
 # 3. Slide Segmentation
 
@@ -119,7 +119,7 @@ Horizontal Slide B
    Vertical Slide C
 ```
 
----
+______________________________________________________________________
 
 # 4. AST Processing
 
@@ -127,12 +127,12 @@ After Markdown parsing, the renderer walks the **Markdown AST tokens** and ident
 
 These include:
 
-| Construct        | Detection               |
+| Construct | Detection |
 | ---------------- | ----------------------- |
-| Fragments        | HTML comment marker     |
-| Columns          | container directive     |
-| Speaker notes    | note blocks             |
-| Metadata         | YAML frontmatter        |
+| Fragments | HTML comment marker |
+| Columns | container directive |
+| Speaker notes | note blocks |
+| Metadata | YAML frontmatter |
 | Slide attributes | YAML between separators |
 
 Each construct is converted into structured nodes.
@@ -149,7 +149,7 @@ Slide
  └── notes
 ```
 
----
+______________________________________________________________________
 
 # 5. Presentation Model
 
@@ -183,7 +183,7 @@ Theme
 
 Slides should contain **only semantic content**, not rendering details.
 
----
+______________________________________________________________________
 
 # 6. Block Types
 
@@ -191,17 +191,17 @@ Blocks correspond to Markdown structures.
 
 Common block types:
 
-| Block     | Source           |
+| Block | Source |
 | --------- | ---------------- |
-| Heading   | `#` syntax       |
-| Paragraph | plain text       |
-| List      | `-` or `*`       |
-| Code      | fenced blocks    |
-| Image     | `![]()`          |
-| Quote     | `>`              |
-| Table     | Markdown table   |
-| Columns   | layout container |
-| Callout   | `::: warning`    |
+| Heading | `#` syntax |
+| Paragraph | plain text |
+| List | `-` or `*` |
+| Code | fenced blocks |
+| Image | `![]()` |
+| Quote | `>` |
+| Table | Markdown table |
+| Columns | layout container |
+| Callout | `::: warning` |
 
 Block representation example:
 
@@ -213,7 +213,7 @@ Block(
 )
 ```
 
----
+______________________________________________________________________
 
 # 7. Fragment Handling
 
@@ -245,7 +245,7 @@ Fragment(
 
 Renderers decide how to display fragments.
 
----
+______________________________________________________________________
 
 # 8. Notes Handling
 
@@ -269,11 +269,11 @@ Slide.notes = [
 
 Notes are rendered only in:
 
-* presenter view
-* speaker exports
-* printed notes
+- presenter view
+- speaker exports
+- printed notes
 
----
+______________________________________________________________________
 
 # 9. Layout System
 
@@ -296,24 +296,24 @@ elif layout == columns:
 
 Layout types:
 
-| Layout  | Purpose          |
+| Layout | Purpose |
 | ------- | ---------------- |
-| title   | title slide      |
-| default | normal slide     |
-| columns | two columns      |
-| image   | full background  |
-| center  | centered content |
+| title | title slide |
+| default | normal slide |
+| columns | two columns |
+| image | full background |
+| center | centered content |
 
----
+______________________________________________________________________
 
 # 10. Theme System
 
 Themes define:
 
-* fonts
-* colors
-* spacing
-* transitions
+- fonts
+- colors
+- spacing
+- transitions
 
 Themes are stored as:
 
@@ -327,7 +327,7 @@ theme/
 
 Renderer loads theme assets when generating output.
 
----
+______________________________________________________________________
 
 # 11. HTML Rendering
 
@@ -354,17 +354,17 @@ Example HTML:
 
 Slides are navigated using:
 
-* keyboard
-* click
-* touch
+- keyboard
+- click
+- touch
 
 Optional frameworks:
 
-* Reveal.js
-* bespoke.js
-* custom JS engine
+- Reveal.js
+- bespoke.js
+- custom JS engine
 
----
+______________________________________________________________________
 
 # 12. PDF Export
 
@@ -376,8 +376,8 @@ HTML → Print → PDF
 
 Advantages:
 
-* simplest
-* preserves layout
+- simplest
+- preserves layout
 
 ### Method 2
 
@@ -399,7 +399,7 @@ CSS print layout
 PDF
 ```
 
----
+______________________________________________________________________
 
 # 13. PowerPoint Export
 
@@ -413,13 +413,13 @@ python-pptx
 
 Mapping rules:
 
-| Markdown  | PPTX              |
+| Markdown | PPTX |
 | --------- | ----------------- |
-| Heading   | Title             |
-| Paragraph | Text box          |
-| List      | Bullet list       |
-| Image     | Picture           |
-| Code      | Monospace textbox |
+| Heading | Title |
+| Paragraph | Text box |
+| List | Bullet list |
+| Image | Picture |
+| Code | Monospace textbox |
 
 Example slide creation:
 
@@ -429,7 +429,7 @@ ppt.slides.add_slide(layout)
 
 Fragments become **separate animation steps**.
 
----
+______________________________________________________________________
 
 # 14. Terminal (TUI) Renderer
 
@@ -453,14 +453,14 @@ wait for keypress
 
 Controls:
 
-| Key   | Action        |
+| Key | Action |
 | ----- | ------------- |
-| Right | next slide    |
-| Left  | previous      |
+| Right | next slide |
+| Left | previous |
 | Space | next fragment |
-| N     | show notes    |
+| N | show notes |
 
----
+______________________________________________________________________
 
 # 15. Image Handling
 
@@ -487,7 +487,7 @@ images/
    diagram.png
 ```
 
----
+______________________________________________________________________
 
 # 16. Code Highlighting
 
@@ -505,7 +505,7 @@ Renderer converts code blocks to:
 <pre><code class="language-python">
 ```
 
----
+______________________________________________________________________
 
 # 17. Incremental Compilation
 
@@ -529,7 +529,7 @@ file changes
 → refresh browser
 ```
 
----
+______________________________________________________________________
 
 # 18. CLI Interface
 
@@ -546,7 +546,7 @@ build/
    presentation.html
 ```
 
----
+______________________________________________________________________
 
 ```
 slidemd serve talk.md
@@ -554,7 +554,7 @@ slidemd serve talk.md
 
 Starts local preview server.
 
----
+______________________________________________________________________
 
 ```
 slidemd export talk.md --pdf
@@ -562,7 +562,7 @@ slidemd export talk.md --pdf
 
 Exports PDF.
 
----
+______________________________________________________________________
 
 ```
 slidemd export talk.md --pptx
@@ -570,7 +570,7 @@ slidemd export talk.md --pptx
 
 Exports PowerPoint.
 
----
+______________________________________________________________________
 
 # 19. Plugin System
 
@@ -592,21 +592,21 @@ register_directive()
 register_renderer()
 ```
 
----
+______________________________________________________________________
 
 # 20. Performance Considerations
 
-Typical slide decks are small (<1MB).
+Typical slide decks are small (\<1MB).
 
 However:
 
-* image compression
-* caching parsed AST
-* incremental builds
+- image compression
+- caching parsed AST
+- incremental builds
 
 should be implemented.
 
----
+______________________________________________________________________
 
 # 21. Error Handling
 
@@ -622,16 +622,16 @@ line: 134
 directive: ::: grid
 ```
 
----
+______________________________________________________________________
 
 # 22. Testing Strategy
 
 Recommended test layers:
 
 1. Parser tests
-2. AST tests
-3. Renderer tests
-4. Snapshot tests
+1. AST tests
+1. Renderer tests
+1. Snapshot tests
 
 Example snapshot test:
 
@@ -641,7 +641,7 @@ input.md → output.html
 
 Compare to expected result.
 
----
+______________________________________________________________________
 
 # 23. Reference Implementation (Python)
 
@@ -668,7 +668,7 @@ slidemd/
   cli/
 ```
 
----
+______________________________________________________________________
 
 # 24. Minimal Prototype Pipeline
 

@@ -10,25 +10,19 @@ from importlib import metadata
 from pathlib import Path
 from typing import Callable
 
-from safari_writer.cli_types import StartupRequest
 from safari_writer.ansi_preview import extract_ansi_page, render_ansi_preview
+from safari_writer.cli_types import StartupRequest
 from safari_writer.document_io import load_document_buffer, load_document_state
 from safari_writer.format_codec import decode_sfw, encode_sfw, strip_controls
-from safari_writer.mail_merge_db import (
-    MailMergeDB,
-    apply_mail_merge_to_buffer,
-    inspect_mail_merge_db,
-    load_mail_merge_db,
-    save_mail_merge_db,
-    validate_mail_merge_data,
-)
-from safari_writer.proofing import (
-    check_word,
-    extract_words,
-    load_personal_dictionary,
-    make_checker,
-    suggest_words,
-)
+from safari_writer.mail_merge_db import (MailMergeDB,
+                                         apply_mail_merge_to_buffer,
+                                         inspect_mail_merge_db,
+                                         load_mail_merge_db,
+                                         save_mail_merge_db,
+                                         validate_mail_merge_data)
+from safari_writer.proofing import (check_word, extract_words,
+                                    load_personal_dictionary, make_checker,
+                                    suggest_words)
 from safari_writer.splash import maybe_show_splash
 from safari_writer.state import AppState, GlobalFormat
 from safari_writer.themes import load_settings
@@ -505,9 +499,9 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
     if command == "mail-merge":
         return StartupRequest(
             destination="mail_merge",
-            mail_merge_database_path=Path(args.database).resolve()
-            if args.database
-            else None,
+            mail_merge_database_path=(
+                Path(args.database).resolve() if args.database else None
+            ),
             mail_merge_mode=args.mode,
             read_only=args.read_only,
         )
@@ -542,7 +536,9 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
     if command == "safari-slides":
         return StartupRequest(
             destination="safari_slides",
-            document_path=Path(args.file).resolve() if getattr(args, "file", None) else None,
+            document_path=(
+                Path(args.file).resolve() if getattr(args, "file", None) else None
+            ),
             read_only=args.read_only,
         )
     raise ValueError(f"Unsupported TUI destination: {command}")
@@ -845,9 +841,9 @@ def _handle_mail_merge_validate(args: argparse.Namespace) -> int:
 
 
 def _handle_doctor(args: argparse.Namespace) -> int:
-    from safari_writer.screens.doctor import gather_doctor_info
-
     import re
+
+    from safari_writer.screens.doctor import gather_doctor_info
 
     # Strip Textual/Rich markup tags for plain-text CLI output
     raw = gather_doctor_info()

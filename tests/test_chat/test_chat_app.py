@@ -4,14 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from safari_chat.app import SafariChatApp, _DEFAULT_HELP
+from safari_chat.app import _DEFAULT_HELP, SafariChatApp
 from safari_chat.engine import parse_document
-from safari_chat.screens import (
-    CHAT_COMMAND_BAR,
-    CHAT_HELP_CONTENT,
-    CHAT_MENU_BAR,
-    SafariChatMainScreen,
-)
+from safari_chat.screens import (CHAT_COMMAND_BAR, CHAT_HELP_CONTENT,
+                                 CHAT_MENU_BAR, SafariChatMainScreen)
 from safari_chat.state import SafariChatState
 
 

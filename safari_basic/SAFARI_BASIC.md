@@ -6,15 +6,15 @@ This document specifies a modern implementation of **Safari Basic for the 8-bit 
 
 This specification:
 
-* targets the **latest 8-bit Safari Basic lineage**, not ST BASIC
-* preserves distinctive source-level behavior where practical
-* excludes hardware-specific facilities such as graphics, `PEEK`, `POKE`, `USR`, and device/tape I/O
-* uses **ASCII** source text
-* requires numeric evaluation with the **maximum practical precision available** in the implementation language/runtime
+- targets the **latest 8-bit Safari Basic lineage**, not ST BASIC
+- preserves distinctive source-level behavior where practical
+- excludes hardware-specific facilities such as graphics, `PEEK`, `POKE`, `USR`, and device/tape I/O
+- uses **ASCII** source text
+- requires numeric evaluation with the **maximum practical precision available** in the implementation language/runtime
 
 This is a language-and-interpreter spec for modern machines.
 
----
+______________________________________________________________________
 
 ## 2. Source Form
 
@@ -49,7 +49,7 @@ PRINT 2+2
 
 Source text is ASCII. Keywords are case-insensitive. String contents preserve case.
 
----
+______________________________________________________________________
 
 ## 3. Lexical Rules
 
@@ -57,10 +57,10 @@ Source text is ASCII. Keywords are case-insensitive. String contents preserve ca
 
 Identifiers:
 
-* begin with a letter
-* may contain letters and digits
-* are case-insensitive
-* are significant in full; they are not truncated
+- begin with a letter
+- may contain letters and digits
+- are case-insensitive
+- are significant in full; they are not truncated
 
 Examples:
 
@@ -93,7 +93,7 @@ PRINT PRINT
 
 This behavior is distinctive and should be preserved.
 
----
+______________________________________________________________________
 
 ## 4. Data Model
 
@@ -134,7 +134,7 @@ Undimensioned array use is an error.
 
 This subset does **not** support string arrays.
 
----
+______________________________________________________________________
 
 ## 5. Statements
 
@@ -282,7 +282,7 @@ SOUND channel, pitch, timbre, volume
 
 If implemented, it should be treated as a host-level convenience feature. Exact audio behavior is implementation-defined.
 
----
+______________________________________________________________________
 
 ## 6. Expressions
 
@@ -290,23 +290,23 @@ If implemented, it should be treated as a host-level convenience feature. Exact 
 
 Implement at least:
 
-* `+`
-* `-`
-* `*`
-* `/`
-* unary `+` and `-`
-* `^`
+- `+`
+- `-`
+- `*`
+- `/`
+- unary `+` and `-`
+- `^`
 
 ### 6.2 Relational Operators
 
 Implement at least:
 
-* `=`
-* `<>`
-* `<`
-* `>`
-* `<=`
-* `>=`
+- `=`
+- `<>`
+- `<`
+- `>`
+- `<=`
+- `>=`
 
 A true comparison yields a nonzero numeric value. False yields zero.
 
@@ -318,7 +318,7 @@ String equality and ordering comparisons may be supported using normal lexicogra
 
 Parentheses may be used to group expressions.
 
----
+______________________________________________________________________
 
 ## 7. REPL Commands
 
@@ -370,47 +370,47 @@ CLR
 
 The REPL shall support the classic edit model:
 
-* entering a numbered line inserts or replaces it
-* entering only a line number deletes it
-* `LIST` reveals canonical stored form
+- entering a numbered line inserts or replaces it
+- entering only a line number deletes it
+- `LIST` reveals canonical stored form
 
 This editing model is part of the language experience and should be preserved.
 
----
+______________________________________________________________________
 
 ## 8. Error Behavior
 
 The interpreter shall detect and report, at minimum:
 
-* syntax error
-* undefined line target
-* use of undimensioned array or string
-* return without gosub
-* next without matching for
-* type mismatch
-* input conversion failure
+- syntax error
+- undefined line target
+- use of undimensioned array or string
+- return without gosub
+- next without matching for
+- type mismatch
+- input conversion failure
 
 Error text is implementation-defined, but should remain short and REPL-friendly.
 
----
+______________________________________________________________________
 
 ## 9. Distinctive Behaviors to Preserve
 
 A conforming implementation should preserve these Atari-BASIC-like traits:
 
 1. **Line-oriented program storage** with numbered lines
-2. **Immediate mode plus stored program mode** in one interpreter
-3. **Full-significance variable names**
-4. **Keyword-as-variable via `LET`**
-5. **Mandatory `DIM` for strings and arrays**
-6. **No `ELSE` in `IF`**
-7. **Multiple statements per line with `:`**
-8. **`LIST` as a first-class REPL/program editing command**
-9. **Variable-valued `GOTO` targets**
+1. **Immediate mode plus stored program mode** in one interpreter
+1. **Full-significance variable names**
+1. **Keyword-as-variable via `LET`**
+1. **Mandatory `DIM` for strings and arrays**
+1. **No `ELSE` in `IF`**
+1. **Multiple statements per line with `:`**
+1. **`LIST` as a first-class REPL/program editing command**
+1. **Variable-valued `GOTO` targets**
 
 These are the main source-visible features that make Safari Basic feel like Safari Basic in a modern implementation.
 
----
+______________________________________________________________________
 
 ## 10. Minimal Conformance Example
 

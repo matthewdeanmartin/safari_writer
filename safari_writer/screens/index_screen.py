@@ -9,11 +9,11 @@ reference but are no longer used by the main menu actions (index1 / index2).
 import platform
 from pathlib import Path
 
-from textual.app import ComposeResult
-from textual.screen import Screen
 from textual import events
-from textual.widgets import Static
+from textual.app import ComposeResult
 from textual.containers import Container
+from textual.screen import Screen
+from textual.widgets import Static
 
 
 def _find_external_drives() -> list[Path]:

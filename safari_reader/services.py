@@ -11,7 +11,7 @@ from pathlib import Path
 
 import httpx
 
-from safari_reader.state import BookMeta, Bookmark, SafariReaderState
+from safari_reader.state import Bookmark, BookMeta, SafariReaderState
 
 __all__ = [
     "add_book_to_library",
@@ -418,8 +418,7 @@ def parse_chapters(text: str) -> list[tuple[str, int]]:
     """Extract chapter headings and their character offsets."""
     chapters: list[tuple[str, int]] = []
     pattern = re.compile(
-        r"^(CHAPTER|Chapter|BOOK|PART|SECTION|ACT|SCENE)"
-        r"[\s.:]+(.*)$",
+        r"^(CHAPTER|Chapter|BOOK|PART|SECTION|ACT|SCENE)" r"[\s.:]+(.*)$",
         re.MULTILINE,
     )
     for m in pattern.finditer(text):

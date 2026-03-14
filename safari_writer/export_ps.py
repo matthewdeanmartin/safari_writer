@@ -14,23 +14,12 @@ from safari_writer.state import GlobalFormat
 if TYPE_CHECKING:
     from safari_writer.mail_merge_db import MailMergeDB
 
-from safari_writer.screens.editor import (
-    CTRL_BOLD,
-    CTRL_UNDERLINE,
-    CTRL_CENTER,
-    CTRL_RIGHT,
-    CTRL_ELONGATE,
-    CTRL_SUPER,
-    CTRL_SUB,
-    CTRL_PARA,
-    CTRL_MERGE,
-    CTRL_HEADER,
-    CTRL_FOOTER,
-    CTRL_HEADING,
-    CTRL_EJECT,
-    CTRL_CHAIN,
-    CTRL_FORM,
-)
+from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_CHAIN,
+                                          CTRL_EJECT, CTRL_ELONGATE,
+                                          CTRL_FOOTER, CTRL_FORM, CTRL_HEADER,
+                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
+                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
+                                          CTRL_UNDERLINE)
 
 __all__ = ["export_postscript"]
 
@@ -86,11 +75,11 @@ def export_postscript(
 
 def _markdown_to_sfw_like_buffer(buffer: list[str]) -> list[str]:
     """Convert a Markdown buffer to a buffer with AtariWriter control codes.
-    
+
     This allows reusing the existing PostScript/PDF rendering logic.
     """
     import re
-    
+
     out: list[str] = []
     for line in buffer:
         # Headings
@@ -106,19 +95,19 @@ def _markdown_to_sfw_like_buffer(buffer: list[str]) -> list[str]:
             # but export_ps uses heading_counters anyway.
             out.append(f"{CTRL_HEADING}{level}{content}")
             continue
-            
+
         # Horizontal rule
         if line.strip() == "---":
             out.append(CTRL_EJECT)
             continue
-            
+
         # Inline formatting (very basic)
         t = line
         # Bold: **text** -> CTRL_BOLD text CTRL_BOLD
         t = re.sub(r"\*\*(.*?)\*\*", f"{CTRL_BOLD}\\1{CTRL_BOLD}", t)
         # Italic: *text* -> CTRL_UNDERLINE text CTRL_UNDERLINE (mapping italic to underline for now)
         t = re.sub(r"\*(.*?)\*", f"{CTRL_UNDERLINE}\\1{CTRL_UNDERLINE}", t)
-        
+
         # Paragraphs in AW are marked with CTRL_PARA at start of line
         # If it's not a heading or eject, and it's not empty, it's a para or continuation.
         # For simplicity, we'll just treat everything as-is.

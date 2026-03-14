@@ -2,22 +2,14 @@
 
 from __future__ import annotations
 
-from safari_writer.export_ps import export_postscript, _ps_escape, _parse_spans, _strip
+from safari_writer.export_ps import (_parse_spans, _ps_escape, _strip,
+                                     export_postscript)
+from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, CTRL_EJECT,
+                                          CTRL_ELONGATE, CTRL_FOOTER,
+                                          CTRL_HEADER, CTRL_HEADING, CTRL_PARA,
+                                          CTRL_RIGHT, CTRL_SUB, CTRL_SUPER,
+                                          CTRL_UNDERLINE)
 from safari_writer.state import GlobalFormat
-from safari_writer.screens.editor import (
-    CTRL_BOLD,
-    CTRL_UNDERLINE,
-    CTRL_CENTER,
-    CTRL_RIGHT,
-    CTRL_ELONGATE,
-    CTRL_SUPER,
-    CTRL_SUB,
-    CTRL_PARA,
-    CTRL_HEADER,
-    CTRL_FOOTER,
-    CTRL_HEADING,
-    CTRL_EJECT,
-)
 
 
 class TestPsEscape:
@@ -164,7 +156,7 @@ class TestExportPostscript:
         assert "rlineto" in ps  # underline drawing uses rlineto
 
     def test_mail_merge_integration(self) -> None:
-        from safari_writer.mail_merge_db import MailMergeDB, FieldDef
+        from safari_writer.mail_merge_db import FieldDef, MailMergeDB
 
         db = MailMergeDB(
             fields=[FieldDef("Name", 20)],
