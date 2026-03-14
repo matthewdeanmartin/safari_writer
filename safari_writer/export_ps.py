@@ -59,12 +59,16 @@ def export_postscript(
     buffer: list[str],
     fmt: GlobalFormat,
     db: MailMergeDB | None = None,
+    is_markdown: bool = False,
 ) -> str:
     """Convert a document buffer to PostScript source text.
 
     If the buffer contains merge markers and *db* has records, one copy
     of the document is emitted per record with field values substituted.
     """
+    if is_markdown:
+        return _export_single(_markdown_to_sfw_like_buffer(buffer), fmt)
+
     has_merge = any(CTRL_MERGE in line for line in buffer)
     if has_merge and db is not None and db.records:
         from safari_writer.mail_merge_db import apply_mail_merge_to_buffer
@@ -78,6 +82,48 @@ def export_postscript(
             parts.append(_export_single(merged_buf, fmt))
         return "\n".join(parts)
     return _export_single(buffer, fmt)
+
+
+def _markdown_to_sfw_like_buffer(buffer: list[str]) -> list[str]:
+    """Convert a Markdown buffer to a buffer with AtariWriter control codes.
+    
+    This allows reusing the existing PostScript/PDF rendering logic.
+    """
+    import re
+    
+    out: list[str] = []
+    for line in buffer:
+        # Headings
+        if line.startswith("#"):
+            level = 0
+            for char in line:
+                if char == "#":
+                    level += 1
+                else:
+                    break
+            content = line[level:].strip()
+            # We don't want to double-number if heading_numbering is used,
+            # but export_ps uses heading_counters anyway.
+            out.append(f"{CTRL_HEADING}{level}{content}")
+            continue
+            
+        # Horizontal rule
+        if line.strip() == "---":
+            out.append(CTRL_EJECT)
+            continue
+            
+        # Inline formatting (very basic)
+        t = line
+        # Bold: **text** -> CTRL_BOLD text CTRL_BOLD
+        t = re.sub(r"\*\*(.*?)\*\*", f"{CTRL_BOLD}\\1{CTRL_BOLD}", t)
+        # Italic: *text* -> CTRL_UNDERLINE text CTRL_UNDERLINE (mapping italic to underline for now)
+        t = re.sub(r"\*(.*?)\*", f"{CTRL_UNDERLINE}\\1{CTRL_UNDERLINE}", t)
+        
+        # Paragraphs in AW are marked with CTRL_PARA at start of line
+        # If it's not a heading or eject, and it's not empty, it's a para or continuation.
+        # For simplicity, we'll just treat everything as-is.
+        out.append(t)
+    return out
 
 
 def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:

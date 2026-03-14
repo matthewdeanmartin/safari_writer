@@ -327,7 +327,10 @@ class SafariWriterApp(App):
         self._open_editor()
 
     def _action_print(self) -> None:
-        self.push_screen(PrintScreen(), callback=self._on_print_choice)
+        self.push_screen(
+            PrintScreen(self.state.file_profile.highlight_profile),
+            callback=self._on_print_choice,
+        )
 
     def _on_print_choice(self, choice: str | None) -> None:
         if choice == "git":
@@ -372,6 +375,18 @@ class SafariWriterApp(App):
                 FilePromptScreen("Export PDF to", base),
                 callback=self._on_export_pdf,
             )
+        elif choice == "html":
+            base = self.state.filename
+            if base and "." in base:
+                base = base.rsplit(".", 1)[0] + ".html"
+            elif base:
+                base += ".html"
+            else:
+                base = "document.html"
+            self.push_screen(
+                FilePromptScreen("Export HTML to", base),
+                callback=self._on_export_html,
+            )
         elif choice == "slides":
             self.push_screen(
                 FilePromptScreen(
@@ -382,6 +397,36 @@ class SafariWriterApp(App):
             )
         elif choice == "slides_preview":
             self._action_preview_slides()
+
+    def _on_export_html(self, filename: str | None) -> None:
+        if not filename:
+            return
+        try:
+            from safari_writer.export_html import export_html
+            from safari_writer.file_types import HighlightProfile
+
+            is_md = self.state.highlight_profile == HighlightProfile.MARKDOWN
+            text = export_html(
+                self.state.buffer, self.state.fmt, self.state.mail_merge_db, is_markdown=is_md
+            )
+            Path(filename).write_text(text, encoding="utf-8")
+            self.set_message(f"Exported HTML: {filename}")
+            
+            # Prompt to open with browser
+            self._pending_html_path = Path(filename)
+            self.push_screen(
+                ConfirmScreen(f"Exported {filename}. Open in browser?"),
+                callback=self._on_html_open_confirm,
+            )
+        except OSError as e:
+            self.set_message(f"Export error: {e}")
+
+    def _on_html_open_confirm(self, confirmed: bool | None) -> None:
+        if confirmed and hasattr(self, "_pending_html_path"):
+            import webbrowser
+            webbrowser.open(self._pending_html_path.as_uri())
+        if hasattr(self, "_pending_html_path"):
+            del self._pending_html_path
 
     def _on_export_md(self, filename: str | None) -> None:
         if not filename:
@@ -402,9 +447,11 @@ class SafariWriterApp(App):
             return
         try:
             from safari_writer.export_ps import export_postscript
+            from safari_writer.file_types import HighlightProfile
 
+            is_md = self.state.highlight_profile == HighlightProfile.MARKDOWN
             text = export_postscript(
-                self.state.buffer, self.state.fmt, self.state.mail_merge_db
+                self.state.buffer, self.state.fmt, self.state.mail_merge_db, is_markdown=is_md
             )
             Path(filename).write_text(text, encoding="utf-8")
             self.set_message(f"Exported PostScript: {filename}")
@@ -416,9 +463,11 @@ class SafariWriterApp(App):
             return
         try:
             from safari_writer.export_pdf import export_pdf
+            from safari_writer.file_types import HighlightProfile
 
+            is_md = self.state.highlight_profile == HighlightProfile.MARKDOWN
             pdf_bytes = export_pdf(
-                self.state.buffer, self.state.fmt, self.state.mail_merge_db
+                self.state.buffer, self.state.fmt, self.state.mail_merge_db, is_markdown=is_md
             )
             Path(filename).write_bytes(pdf_bytes)
             self.set_message(f"Exported PDF: {filename}")

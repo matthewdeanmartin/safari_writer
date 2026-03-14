@@ -9,6 +9,7 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 from textual import events
 
+from safari_writer.file_types import HighlightProfile
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.mail_merge_db import MailMergeDB
 from safari_writer.state import AppState, GlobalFormat
@@ -81,19 +82,27 @@ class PrintScreen(ModalScreen[str | None]):
 
     CSS = PRINT_CSS
 
+    def __init__(self, highlight_profile: HighlightProfile, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.highlight_profile = highlight_profile
+
     def compose(self) -> ComposeResult:
         with Container(id="print-dialog"):
             yield Static(_("*** PRINT / EXPORT ***"), id="print-title")
             yield Static("[bold underline]A[/]  ANSI Preview", classes="print-option")
-            yield Static(
-                "[bold underline]M[/]  Export to Markdown (.md)", classes="print-option"
-            )
+            if self.highlight_profile != HighlightProfile.MARKDOWN:
+                yield Static(
+                    "[bold underline]M[/]  Export to Markdown (.md)", classes="print-option"
+                )
             yield Static(
                 "[bold underline]P[/]  Export to PostScript (.ps)",
                 classes="print-option",
             )
             yield Static(
                 "[bold underline]D[/]  Export to PDF (.pdf)", classes="print-option"
+            )
+            yield Static(
+                "[bold underline]H[/]  Export to HTML (.html)", classes="print-option"
             )
             yield Static(
                 "[bold underline]S[/]  Export to Slides (.slides.md)",
@@ -116,12 +125,14 @@ class PrintScreen(ModalScreen[str | None]):
     def on_key(self, event: events.Key) -> None:
         if event.key == "a":
             self.dismiss("ansi")
-        elif event.key == "m":
+        elif event.key == "m" and self.highlight_profile != HighlightProfile.MARKDOWN:
             self.dismiss("markdown")
         elif event.key == "p":
             self.dismiss("postscript")
         elif event.key == "d":
             self.dismiss("pdf")
+        elif event.key == "h":
+            self.dismiss("html")
         elif event.key == "s":
             self.dismiss("slides")
         elif event.key == "v":
@@ -189,10 +200,14 @@ class PrintPreviewScreen(Screen):
 
     def on_mount(self) -> None:
         self._rendered_lines = _render_with_mail_merge(
-            self.state.buffer, self.state.fmt, self.state.mail_merge_db
+            self.state.buffer,
+            self.state.fmt,
+            self.state.mail_merge_db,
+            self.state.highlight_profile,
         )
         self._total_pages = _count_pages(self._rendered_lines)
         self._update_view()
+
 
     def _update_view(self) -> None:
         height = max(1, self.size.height - 2)  # minus header + footer
@@ -679,6 +694,7 @@ def _render_with_mail_merge(
     buffer: list[str],
     fmt: GlobalFormat,
     db: MailMergeDB | None,
+    highlight_profile: HighlightProfile = HighlightProfile.SAFARI_WRITER,
 ) -> list[str]:
     """Render with mail merge substitution when applicable.
 
@@ -686,6 +702,9 @@ def _render_with_mail_merge(
     renders one copy per record with page breaks between copies.
     Otherwise renders the buffer as-is.
     """
+    if highlight_profile == HighlightProfile.MARKDOWN:
+        return _render_markdown(buffer, fmt)
+
     if not _buffer_has_merge_markers(buffer) or db is None or not db.records:
         return _render_document(buffer, fmt)
 
@@ -700,6 +719,31 @@ def _render_with_mail_merge(
             )
         all_lines.extend(rendered)
     return all_lines
+
+
+def _render_markdown(buffer: list[str], fmt: GlobalFormat) -> list[str]:
+    """Render a Markdown buffer into ANSI-preview lines."""
+    from rich.console import Console
+    from rich.markdown import Markdown
+
+    left = fmt.left_margin
+    right = fmt.right_margin
+    width = max(right - left, 10)
+
+    text = "\n".join(buffer)
+    console = Console(
+        width=width, force_terminal=True, color_system="standard", no_color=False
+    )
+    with console.capture() as capture:
+        console.print(Markdown(text))
+    rendered_text = capture.get()
+
+    lines = rendered_text.splitlines()
+    padded_lines = [_pad_left(line, left) for line in lines]
+
+    # Markdown rendering doesn't currently support AtariWriter-style
+    # headers/footers in the .md file itself, but we can still paginate.
+    return _paginate(padded_lines, fmt, "", "")
 
 
 def _apply_record(buffer: list[str], record: list[str]) -> list[str]:

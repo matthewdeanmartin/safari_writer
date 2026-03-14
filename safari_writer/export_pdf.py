@@ -47,10 +47,15 @@ def export_pdf(
     buffer: list[str],
     fmt: GlobalFormat,
     db: MailMergeDB | None = None,
+    is_markdown: bool = False,
 ) -> bytes:
     """Convert a document buffer to PDF bytes."""
     stream = BytesIO()
     pdf = Canvas(stream, pagesize=(_PAGE_W, _PAGE_H), pageCompression=0)
+
+    if is_markdown:
+        from safari_writer.export_ps import _markdown_to_sfw_like_buffer
+        buffer = _markdown_to_sfw_like_buffer(buffer)
 
     has_merge = any(CTRL_MERGE in line for line in buffer)
     if has_merge and db is not None and db.records:
