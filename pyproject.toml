@@ -88,19 +88,25 @@ include = [
 
 [dependency-groups]
 dev = [
-    "mypy>=1.19.0",
+    # lint
     "pylint>=3.3.0",
     "ruff>=0.11.0",
-    "textual-dev>=1.0.0",
+
+    # mypy
+    "mypy>=1.19.0",
+    "types-Send2Trash",
+    "types-pygments>=2.19.0.20251121",
+    # tests
     "pytest>=8.0.0",
     "hypothesis>=6.151.9",
     "tox>=4.0.0",
-    "hatch",
-    "types-pygments>=2.19.0.20251121",
     "pytest-cov>=7.0.0",
     "pytest-xdist>=3.5.0; python_version >= '3.8'",
     "pytest-xdist>=3.8.0",
     "pytest-randomly>=4.0.1",
+    # other
+    "textual-dev>=1.0.0",
+    "hatch",
 ]
 
 [tool.mypy]

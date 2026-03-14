@@ -4,7 +4,7 @@ import random
 import re
 import sys
 from dataclasses import dataclass
-from typing import Dict, List, Optional, TextIO, Tuple, Union
+from typing import Any, Dict, List, NoReturn, Optional, TextIO, Tuple, Union, cast
 
 
 class BasicError(Exception):
@@ -42,10 +42,10 @@ class Scanner:
             return self.text[self.pos]
         return ""
 
-    def advance(self, count: int = 1):
+    def advance(self, count: int = 1) -> None:
         self.pos = min(self.pos + count, self.length)
 
-    def skip_spaces(self):
+    def skip_spaces(self) -> None:
         while self.pos < self.length and self.text[self.pos] in (" ", "\t"):
             self.pos += 1
 
@@ -79,7 +79,7 @@ class SafariBasic:
         self.trace_vars = False
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Clears the entire program, variables, and state (NEW command)."""
         self.lines: Dict[int, str] = {}
         self.line_order: List[int] = []
@@ -91,7 +91,7 @@ class SafariBasic:
         self._undo_stack: List[Dict[int, str]] = []
         self._redo_stack: List[Dict[int, str]] = []
 
-    def _save_undo(self):
+    def _save_undo(self) -> None:
         self._undo_stack.append(self.lines.copy())
         self._redo_stack.clear()
         if len(self._undo_stack) > 100:
@@ -146,18 +146,18 @@ class SafariBasic:
         self.line_order = sorted(self.lines.keys())
         return len(old_to_new)
 
-    def _clear_vars(self):
+    def _clear_vars(self) -> None:
         self.vars: Dict[str, Union[float, str]] = {}
         self.arrays: Dict[str, List[float]] = {}
         self.string_caps: Dict[str, int] = {}
         self.for_stack: List[ForFrame] = []
         self.gosub_stack: List[GosubFrame] = []
 
-    def print_out(self, text: str, end: str = "\n"):
+    def print_out(self, text: str, end: str = "\n") -> None:
         self.out_stream.write(text + end)
         self.out_stream.flush()
 
-    def _error(self, message: str):
+    def _error(self, message: str) -> NoReturn:
         raise BasicError(message)
 
     def _split_statements(self, text: str) -> List[str]:
@@ -190,7 +190,7 @@ class SafariBasic:
         stmts.append("".join(current))
         return stmts
 
-    def run_program(self, start_line: Optional[int] = None):
+    def run_program(self, start_line: Optional[int] = None) -> None:
         if start_line is not None:
             if start_line not in self.lines:
                 self._error(f"Line {start_line} not found")
@@ -202,7 +202,7 @@ class SafariBasic:
         self.stopped = False
         self._run_loop()
 
-    def _run_loop(self):
+    def _run_loop(self) -> None:
         try:
             while (
                 not self.halted
@@ -248,7 +248,7 @@ class SafariBasic:
             self.print_out(f"ERROR: {e} AT LINE {line_str}")
             raise e
 
-    def add_program_line(self, raw_line: str):
+    def add_program_line(self, raw_line: str) -> None:
         line = raw_line.strip()
         if not line:
             return
@@ -265,10 +265,10 @@ class SafariBasic:
         else:
             self.execute_immediate(line)
 
-    def execute_repl_line(self, raw_line: str):
+    def execute_repl_line(self, raw_line: str) -> None:
         self.add_program_line(raw_line)
 
-    def execute_code(self, code: str):
+    def execute_code(self, code: str) -> None:
         self.reset()
         for line in code.splitlines():
             self.add_program_line(line.strip())
@@ -277,14 +277,14 @@ class SafariBasic:
     def run_and_capture(self, code: str) -> str:
         buf = io.StringIO()
         old_out = self.out_stream
-        self.out_stream = buf
+        self.out_stream = cast(TextIO, buf)
         try:
             self.execute_code(code)
         finally:
             self.out_stream = old_out
         return buf.getvalue()
 
-    def execute_immediate(self, raw_line: str):
+    def execute_immediate(self, raw_line: str) -> None:
         stmts = self._split_statements(raw_line.strip())
         saved_pc, saved_stmt = self.pc_idx, self.stmt_idx
         self.pc_idx, self.stmt_idx = -1, 0
@@ -397,7 +397,7 @@ class SafariBasic:
         self._error("Syntax error")
         return False
 
-    def _stmt_list(self, scanner: Scanner):
+    def _stmt_list(self, scanner: Scanner) -> None:
         scanner.skip_spaces()
         start = 0
         end = float("inf")
@@ -439,7 +439,7 @@ class SafariBasic:
 
     def _set_var(
         self, name: str, is_string: bool, idx: Optional[int], val: Union[float, str]
-    ):
+    ) -> None:
         if is_string:
             if not isinstance(val, str):
                 self._error("Type mismatch")
@@ -460,7 +460,7 @@ class SafariBasic:
             else:
                 self.vars[name] = val
 
-    def _stmt_print(self, scanner: Scanner):
+    def _stmt_print(self, scanner: Scanner) -> None:
         file_out = self.out_stream
         scanner.skip_spaces()
         if scanner.peek() == "#":
@@ -499,7 +499,7 @@ class SafariBasic:
             file_out.write("\n")
         file_out.flush()
 
-    def _stmt_input(self, scanner: Scanner):
+    def _stmt_input(self, scanner: Scanner) -> None:
         file_in, prompt = self.in_stream, "? "
         scanner.skip_spaces()
         if scanner.peek() == "#":
@@ -542,7 +542,7 @@ class SafariBasic:
                 continue
             break
 
-    def _stmt_let(self, scanner: Scanner):
+    def _stmt_let(self, scanner: Scanner) -> None:
         name, is_string, idx = self._get_var_ref(scanner)
         scanner.skip_spaces()
         if scanner.peek() != "=":
@@ -588,7 +588,7 @@ class SafariBasic:
         self.stmt_idx = 9999
         return False
 
-    def _stmt_for(self, scanner: Scanner):
+    def _stmt_for(self, scanner: Scanner) -> None:
         name, is_string, idx = self._get_var_ref(scanner)
         if is_string or idx is not None:
             self._error("FOR variable must be scalar numeric")
@@ -601,11 +601,11 @@ class SafariBasic:
         if not scanner.consume_keyword("TO"):
             self._error("Expected TO")
         end_val = self._eval_expr(scanner)
-        step_val = 1.0
+        step_val: Union[float, str] = 1.0
         scanner.skip_spaces()
         if scanner.consume_keyword("STEP"):
             step_val = self._eval_expr(scanner)
-        if not all(isinstance(x, float) for x in (start_val, end_val, step_val)):
+        if not (isinstance(start_val, float) and isinstance(end_val, float) and isinstance(step_val, float)):
             self._error("Type mismatch")
         self.vars[name] = start_val
         self.for_stack.append(
@@ -633,7 +633,10 @@ class SafariBasic:
             frame_idx = len(self.for_stack) - 1
         frame = self.for_stack[frame_idx]
         self.for_stack = self.for_stack[: frame_idx + 1]
-        val = self.vars.get(frame.var_name, 0.0) + frame.step
+        var_val = self.vars.get(frame.var_name, 0.0)
+        if isinstance(var_val, str):
+            self._error("Type mismatch")
+        val = var_val + frame.step
         self.vars[frame.var_name] = val
         if (frame.step >= 0 and val <= frame.end_value) or (
             frame.step < 0 and val >= frame.end_value
@@ -643,7 +646,7 @@ class SafariBasic:
         self.for_stack.pop()
         return False
 
-    def _stmt_dim(self, scanner: Scanner):
+    def _stmt_dim(self, scanner: Scanner) -> None:
         while scanner.remaining():
             scanner.skip_spaces()
             name, is_string, idx = self._get_var_ref(scanner)
@@ -659,7 +662,7 @@ class SafariBasic:
                 continue
             break
 
-    def _stmt_open(self, scanner: Scanner):
+    def _stmt_open(self, scanner: Scanner) -> None:
         scanner.skip_spaces()
         if scanner.peek() != "#":
             self._error("Expected #")
@@ -680,11 +683,13 @@ class SafariBasic:
         if fd in self.files:
             self.files[fd].close()
         try:
-            self.files[fd] = open(filename, "r" if mode.lower() == "r" else "w")
+            self.files[fd] = cast(
+                TextIO, open(filename, "r" if mode.lower() == "r" else "w")
+            )
         except Exception as e:
             self._error(f"Cannot open file: {e}")
 
-    def _stmt_close(self, scanner: Scanner):
+    def _stmt_close(self, scanner: Scanner) -> None:
         scanner.skip_spaces()
         if scanner.peek() != "#":
             self._error("Expected #")
@@ -707,7 +712,21 @@ class SafariBasic:
             if rel_op:
                 scanner.advance(len(rel_op))
                 right = self._eval_sum(scanner)
-                if isinstance(left, type(right)):
+                if isinstance(left, float) and isinstance(right, float):
+                    if rel_op == "=":
+                        res = left == right
+                    elif rel_op == "<>":
+                        res = left != right
+                    elif rel_op == "<":
+                        res = left < right
+                    elif rel_op == ">":
+                        res = left > right
+                    elif rel_op == "<=":
+                        res = left <= right
+                    else:  # rel_op == ">="
+                        res = left >= right
+                    left = 1.0 if res else 0.0
+                elif isinstance(left, str) and isinstance(right, str):
                     if rel_op == "=":
                         res = left == right
                     elif rel_op == "<>":
@@ -911,7 +930,7 @@ class SafariBasic:
             return self.vars.get(name, 0.0)
         self._error("Syntax error in expression")
 
-    def inject_variable(self, name: str, value: Union[float, str]):
+    def inject_variable(self, name: str, value: Union[float, str]) -> None:
         name = name.upper()
         if isinstance(value, str):
             if not name.endswith("$"):

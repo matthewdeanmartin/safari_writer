@@ -29,7 +29,7 @@ RUFF_FORMAT_DEFAULT_FLAGS := --quiet
 RUFF_FORMAT_VERBOSE_FLAGS := --verbose
 PYLINT_DEFAULT_FLAGS := $(PYLINT_RULES) --score=n --reports=n
 PYLINT_VERBOSE_FLAGS := -v $(PYLINT_RULES)
-MYPY_DEFAULT_FLAGS := --no-pretty --hide-error-context --no-error-summary
+MYPY_DEFAULT_FLAGS := --no-pretty --hide-error-context --no-error-summary --check-untyped-defs
 MYPY_VERBOSE_FLAGS := -v
 MYPY_DOS_CONFIG_FLAGS := --config-file NUL
 TOX_DEFAULT_FLAGS := -q
