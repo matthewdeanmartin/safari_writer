@@ -137,7 +137,7 @@ class SafariREPL:
         self._autosave_timer: Optional[threading.Timer] = None
         self._load_history()
 
-    def _load_history(self):
+    def _load_history(self) -> None:
         try:
             path = os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
             if os.path.exists(path):
@@ -148,7 +148,7 @@ class SafariREPL:
         except Exception:
             pass
 
-    def _save_history(self):
+    def _save_history(self) -> None:
         try:
             path = os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
             with open(path, "w", encoding="utf-8") as f:
@@ -157,11 +157,11 @@ class SafariREPL:
         except Exception:
             pass
 
-    def _add_history(self, line: str):
+    def _add_history(self, line: str) -> None:
         if line and (not self.history or self.history[-1] != line):
             self.history.append(line)
 
-    def print_out(self, text: str, end: str = "\n"):
+    def print_out(self, text: str, end: str = "\n") -> None:
         self.out_stream.write(text + end)
         self.out_stream.flush()
 
@@ -361,7 +361,7 @@ class SafariREPL:
 
         return True
 
-    def _do_list(self, line: str):
+    def _do_list(self, line: str) -> None:
         parts = line.upper().replace("LIST", "").strip().split(",")
         start = 0
         end = float("inf")
@@ -386,7 +386,7 @@ class SafariREPL:
             if start <= num <= end:
                 self.print_out(f"{num} {self.interpreter.lines[num]}")
 
-    def _do_load(self, line: str):
+    def _do_load(self, line: str) -> None:
         match = re.search(r'["\'](.*?)["\']', line)
         filename = (
             match.group(1)
@@ -409,7 +409,7 @@ class SafariREPL:
         except Exception as e:
             self.print_out(f"ERROR LOADING {filename}: {e}")
 
-    def _do_save(self, line: str):
+    def _do_save(self, line: str) -> None:
         match = re.search(r'["\'](.*?)["\']', line)
         filename = (
             match.group(1)
@@ -431,7 +431,7 @@ class SafariREPL:
         except Exception as e:
             self.print_out(f"ERROR SAVING {filename}: {e}")
 
-    def _do_renumber(self, line: str):
+    def _do_renumber(self, line: str) -> None:
         # REN start,step,from
         params = (
             line.upper().replace("RENUMBER", "").replace("REN", "").strip().split(",")
@@ -454,7 +454,7 @@ class SafariREPL:
         count = self.interpreter.renumber(start, step, from_line)
         self.print_out(f"RENUMBERED {count} LINES")
 
-    def _do_vars(self):
+    def _do_vars(self) -> None:
         if not self.interpreter.vars and not self.interpreter.arrays:
             self.print_out("NO VARIABLES")
             return
@@ -466,7 +466,7 @@ class SafariREPL:
         for name, arr in sorted(self.interpreter.arrays.items()):
             self.print_out(f"{name}({len(arr)-1}) = [ARRAY]")
 
-    def _do_edit(self, line: str):
+    def _do_edit(self, line: str) -> None:
         parts = line.split()
         if len(parts) < 2 or not parts[1].isdigit():
             self.print_out("EDIT REQUIRES LINE NUMBER")
@@ -477,7 +477,7 @@ class SafariREPL:
             return
         self.print_out(f"{num} {self.interpreter.lines[num]}")
 
-    def _do_delete(self, line: str):
+    def _do_delete(self, line: str) -> None:
         args = line.upper().replace("DELETE", "").strip()
         if not args:
             self.print_out("DELETE REQUIRES LINE NUMBER(S)")
@@ -502,7 +502,7 @@ class SafariREPL:
         else:
             self.print_out("NO LINES IN RANGE")
 
-    def _do_find(self, line: str):
+    def _do_find(self, line: str) -> None:
         match = re.search(r'["\'](.*?)["\']', line)
         if not match:
             self.print_out('FIND REQUIRES "TEXT"')
@@ -524,7 +524,7 @@ class SafariREPL:
         else:
             self.print_out(f"{found} LINE{'S' if found != 1 else ''} FOUND")
 
-    def _do_replace(self, line: str):
+    def _do_replace(self, line: str) -> None:
         # REPLACE "old","new"
         matches = re.findall(r'["\'](.*?)["\']', line)
         if len(matches) < 2:
@@ -552,7 +552,7 @@ class SafariREPL:
         else:
             self.print_out("NOT FOUND")
 
-    def _do_files(self, line: str):
+    def _do_files(self, line: str) -> None:
         parts = line.split(maxsplit=1)
         pattern = parts[1].strip() if len(parts) > 1 else None
         try:
@@ -573,7 +573,7 @@ class SafariREPL:
         except Exception as e:
             self.print_out(f"ERROR: {e}")
 
-    def _do_cd(self, line: str):
+    def _do_cd(self, line: str) -> None:
         match = re.search(r'["\'](.*?)["\']', line)
         if match:
             path = match.group(1)
@@ -586,7 +586,7 @@ class SafariREPL:
         except Exception as e:
             self.print_out(f"ERROR: {e}")
 
-    def _do_autosave(self, line: str):
+    def _do_autosave(self, line: str) -> None:
         upper = line.upper().strip()
         if "ON" in upper:
             if not self.current_filename:
@@ -602,14 +602,14 @@ class SafariREPL:
             state = "ON" if self._autosave_enabled else "OFF"
             self.print_out(f"AUTOSAVE IS {state}")
 
-    def _schedule_autosave(self):
+    def _schedule_autosave(self) -> None:
         if not self._autosave_enabled:
             return
         self._autosave_timer = threading.Timer(15.0, self._do_autosave_tick)
         self._autosave_timer.daemon = True
         self._autosave_timer.start()
 
-    def _do_autosave_tick(self):
+    def _do_autosave_tick(self) -> None:
         if self._autosave_enabled and self.current_filename and self.modified:
             try:
                 with open(self.current_filename, "w", encoding="utf-8") as f:
@@ -621,13 +621,13 @@ class SafariREPL:
         if self._autosave_enabled:
             self._schedule_autosave()
 
-    def _stop_autosave(self):
+    def _stop_autosave(self) -> None:
         self._autosave_enabled = False
         if self._autosave_timer:
             self._autosave_timer.cancel()
             self._autosave_timer = None
 
-    def _do_help(self, line: str):
+    def _do_help(self, line: str) -> None:
         parts = line.split(maxsplit=1)
         if len(parts) > 1:
             topic = parts[1].strip().upper()
@@ -663,7 +663,7 @@ class SafariREPL:
         self.print_out("BYE / EXIT         - Exit REPL")
         self.print_out("HELP <topic>       - Detailed help on a command")
 
-    def _do_examples(self, line: str):
+    def _do_examples(self, line: str) -> None:
         parts = line.split(maxsplit=1)
         if len(parts) > 1:
             # Load a specific example
@@ -704,7 +704,7 @@ class SafariREPL:
         self.print_out("\nTYPE EXAMPLES <NAME> TO LOAD ONE")
 
 
-def main():
+def main() -> None:
     repl = SafariREPL()
     print("Safari Basic REPL")
     print("READY")

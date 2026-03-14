@@ -769,4 +769,4 @@ class ProofreaderScreen(Screen):
     # ------------------------------------------------------------------
 
     def action_exit_proofreader(self) -> None:
-        self.app.pop_screen()  # type: ignore[attr-defined]
+        self.app.pop_screen()

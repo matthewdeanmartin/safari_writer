@@ -99,7 +99,7 @@ def _detect_os_locale() -> str:
         try:
             import ctypes
 
-            lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()  # type: ignore[attr-defined]
+            lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
             if lcid in _LCID_MAP:
                 return _LCID_MAP[lcid]
         except Exception:
@@ -136,7 +136,7 @@ def _detect_os_locale() -> str:
 
     # Python's own locale detection
     try:
-        raw, _ = locale.getdefaultlocale()  # type: ignore[deprecated]
+        raw, _ = locale.getdefaultlocale()
         if raw:
             tag = _normalize_tag(raw)
             if tag:

@@ -106,6 +106,7 @@ class ProgramEditorScreen(Screen[bool]):
         self._scroll_offset = 0  # first visible line
         self._insert_mode = True
         self._dirty = False
+        self._exit_warned = False
         self._message = ""
         self._show_help = False
         # Load file

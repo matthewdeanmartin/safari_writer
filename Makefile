@@ -14,6 +14,7 @@ REPL_MODULE := safari_repl
 SLIDES_MODULE := safari_slides
 BASIC_MODULE := safari_basic
 ALL_MODULES := $(WRITER_MODULE) $(DOS_MODULE) $(CHAT_MODULE) $(FED_MODULE) $(ASM_MODULE) $(READER_MODULE) $(VIEW_MODULE) $(REPL_MODULE) $(SLIDES_MODULE) $(BASIC_MODULE)
+MYPY_MODULES := $(WRITER_MODULE) $(DOS_MODULE) $(CHAT_MODULE) $(BASE_MODULE) $(FED_MODULE) $(ASM_MODULE) $(READER_MODULE) $(VIEW_MODULE) $(REPL_MODULE) $(SLIDES_MODULE) $(BASIC_MODULE)
 PYTEST_COVERAGE_MODULES := $(WRITER_MODULE) $(DOS_MODULE) $(CHAT_MODULE) $(BASE_MODULE) $(FED_MODULE) $(ASM_MODULE) $(READER_MODULE) $(VIEW_MODULE) $(REPL_MODULE) $(SLIDES_MODULE) $(BASIC_MODULE)
 FORMAT_TARGETS := $(ALL_MODULES) tests
 
@@ -29,9 +30,8 @@ RUFF_FORMAT_DEFAULT_FLAGS := --quiet
 RUFF_FORMAT_VERBOSE_FLAGS := --verbose
 PYLINT_DEFAULT_FLAGS := $(PYLINT_RULES) --score=n --reports=n
 PYLINT_VERBOSE_FLAGS := -v $(PYLINT_RULES)
-MYPY_DEFAULT_FLAGS := --no-pretty --hide-error-context --no-error-summary --check-untyped-defs
+MYPY_DEFAULT_FLAGS := --config-file pyproject.toml --no-pretty --hide-error-context --no-error-summary
 MYPY_VERBOSE_FLAGS := -v
-MYPY_DOS_CONFIG_FLAGS := --config-file NUL
 TOX_DEFAULT_FLAGS := -q
 TOX_VERBOSE_FLAGS := -v
 
@@ -43,7 +43,7 @@ TOX_VERBOSE_FLAGS := -v
 	lint lint-verbose lint-all lint-all-verbose lint-writer lint-writer-verbose lint-dos lint-dos-verbose lint-chat lint-chat-verbose lint-fed lint-fed-verbose lint-reader lint-reader-verbose \
 	lint-ruff lint-ruff-verbose lint-ruff-all lint-ruff-all-verbose lint-ruff-writer lint-ruff-writer-verbose lint-ruff-dos lint-ruff-dos-verbose lint-ruff-chat lint-ruff-chat-verbose lint-ruff-fed lint-ruff-fed-verbose lint-ruff-reader lint-ruff-reader-verbose \
 	pylint pylint-verbose pylint-all pylint-all-verbose pylint-writer pylint-writer-verbose pylint-dos pylint-dos-verbose pylint-chat pylint-chat-verbose pylint-fed pylint-fed-verbose pylint-reader pylint-reader-verbose \
-	mypy mypy-verbose mypy-all mypy-all-verbose mypy-writer mypy-writer-verbose mypy-dos mypy-dos-verbose mypy-chat mypy-chat-verbose mypy-fed mypy-fed-verbose mypy-reader mypy-reader-verbose \
+	mypy mypy-verbose mypy-all mypy-all-verbose mypy-writer mypy-writer-verbose mypy-dos mypy-dos-verbose mypy-chat mypy-chat-verbose mypy-base mypy-base-verbose mypy-fed mypy-fed-verbose mypy-asm mypy-asm-verbose mypy-repl mypy-repl-verbose mypy-reader mypy-reader-verbose mypy-slides mypy-slides-verbose mypy-view mypy-view-verbose mypy-basic mypy-basic-verbose \
 	format format-verbose format-all format-all-verbose format-writer format-writer-verbose format-dos format-dos-verbose format-chat format-chat-verbose format-fed format-fed-verbose format-reader format-reader-verbose \
 	publish publish-verbose
 
@@ -261,39 +261,75 @@ mypy: mypy-writer
 
 mypy-verbose: mypy-writer-verbose
 
-mypy-all: mypy-writer mypy-dos mypy-chat mypy-fed mypy-reader
+mypy-all: mypy-writer mypy-dos mypy-chat mypy-base mypy-fed mypy-asm mypy-repl mypy-reader mypy-slides mypy-view mypy-basic
 
-mypy-all-verbose: mypy-writer-verbose mypy-dos-verbose mypy-chat-verbose mypy-fed-verbose mypy-reader-verbose
+mypy-all-verbose: mypy-writer-verbose mypy-dos-verbose mypy-chat-verbose mypy-base-verbose mypy-fed-verbose mypy-asm-verbose mypy-repl-verbose mypy-reader-verbose mypy-slides-verbose mypy-view-verbose mypy-basic-verbose
 
 mypy-writer:
-	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(WRITER_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(WRITER_MODULE)
 
 mypy-writer-verbose:
-	@uv run mypy $(MYPY_VERBOSE_FLAGS) $(WRITER_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(WRITER_MODULE)
 
 mypy-dos:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_DEFAULT_FLAGS) $(DOS_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(DOS_MODULE)
 
 mypy-dos-verbose:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(DOS_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(DOS_MODULE)
 
 mypy-chat:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_DEFAULT_FLAGS) $(CHAT_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(CHAT_MODULE)
 
 mypy-chat-verbose:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(CHAT_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(CHAT_MODULE)
+
+mypy-base:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(BASE_MODULE)
+
+mypy-base-verbose:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(BASE_MODULE)
 
 mypy-fed:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_DEFAULT_FLAGS) $(FED_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(FED_MODULE)
 
 mypy-fed-verbose:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(FED_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(FED_MODULE)
+
+mypy-asm:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(ASM_MODULE)
+
+mypy-asm-verbose:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(ASM_MODULE)
+
+mypy-repl:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(REPL_MODULE)
+
+mypy-repl-verbose:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(REPL_MODULE)
 
 mypy-reader:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_DEFAULT_FLAGS) $(READER_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(READER_MODULE)
 
 mypy-reader-verbose:
-	@uv run mypy $(MYPY_DOS_CONFIG_FLAGS) $(MYPY_VERBOSE_FLAGS) $(READER_MODULE)
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(READER_MODULE)
+
+mypy-slides:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(SLIDES_MODULE)
+
+mypy-slides-verbose:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(SLIDES_MODULE)
+
+mypy-view:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(VIEW_MODULE)
+
+mypy-view-verbose:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(VIEW_MODULE)
+
+mypy-basic:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) -p $(BASIC_MODULE)
+
+mypy-basic-verbose:
+	@uv run mypy $(MYPY_DEFAULT_FLAGS) $(MYPY_VERBOSE_FLAGS) -p $(BASIC_MODULE)
 
 format: format-all
 

@@ -581,7 +581,7 @@ class MailMergeScreen(Screen):
     # Main menu
     # ------------------------------------------------------------------
 
-    def _key_main(self, key: str, event) -> None:
+    def _key_main(self, key: str, event: events.Key) -> None:
         if getattr(self, "_print_preview_shown", False):
             self._print_preview_shown = False
             self._enter_main()
@@ -657,13 +657,13 @@ class MailMergeScreen(Screen):
         if system == "Windows":
             import ctypes
 
-            bitmask = ctypes.windll.kernel32.GetLogicalDrives()  # type: ignore[attr-defined]
+            bitmask = ctypes.windll.kernel32.GetLogicalDrives()
             for i in range(26):
                 if bitmask & (1 << i):
                     letter = chr(65 + i)
                     drive_path = f"{letter}:\\"
-                    drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)  # type: ignore[attr-defined]
-                    if drive_type in (2, 3) and Path(drive_path) != Path.cwd().anchor:
+                    drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)
+                    if drive_type in (2, 3) and Path(drive_path).anchor != Path.cwd().anchor:
                         drives.append(Path(drive_path))
         elif system == "Darwin":
             volumes = Path("/Volumes")
@@ -683,7 +683,7 @@ class MailMergeScreen(Screen):
     # Schema editing
     # ------------------------------------------------------------------
 
-    def _key_schema(self, key: str, event) -> None:
+    def _key_schema(self, key: str, event: events.Key) -> None:
         fields = self._db.fields
         if key == "up":
             self._schema_field_idx = max(0, self._schema_field_idx - 1)
@@ -731,7 +731,7 @@ class MailMergeScreen(Screen):
             else:
                 self._enter_main()
 
-    def _key_schema_edit(self, key: str, event) -> None:
+    def _key_schema_edit(self, key: str, event: events.Key) -> None:
         action = self._schema_action
         idx = self._schema_field_idx
 
@@ -822,7 +822,7 @@ class MailMergeScreen(Screen):
     # Data entry (new record)
     # ------------------------------------------------------------------
 
-    def _key_data_entry(self, key: str, event) -> None:
+    def _key_data_entry(self, key: str, event: events.Key) -> None:
         fi = self._entry_field_idx
         fdef = self._db.fields[fi]
 
@@ -862,7 +862,7 @@ class MailMergeScreen(Screen):
                 self._input_buf += event.character
                 self._render_entry_form()
 
-    def _key_data_entry_confirm(self, key: str, event) -> None:
+    def _key_data_entry_confirm(self, key: str, event: events.Key) -> None:
         k = key.lower()
         if k == "y":
             if self._db.records_free <= 0:
@@ -910,7 +910,7 @@ class MailMergeScreen(Screen):
     # Update / browse records
     # ------------------------------------------------------------------
 
-    def _key_update(self, key: str, event) -> None:
+    def _key_update(self, key: str, event: events.Key) -> None:
         records = self._db.records
         if not records:
             self._enter_main()
@@ -979,7 +979,7 @@ class MailMergeScreen(Screen):
         elif key == "escape":
             self._enter_main()
 
-    def _key_update_delete(self, key: str, event) -> None:
+    def _key_update_delete(self, key: str, event: events.Key) -> None:
         k = key.lower()
         if k == "y":
             idx = self._update_record_idx
@@ -1000,7 +1000,7 @@ class MailMergeScreen(Screen):
             self._render_update_record()
             self._set_message(_("Deletion cancelled."))
 
-    def _key_update_edit(self, key: str, event) -> None:
+    def _key_update_edit(self, key: str, event: events.Key) -> None:
         rec = self._db.records[self._update_record_idx]
         fi = self._update_field_idx
         fdef = self._db.fields[fi]
@@ -1095,7 +1095,7 @@ class MailMergeScreen(Screen):
     # Build Subset
     # ------------------------------------------------------------------
 
-    def _key_subset(self, key: str, event) -> None:
+    def _key_subset(self, key: str, event: events.Key) -> None:
         if key == "escape":
             self._active_subset = None
             self._set_message(_("Subset cleared."))
@@ -1122,7 +1122,7 @@ class MailMergeScreen(Screen):
                 self._input_buf += event.character
                 self._render_subset()
 
-    def _key_subset_field(self, key: str, event) -> None:
+    def _key_subset_field(self, key: str, event: events.Key) -> None:
         if key == "escape":
             self._enter_subset()
             return
@@ -1256,7 +1256,7 @@ class MailMergeScreen(Screen):
         self._set_message(purpose_labels.get(self._index_purpose, "Index"))
         self._set_help(" ↑↓ Select  Enter Load  Esc Back")
 
-    def _key_index(self, key: str, event) -> None:
+    def _key_index(self, key: str, event: events.Key) -> None:
         entries = self._index_entries
         if key == "escape":
             self._enter_main()
@@ -1299,7 +1299,7 @@ class MailMergeScreen(Screen):
     # File operations
     # ------------------------------------------------------------------
 
-    def _key_filename(self, key: str, event) -> None:
+    def _key_filename(self, key: str, event: events.Key) -> None:
         mode = self._mode
         if key == "escape":
             self._enter_main()
@@ -1385,7 +1385,7 @@ class MailMergeScreen(Screen):
     # Print / Mail Merge
     # ------------------------------------------------------------------
 
-    def _key_print(self, key: str, event) -> None:
+    def _key_print(self, key: str, event: events.Key) -> None:
         k = key.lower()
         if k == "y":
             self._do_print_merge()
@@ -1616,10 +1616,10 @@ class MailMergeScreen(Screen):
     # ------------------------------------------------------------------
 
     def action_show_help(self) -> None:
-        self.app.push_screen(MailMergeHelpScreen())  # type: ignore[attr-defined]
+        self.app.push_screen(MailMergeHelpScreen())
 
     def action_exit_module(self) -> None:
         if self._mode != MODE_MAIN:
             self._enter_main()
         else:
-            self.app.pop_screen()  # type: ignore[attr-defined]
+            self.app.pop_screen()

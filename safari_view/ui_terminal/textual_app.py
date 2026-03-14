@@ -283,7 +283,7 @@ class SafariViewApp(App):
         self.push_screen(SafariViewScreen(self.state, self.launch_config))
 
 
-def main():
+def main() -> None:
     """Main entry point for SafariView."""
     app = SafariViewApp()
     app.run()

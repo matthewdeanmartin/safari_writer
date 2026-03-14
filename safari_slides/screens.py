@@ -109,7 +109,7 @@ class SafariSlidesMainScreen(Screen):
 
     def action_quit_viewer(self) -> None:
         if hasattr(self.app, "quit_slides"):
-            self.app.quit_slides()  # type: ignore[attr-defined]
+            self.app.quit_slides()
         else:
             self.app.pop_screen()
 

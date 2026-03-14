@@ -24,14 +24,14 @@ def _find_external_drives() -> list[Path]:
     if system == "Windows":
         import ctypes
 
-        bitmask = ctypes.windll.kernel32.GetLogicalDrives()  # type: ignore[attr-defined]
+        bitmask = ctypes.windll.kernel32.GetLogicalDrives()
         DRIVE_REMOVABLE = 2
         DRIVE_FIXED = 3
         for i in range(26):
             if bitmask & (1 << i):
                 letter = chr(65 + i)
                 drive_path = f"{letter}:\\"
-                drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)  # type: ignore[attr-defined]
+                drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)
                 if drive_type == DRIVE_REMOVABLE:
                     drives.append(Path(drive_path))
                 elif drive_type == DRIVE_FIXED and letter not in ("C",):

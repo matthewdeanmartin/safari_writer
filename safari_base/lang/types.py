@@ -259,6 +259,13 @@ class ListStmt(Stmt):
 
 
 @dataclass
+class InsertStmt(Stmt):
+    table: str = ""
+    fields: list[str] = field(default_factory=list)
+    values: list[Expr] = field(default_factory=list)
+
+
+@dataclass
 class DisplayStructureStmt(Stmt):
     pass
 

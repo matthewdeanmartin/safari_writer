@@ -1006,7 +1006,7 @@ class EditorArea(Widget, can_focus=True):
             if (
                 hasattr(self.app, "_fed_compose_active")
                 and self.app._fed_compose_active
-            ):  # type: ignore[attr-defined]
+            ):
                 self.app.finish_fed_compose()  # type: ignore[attr-defined]
             else:
                 self.app.pop_screen()
@@ -1917,7 +1917,7 @@ class EditorScreen(Screen):
                                             looks_like_slide_markdown)
 
         fed_active = (
-            hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active  # type: ignore[attr-defined]
+            hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active
         )
         if fed_active:
             return HELP_TEXT_FED

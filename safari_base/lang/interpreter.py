@@ -26,9 +26,10 @@ from safari_base.lang.types import (AppendBlankStmt, AppendFromStmt,
                                     DisplayStructureStmt, DoCaseStmt,
                                     DoProgramStmt, DoWhileStmt, EraseStmt,
                                     ExitStmt, Expr, FieldRef, ForEachStmt,
-                                    ForStmt, FuncCall, FuncDefStmt, GoStmt,
-                                    HashAssignStmt, Ident, IfStmt, IndexOnStmt,
-                                    ListStmt, LocateStmt, LogicalLit, LoopStmt,
+                                     ForStmt, FuncCall, FuncDefStmt, GoStmt,
+                                     HashAssignStmt, Ident, IfStmt, IndexOnStmt,
+                                     InsertStmt,
+                                     ListStmt, LocateStmt, LogicalLit, LoopStmt,
                                     MdStmt, NumberLit, PackStmt, PrintStmt,
                                     ProcCallStmt, ProcDefStmt, QuitStmt,
                                     RdStmt, RecallStmt, RenameStmt,
@@ -413,7 +414,7 @@ class Interpreter:
         if stmt.target == "BOTTOM":
             wa.go_bottom()
             return CommandResult(message=f"Record {wa.recno}")
-        n = int(self._eval(stmt.target))
+        n = int(stmt.target) if isinstance(stmt.target, str) else int(self._eval(stmt.target))
         wa.go_record(n)
         return CommandResult(message=f"Record {wa.recno}")
 

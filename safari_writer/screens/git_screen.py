@@ -226,7 +226,7 @@ def _find_repo_root(start: Path) -> Optional[Path]:
 def _git_status(repo_path: Path) -> str:
     """Return a human-readable status summary."""
     try:
-        import git  # type: ignore[import]
+        import git
 
         repo = git.Repo(repo_path)
         lines: list[str] = []
@@ -271,7 +271,7 @@ def _remote_url(repo: Any) -> str:
 
 def _git_add_all(repo_path: Path) -> str:
     try:
-        import git  # type: ignore[import]
+        import git
 
         repo = git.Repo(repo_path)
         repo.git.add(A=True)
@@ -282,7 +282,7 @@ def _git_add_all(repo_path: Path) -> str:
 
 def _git_commit(repo_path: Path, message: str) -> str:
     try:
-        import git  # type: ignore[import]
+        import git
 
         repo = git.Repo(repo_path)
         if not message.strip():
@@ -295,7 +295,7 @@ def _git_commit(repo_path: Path, message: str) -> str:
 
 def _git_push(repo_path: Path) -> str:
     try:
-        import git  # type: ignore[import]
+        import git
 
         repo = git.Repo(repo_path)
         if not repo.remotes:
@@ -314,7 +314,7 @@ def _git_push(repo_path: Path) -> str:
 
 def _git_pull(repo_path: Path) -> str:
     try:
-        import git  # type: ignore[import]
+        import git
 
         repo = git.Repo(repo_path)
         if not repo.remotes:
@@ -328,7 +328,7 @@ def _git_pull(repo_path: Path) -> str:
 
 def _git_log(repo_path: Path, count: int = 20) -> str:
     try:
-        import git  # type: ignore[import]
+        import git
 
         repo = git.Repo(repo_path)
         if not repo.head.is_valid():

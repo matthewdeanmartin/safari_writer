@@ -100,7 +100,7 @@ class StyleSwitcherScreen(Screen):
                 widget.set_classes("ss-item")
         # Live preview: switch the app theme immediately
         chosen = THEME_NAMES[self._selected]
-        self.app.theme = chosen  # type: ignore[attr-defined]
+        self.app.theme = chosen
 
     def on_key(self, event: events.Key) -> None:
         if event.key == "up":
@@ -114,15 +114,15 @@ class StyleSwitcherScreen(Screen):
 
     def action_apply_theme(self) -> None:
         chosen = THEME_NAMES[self._selected]
-        self.app.theme = chosen  # type: ignore[attr-defined]
+        self.app.theme = chosen
         settings = load_settings()
         settings["theme"] = chosen
         save_settings(settings)
-        self.app.pop_screen()  # type: ignore[attr-defined]
+        self.app.pop_screen()
 
     def action_exit_switcher(self) -> None:
         # Restore the theme that was active before we entered (the one saved)
         settings = load_settings()
         saved = settings.get("theme", DEFAULT_THEME)
-        self.app.theme = saved  # type: ignore[attr-defined]
-        self.app.pop_screen()  # type: ignore[attr-defined]
+        self.app.theme = saved
+        self.app.pop_screen()

@@ -5,10 +5,9 @@ Renders a PIL image using Unicode block characters in the terminal.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from rich.color import Color
-from rich.console import RenderResult
 from rich.style import Style
 from rich.text import Text
 from textual.widget import Widget
@@ -23,7 +22,7 @@ class ChunkyImage(Widget):
     This provides the 'chunky' retro look in the terminal.
     """
 
-    def __init__(self, image: Image.Image | None = None, **kwargs) -> None:
+    def __init__(self, image: Image.Image | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.image = image
 
@@ -32,7 +31,7 @@ class ChunkyImage(Widget):
         self.image = image
         self.refresh()
 
-    def render(self) -> RenderResult:
+    def render(self) -> Any:
         """Render the image to terminal segments."""
         if not self.image:
             return Text("No image loaded")
@@ -46,7 +45,7 @@ class ChunkyImage(Widget):
         # We'll use the upper half block ▀.
         # Foreground color = top pixel, Background color = bottom pixel.
 
-        pixels = img.load()
+        pixels = cast(Any, img.load())
         text = Text()
 
         for y in range(0, height, 2):

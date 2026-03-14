@@ -70,8 +70,14 @@ class PrintScreen(ModalScreen[str | None]):
 
     CSS = PRINT_CSS
 
-    def __init__(self, highlight_profile: HighlightProfile, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        highlight_profile: HighlightProfile,
+        name: str | None = None,
+        id: str | None = None,
+        classes: str | None = None,
+    ) -> None:
+        super().__init__(name=name, id=id, classes=classes)
         self.highlight_profile = highlight_profile
 
     def compose(self) -> ComposeResult:

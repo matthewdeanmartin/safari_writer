@@ -6,9 +6,8 @@ from dataclasses import dataclass, field
 from io import BytesIO
 from typing import TYPE_CHECKING
 
-from reportlab.pdfbase.pdfmetrics import \
-    stringWidth  # type: ignore[import-untyped]
-from reportlab.pdfgen.canvas import Canvas  # type: ignore[import-untyped]
+from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.pdfgen.canvas import Canvas
 
 from safari_writer.heading_numbering import next_heading_number
 from safari_writer.state import GlobalFormat

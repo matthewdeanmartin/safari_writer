@@ -4,7 +4,7 @@ import random
 import re
 import sys
 from dataclasses import dataclass
-from typing import Any, Dict, List, NoReturn, Optional, TextIO, Tuple, Union, cast
+from typing import Dict, List, NoReturn, Optional, TextIO, Tuple, Union, cast
 
 
 class BasicError(Exception):
@@ -128,7 +128,7 @@ class SafariBasic:
         keywords = ["GOTO", "GOSUB", "THEN", "RESTORE", "TRAP"]
         kw_pattern = r"\b(" + "|".join(keywords) + r")\s+(\d+)\b"
 
-        def replace_ref(match):
+        def replace_ref(match: re.Match[str]) -> str:
             kw = match.group(1)
             old_num = int(match.group(2))
             if old_num in old_to_new:
@@ -395,7 +395,6 @@ class SafariBasic:
             self._stmt_let(scanner)
             return False
         self._error("Syntax error")
-        return False
 
     def _stmt_list(self, scanner: Scanner) -> None:
         scanner.skip_spaces()
@@ -533,7 +532,6 @@ class SafariBasic:
                     val = float(raw_in)
                 except ValueError:
                     self._error("Input conversion failure")
-                    val = 0.0
                 self._set_var(name, is_string, idx, val)
             scanner.skip_spaces()
             if scanner.peek() == ",":

@@ -10,6 +10,7 @@ import zipfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 __all__ = [
     "CODE_EXTENSIONS",
@@ -164,7 +165,7 @@ def set_protected(path: Path, protected: bool) -> None:
                 if protected
                 else current_attributes & ~readonly_attribute
             )
-            result = ctypes.windll.kernel32.SetFileAttributesW(  # type: ignore[attr-defined]
+            result = ctypes.windll.kernel32.SetFileAttributesW(
                 str(path),
                 int(new_attributes),
             )
@@ -474,7 +475,7 @@ def discover_locations(current_path: Path | None = None) -> list[DeviceLocation]
         try:
             import ctypes
 
-            bitmask = ctypes.windll.kernel32.GetLogicalDrives()  # type: ignore[attr-defined]
+            bitmask = ctypes.windll.kernel32.GetLogicalDrives()
         except AttributeError:
             bitmask = 0
         for index in range(26):
@@ -675,7 +676,9 @@ def get_preview_syntax(path: Path, limit_lines: int = 25) -> object:
     )
 
 
-def zip_paths(paths: list[Path], archive_path: Path, mode: str = "w") -> Path:
+def zip_paths(
+    paths: list[Path], archive_path: Path, mode: Literal["w", "a", "x"] = "w"
+) -> Path:
     """Create or append to a ZIP archive."""
 
     # Ensure archive name has .zip

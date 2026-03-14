@@ -195,7 +195,7 @@ class TableHandle:
         rec = self.current_record()
         if rec is None:
             return False
-        return dbf.is_deleted(rec)
+        return bool(dbf.is_deleted(rec))
 
     def pack(self) -> int:
         """Remove all deleted records. Returns count removed."""

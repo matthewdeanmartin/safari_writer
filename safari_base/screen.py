@@ -177,7 +177,7 @@ class SafariBaseScreen(Screen[None]):
         self._sync_layout_bounds()
         self._refresh()
 
-    def on_key(self, event) -> None:  # type: ignore[override]
+    def on_key(self, event: events.Key) -> None:
         key = event.key
         _log.debug(
             "key=%s character=%r mode=%s prompt=%r cursor=%s row=%s offset=%s",
@@ -719,7 +719,7 @@ class SafariBaseScreen(Screen[None]):
             work_dir = Path.cwd()
         file_path = work_dir / name
 
-        def on_editor_dismiss(saved: bool) -> None:
+        def on_editor_dismiss(saved: bool | None) -> None:
             if saved:
                 self._message = f"Saved {file_path.name}"
             else:

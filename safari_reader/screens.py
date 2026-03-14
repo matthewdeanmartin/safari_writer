@@ -170,15 +170,15 @@ class SafariReaderMainMenuScreen(Screen):
 
     def action_menu(self, choice: str) -> None:
         if choice == "library":
-            self.app.push_screen(SafariReaderLibraryScreen(self.state))  # type: ignore[arg-type]
+            self.app.push_screen(SafariReaderLibraryScreen(self.state))
         elif choice == "catalog":
-            self.app.push_screen(SafariReaderCatalogScreen(self.state))  # type: ignore[arg-type]
+            self.app.push_screen(SafariReaderCatalogScreen(self.state))
         elif choice == "resume":
             self._resume_last()
         elif choice == "help":
-            self.app.push_screen(SafariReaderHelpScreen(self.state))  # type: ignore[arg-type]
+            self.app.push_screen(SafariReaderHelpScreen(self.state))
         elif choice == "settings":
-            self.app.push_screen(SafariReaderSettingsScreen(self.state))  # type: ignore[arg-type]
+            self.app.push_screen(SafariReaderSettingsScreen(self.state))
         elif choice == "quit":
             _quit_reader(self)
 
@@ -191,7 +191,7 @@ class SafariReaderMainMenuScreen(Screen):
         for b in candidates:
             if b.last_opened and b.file_path and b.file_path.exists():
                 open_book(b, self.state)
-                self.app.push_screen(SafariReaderScreen(self.state))  # type: ignore[arg-type]
+                self.app.push_screen(SafariReaderScreen(self.state))
                 return
         self.notify("NO BOOK TO RESUME", severity="warning")
 
@@ -260,16 +260,16 @@ class SafariReaderLibraryScreen(Screen):
         if book is None:
             return
         open_book(book, self.state)
-        self.app.push_screen(SafariReaderScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderScreen(self.state))
 
     def action_import_file(self) -> None:
-        self.app.push_screen(SafariReaderImportScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderImportScreen(self.state))
 
     def action_details(self) -> None:
         book = self._selected_book()
         if book is None:
             return
-        self.app.push_screen(SafariReaderBookDetailScreen(self.state, book))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderBookDetailScreen(self.state, book))
 
     def action_archive(self) -> None:
         book = self._selected_book()
@@ -277,10 +277,10 @@ class SafariReaderLibraryScreen(Screen):
             return
         delete_book(book, self.state)
         self.app.pop_screen()
-        self.app.push_screen(SafariReaderLibraryScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderLibraryScreen(self.state))
 
     def action_catalog(self) -> None:
-        self.app.push_screen(SafariReaderCatalogScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderCatalogScreen(self.state))
 
     def action_go_back(self) -> None:
         self.app.pop_screen()
@@ -496,7 +496,7 @@ class SafariReaderScreen(Screen):
         self._render_page()
 
     def action_search(self) -> None:
-        self.app.push_screen(SafariReaderSearchScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderSearchScreen(self.state))
 
     def action_bookmark(self) -> None:
         now = datetime.now(tz=timezone.utc).isoformat()
@@ -515,10 +515,10 @@ class SafariReaderScreen(Screen):
         self.notify("BOOKMARK SET")
 
     def action_goto(self) -> None:
-        self.app.push_screen(SafariReaderGoToScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderGoToScreen(self.state))
 
     def action_help(self) -> None:
-        self.app.push_screen(SafariReaderHelpScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderHelpScreen(self.state))
 
     def action_library(self) -> None:
         save_reading_state(self.state)
@@ -551,7 +551,7 @@ class SafariReaderScreen(Screen):
 
     def action_toggle_toc(self) -> None:
         if self.state.current_chapters:
-            self.app.push_screen(SafariReaderTOCScreen(self.state))  # type: ignore[arg-type]
+            self.app.push_screen(SafariReaderTOCScreen(self.state))
 
     def action_reader_menu(self) -> None:
         save_reading_state(self.state)
@@ -663,7 +663,7 @@ class SafariReaderCatalogScreen(Screen):
         self.query_one("#catalog-status", Static).update(text)
 
     def action_search(self) -> None:
-        self.app.push_screen(  # type: ignore[arg-type]
+        self.app.push_screen(
             SafariReaderCatalogSearchScreen(self.state, self)
         )
 
@@ -686,7 +686,7 @@ class SafariReaderCatalogScreen(Screen):
             elif isinstance(result, dict):
                 # Detail fetch completed
                 if result:
-                    self.app.push_screen(  # type: ignore[arg-type]
+                    self.app.push_screen(
                         SafariReaderCatalogDetailScreen(self.state, result)
                     )
                 else:
@@ -916,7 +916,7 @@ class SafariReaderBookDetailScreen(Screen):
 
     def action_read(self) -> None:
         open_book(self.book, self.state)
-        self.app.push_screen(SafariReaderScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderScreen(self.state))
 
     def action_archive(self) -> None:
         delete_book(self.book, self.state)
@@ -1098,16 +1098,16 @@ class SafariReaderGoToScreen(Screen):
                 self.action_goto_bookmarks()
 
     def action_goto_percent(self) -> None:
-        self.app.push_screen(SafariReaderGoToPercentScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderGoToPercentScreen(self.state))
 
     def action_goto_chapter(self) -> None:
         if self.state.current_chapters:
             self.app.pop_screen()
-            self.app.push_screen(SafariReaderTOCScreen(self.state))  # type: ignore[arg-type]
+            self.app.push_screen(SafariReaderTOCScreen(self.state))
 
     def action_goto_bookmarks(self) -> None:
         if self.state.bookmarks:
-            self.app.push_screen(SafariReaderBookmarksScreen(self.state))  # type: ignore[arg-type]
+            self.app.push_screen(SafariReaderBookmarksScreen(self.state))
         else:
             self.notify("NO BOOKMARKS SET")
 
@@ -1211,7 +1211,7 @@ class SafariReaderBookmarksScreen(Screen):
         del self.state.bookmarks[idx]
         save_reading_state(self.state)
         self.app.pop_screen()
-        self.app.push_screen(SafariReaderBookmarksScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderBookmarksScreen(self.state))
 
     def action_go_back(self) -> None:
         self.app.pop_screen()
@@ -1318,7 +1318,7 @@ class SafariReaderSettingsScreen(Screen):
 
     def _refresh_screen(self) -> None:
         self.app.pop_screen()
-        self.app.push_screen(SafariReaderSettingsScreen(self.state))  # type: ignore[arg-type]
+        self.app.push_screen(SafariReaderSettingsScreen(self.state))
 
     def action_set_scale_0(self) -> None:
         self.state.settings.text_scale = 0
@@ -1434,6 +1434,6 @@ def _quit_reader(screen: Screen) -> None:
     """Exit the reader back to the parent app or standalone."""
     app = screen.app
     if hasattr(app, "quit_reader"):
-        app.quit_reader()  # type: ignore[attr-defined]
+        app.quit_reader()
     else:
         app.pop_screen()

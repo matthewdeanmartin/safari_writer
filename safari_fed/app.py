@@ -244,6 +244,6 @@ def build_fed_state(
                 if cached_posts:
                     session.posts = cached_posts
         # Sync active session state (posts may have been restored)
-        state._restore_active_session()  # type: ignore[attr-defined]
+        state._restore_active_session()
 
     return state

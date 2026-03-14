@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from textual import events
 from textual.app import ComposeResult
@@ -748,12 +748,12 @@ class SafariDosBrowserScreen(Screen):
             if entry:
                 if entry.is_dir:
                     title = f"FOLDER: {entry.name}"
-                    content = get_entry_info(entry.path)
+                    content: Any = get_entry_info(entry.path)
                 else:
                     title = f"FILE: {entry.name}"
                     ext = entry.path.suffix.lower()
                     if ext in {".png", ".jpg", ".jpeg", ".bmp", ".gif"}:
-                        content: object = (
+                        content = (
                             f"[Image File]\n\n{get_entry_info(entry.path)}"
                         )
                     elif ext in CODE_EXTENSIONS:

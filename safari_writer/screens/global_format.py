@@ -326,15 +326,16 @@ class GlobalFormatScreen(Screen):
         if self._lang_row is not None:
             self._lang_row.refresh_lang(
                 self._state.doc_language if self._state else "", editing=True
-            )  # type: ignore[union-attr]
+            )
         from safari_writer.locale_info import LOCALE, available_languages
 
         langs = available_languages()
         hint = (
             f"Available: {', '.join(langs)}" if langs else "No dictionaries installed"
         )
+        current_lang = self._state.doc_language if self._state is not None else LOCALE
         self.set_message(
-            f"Language (current: {self._state.doc_language or LOCALE}): "  # type: ignore[union-attr]
+            f"Language (current: {current_lang or LOCALE}): "
             f"type tag or Enter=(auto). {hint}"
         )
 
@@ -344,7 +345,7 @@ class GlobalFormatScreen(Screen):
             if self._lang_row is not None:
                 self._lang_row.refresh_lang(
                     self._state.doc_language if self._state else ""
-                )  # type: ignore[union-attr]
+                )
             self.set_message(_("Edit cancelled."))
         elif key == "enter":
             new_lang = self._input_buf.strip()
@@ -376,13 +377,13 @@ class GlobalFormatScreen(Screen):
                 if self._lang_row is not None:
                     self._lang_row.refresh_lang(
                         self._state.doc_language if self._state else ""
-                    )  # type: ignore[union-attr]
+                    )
                 self.set_message(_("Edit cancelled."))
             else:
                 param = KEY_TO_PARAM[self._editing_key]
                 self._cancel_edit(param)
             return
-        self.app.pop_screen()  # type: ignore[attr-defined]
+        self.app.pop_screen()
 
     def action_reset_defaults(self) -> None:
         if self._editing_key is not None:

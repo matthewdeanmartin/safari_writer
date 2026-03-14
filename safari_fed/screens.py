@@ -430,7 +430,7 @@ class SafariFedMainScreen(Screen[None]):
         self.state.compose_cw = "none"
         # If running inside Safari Writer, open the full editor
         if hasattr(self.app, "open_fed_compose"):
-            self.app.open_fed_compose(  # type: ignore[attr-defined]
+            self.app.open_fed_compose(
                 reply_to_post=post if reply else None,
                 reply=reply,
             )
@@ -506,7 +506,7 @@ class SafariFedMainScreen(Screen[None]):
             title = post.author
             text = render_post_for_writer(post)
         if hasattr(self.app, "open_in_writer_from_text"):
-            self.app.open_in_writer_from_text(title, text)  # type: ignore[attr-defined]
+            self.app.open_in_writer_from_text(title, text)
         else:
             self.set_message("Writer handoff unavailable")
 
@@ -544,7 +544,7 @@ class SafariFedMainScreen(Screen[None]):
     def _quit_fed(self) -> None:
         self._persist_state()
         if hasattr(self.app, "quit_fed"):
-            self.app.quit_fed()  # type: ignore[attr-defined]
+            self.app.quit_fed()
         else:
             self.app.exit()
 

@@ -345,7 +345,7 @@ def _parse_spans(text: str) -> list[_Span]:
     current_chars: list[str] = []
     bold = underline = elongated = superscript = subscript = False
 
-    def flush():
+    def flush() -> None:
         if current_chars:
             spans.append(
                 _Span(

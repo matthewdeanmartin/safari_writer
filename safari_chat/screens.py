@@ -283,7 +283,7 @@ class SafariChatMainScreen(Screen):
 
     def action_quit_chat(self) -> None:
         if hasattr(self.app, "quit_chat"):
-            self.app.quit_chat()  # type: ignore[attr-defined]
+            self.app.quit_chat()
         else:
             self.app.exit()
 

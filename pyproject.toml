@@ -111,8 +111,32 @@ dev = [
 
 [tool.mypy]
 python_version = "3.12"
-files = ["safari_writer"]
+files = [
+    "safari_writer",
+    "safari_dos",
+    "safari_chat",
+    "safari_base",
+    "safari_fed",
+    "safari_basic",
+    "safari_asm",
+    "safari_repl",
+    "safari_reader",
+    "safari_slides",
+    "safari_view",
+]
+exclude = [
+    "^tests/",
+    "^test_integration/",
+]
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+strict_equality = true
 warn_return_any = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_ignores = true
 warn_unused_configs = true
 show_error_codes = true
 pretty = true

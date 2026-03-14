@@ -31,7 +31,7 @@ class SafariViewTkApp:
         self._setup_menu()
         self._setup_ui()
 
-        self.tk_image = None
+        self.tk_image: ImageTk.PhotoImage | None = None
         self.current_path = self.state.current_path
 
         if self.state.current_image_path:
@@ -101,7 +101,7 @@ class SafariViewTkApp:
         if self.state.current_image_path:
             self._load_and_render_image(self.state.current_image_path)
 
-    def _on_resize(self, event) -> None:
+    def _on_resize(self, event: tk.Event[tk.Misc]) -> None:
         # Debounce or just re-render
         if self.state.current_image_path:
             self._load_and_render_image(self.state.current_image_path)
