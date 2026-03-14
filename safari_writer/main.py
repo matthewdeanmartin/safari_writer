@@ -167,9 +167,14 @@ def build_parser() -> argparse.ArgumentParser:
     tui_safari_dos.set_defaults(handler=_handle_tui_command)
 
     tui_safari_fed = tui_subparsers.add_parser(
-        "safari-fed", help="Open Safari Feed inside Safari Writer."
+        "safari-fed", help="Open Safari Fed (Mastodon Reader) inside Safari Writer."
     )
     tui_safari_fed.set_defaults(handler=_handle_tui_command)
+
+    tui_safari_feed = tui_subparsers.add_parser(
+        "safari-feed", help="Open Safari Feed (RSS Feed Reader) inside Safari Writer."
+    )
+    tui_safari_feed.set_defaults(handler=_handle_tui_command)
 
     tui_safari_repl = tui_subparsers.add_parser(
         "safari-repl", help="Open Safari REPL (Atari BASIC) inside Safari Writer."
@@ -526,6 +531,8 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
         )
     if command == "safari-fed":
         return StartupRequest(destination="safari_fed")
+    if command == "safari-feed":
+        return StartupRequest(destination="safari_feed")
     if command == "safari-repl":
         return StartupRequest(
             destination="safari_repl",

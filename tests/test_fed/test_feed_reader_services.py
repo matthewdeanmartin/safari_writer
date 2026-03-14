@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import httpx
 
 from safari_fed.feed_state import FeedItem, FeedRecord
 from safari_fed.services import (
+    config_dir,
     fetch_article,
     fetch_feed,
     load_cached_article,
@@ -147,3 +149,27 @@ def test_feed_preferences_round_trip(monkeypatch, tmp_path):
     save_feed_preferences(payload)
 
     assert json.loads((tmp_path / "state.json").read_text(encoding="utf-8")) == payload
+
+
+def test_config_dir_uses_expanded_override(monkeypatch, tmp_path):
+    monkeypatch.setenv("SAFARI_WRITER_CONFIG_DIR", str(Path("~") / "custom-fed"))
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    monkeypatch.delenv("APPDATA", raising=False)
+
+    resolved = config_dir()
+
+    assert resolved == tmp_path / "custom-fed"
+    assert resolved.is_dir()
+
+
+def test_config_dir_prefers_xdg_config_home(monkeypatch, tmp_path):
+    monkeypatch.delenv("SAFARI_WRITER_CONFIG_DIR", raising=False)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    monkeypatch.delenv("APPDATA", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+    resolved = config_dir()
+
+    assert resolved == tmp_path / ".config" / "safari_writer"
+    assert resolved.is_dir()

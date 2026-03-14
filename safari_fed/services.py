@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -41,6 +42,17 @@ _SCRIPT_STYLE_RE = re.compile(
 _TAG_RE = re.compile(r"<[^>]+>")
 _WS_RE = re.compile(r"[ \t]+")
 _MULTI_NL_RE = re.compile(r"\n{3,}")
+
+
+def _expand_config_path(raw_path: str) -> Path:
+    """Expand `~` using HOME when available, including on Windows shells."""
+
+    if raw_path == "~" or raw_path.startswith("~/") or raw_path.startswith("~\\"):
+        home = os.environ.get("HOME", "").strip()
+        if home:
+            suffix = raw_path[2:] if raw_path != "~" else ""
+            return Path(home) / suffix if suffix else Path(home)
+    return Path(raw_path).expanduser()
 
 
 class _HtmlToText(HTMLParser):
@@ -123,7 +135,11 @@ class _HtmlToText(HTMLParser):
 def config_dir() -> Path:
     """Return the Safari Feed config directory."""
 
-    path = Path.home() / ".config" / "safari_writer"
+    raw_override = os.environ.get("SAFARI_WRITER_CONFIG_DIR", "").strip()
+    if raw_override:
+        path = _expand_config_path(raw_override)
+    else:
+        path = _expand_config_path("~/.config/safari_writer")
     path.mkdir(parents=True, exist_ok=True)
     return path
 

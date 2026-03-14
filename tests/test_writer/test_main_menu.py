@@ -39,6 +39,7 @@ class TestMenuColumns:
         assert "safari_dos" in actions
         assert "safari_chat" in actions
         assert "safari_fed" in actions
+        assert "safari_feed" in actions
         assert "safari_slides" in actions
         assert "safari_repl" in actions
         assert "style_switcher" in actions

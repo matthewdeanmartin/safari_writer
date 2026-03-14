@@ -23,10 +23,12 @@ from safari_dos.state import SafariDosState
 from safari_fed.app import build_fed_state
 from safari_fed.feed_state import SafariFeedState
 from safari_fed.screens import (
-    SafariFedMainScreen,
+    SafariFedMainScreen as SafariFeedMainScreen,
     SafariFeedListScreen,
     SafariFeedReaderScreen,
 )
+from safari_fed.state import SafariFedState
+from safari_fed.services import config_dir as safari_feed_config_dir
 from safari_reader.screens import SafariReaderMainMenuScreen
 from safari_reader.state import SafariReaderState
 from safari_repl.screens import ReplEditorScreen, ReplMainMenuScreen
@@ -91,7 +93,8 @@ class SafariWriterApp(App):
         self._pending_save_filename = ""
         self._last_safari_dos_path = Path.cwd()
         self.dos_state: SafariDosState | None = None
-        self.fed_state: SafariFeedState | None = None
+        self.fed_state: SafariFedState | None = None
+        self.feed_reader_state: SafariFeedState | None = None
         self.repl_state: ReplState | None = None
         self.reader_state: SafariReaderState | None = None
         self.slides_state: SafariSlidesState | None = None
@@ -178,6 +181,9 @@ class SafariWriterApp(App):
         if destination == "safari_fed":
             self._action_safari_fed()
             return
+        if destination == "safari_feed":
+            self._action_safari_feed()
+            return
         if destination == "safari_repl":
             self._action_safari_repl(request.safari_repl_path)
             return
@@ -229,6 +235,8 @@ class SafariWriterApp(App):
             self._action_safari_chat()
         elif action == "safari_fed":
             self._action_safari_fed()
+        elif action == "safari_feed":
+            self._action_safari_feed()
         elif action == "safari_repl":
             self._action_safari_repl()
         elif action == "safari_reader":
@@ -770,9 +778,9 @@ class SafariWriterApp(App):
             return
         if isinstance(
             self.screen,
-            (SafariFedMainScreen, SafariFeedListScreen, SafariFeedReaderScreen),
+            (SafariFeedMainScreen, SafariFeedListScreen, SafariFeedReaderScreen),
         ):
-            self.quit_fed()
+            self.quit_feed()
             return
         if isinstance(self.screen, SafariSlidesMainScreen):
             self.quit_slides()
@@ -803,10 +811,19 @@ class SafariWriterApp(App):
     def _action_safari_fed(self) -> None:
         if self.fed_state is None:
             self.fed_state = build_fed_state()
-        self.push_screen(SafariFedMainScreen(self.fed_state))
+        self.set_message("Safari Fed is available as the Mastodon reader entry.")
+
+    def _action_safari_feed(self) -> None:
+        if self.feed_reader_state is None:
+            self.feed_reader_state = SafariFeedState(config_dir=safari_feed_config_dir())
+        self.push_screen(SafariFeedMainScreen(self.feed_reader_state))
 
     def quit_fed(self) -> None:
         """Called by Safari Feed screens to return to the writer menu."""
+        self.pop_screen()
+
+    def quit_feed(self) -> None:
+        """Called by Safari Feed Reader screens to return to the writer menu."""
         self.pop_screen()
 
     def quit_base(self) -> None:

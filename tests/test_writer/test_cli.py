@@ -173,6 +173,14 @@ def test_build_startup_request_for_safari_fed():
     assert request == StartupRequest(destination="safari_fed")
 
 
+def test_build_startup_request_for_safari_feed():
+    args = parse_args(["tui", "safari-feed"])
+
+    request = build_startup_request(args)
+
+    assert request == StartupRequest(destination="safari_feed")
+
+
 def test_build_startup_request_for_safari_repl():
     args = parse_args(["tui", "safari-repl", "--file", "demo.bas"])
 
