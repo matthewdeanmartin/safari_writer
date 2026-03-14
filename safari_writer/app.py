@@ -21,8 +21,12 @@ from safari_dos.services import (list_favorites, list_recent_documents,
                                  record_recent_location)
 from safari_dos.state import SafariDosState
 from safari_fed.app import build_fed_state
-from safari_fed.screens import SafariFedMainScreen
-from safari_fed.state import SafariFedState
+from safari_fed.feed_state import SafariFeedState
+from safari_fed.screens import (
+    SafariFedMainScreen,
+    SafariFeedListScreen,
+    SafariFeedReaderScreen,
+)
 from safari_reader.screens import SafariReaderMainMenuScreen
 from safari_reader.state import SafariReaderState
 from safari_repl.screens import ReplEditorScreen, ReplMainMenuScreen
@@ -87,7 +91,7 @@ class SafariWriterApp(App):
         self._pending_save_filename = ""
         self._last_safari_dos_path = Path.cwd()
         self.dos_state: SafariDosState | None = None
-        self.fed_state: SafariFedState | None = None
+        self.fed_state: SafariFeedState | None = None
         self.repl_state: ReplState | None = None
         self.reader_state: SafariReaderState | None = None
         self.slides_state: SafariSlidesState | None = None
@@ -764,7 +768,10 @@ class SafariWriterApp(App):
         if isinstance(self.screen, SafariChatMainScreen):
             self.quit_chat()
             return
-        if isinstance(self.screen, SafariFedMainScreen):
+        if isinstance(
+            self.screen,
+            (SafariFedMainScreen, SafariFeedListScreen, SafariFeedReaderScreen),
+        ):
             self.quit_fed()
             return
         if isinstance(self.screen, SafariSlidesMainScreen):
@@ -799,7 +806,7 @@ class SafariWriterApp(App):
         self.push_screen(SafariFedMainScreen(self.fed_state))
 
     def quit_fed(self) -> None:
-        """Called by SafariFedMainScreen to return to the writer menu."""
+        """Called by Safari Feed screens to return to the writer menu."""
         self.pop_screen()
 
     def quit_base(self) -> None:

@@ -167,7 +167,7 @@ def build_parser() -> argparse.ArgumentParser:
     tui_safari_dos.set_defaults(handler=_handle_tui_command)
 
     tui_safari_fed = tui_subparsers.add_parser(
-        "safari-fed", help="Open Safari Fed inside Safari Writer."
+        "safari-fed", help="Open Safari Feed inside Safari Writer."
     )
     tui_safari_fed.set_defaults(handler=_handle_tui_command)
 

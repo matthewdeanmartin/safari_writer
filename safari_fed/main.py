@@ -8,9 +8,12 @@ from pathlib import Path
 
 from safari_fed.app import SafariFedApp
 from safari_fed.client import load_clients_from_env
-from safari_fed.opml import (DEFAULT_MAX_ACCOUNTS, DEFAULT_MAX_FEEDS,
-                             default_opml_export_path,
-                             export_followed_feeds_to_opml)
+from safari_fed.opml import (
+    DEFAULT_MAX_ACCOUNTS,
+    DEFAULT_MAX_FEEDS,
+    default_opml_export_path,
+    export_followed_feeds_to_opml,
+)
 from safari_fed.state import FOLDER_ORDER, SafariFedExitRequest
 
 __all__ = ["build_parser", "main", "parse_args"]
