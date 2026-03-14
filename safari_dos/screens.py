@@ -24,6 +24,13 @@ from textual.containers import Container
 from textual.screen import ModalScreen, Screen
 from textual.widgets import Static
 
+from safari_writer.program_runner import (
+    decode_stdin_text,
+    is_runnable_path,
+    path_may_need_stdin,
+    run_program_file,
+)
+from safari_writer.screens.output_screen import OutputScreen
 from safari_dos.services import (
     CODE_EXTENSIONS,
     DirectoryEntry,
@@ -482,6 +489,7 @@ class SafariDosBrowserScreen(Screen):
         Binding("home", "cursor_home", "Home", show=False),
         Binding("end", "cursor_end", "End", show=False),
         Binding("enter", "activate", "Open", show=False),
+        Binding("e", "run_selected", "Run", show=False),
         Binding("backspace", "parent", "Up Folder", show=False),
         Binding("t", "toggle_select", "Select", show=False),
         Binding("a", "select_all", "All", show=False),
@@ -562,11 +570,18 @@ class SafariDosBrowserScreen(Screen):
 
     def _help_text(self) -> str:
         if self._picker_mode == "file":
-            return "Enter=choose/open  Backspace=up  F=favorites  .=hidden  F1=help  Esc=cancel"
+            return (
+                "Enter=choose/open  Backspace=up  F=favorites  .=hidden  "
+                "F1=help  Esc=cancel"
+            )
         if self._picker_mode == "directory":
-            return "Enter=open  Tab=choose folder  F=favorites  .=hidden  F1=help  Esc=cancel"
+            return (
+                "Enter=open  Tab=choose folder  F=favorites  .=hidden  "
+                "F1=help  Esc=cancel"
+            )
         return (
-            "Enter=open  T=select  C/M/R/W/N/X ops  Z/U zip  V=view  F1=help  Esc=menu"
+            "Enter=open  E=run  T=select  C/M/R/W/N/X ops  Z/U zip  "
+            "V=view  F1=help  Esc=menu"
         )
 
     def _menu_title(self) -> str:
@@ -600,6 +615,7 @@ class SafariDosBrowserScreen(Screen):
             ]
         return [
             ("RET.", "OPEN ITEM"),
+            ("E.", "EXECUTE PROGRAM"),
             ("T.", "SELECT ITEM"),
             ("C.", "COPY FILE(S)"),
             ("M.", "MOVE FILE(S)"),
@@ -882,6 +898,37 @@ class SafariDosBrowserScreen(Screen):
             self.dismiss(entry.path)
             return
         self._request_open_in_writer(entry.path)
+
+    def action_run_selected(self) -> None:
+        if self._picker_mode is not None:
+            return
+        entry = self._selected_entry()
+        if entry is None or entry.is_dir:
+            self.set_message("Select a program file to run")
+            return
+        if not is_runnable_path(entry.path):
+            self.set_message("Run supports .bas, .asm, .prg, and .py files")
+            return
+        if path_may_need_stdin(entry.path):
+            self.app.push_screen(
+                InputScreen("Program Input (use \\n for new lines)"),
+                callback=lambda value: self._run_selected_program(entry.path, value),
+            )
+            return
+        self._run_selected_program(entry.path, "")
+
+    def _run_selected_program(self, path: Path, raw_stdin: str | None) -> None:
+        if raw_stdin is None:
+            self.set_message("Execution cancelled")
+            return
+        self._sync_recent_documents(path)
+        result = run_program_file(
+            path,
+            stdin_text=decode_stdin_text(raw_stdin),
+        )
+        status = "Executed" if result.success else "Execution failed"
+        self.set_message(f"{status}: {path.name}")
+        self.app.push_screen(OutputScreen(result.output, title=result.title))
 
     def _request_open_in_writer(self, path: Path) -> None:
         self._sync_recent_locations()
@@ -1398,7 +1445,8 @@ MAIN MENU
 FILE BROWSER — NAVIGATION
   Up / Down         Move cursor            Home / End        First / last
   PageUp / PageDown Scroll page            Enter             Open folder/file
-  Backspace         Parent folder          H                 Home folder
+  E                 Execute program        Backspace         Parent folder
+  H                 Home folder
   .                 Toggle hidden files    /                 Filter by pattern
   S                 Cycle sort order       D                 Switch device
 
@@ -1414,6 +1462,7 @@ FILE BROWSER — OPERATIONS
   Z                 Create zip archive     U                 Unzip archive
   F                 Favorites / recent     G                 Garbage list
   V                 Toggle preview pane    Space             Fullscreen preview
+  Run supports .bas, .asm, .prg, and .py files.
 
 OTHER
   F1                This help screen       Esc               Back / Cancel

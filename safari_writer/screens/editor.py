@@ -14,9 +14,6 @@
 
 import logging
 import os
-import io
-import sys
-import subprocess
 from pathlib import Path
 from typing import Protocol, cast
 
@@ -28,7 +25,14 @@ from textual.widget import Widget
 from textual import events
 from textual.containers import Container
 
-from safari_writer.file_types import HighlightProfile, StorageMode
+from safari_writer.file_types import FileProfile, HighlightProfile, StorageMode
+from safari_writer.program_runner import (
+    decode_stdin_text,
+    is_runnable_profile,
+    program_may_need_stdin,
+    run_program_source,
+)
+from safari_writer.screens.file_ops import FilePromptScreen
 from safari_writer.state import AppState
 from safari_writer.syntax_highlight import create_highlighter
 from safari_writer.screens.output_screen import OutputScreen
@@ -182,6 +186,13 @@ HELP_TEXT_PLAIN = (
 HELP_TEXT_FED = (
     "^X Cut  ^C Copy  ^V Paste  ^F Find  ^Z Undo  "
     "^S Save  ^P Post/Export  F1 Help  Esc Cancel"
+)
+HELP_TEXT_RUNNABLE = (
+    "F5 Run  ^P Print/Export  ^S Save  ^F Find  ^Z Undo  F1 Help  Esc Menu"
+)
+HELP_TEXT_SLIDES = (
+    "F7 Preview Slides  ^P Print/Export  ^S Save  ^F Find  "
+    "^Shift+E New Slide  ^Shift+N Deck Title  F1 Help  Esc Menu"
 )
 EDITOR_RESERVED_LINES = 4
 
@@ -411,6 +422,8 @@ class _EditorScreenHost(_MessageScreen, Protocol):
 class _EditorApp(Protocol):
     def _action_print(self) -> None: ...
 
+    def _action_preview_slides(self) -> None: ...
+
     def _action_save_via_safari_dos(self) -> None: ...
 
 
@@ -452,6 +465,13 @@ class EditorArea(Widget, can_focus=True):
 
     def _app_host(self) -> _EditorApp:
         return cast(_EditorApp, self.app)
+
+    def _is_slide_document(self) -> bool:
+        from safari_slides.services import is_slide_filename, looks_like_slide_markdown
+
+        return is_slide_filename(self.state.filename) or looks_like_slide_markdown(
+            "\n".join(self.state.buffer)
+        )
 
     def _push_undo(self, action: str) -> None:
         """Push an undo snapshot if the action type changed (coalesces typing)."""
@@ -918,6 +938,8 @@ class EditorArea(Widget, can_focus=True):
             self._find_next()
         elif key == "f5":
             self._run_program()
+        elif key == "f7":
+            self._app_host()._action_preview_slides()
         elif key == "alt+h":
             self._prompt_replace()
         elif key == "alt+n":
@@ -955,7 +977,10 @@ class EditorArea(Widget, can_focus=True):
         elif key == "ctrl+shift+s":
             self._prompt_heading()
         elif key == "ctrl+shift+e":
-            self._insert_structure_marker(CTRL_EJECT)
+            if self._is_slide_document():
+                self._insert_slide_separator()
+            else:
+                self._insert_structure_marker(CTRL_EJECT)
         elif key == "ctrl+shift+c":
             self._prompt_chain()
 
@@ -1707,80 +1732,63 @@ class EditorArea(Widget, can_focus=True):
     def _run_program(self) -> None:
         """Run the current buffer as a program based on its file profile."""
         profile = self.state.file_profile
-        source = "\n".join(self.state.buffer)
-        output = ""
-        title = "EXECUTION OUTPUT"
-
-        if profile.highlight_profile == HighlightProfile.SAFARI_BASIC:
-            from safari_basic.interpreter import SafariBasic, BasicError
-
-            buf = io.StringIO()
-            basic_interp = SafariBasic(out_stream=buf)
-            try:
-                basic_interp.reset()
-                for line in self.state.buffer:
-                    basic_interp.add_program_line(line.strip())
-                basic_interp.run_program()
-                output = buf.getvalue()
-                title = "SAFARI BASIC OUTPUT"
-            except BasicError as exc:
-                output = f"BASIC ERROR: {exc}"
-            except Exception as exc:
-                output = f"SYSTEM ERROR: {exc}"
-
-        elif profile.highlight_profile == HighlightProfile.SAFARI_ASM:
-            from safari_asm.interpreter import run_source as run_asm
-
-            buf = io.StringIO()
-            try:
-                run_asm(source, stdout=buf, stderr=buf)
-                output = buf.getvalue()
-                title = "SAFARI ASM OUTPUT"
-            except Exception as exc:
-                output = f"ASM ERROR: {exc}"
-
-        elif profile.highlight_profile == HighlightProfile.SAFARI_BASE:
-            from safari_base.lang.interpreter import Interpreter as BaseInterpreter
-            from safari_base.lang.environment import Environment as BaseEnvironment
-
-            try:
-                env = BaseEnvironment()
-                base_interp = BaseInterpreter(env)
-                base_result = base_interp.run_source(source)
-                output = base_result.data or base_result.message or ""
-                if base_result.message and base_result.data:
-                    output = f"{base_result.message}\n\n{base_result.data}"
-                title = "SAFARI BASE OUTPUT"
-            except Exception as exc:
-                output = f"BASE ERROR: {exc}"
-
-        elif profile.highlight_profile == HighlightProfile.PYTHON:
-            try:
-                import tempfile
-
-                with tempfile.NamedTemporaryFile(
-                    suffix=".py", delete=False, mode="w", encoding="utf-8"
-                ) as f:
-                    f.write(source)
-                    temp_name = f.name
-
-                python_result = subprocess.run(
-                    [sys.executable, temp_name],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                output = python_result.stdout + python_result.stderr
-                title = "PYTHON OUTPUT"
-                os.unlink(temp_name)
-            except Exception as exc:
-                output = f"PYTHON ERROR: {exc}"
-
-        else:
+        if not is_runnable_profile(profile):
             self._set_screen_message(_("No runner available for this file type"))
             return
 
-        self.app.push_screen(OutputScreen(output, title=title))
+        source = "\n".join(self.state.buffer)
+        working_path = Path(self.state.filename).resolve() if self.state.filename else None
+        if program_may_need_stdin(source, profile):
+            self.app.push_screen(
+                FilePromptScreen("Program Input (use \\n for new lines)"),
+                callback=lambda value: self._run_program_with_stdin(
+                    source,
+                    profile,
+                    working_path,
+                    value,
+                ),
+            )
+            return
+        self._show_program_output(
+            source,
+            profile,
+            working_path,
+            stdin_text="",
+        )
+
+    def _run_program_with_stdin(
+        self,
+        source: str,
+        profile: FileProfile,
+        working_path: Path | None,
+        raw_stdin: str | None,
+    ) -> None:
+        if raw_stdin is None:
+            self._set_screen_message("Execution cancelled")
+            return
+        self._show_program_output(
+            source,
+            profile,
+            working_path,
+            stdin_text=decode_stdin_text(raw_stdin),
+        )
+
+    def _show_program_output(
+        self,
+        source: str,
+        profile: FileProfile,
+        working_path: Path | None,
+        *,
+        stdin_text: str,
+    ) -> None:
+        result = run_program_source(
+            source,
+            profile=profile,
+            filename=self.state.filename,
+            working_path=working_path,
+            stdin_text=stdin_text,
+        )
+        self.app.push_screen(OutputScreen(result.output, title=result.title))
 
     def _scroll_to_cursor(self) -> None:
         """Adjust ``_scroll_offset`` so the cursor row is visible.
@@ -1804,6 +1812,15 @@ class EditorArea(Widget, can_focus=True):
     def _update_status(self) -> None:
         self._screen_host().update_status()
 
+    def _insert_slide_separator(self) -> None:
+        s = self.state
+        row = s.cursor_row + 1
+        s.buffer[row:row] = ["", "---", ""]
+        s.cursor_row = min(row + 2, len(s.buffer) - 1)
+        s.cursor_col = 0
+        s.modified = True
+        self._set_screen_message("Inserted slide break")
+
 
 class EditorScreen(Screen):
     CSS = EDITOR_CSS
@@ -1816,21 +1833,12 @@ class EditorScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Static(self._tab_bar_text(), id="tab-bar")
         yield EditorArea(self.state)
-        fed_active = (
-            hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active  # type: ignore[attr-defined]
-        )
-        if fed_active:
-            help_bar = HELP_TEXT_FED
-        elif not self.state.allows_formatting:
-            help_bar = HELP_TEXT_PLAIN
-        else:
-            help_bar = HELP_TEXT
         with Container(id="editor-footer"):
             yield Static(
                 self._message or _("Welcome to Safari Writer"), id="message-bar"
             )
             yield Static(self._status_text(), id="status-bar")
-            yield Static(help_bar, id="help-bar")
+            yield Static(self._help_bar_text(), id="help-bar")
 
     def on_mount(self) -> None:
         self.query_one(EditorArea).focus()
@@ -1892,7 +1900,26 @@ class EditorScreen(Screen):
     def update_status(self) -> None:
         if self.is_mounted:
             self.query_one("#status-bar", Static).update(self._status_text())
+            self.query_one("#help-bar", Static).update(self._help_bar_text())
 
     def update_tab_bar(self) -> None:
         if self.is_mounted:
             self.query_one("#tab-bar", Static).update(self._tab_bar_text())
+
+    def _help_bar_text(self) -> str:
+        from safari_slides.services import is_slide_filename, looks_like_slide_markdown
+
+        fed_active = (
+            hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active  # type: ignore[attr-defined]
+        )
+        if fed_active:
+            return HELP_TEXT_FED
+        if is_slide_filename(self.state.filename) or looks_like_slide_markdown(
+            "\n".join(self.state.buffer)
+        ):
+            return HELP_TEXT_SLIDES
+        if is_runnable_profile(self.state.file_profile):
+            return HELP_TEXT_RUNNABLE
+        if not self.state.allows_formatting:
+            return HELP_TEXT_PLAIN
+        return HELP_TEXT

@@ -30,6 +30,7 @@ from safari_dos.services import (
     zip_paths,
 )
 from safari_dos.state import SafariDosExitRequest, SafariDosLaunchConfig, SafariDosState
+from safari_writer.program_runner import decode_stdin_text, run_program_file
 
 __all__ = ["build_parser", "main", "parse_args"]
 
@@ -60,6 +61,7 @@ TOP_LEVEL_COMMANDS = {
     "unzip",
     "locations",
     "edit",
+    "run",
 }
 SORT_CHOICES = ("name", "date", "size", "type")
 SCREEN_CHOICES = ("menu", "browser", "devices", "favorites", "garbage", "help")
@@ -284,6 +286,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Open a file in Safari Writer directly.",
     )
     edit_parser.add_argument("file")
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Execute a .bas, .asm, .prg, or .py file.",
+    )
+    run_parser.add_argument("file")
+    run_parser.add_argument(
+        "--database",
+        help="Optional data file or working directory to resolve .prg table paths.",
+    )
+    run_parser.add_argument(
+        "--stdin",
+        help="Optional program input. Use \\n escapes for additional lines.",
+    )
     return parser
 
 
@@ -587,4 +602,16 @@ def main(argv: list[str] | None = None) -> int:
         from safari_writer.main import main as safari_writer_main
 
         return safari_writer_main(["tui", "edit", "--file", str(file_path)])
+    if args.command == "run":
+        file_path = _resolve_existing_path(args.file)
+        if file_path.is_dir():
+            raise IsADirectoryError(f"Not a file: {file_path}")
+        record_recent_document(file_path)
+        result = run_program_file(
+            file_path,
+            database_path=_resolve_path(args.database),
+            stdin_text=decode_stdin_text(args.stdin),
+        )
+        print(result.output)
+        return 0 if result.success else 1
     raise ValueError(f"Unsupported command: {args.command}")

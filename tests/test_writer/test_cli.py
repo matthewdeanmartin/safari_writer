@@ -184,6 +184,18 @@ def test_build_startup_request_for_safari_repl():
     )
 
 
+def test_build_startup_request_for_safari_slides():
+    args = parse_args(["tui", "safari-slides", "--file", "deck.slides.md"])
+
+    request = build_startup_request(args)
+
+    assert request == StartupRequest(
+        destination="safari_slides",
+        document_path=Path("deck.slides.md").resolve(),
+        read_only=False,
+    )
+
+
 def test_main_default_invocation_launches_menu(monkeypatch):
     captured: dict[str, object] = {}
     splash_calls: list[tuple[bool, object | None]] = []

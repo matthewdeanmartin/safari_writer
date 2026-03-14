@@ -7,6 +7,8 @@ the Widget.__init__ so Textual's app context isn't required.
 import pytest
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from safari_writer.file_types import resolve_file_profile
+from safari_writer.program_runner import ProgramExecutionResult
 from safari_writer.state import AppState, GlobalFormat
 from safari_writer.screens.editor import (
     EditorArea,
@@ -14,6 +16,7 @@ from safari_writer.screens.editor import (
     CTRL_BOLD,
     CTRL_CENTER,
 )
+from safari_writer.screens.output_screen import OutputScreen
 
 
 # ---------------------------------------------------------------------------
@@ -383,8 +386,6 @@ class TestEditorFooter:
         assert "[Safari Writer]" in text
 
     def test_status_bar_shows_plain_for_txt(self):
-        from safari_writer.file_types import resolve_file_profile
-
         state = AppState()
         state.filename = "notes.txt"
         state.file_profile = resolve_file_profile("notes.txt")
@@ -393,6 +394,49 @@ class TestEditorFooter:
 
         assert "[PLAIN]" in text
         assert "[Plain Text]" in text
+
+    def test_help_bar_shows_run_for_basic_programs(self):
+        state = AppState(filename="demo.bas")
+        state.file_profile = resolve_file_profile("demo.bas")
+        screen = EditorScreen(state)
+        fake_app = MagicMock()
+        fake_app._fed_compose_active = False
+
+        with patch.object(
+            type(screen),
+            "app",
+            new_callable=lambda: property(lambda self: fake_app),
+        ):
+            assert "F5 Run" in screen._help_bar_text()
+
+
+class TestProgramExecution:
+    def test_run_program_pushes_output_screen(self, monkeypatch):
+        screen = make_editor('10 PRINT "HI"')
+        screen.state.filename = "demo.bas"
+        screen.state.file_profile = resolve_file_profile("demo.bas")
+        pushed: list[OutputScreen] = []
+        fake_app = MagicMock()
+        fake_app.push_screen.side_effect = pushed.append
+        monkeypatch.setattr(
+            "safari_writer.screens.editor.run_program_source",
+            lambda source, *, profile, filename, working_path, stdin_text: ProgramExecutionResult(
+                title="SAFARI BASIC OUTPUT",
+                output="HI",
+                success=True,
+            ),
+        )
+
+        with patch.object(
+            type(screen),
+            "app",
+            new_callable=lambda: property(lambda self: fake_app),
+        ):
+            screen._run_program()
+
+        assert len(pushed) == 1
+        assert pushed[0]._title == "SAFARI BASIC OUTPUT"
+        assert pushed[0]._output_lines == ["HI"]
 
 
 class TestReplacePromptShortcut:

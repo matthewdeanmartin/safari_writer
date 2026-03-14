@@ -47,7 +47,7 @@ PrintScreen {
 
 #print-dialog {
     width: 44;
-    height: 17;
+    height: 19;
     border: solid $primary;
     background: $surface;
     padding: 1 2;
@@ -75,7 +75,8 @@ PrintScreen {
 class PrintScreen(ModalScreen[str | None]):
     """Modal dialog offering print/export options.
 
-    Dismisses with one of: "ansi", "markdown", "postscript", "pdf", or None.
+    Dismisses with one of: "ansi", "markdown", "postscript", "pdf",
+    "slides", "slides_preview", or None.
     """
 
     CSS = PRINT_CSS
@@ -93,6 +94,14 @@ class PrintScreen(ModalScreen[str | None]):
             )
             yield Static(
                 "[bold underline]D[/]  Export to PDF (.pdf)", classes="print-option"
+            )
+            yield Static(
+                "[bold underline]S[/]  Export to Slides (.slides.md)",
+                classes="print-option",
+            )
+            yield Static(
+                "[bold underline]V[/]  Preview in Safari Slides",
+                classes="print-option",
             )
             yield Static(
                 "[bold underline]T[/]  Post to Mastodon (Toot)",
@@ -113,6 +122,10 @@ class PrintScreen(ModalScreen[str | None]):
             self.dismiss("postscript")
         elif event.key == "d":
             self.dismiss("pdf")
+        elif event.key == "s":
+            self.dismiss("slides")
+        elif event.key == "v":
+            self.dismiss("slides_preview")
         elif event.key == "t":
             self.dismiss("mastodon")
         elif event.key == "g":

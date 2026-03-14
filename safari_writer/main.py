@@ -151,7 +151,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_tui_file_option(tui_print)
     _add_tui_read_only_option(tui_print)
     tui_print.add_argument(
-        "--target", choices=["ansi", "markdown", "postscript", "pdf"]
+        "--target", choices=["ansi", "markdown", "postscript", "pdf", "slides"]
     )
     tui_print.set_defaults(handler=_handle_tui_command)
 
@@ -188,6 +188,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     tui_safari_reader.set_defaults(handler=_handle_tui_command)
 
+    tui_safari_slides = tui_subparsers.add_parser(
+        "safari-slides", help="Open Safari Slides inside Safari Writer."
+    )
+    _add_tui_file_option(tui_safari_slides)
+    _add_tui_read_only_option(tui_safari_slides)
+    tui_safari_slides.set_defaults(handler=_handle_tui_command)
+
     export_parser = subparsers.add_parser(
         "export", help="Run headless export commands."
     )
@@ -220,6 +227,16 @@ def build_parser() -> argparse.ArgumentParser:
     export_pdf.add_argument("-o", "--output", help="Destination .pdf file.")
     export_pdf.add_argument("--merge-db", help="Optional mail-merge database to apply.")
     export_pdf.set_defaults(handler=_handle_export_pdf)
+
+    export_slides = export_subparsers.add_parser(
+        "slides", help="Export a document to SlideMD."
+    )
+    _add_export_input(export_slides)
+    _add_output_flags(export_slides, "SlideMD")
+    export_slides.add_argument(
+        "--merge-db", help="Optional mail-merge database to apply."
+    )
+    export_slides.set_defaults(handler=_handle_export_slides)
 
     export_ansi = export_subparsers.add_parser(
         "ansi", help="Render ANSI preview output headlessly."
@@ -522,6 +539,12 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
         )
     if command == "safari-reader":
         return StartupRequest(destination="safari_reader")
+    if command == "safari-slides":
+        return StartupRequest(
+            destination="safari_slides",
+            document_path=Path(args.file).resolve() if getattr(args, "file", None) else None,
+            read_only=args.read_only,
+        )
     raise ValueError(f"Unsupported TUI destination: {command}")
 
 
@@ -636,6 +659,26 @@ def _handle_export_pdf(args: argparse.Namespace) -> int:
     rendered = export_pdf(buffer, GlobalFormat())
     output_path.write_bytes(rendered)
     _emit_status(args, f"Exported PDF to {output_path}")
+    return 0
+
+
+def _handle_export_slides(args: argparse.Namespace) -> int:
+    from safari_slides.services import build_slidemd_from_writer
+
+    input_path = Path(args.input).resolve()
+    buffer = load_document_buffer(input_path, encoding=args.encoding)
+    buffer = _load_merge_applied_buffer(buffer, args.merge_db, args.encoding)
+    rendered = build_slidemd_from_writer(buffer, GlobalFormat())
+    if args.stdout:
+        _emit(rendered.rstrip())
+        return 0
+    output_path = (
+        Path(args.output).resolve()
+        if args.output
+        else input_path.with_suffix(".slides.md")
+    )
+    output_path.write_text(rendered, encoding="utf-8")
+    _emit_status(args, f"Exported SlideMD to {output_path}")
     return 0
 
 

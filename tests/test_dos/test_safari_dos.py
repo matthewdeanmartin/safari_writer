@@ -8,7 +8,7 @@ from pathlib import Path
 import safari_dos
 from safari_dos.main import main as safari_dos_main, parse_args
 from safari_dos.state import SafariDosLaunchConfig, SafariDosState
-from safari_dos.screens import SafariDosBrowserScreen
+from safari_dos.screens import InputScreen, SafariDosBrowserScreen
 from safari_dos.services import (
     copy_paths,
     create_folder,
@@ -35,6 +35,8 @@ from safari_dos.services import (
 import unittest.mock as mock
 from safari_dos.state import SafariDosExitRequest
 from safari_writer.app import SafariWriterApp
+from safari_writer.program_runner import ProgramExecutionResult
+from safari_writer.screens.output_screen import OutputScreen
 from safari_writer.screens.file_ops import FilePromptScreen
 
 
@@ -89,6 +91,14 @@ def test_parse_args_supports_browse_startup_flags():
     assert args.descending is True
     assert args.filter == "draft"
     assert args.select == "draft.sfw"
+
+
+def test_parse_args_supports_run_command():
+    args = parse_args(["run", "demo.prg", "--database", "data"])
+
+    assert args.command == "run"
+    assert args.file == "demo.prg"
+    assert args.database == "data"
 
 
 def test_list_directory_filters_hidden_files(tmp_path):
@@ -362,6 +372,40 @@ def test_main_edit_delegates_to_safari_writer(monkeypatch, tmp_path):
     assert launched == [["tui", "edit", "--file", str(document.resolve())]]
 
 
+def test_main_run_executes_program_and_prints_output(monkeypatch, tmp_path, capsys):
+    program = tmp_path / "demo.bas"
+    program.write_text('10 PRINT "HI"', encoding="utf-8")
+    safari_dos_main_module = importlib.import_module("safari_dos.main")
+    seen: list[tuple[Path, Path | None]] = []
+
+    monkeypatch.setattr(
+        safari_dos_main_module,
+        "run_program_file",
+        lambda path, *, database_path=None, stdin_text=None: (
+            seen.append((path, database_path))
+            or ProgramExecutionResult(
+                title="SAFARI BASIC OUTPUT",
+                output="HI",
+                success=True,
+            )
+        ),
+    )
+
+    exit_code = safari_dos_main(
+        [
+            "run",
+            str(program),
+            "--database",
+            str(tmp_path / "data"),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out.strip() == "HI"
+    assert seen == [(program.resolve(), (tmp_path / "data").resolve())]
+
+
 def test_dos_help_screen_is_modal():
     """Safari DOS help screen is a ModalScreen with full key reference."""
     from safari_dos.screens import SafariDosHelpScreen, DOS_HELP_CONTENT
@@ -377,6 +421,79 @@ def test_dos_browser_has_f1_binding():
     """The browser screen has an F1 binding for help."""
     binding_keys = [b.key for b in SafariDosBrowserScreen.BINDINGS]
     assert "f1" in binding_keys
+
+
+def test_dos_browser_has_run_binding():
+    binding_keys = [b.key for b in SafariDosBrowserScreen.BINDINGS]
+    assert "e" in binding_keys
+
+
+def test_dos_browser_run_selected_pushes_output_screen(monkeypatch, tmp_path):
+    program = tmp_path / "demo.bas"
+    program.write_text('10 PRINT "HI"', encoding="utf-8")
+    state = SafariDosState(current_path=tmp_path)
+    screen = SafariDosBrowserScreen(state)
+    screen._entries = list_directory(tmp_path)
+    screen._selected_index = 0
+    pushed: list[OutputScreen] = []
+    fake_app = mock.MagicMock()
+    fake_app.push_screen.side_effect = pushed.append
+    monkeypatch.setattr(
+        "safari_dos.screens.run_program_file",
+        lambda path, *, stdin_text=None: ProgramExecutionResult(
+            title="SAFARI BASIC OUTPUT",
+            output="HI",
+            success=True,
+        ),
+    )
+
+    with mock.patch.object(
+        type(screen),
+        "app",
+        new_callable=lambda: property(lambda self: fake_app),
+    ):
+        screen.action_run_selected()
+
+    assert screen._message == "Executed: demo.bas"
+    assert len(pushed) == 1
+    assert pushed[0]._title == "SAFARI BASIC OUTPUT"
+    assert pushed[0]._output_lines == ["HI"]
+
+
+def test_dos_browser_run_selected_prompts_for_stdin(monkeypatch, tmp_path):
+    program = tmp_path / "prompt.asm"
+    program.write_text(
+        "\n".join(
+            [
+                ".TEXT",
+                "MAIN:",
+                "    INP A",
+                "    OUTLN A",
+                "    HALT",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    state = SafariDosState(current_path=tmp_path)
+    screen = SafariDosBrowserScreen(state)
+    screen._entries = list_directory(tmp_path)
+    screen._selected_index = 0
+    pushed: list[object] = []
+    fake_app = mock.MagicMock()
+    fake_app.push_screen.side_effect = (
+        lambda screen_obj, callback=None: pushed.append((screen_obj, callback))
+    )
+
+    with mock.patch.object(
+        type(screen),
+        "app",
+        new_callable=lambda: property(lambda self: fake_app),
+    ):
+        screen.action_run_selected()
+
+    prompt_screen, callback = pushed[0]
+    assert isinstance(prompt_screen, InputScreen)
+    assert callback is not None
 
 
 # ---------------------------------------------------------------------------

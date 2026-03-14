@@ -72,6 +72,13 @@ from safari_repl.screens import ReplMainMenuScreen, ReplEditorScreen
 from safari_repl.state import ReplState
 from safari_reader.screens import SafariReaderMainMenuScreen
 from safari_reader.state import SafariReaderState
+from safari_slides.screens import SafariSlidesMainScreen
+from safari_slides.services import (
+    build_slidemd_from_writer,
+    default_slide_export_name,
+    slides_state_from_writer,
+)
+from safari_slides.state import SafariSlidesState
 from safari_view.ui_terminal.textual_app import SafariViewScreen
 from safari_view.state import SafariViewState
 
@@ -104,6 +111,7 @@ class SafariWriterApp(App):
         self.fed_state: SafariFedState | None = None
         self.repl_state: ReplState | None = None
         self.reader_state: SafariReaderState | None = None
+        self.slides_state: SafariSlidesState | None = None
         self._fed_compose_active: bool = False
         self._last_backup_path: Path | None = None
 
@@ -190,6 +198,9 @@ class SafariWriterApp(App):
         if destination == "safari_reader":
             self._action_safari_reader()
             return
+        if destination == "safari_slides":
+            self._action_safari_slides()
+            return
 
     def _set_initial_cursor(self, line: int | None, column: int | None) -> None:
         if not self.state.buffer:
@@ -236,6 +247,8 @@ class SafariWriterApp(App):
             self._action_safari_repl()
         elif action == "safari_reader":
             self._action_safari_reader()
+        elif action == "safari_slides":
+            self._action_safari_slides()
         elif action == "safari_view":
             self._action_safari_view()
         elif action == "load":
@@ -359,6 +372,16 @@ class SafariWriterApp(App):
                 FilePromptScreen("Export PDF to", base),
                 callback=self._on_export_pdf,
             )
+        elif choice == "slides":
+            self.push_screen(
+                FilePromptScreen(
+                    "Export Slides to",
+                    default_slide_export_name(self.state.filename),
+                ),
+                callback=self._on_export_slides,
+            )
+        elif choice == "slides_preview":
+            self._action_preview_slides()
 
     def _on_export_md(self, filename: str | None) -> None:
         if not filename:
@@ -399,6 +422,21 @@ class SafariWriterApp(App):
             )
             Path(filename).write_bytes(pdf_bytes)
             self.set_message(f"Exported PDF: {filename}")
+        except OSError as e:
+            self.set_message(f"Export error: {e}")
+
+    def _on_export_slides(self, filename: str | None) -> None:
+        if not filename:
+            return
+        try:
+            deck = build_slidemd_from_writer(
+                self.state.buffer,
+                self.state.fmt,
+                self.state.mail_merge_db,
+                title=self.state.doc_title,
+            )
+            Path(filename).write_text(deck, encoding="utf-8")
+            self.set_message(f"Exported Slides: {filename}")
         except OSError as e:
             self.set_message(f"Export error: {e}")
 
@@ -680,6 +718,9 @@ class SafariWriterApp(App):
         if isinstance(self.screen, SafariFedMainScreen):
             self.quit_fed()
             return
+        if isinstance(self.screen, SafariSlidesMainScreen):
+            self.quit_slides()
+            return
         if isinstance(self.screen, (SafariDosMainMenuScreen, SafariDosBrowserScreen)):
             self.quit_dos()
             return
@@ -719,6 +760,18 @@ class SafariWriterApp(App):
 
     def quit_reader(self) -> None:
         """Called by SafariReaderMainMenuScreen to return to the writer menu."""
+        self.pop_screen()
+
+    def _action_preview_slides(self) -> None:
+        self.slides_state = slides_state_from_writer(self.state)
+        self.push_screen(SafariSlidesMainScreen(self.slides_state))
+
+    def _action_safari_slides(self) -> None:
+        self._action_preview_slides()
+
+    def quit_slides(self) -> None:
+        """Called by SafariSlidesMainScreen to return to the writer menu."""
+
         self.pop_screen()
 
     def _action_safari_view(self) -> None:
