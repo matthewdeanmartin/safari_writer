@@ -1,6 +1,6 @@
 # safari_writer
 
-A text editor.
+A retro word processor plus a family of keyboard-first companion tools.
 
 Main goals
 
@@ -22,24 +22,25 @@ pipx install safari-writer
 You can run the main editor or the companion tools directly:
 
 ```bash
-safari-writer # Word processor 
-safari-dos # File browser/manager
+safari-writer
 safari-dos browse C:\work --show-hidden --sort date --descending
 safari-dos ls C:\work --sort type
-safari-chat # Eliza style help chat bot
-safari-fed # Mastodon client
-safari-base  # xbase clone
-safari-repl # BASIC repl
-safari-view # Retro image viewer
+safari-chat
+safari-chat docs\index.md
+safari-fed --folder Mentions
+safari-base address_book.db
+safari-reader --library C:\books
+safari-repl demo.bas
+safari-slides docs\safari_suite_tools.slides.md
 safari-view open images\frog.png --mode st --no-dithering
 safari-view render images\frog.png --mode 2600 --width 160 --height 192 --output out\frog-2600.png
 ```
 
-Follow the menus.
+Most people start with `safari-writer` and open the other tools from the Main Menu.
 
 ## Features
 
-- **Safari Writer**: The core text editor.
+- **Safari Writer**: The core word processor.
   - Keybindings mostly modern, but somewhat influenced by original Atari.
   - Search and replace, word count, and alphabetize.
   - Style codes/printer codes for formatting.
@@ -48,9 +49,13 @@ Follow the menus.
 - **Mailmerge**: Database-driven form letters with a dedicated record editor.
 - **Safari DOS**: A menu-driven way to do file browsing and manipulation, featuring a classic two-pane layout and a "Garbage" bin for file recovery.
 - **Safari Chat**: A "Clippy" style helper based on ELIZA. It answers your questions using the help docs and offers emotional support—no LLMs involved.
-- **Safari Base**: An alternative UI for the mail merge data files (currently in extreme beta).
+- **Safari Base**: A dBASE-style shell for browsing and updating SQLite-backed address-book style data.
 - **Safari Fed**: A calm, keyboard-driven Mastodon client styled after Pine and retro BBS readers. Queue-based reading, folder metaphors, thread view, and a direct handoff to Safari Writer.
-- **Safari BASIC**: Atari BASIC compatible BASIC for macros
+- **Safari Reader**: A keyboard-first library, catalog, and long-form reading app.
+- **Safari REPL**: A small Atari BASIC REPL and `.BAS` file runner with Writer handoff for loaded files.
+- **Safari Slides**: A SlideMD presentation viewer with notes and fragment support.
+- **Safari View**: A retro image viewer and renderer with Textual, Tk, and batch render entry points.
+- **Safari BASIC**: The shared Atari BASIC-compatible macro engine used by Safari Writer and Safari Fed.
 
 ## Current Limitations
 

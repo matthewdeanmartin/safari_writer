@@ -1,7 +1,9 @@
 # Safari Writer Help
 
 Welcome to Safari Writer, a word processor inspired by AtariWriter 80.
-This document covers Safari Writer, Safari DOS, Safari Chat, and Safari Fed.
+This document covers Safari Writer, Safari DOS, Safari Chat, Safari Fed,
+Safari Base, Safari Basic, Safari REPL, Safari Reader, Safari Slides,
+and Safari View.
 If something is frustrating, that is okay. Take it one step at a time.
 
 ______________________________________________________________________
@@ -35,12 +37,14 @@ The Main Menu is the central hub of Safari Writer. Use it for **Document Actions
 - \[I am getting a Disk Full error\](#Disk Full Error)
 - \[I do not know where my file went\](#Finding Files)
 
-**Modules:**
+**Words:**
 
 - **V** **Verify Spelling** — launch the Proofreader
 - **P** **Print** File — print or export your document
 - **G** **Global Format** — set margins, spacing, and layout
 - **M** **Mail Merge** — database and form letters
+- **I** **Library Reader** — open Safari Reader
+- **?** **Doctor** — run diagnostics
 
 ______________________________________________________________________
 
@@ -65,14 +69,26 @@ If you saved a file but cannot find it, check the following:
 
 ______________________________________________________________________
 
-**File Browsing:**
+**DOS:**
 
 - **1** **Index** Current Folder — browse files here
 - **2** **Index** External Drive — browse other drives
+- **K** **Backup & Restore** — backup and restore tools
 - **O** Open **Safari DOS** — full file manager
+- **L** **Load** File — open a file from disk
+- **S** **Save** File — save your current document
+- **A** **Save As** — choose a new filename
+- **D** **Delete** File — move a file to Garbage
 - **F** **Folder** (New) — create a new directory
 
-**Other:**
+**Tools:**
+
+- **B** **Base** (Address Book) — open Safari Base
+- **H** **Help Chat** — open Safari Chat
+- **N** **Net Safari Fed** — open Safari Fed
+- **J** **Slide Projector** — open Safari Slides
+- **R** **Run Safari REPL** — open Safari REPL
+- **W** **Image Viewer** — open Safari View
 
 - **T** Try **Demo Mode** — load a sample document
 - **X** **Style Switcher** — choose a color theme
@@ -697,6 +713,9 @@ ______________________________________________________________________
 You can also use Safari Writer from the command line without
 the full interface.
 
+If you want to render an image from the command line, jump to the
+**Safari View** section called **View CLI** later in this document.
+
 **Export commands:**
 
 - safari-writer export markdown INPUT -o OUTPUT
@@ -790,15 +809,21 @@ ______________________________________________________________________
 Safari Writer is a word processor, built with Python and the
 Textual framework.
 
-It includes four applications:
+It includes the main writer plus companion tools:
 
 - **Safari Writer** — the word processor
 - **Safari DOS** — the file manager
 - **Safari Chat** — the help assistant
 - **Safari Fed** — the Mastodon client
+- **Safari Base** — the dBASE-style data shell
+- **Safari Reader** — the keyboard-first reading app
+- **Safari REPL** — the interactive BASIC workspace
+- **Safari Slides** — the SlideMD presentation viewer
+- **Safari View** — the retro image viewer
+- **Safari Basic** — the shared BASIC macro engine
 
-All three share the same retro text-mode aesthetic and can be
-run independently or together.
+They share the same retro text-mode aesthetic and can be run
+independently or together.
 
 Safari Chat is powered by ELIZA-style pattern matching and
 keyword retrieval. It is not an artificial intelligence. It
@@ -814,7 +839,9 @@ ______________________________________________________________________
 
 # Safari Extended Modules Help
 
-This document covers additional modules in the Safari Suite: Safari ASM, Safari Basic, Safari Reader, Safari REPL, Safari Slides, and Safari View.
+This document also covers additional modules in the Safari Suite:
+Safari ASM, Safari Base, Safari Basic, Safari Reader, Safari REPL,
+Safari Slides, and Safari View.
 
 ______________________________________________________________________
 
@@ -872,12 +899,13 @@ ______________________________________________________________________
 
 ## Safari Base
 
-**Safari Base** is a dBASE-style shell for managing structured data. It provides a terminal-based interface for interacting with SQLite databases using a simplified command set inspired by classic database management systems.
+**Safari Base** is a dBASE-style shell for managing structured data. It provides a terminal-based interface for interacting with SQLite databases using a simplified command set inspired by classic database tools.
 
 Run **safari-base** to start the shell.
 
 - \[How do I load a database?\](#Loading Databases)
 - \[What can I do in Safari Base?\](#Base Operations)
+- \[Can I export data?\](#Base Export)
 
 ______________________________________________________________________
 
@@ -895,12 +923,35 @@ ______________________________________________________________________
 
 ## Base Operations
 
-Safari Base allows you to perform standard database operations through its TUI:
+Safari Base currently focuses on a keyboard-driven shell:
 
-1. **Browse** records in a table.
-1. **Edit** field values.
-1. **Search** and filter data.
-1. **Export** tables to Safari Writer or CSV format.
+1. **Browse** the current table.
+1. **Inspect** table structure.
+1. **Switch** between tables.
+1. **Append** new records.
+1. Use the **Assist** menu for classic dBASE-style command shortcuts.
+
+Important keys include:
+
+- **F1** — help
+- **F6** — structure
+- **F7** — tables
+- **F8** — browse mode
+- **F10 / F2** — Assist menu
+- **F3 / Ctrl + A** — append mode
+- **Insert** — toggle insert mode
+- **CapsLock / F9** — toggle caps mode
+- **Ctrl + Q** — quit
+
+- \[Go back to Safari Base\](#Safari Base)
+
+______________________________________________________________________
+
+## Base Export
+
+Safari Base does **not** currently expose a dedicated CSV or Writer export
+workflow from the shell. If you need exported output, use Safari Base to inspect
+or update the data, then use other tools for the final export step.
 
 - \[Go back to Safari Base\](#Safari Base)
 
@@ -908,7 +959,7 @@ ______________________________________________________________________
 
 ## Safari Basic
 
-**Safari Basic** is an embedded Atari BASIC macro interpreter. It is used primarily for extending the functionality of Safari Writer and Safari DOS through small, fast scripts.
+**Safari Basic** is an embedded Atari BASIC macro interpreter. It is used primarily for extending Safari Writer and Safari Fed through small, fast scripts.
 
 Unlike Safari REPL, Safari Basic is designed to be **embedded** within other applications.
 
@@ -921,9 +972,9 @@ ______________________________________________________________________
 
 Macros in Safari Basic use a subset of Atari BASIC. They are often used for:
 
-1. Customizing the **Main Menu**.
-1. Automating **Mail Merge** setups.
-1. Defining custom **Global Format** templates.
+1. Generating or transforming text inside **Safari Writer**.
+1. Creating draft output from the current post inside **Safari Fed**.
+1. Testing BASIC logic in **Safari REPL** before using it as a macro.
 
 - \[Go back to Safari Basic\](#Safari Basic)
 
@@ -945,7 +996,7 @@ ______________________________________________________________________
 You can load a `.BAS` file directly into the REPL by passing it as a command-line argument:
 `safari-repl game.bas`
 
-Inside the REPL, use the `LOAD` and `SAVE` commands to manage your programs.
+You can also choose **Load** from the Safari REPL main menu.
 
 - \[Tell me about handoff\](#BASIC Handoff)
 - \[Go back to Safari REPL\](#Safari REPL)
@@ -954,9 +1005,9 @@ ______________________________________________________________________
 
 ## BASIC Handoff
 
-Safari REPL supports **Writer Handoff**. If you want to edit your BASIC code in a full-featured word processor, you can request to open the current buffer in Safari Writer.
+Safari REPL supports **Writer Handoff** for loaded files. Press **F9** to open the loaded `.BAS` file in Safari Writer.
 
-This allows you to use Safari Writer's search/replace and formatting tools on your source code.
+This allows you to use Safari Writer's search/replace and other editor tools on your source code.
 
 - \[Go back to Safari REPL\](#Safari REPL)
 
@@ -969,21 +1020,29 @@ ______________________________________________________________________
 Run **safari-reader** to open your library.
 
 - \[How do I navigate?\](#Reader Navigation)
-- \[Can I export to Safari Writer?\](#Reader Handoff)
+- \[How do I find text in a book?\](#Reader Search)
+- \[Can I move quoted text into Writer?\](#Reader Handoff)
 
 ______________________________________________________________________
 
 ## Reader Navigation
 
-Safari Reader uses standard Safari Suite navigation keys for reading your **Books**:
+Safari Reader uses standard Safari Suite navigation keys for reading your books:
 
-- **Up / Down** — scroll line by line
-
-- **Page Up / Page Down** — scroll page by page
-
-- **Home / End** — jump to start or end of the **Book**
-
-- **/** — **Search** for text within the current **Book**
+- **Page Down / Space** — next page
+- **Page Up** — previous page
+- **Ctrl + Page Down** — next chapter
+- **Ctrl + Page Up** — previous chapter
+- **Home / End** — jump to the start or end of the current chapter
+- **/** — search inside the current book
+- **B** — set a bookmark
+- **G** — go to a percent, chapter, or bookmark
+- **T** — table of contents
+- **+ / =** — bigger text
+- **-** — smaller text
+- **] / [** — more or less line spacing
+- **L** — return to the library
+- **H** — help
 
 - \[Tell me about export\](#Reader Handoff)
 
@@ -991,9 +1050,20 @@ Safari Reader uses standard Safari Suite navigation keys for reading your **Book
 
 ______________________________________________________________________
 
+## Reader Search
+
+To **find text in a book**, press **/** while reading. Safari Reader
+searches inside the current book and jumps to the next matching text.
+Use **Page Up**, **Page Down**, and chapter navigation to continue
+reading around the result.
+
+- \[Go back to Safari Reader\](#Safari Reader)
+
+______________________________________________________________________
+
 ## Reader Handoff
 
-Like Safari Fed and Safari REPL, Safari Reader can **handoff** to Safari Writer. If you find a passage you want to quote or a section of documentation you want to edit, you can open it directly in the Safari Writer editor.
+Safari Reader does **not** currently include a direct one-key Writer handoff from the reading screens. If you want to quote a passage in Safari Writer, note the source location in Reader and then open the same file in Writer or copy the text manually after leaving Reader.
 
 - \[Go back to Safari Reader\](#Safari Reader)
 
@@ -1001,9 +1071,9 @@ ______________________________________________________________________
 
 ## Safari Slides
 
-**Safari Slides** is a presentation tool for **SlideMD** decks. It turns simple Markdown files into professional, keyboard-driven terminal presentations.
+**Safari Slides** is a presentation tool for **SlideMD** decks. It turns simple Markdown files into keyboard-driven terminal presentations.
 
-Run `safari-slides deck.md` to start a presentation.
+Run `safari-slides deck.slides.md` to start a presentation. If you do not pass a deck, Safari Slides opens its built-in welcome presentation.
 
 - \[How do I control the slides?\](#Slides Navigation)
 - \[What is SlideMD?\](#SlideMD Format)
@@ -1012,13 +1082,15 @@ ______________________________________________________________________
 
 ## Slides Navigation
 
-- **Right Arrow / Space** — next slide
+- **Right Arrow / Down Arrow / Space / PageDown** — next slide or fragment
 
-- **Left Arrow / Backspace** — previous slide
+- **Left Arrow / Up Arrow / PageUp** — previous slide or fragment
 
 - **Home** — first slide
 
 - **End** — last slide
+
+- **N** — toggle speaker notes
 
 - **Esc / Q** — exit presentation
 
@@ -1050,7 +1122,7 @@ ______________________________________________________________________
 
 ## Safari View
 
-**Safari View** is a retro image and document viewer. It uses a custom **retro pipeline** to render images in various vintage styles, including Atari 2600, Atari 800, and Atari ST modes.
+**Safari View** is a retro image viewer and renderer. It uses a custom **retro pipeline** to render images in various vintage styles, including Atari 2600, Atari 800, and Atari ST modes.
 
 Run `safari-view open image.png` to view a file.
 
@@ -1084,13 +1156,19 @@ ______________________________________________________________________
 
 The **TUI (Terminal User Interface)** mode includes a file browser and a live preview pane.
 
-- **Space** — toggle browser visibility
+- **F2** — toggle browser visibility
 
-- **Arrows** — navigate folders
+- **Enter** — open the selected image
 
-- **Enter** — view the selected image
+- **F3 / F4 / F5 / F6** — switch to 2600, 800, ST, or Native mode
 
-- **M** — cycle through render modes live
+- **D** — toggle dithering
+
+- **G** — toggle pixel grid
+
+- **Esc** — go back
+
+- **Q** — quit
 
 - \[Tell me about the CLI\](#View CLI)
 
@@ -1098,7 +1176,7 @@ The **TUI (Terminal User Interface)** mode includes a file browser and a live pr
 
 ______________________________________________________________________
 
-## View CLI Image Renderer
+## View CLI
 
 You can use the Safari View **Command Line** interface to **render** images directly to files without opening the TUI. This is the primary **CLI** tool for batch processing:
 `safari-view render input.png --mode 800 -o output.png`

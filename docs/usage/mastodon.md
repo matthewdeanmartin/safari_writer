@@ -5,8 +5,11 @@ can write a post in the editor and send it without leaving the app.
 
 ## Prerequisites
 
-You must have an active Safari Fed session before posting. Open Safari Fed from
-the Main Menu first and sign in to your Mastodon account.
+You can open Safari Fed from the Main Menu or by running `safari-fed`.
+
+If Mastodon credentials are configured, Safari Fed can sync and send live posts.
+If no credentials are configured, Safari Fed still opens in demo mode so you can
+explore the interface safely.
 
 ## Posting the current document
 
@@ -24,17 +27,23 @@ the Main Menu first and sign in to your Mastodon account.
 > **Tip:** Keep your post under 500 characters. The preview shows
 > `chars/500 OVER n` in red when you are over the limit.
 
-## Composing a reply from Safari Fed
+## Composing a post or reply from Safari Fed
 
-Inside Safari Fed you can compose new posts and replies directly in the Safari
-Writer editor:
+Safari Fed behaves a little differently depending on where it was launched:
 
-1. Open Safari Fed from the Main Menu (**Safari Fed** option).
-1. Navigate to a post you want to reply to and press the reply key.
-1. Safari Writer opens the editor pre-filled with a quote of the post and
-   `@author` on the last line.
-1. Type your reply.
-1. Press **Ctrl+P** to send, or **Esc** to go back to Safari Fed without posting.
+1. In standalone Safari Fed, press **C** to compose or **R** to reply.
+1. The built-in compose shell opens.
+1. Press **Ctrl+X** to send, **Ctrl+S** to save a draft, or **Esc** to cancel.
+
+When Safari Fed is launched from inside the full Safari Writer app, **C** and
+**R** hand the draft to the full Safari Writer editor instead of the mini
+compose shell.
+
+1. Open Safari Fed from the Main Menu.
+1. Press **C** to compose a new post or **R** to reply to the selected post.
+1. Safari Writer opens the editor, with replies pre-filled with an `@author`
+   line.
+1. Draft and revise as normal, then return to the publish flow from Writer.
 
 ## Spell-check on toots
 

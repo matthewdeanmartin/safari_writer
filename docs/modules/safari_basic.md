@@ -1,32 +1,21 @@
 # Safari Basic
 
-Safari Basic is a modern REPL and interpreter for a subset of the classic Atari BASIC.
+Safari Basic is the Atari BASIC-compatible language runtime used by Safari Writer macros, Safari Fed macros, and Safari REPL.
 
 ## Features
 
-- **Line-Oriented Editing**: Numbered program lines with classic insert/replace behavior.
-- **Immediate Mode**: Execute statements directly from the prompt.
+- **Macro Runtime**: Used by Safari Writer and Safari Fed to run `.BAS` automation scripts.
+- **Atari-Style Language**: Supports a subset of classic Atari BASIC syntax.
 - **Numeric Precision**: Uses modern floating-point precision.
 - **Mandatory DIM**: Strings and arrays must be explicitly dimensioned before use.
 
-## Core Commands
+Safari Basic is not a separate end-user TUI. If you want an interactive shell, use **Safari REPL**.
 
-- **LIST** — Display your program lines.
-- **RUN** — Execute the current program.
-- **NEW** — Delete the current program and reset state.
-- **CONT** — Continue after a `STOP`.
-- **CLR** — Clear variables without deleting the program.
+## Where You Use It
 
-## Sample Program
-
-```basic
-10 DIM NAME$(20)
-20 PRINT "WHAT IS YOUR NAME?"
-30 INPUT NAME$
-40 IF NAME$="" THEN END
-50 PRINT "HELLO, ";NAME$
-60 GOTO 20
-```
+- **Safari Writer** — Press **Ctrl + Backslash** to open the macro picker.
+- **Safari Fed** — Press **~** to run a macro against the current post and save the output as a draft.
+- **Safari REPL** — Use the standalone REPL when you want to experiment with BASIC interactively.
 
 ## Using Safari Basic as a Macro System
 
