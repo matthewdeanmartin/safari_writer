@@ -98,6 +98,7 @@ dev = [
     "hatch",
     "types-pygments>=2.19.0.20251121",
     "pytest-cov>=7.0.0",
+     "pytest-xdist>=3.5.0; python_version >= '3.8'",
 ]
 
 [tool.mypy]
