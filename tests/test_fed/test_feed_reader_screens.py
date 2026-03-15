@@ -121,7 +121,7 @@ def test_feed_list_accepts_multi_digit_selection(tmp_path):
             assert isinstance(app.screen, SafariFeedListScreen)
             await pilot.press("2")
             await pilot.press("0")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.8)
             await pilot.pause()
             assert isinstance(app.screen, SafariFeedReaderScreen)
             assert state.current_feed_index == 19

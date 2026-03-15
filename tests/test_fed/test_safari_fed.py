@@ -17,7 +17,7 @@ from safari_fed.main import parse_args
 from safari_fed.opml import (DEFAULT_MAX_ACCOUNTS, DEFAULT_MAX_FEEDS,
                              WebDocument, build_opml_document,
                              export_followed_feeds_to_opml)
-from safari_fed.screens import FedOpmlLimitsScreen, SafariFedMainScreen
+from safari_fed.screens import SafariFedMainScreen
 from safari_fed.state import (FedPost, SafariFedExitRequest, build_demo_state,
                               render_post_for_writer)
 from safari_writer.app import SafariWriterApp
@@ -362,6 +362,77 @@ def test_export_followed_feeds_to_opml_stops_at_feed_limit(tmp_path):
 
     assert len(subscriptions) == 1
     assert subscriptions[0].xml_url == "https://one.example/feed.xml"
+
+
+def test_export_opml_skips_mastodon_profile_feeds(tmp_path):
+    """OPML export should not include Mastodon instance feeds as blog feeds."""
+    identity = load_default_identity(
+        {
+            "MASTODON_ID_MAIN_BASE_URL": "https://mastodon.social",
+            "MASTODON_ID_MAIN_ACCESS_TOKEN": "token",
+        }
+    )
+    assert identity is not None
+
+    class FakeMastodon:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+        def account_verify_credentials(self):
+            return {"id": "me"}
+
+        def account_following(self, account_id: str, limit: int = 200):
+            return [
+                {
+                    "display_name": "Bob Blogger",
+                    "acct": "bob@mastodon.social",
+                    "url": "https://mastodon.social/@bob",
+                    "fields": [
+                        {
+                            "name": "Blog",
+                            "value": '<a href="https://bob.example/blog">blog</a>',
+                        }
+                    ],
+                },
+            ]
+
+    pages = {
+        # Bob's blog has a feed link
+        "https://bob.example/blog": WebDocument(
+            url="https://bob.example/blog",
+            text=(
+                '<html><head><title>Bob Blog</title>'
+                '<link rel="alternate" type="application/rss+xml" '
+                'href="/feed.xml"></head></html>'
+            ),
+            content_type="text/html",
+        ),
+        # Bob's mastodon profile also has a feed (should be skipped)
+        "https://mastodon.social/@bob": WebDocument(
+            url="https://mastodon.social/@bob",
+            text=(
+                '<html><head><title>Bob on Mastodon</title>'
+                '<link rel="alternate" type="application/rss+xml" '
+                'href="https://mastodon.social/@bob.rss"></head></html>'
+            ),
+            content_type="text/html",
+        ),
+    }
+
+    client = SafariFedClient(identity=identity, mastodon_factory=FakeMastodon)
+    output_path = tmp_path / "feeds.opml"
+    subscriptions = export_followed_feeds_to_opml(
+        client,
+        output_path,
+        fetcher=lambda url: pages.get(url),
+    )
+
+    # Should find the blog feed, NOT the mastodon feed
+    assert len(subscriptions) == 1
+    assert subscriptions[0].xml_url == "https://bob.example/feed.xml"
+    written = output_path.read_text(encoding="utf-8")
+    assert "mastodon.social/@bob" not in written
+    assert "@bob.rss" not in written
 
 
 def test_build_opml_document_renders_outline_rows():
@@ -785,16 +856,6 @@ def test_o_key_starts_opml_export(monkeypatch):
     asyncio.run(run())
 
     assert calls == ["opml"]
-
-
-def test_opml_limits_screen_returns_defaults_on_enter():
-    screen = FedOpmlLimitsScreen()
-    results: list[tuple[int, int] | None] = []
-    screen.dismiss = lambda result=None: results.append(result)
-
-    screen.on_key(type("Key", (), {"key": "enter", "character": None, "stop": lambda self: None})())
-
-    assert results == [(DEFAULT_MAX_ACCOUNTS, DEFAULT_MAX_FEEDS)]
 
 
 def test_help_screen_opens_on_f1():

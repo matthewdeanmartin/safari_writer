@@ -45,6 +45,67 @@ _COMMON_FEED_PATHS = (
 )
 _HREF_RE = re.compile(r"""href\s*=\s*["']([^"'<> ]+)["']""", re.IGNORECASE)
 
+# Known fediverse server software domains and patterns.
+# Profile URLs on these instances are NOT personal blogs.
+_FEDIVERSE_DOMAINS = frozenset({
+    "mastodon.social",
+    "mastodon.online",
+    "mastodon.world",
+    "mstdn.social",
+    "mstdn.jp",
+    "mas.to",
+    "fosstodon.org",
+    "hachyderm.io",
+    "infosec.exchange",
+    "tech.lgbt",
+    "toot.community",
+    "universeodon.com",
+    "c.im",
+    "sfba.social",
+    "aus.social",
+    "social.coop",
+    "kolektiva.social",
+    "mathstodon.xyz",
+    "scholar.social",
+    "masto.ai",
+    "sciences.social",
+    "sigmoid.social",
+    "pixel.kitchen",
+    "octodon.social",
+    "ruby.social",
+    "phpc.social",
+    "chaos.social",
+    "nrw.social",
+    "social.linux.pizza",
+    "social.tchncs.de",
+    "ioc.exchange",
+})
+
+# Patterns that mark a URL as a fediverse profile (not a personal blog).
+_FEDIVERSE_PATH_PATTERNS = (
+    re.compile(r"^/@[^/]+/?$"),          # mastodon-style /@user
+    re.compile(r"^/users/[^/]+/?$"),      # ActivityPub /users/user
+)
+
+
+def _is_fediverse_profile_url(url: str) -> bool:
+    """Return True if *url* points to a fediverse profile, not a blog."""
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    # Exact domain match
+    if host in _FEDIVERSE_DOMAINS:
+        return True
+    # Sub-domains of known instances (e.g. www.mastodon.social)
+    for domain in _FEDIVERSE_DOMAINS:
+        if host.endswith(f".{domain}"):
+            return True
+    # Any domain with a /@user or /users/user path pattern
+    path = parsed.path
+    for pat in _FEDIVERSE_PATH_PATTERNS:
+        if pat.match(path):
+            return True
+    return False
+
 
 @dataclass(frozen=True)
 class WebDocument:
@@ -196,10 +257,10 @@ def _load_followed_accounts(
 def _candidate_urls_for_account(account: Mapping[str, Any]) -> list[str]:
     seen: set[str] = set()
     candidates: list[str] = []
+    # Prioritise explicit website and profile fields over the profile URL,
+    # which on Mastodon instances points to the fediverse profile (not a blog).
     for raw in (
-        account.get("url"),
         account.get("website"),
-        account.get("uri"),
         account.get("note"),
     ):
         _collect_candidate_url(raw, seen, candidates)
@@ -207,6 +268,11 @@ def _candidate_urls_for_account(account: Mapping[str, Any]) -> list[str]:
         if isinstance(field, Mapping):
             _collect_candidate_url(field.get("value"), seen, candidates)
             _collect_candidate_url(field.get("name"), seen, candidates)
+    # Only add the profile URL / URI as a last resort, and skip it when it
+    # clearly points to a fediverse instance rather than a personal site.
+    for raw in (account.get("url"), account.get("uri")):
+        if raw and not _is_fediverse_profile_url(str(raw)):
+            _collect_candidate_url(raw, seen, candidates)
     return candidates
 
 
@@ -250,7 +316,11 @@ def _discover_subscription(
 
     parsed = _FeedLinkParser()
     parsed.feed(direct_document.text)
-    feed_links = [urljoin(direct_document.url, href) for href in parsed.feed_links]
+    feed_links = [
+        urljoin(direct_document.url, href)
+        for href in parsed.feed_links
+        if not _is_fediverse_profile_url(urljoin(direct_document.url, href))
+    ]
 
     if not feed_links:
         for suffix in _COMMON_FEED_PATHS:

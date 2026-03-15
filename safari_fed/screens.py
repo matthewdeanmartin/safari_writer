@@ -75,8 +75,6 @@ class SafariFedMainScreen(Screen[None]):
     CSS = _FEED_SCREEN_CSS
 
     BINDINGS = [
-        Binding("up", "move_up", "Up", show=False),
-        Binding("down", "move_down", "Down", show=False),
         Binding("enter", "open_selected", "Open", show=False),
         Binding("r", "rescan", "Rescan", show=False),
         Binding("q", "go_back", "Back", show=False),
@@ -170,20 +168,6 @@ class SafariFedMainScreen(Screen[None]):
         self._set_selected_index(index)
         self.action_open_selected()
 
-    def action_move_up(self) -> None:
-        list_view = self._list_view()
-        if list_view is None:
-            return
-        current = list_view.index if list_view.index is not None else 0
-        self._set_selected_index(max(0, current - 1))
-
-    def action_move_down(self) -> None:
-        list_view = self._list_view()
-        if list_view is None or not self.state.opml_documents:
-            return
-        current = list_view.index if list_view.index is not None else 0
-        self._set_selected_index(min(len(self.state.opml_documents) - 1, current + 1))
-
     def on_key(self, event: Key) -> None:
         if not event.character or not event.character.isdigit():
             return
@@ -201,6 +185,7 @@ class SafariFedMainScreen(Screen[None]):
             return
         self._digit_buffer = candidate
         event.stop()
+        event.prevent_default()
         if self._digit_timer is not None:
             self._digit_timer.stop()
         if has_exact:
@@ -208,7 +193,7 @@ class SafariFedMainScreen(Screen[None]):
         if has_exact and not has_longer_prefix:
             self._commit_digit_selection()
             return
-        self._digit_timer = self.set_timer(0.35, self._commit_digit_selection)
+        self._digit_timer = self.set_timer(0.6, self._commit_digit_selection)
 
     def action_open_selected(self) -> None:
         document = self._selected_document()
@@ -249,8 +234,6 @@ class SafariFeedListScreen(Screen[None]):
     CSS = _FEED_SCREEN_CSS
 
     BINDINGS = [
-        Binding("up", "move_up", "Up", show=False),
-        Binding("down", "move_down", "Down", show=False),
         Binding("enter", "open_feed", "Open Feed", show=False),
         Binding("f", "fetch_current", "Fetch", show=False),
         Binding("a", "fetch_all", "Fetch All", show=False),
@@ -322,20 +305,6 @@ class SafariFeedListScreen(Screen[None]):
         self._set_selected_index(index)
         self.action_open_feed()
 
-    def action_move_up(self) -> None:
-        list_view = self._list_view()
-        if list_view is None:
-            return
-        current = list_view.index if list_view.index is not None else self.state.current_feed_index
-        self._set_selected_index(max(0, current - 1))
-
-    def action_move_down(self) -> None:
-        list_view = self._list_view()
-        if list_view is None or not self.state.feeds:
-            return
-        current = list_view.index if list_view.index is not None else self.state.current_feed_index
-        self._set_selected_index(min(len(self.state.feeds) - 1, current + 1))
-
     def on_key(self, event: Key) -> None:
         if not event.character or not event.character.isdigit():
             return
@@ -353,6 +322,7 @@ class SafariFeedListScreen(Screen[None]):
             return
         self._digit_buffer = candidate
         event.stop()
+        event.prevent_default()
         if self._digit_timer is not None:
             self._digit_timer.stop()
         if has_exact:
@@ -360,7 +330,7 @@ class SafariFeedListScreen(Screen[None]):
         if has_exact and not has_longer_prefix:
             self._commit_digit_selection()
             return
-        self._digit_timer = self.set_timer(0.35, self._commit_digit_selection)
+        self._digit_timer = self.set_timer(0.6, self._commit_digit_selection)
 
     def _selected_feed(self) -> FeedRecord | None:
         index = self._selected_index()

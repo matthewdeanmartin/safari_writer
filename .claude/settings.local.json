@@ -23,7 +23,9 @@
       "Bash(cd C:/github/safari_writer && uv pip install dbf --no-deps 2>&1 || .venv/Scripts/pip install dbf --no-deps 2>&1)",
       "Bash(cd C:/github/safari_writer && uv pip install aenum --no-deps 2>&1)",
       "Bash(.venv/Scripts/pip.exe install:*)",
-      "Bash(uv pip:*)"
+      "Bash(uv pip:*)",
+      "Bash(find:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
