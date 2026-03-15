@@ -10,16 +10,23 @@ from pathlib import Path
 from hypothesis import given
 from hypothesis import strategies as st
 
-from safari_writer.format_codec import (decode_sfw, encode_sfw, has_controls,
-                                        strip_controls)
+from safari_writer.format_codec import (
+    decode_sfw,
+    encode_sfw,
+    has_controls,
+    strip_controls,
+)
 from safari_writer.heading_numbering import next_heading_number
-from safari_writer.mail_merge_db import (MAX_FIELD_DATA_LEN,
-                                         MAX_FIELD_NAME_LEN, MAX_FIELDS,
-                                         FieldDef, MailMergeDB,
-                                         apply_mail_merge_to_buffer,
-                                         validate_mail_merge_data)
-from safari_writer.proofing import (check_word, extract_words,
-                                    load_personal_dictionary)
+from safari_writer.mail_merge_db import (
+    MAX_FIELD_DATA_LEN,
+    MAX_FIELD_NAME_LEN,
+    MAX_FIELDS,
+    FieldDef,
+    MailMergeDB,
+    apply_mail_merge_to_buffer,
+    validate_mail_merge_data,
+)
+from safari_writer.proofing import check_word, extract_words, load_personal_dictionary
 
 CONTROL_CHARS = "".join(
     chr(code) for code in (1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23)

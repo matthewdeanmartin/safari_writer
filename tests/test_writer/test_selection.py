@@ -4,8 +4,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from safari_writer.screens.editor import (EditorArea, _from_flat,
-                                          _selection_range, _to_flat)
+from safari_writer.screens.editor import (
+    EditorArea,
+    _from_flat,
+    _selection_range,
+    _to_flat,
+)
 from safari_writer.state import AppState
 
 

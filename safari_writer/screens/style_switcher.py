@@ -8,8 +8,13 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Static
 
-from safari_writer.themes import (DEFAULT_THEME, THEME_LABELS, THEMES,
-                                  load_settings, save_settings)
+from safari_writer.themes import (
+    DEFAULT_THEME,
+    THEME_LABELS,
+    THEMES,
+    load_settings,
+    save_settings,
+)
 
 SS_CSS = """
 StyleSwitcherScreen {

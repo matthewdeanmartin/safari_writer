@@ -8,12 +8,10 @@ from textual.widgets import Static
 
 import safari_base
 from safari_base.app import SafariBaseApp
-from safari_base.database import (DEFAULT_ADDRESS_SCHEMA, ensure_database,
-                                  list_tables)
+from safari_base.database import DEFAULT_ADDRESS_SCHEMA, ensure_database, list_tables
 from safari_base.main import main as safari_base_main
 from safari_base.main import parse_args
-from safari_base.screen import (SCREEN_CSS, SafariBaseScreen,
-                                clamp_shell_dimension)
+from safari_base.screen import SCREEN_CSS, SafariBaseScreen, clamp_shell_dimension
 
 
 def test_public_exports_are_explicit():

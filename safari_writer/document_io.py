@@ -7,10 +7,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from safari_writer.file_types import StorageMode, resolve_file_profile
-from safari_writer.format_codec import (decode_sfw, encode_sfw,
-                                        extract_sfw_metadata, has_controls,
-                                        inject_sfw_metadata, is_sfw,
-                                        strip_controls)
+from safari_writer.format_codec import (
+    decode_sfw,
+    encode_sfw,
+    extract_sfw_metadata,
+    has_controls,
+    inject_sfw_metadata,
+    is_sfw,
+    strip_controls,
+)
 from safari_writer.state import AppState
 
 if TYPE_CHECKING:

@@ -19,17 +19,28 @@ import pytest
 
 from safari_writer.export_md import export_markdown
 from safari_writer.export_ps import export_postscript
-from safari_writer.mail_merge_db import (FieldDef, MailMergeDB,
-                                         apply_mail_merge_to_buffer,
-                                         load_mail_merge_db,
-                                         save_mail_merge_db)
+from safari_writer.mail_merge_db import (
+    FieldDef,
+    MailMergeDB,
+    apply_mail_merge_to_buffer,
+    load_mail_merge_db,
+    save_mail_merge_db,
+)
 from safari_writer.screens.editor import CTRL_MERGE
-from safari_writer.screens.mail_merge import (MODE_ENTER, MODE_ENTER_CONFIRM,
-                                              MODE_LOAD, MODE_MAIN, MODE_SAVE,
-                                              MODE_UPDATE, MailMergeScreen)
-from safari_writer.screens.print_screen import (_apply_record,
-                                                _buffer_has_merge_markers,
-                                                _render_with_mail_merge)
+from safari_writer.screens.mail_merge import (
+    MODE_ENTER,
+    MODE_ENTER_CONFIRM,
+    MODE_LOAD,
+    MODE_MAIN,
+    MODE_SAVE,
+    MODE_UPDATE,
+    MailMergeScreen,
+)
+from safari_writer.screens.print_screen import (
+    _apply_record,
+    _buffer_has_merge_markers,
+    _render_with_mail_merge,
+)
 from safari_writer.state import AppState, GlobalFormat
 
 MERGE = CTRL_MERGE  # "\x11"

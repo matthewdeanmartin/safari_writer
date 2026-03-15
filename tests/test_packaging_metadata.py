@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import tomllib
+from pathlib import Path
 
 
 def test_pyproject_requires_supported_pillow_on_python_314_plus() -> None:

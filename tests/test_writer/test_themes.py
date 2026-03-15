@@ -6,8 +6,13 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from safari_writer.themes import (DEFAULT_THEME, THEME_LABELS, THEMES,
-                                  load_settings, save_settings)
+from safari_writer.themes import (
+    DEFAULT_THEME,
+    THEME_LABELS,
+    THEMES,
+    load_settings,
+    save_settings,
+)
 
 
 class TestThemeDefinitions:

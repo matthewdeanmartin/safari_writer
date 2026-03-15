@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from safari_asm.model import (Directive, Instruction, Operand, Program,
-                              SymbolDeclaration)
+from safari_asm.model import Directive, Instruction, Operand, Program, SymbolDeclaration
 
 __all__ = ["SafariAsmParseError", "parse_source"]
 

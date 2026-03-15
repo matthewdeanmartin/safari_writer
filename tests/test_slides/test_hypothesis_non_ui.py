@@ -21,7 +21,9 @@ TEXT_LINE = st.text(
 @st.composite
 def slide_sections(draw: st.DrawFn) -> list[tuple[str, list[str]]]:
     titles = draw(
-        st.lists(TEXT_LINE, min_size=1, max_size=5, unique_by=lambda value: value.lower())
+        st.lists(
+            TEXT_LINE, min_size=1, max_size=5, unique_by=lambda value: value.lower()
+        )
     )
     bodies = draw(
         st.lists(
@@ -35,7 +37,7 @@ def slide_sections(draw: st.DrawFn) -> list[tuple[str, list[str]]]:
 
 @given(slide_sections())
 def test_parse_slidemd_assigns_sequential_slide_ids(
-    sections: list[tuple[str, list[str]]]
+    sections: list[tuple[str, list[str]]],
 ) -> None:
     deck = "\n\n---\n\n".join(
         f"# {title}\n\n" + "\n".join(body_lines) for title, body_lines in sections
@@ -72,7 +74,10 @@ def test_slide_properties_reflect_fragment_counts_and_coordinates(
         slide_id="slide-1",
         title="Demo",
         raw_markdown="# Demo",
-        lines=tuple(RenderLine(f"line-{index}", order) for index, order in enumerate(fragment_orders)),
+        lines=tuple(
+            RenderLine(f"line-{index}", order)
+            for index, order in enumerate(fragment_orders)
+        ),
         horizontal_index=horizontal_index,
         vertical_index=vertical_index,
     )

@@ -12,18 +12,30 @@ import safari_dos.services as dos_services
 from safari_dos.main import main as safari_dos_main
 from safari_dos.main import parse_args
 from safari_dos.screens import InputScreen, SafariDosBrowserScreen
-from safari_dos.services import (copy_paths, create_folder, discover_locations,
-                                 duplicate_path, get_entry_info,
-                                 get_preview_text, list_directory,
-                                 list_favorites, list_garbage,
-                                 list_recent_documents, list_recent_locations,
-                                 move_paths, move_to_garbage,
-                                 record_recent_document,
-                                 record_recent_location, rename_path,
-                                 restore_from_garbage, set_protected,
-                                 toggle_favorite, unzip_path, zip_paths)
-from safari_dos.state import (SafariDosExitRequest, SafariDosLaunchConfig,
-                              SafariDosState)
+from safari_dos.services import (
+    copy_paths,
+    create_folder,
+    discover_locations,
+    duplicate_path,
+    get_entry_info,
+    get_preview_text,
+    list_directory,
+    list_favorites,
+    list_garbage,
+    list_recent_documents,
+    list_recent_locations,
+    move_paths,
+    move_to_garbage,
+    record_recent_document,
+    record_recent_location,
+    rename_path,
+    restore_from_garbage,
+    set_protected,
+    toggle_favorite,
+    unzip_path,
+    zip_paths,
+)
+from safari_dos.state import SafariDosExitRequest, SafariDosLaunchConfig, SafariDosState
 from safari_writer.app import SafariWriterApp
 from safari_writer.program_runner import ProgramExecutionResult
 from safari_writer.screens.file_ops import FilePromptScreen
@@ -138,7 +150,9 @@ def test_list_garbage_reads_windows_recycle_bin(monkeypatch):
     completed = mock.Mock(stdout=json.dumps(payload))
 
     monkeypatch.setattr(dos_services.os, "name", "nt", raising=False)
-    monkeypatch.setattr(dos_services.subprocess, "run", lambda *args, **kwargs: completed)
+    monkeypatch.setattr(
+        dos_services.subprocess, "run", lambda *args, **kwargs: completed
+    )
 
     entries = list_garbage()
 

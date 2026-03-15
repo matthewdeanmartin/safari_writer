@@ -16,12 +16,18 @@ if TYPE_CHECKING:
     from safari_writer.export_ps import _Span
     from safari_writer.mail_merge_db import MailMergeDB
 
-from safari_writer.export_ps import (_FONTS, _PAGE_H, _PAGE_W, _parse_spans,
-                                     _strip)
-from safari_writer.screens.editor import (CTRL_CENTER, CTRL_CHAIN, CTRL_EJECT,
-                                          CTRL_FOOTER, CTRL_HEADER,
-                                          CTRL_HEADING, CTRL_MERGE, CTRL_PARA,
-                                          CTRL_RIGHT)
+from safari_writer.export_ps import _FONTS, _PAGE_H, _PAGE_W, _parse_spans, _strip
+from safari_writer.screens.editor import (
+    CTRL_CENTER,
+    CTRL_CHAIN,
+    CTRL_EJECT,
+    CTRL_FOOTER,
+    CTRL_HEADER,
+    CTRL_HEADING,
+    CTRL_MERGE,
+    CTRL_PARA,
+    CTRL_RIGHT,
+)
 
 __all__ = ["export_pdf"]
 

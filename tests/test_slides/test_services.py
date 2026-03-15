@@ -1,8 +1,10 @@
 """Service-layer tests for safari_slides."""
 
-from safari_slides.services import (build_slidemd_from_writer,
-                                    is_slide_filename,
-                                    slides_state_from_writer)
+from safari_slides.services import (
+    build_slidemd_from_writer,
+    is_slide_filename,
+    slides_state_from_writer,
+)
 from safari_writer.state import AppState, GlobalFormat
 
 

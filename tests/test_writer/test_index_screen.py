@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from unittest.mock import patch
 
-from safari_writer.screens.index_screen import _format_size
+from safari_writer.screens.index_screen import _find_external_drives, _format_size
 
 
 class TestFormatSize:
@@ -49,3 +49,15 @@ class TestFormatSize:
         result = _format_size(999)
         assert "K" not in result
         assert "999" in result.strip()
+
+
+class TestFindExternalDrives:
+    def test_windows_without_windll_returns_no_drives(self) -> None:
+        with (
+            patch(
+                "safari_writer.screens.index_screen.platform.system",
+                return_value="Windows",
+            ),
+            patch("safari_writer.screens.index_screen.get_kernel32", return_value=None),
+        ):
+            assert _find_external_drives() == []

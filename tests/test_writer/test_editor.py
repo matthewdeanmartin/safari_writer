@@ -10,8 +10,12 @@ import pytest
 
 from safari_writer.file_types import resolve_file_profile
 from safari_writer.program_runner import ProgramExecutionResult
-from safari_writer.screens.editor import (CTRL_BOLD, CTRL_CENTER, EditorArea,
-                                          EditorScreen)
+from safari_writer.screens.editor import (
+    CTRL_BOLD,
+    CTRL_CENTER,
+    EditorArea,
+    EditorScreen,
+)
 from safari_writer.screens.output_screen import OutputScreen
 from safari_writer.state import AppState, GlobalFormat
 

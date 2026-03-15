@@ -6,11 +6,17 @@ from pathlib import Path
 
 import pytest
 
-from safari_writer.document_io import (load_document_buffer, load_sfw_language,
-                                       serialize_document_buffer)
-from safari_writer.format_codec import (decode_sfw, encode_sfw,
-                                        extract_sfw_metadata,
-                                        inject_sfw_metadata)
+from safari_writer.document_io import (
+    load_document_buffer,
+    load_sfw_language,
+    serialize_document_buffer,
+)
+from safari_writer.format_codec import (
+    decode_sfw,
+    encode_sfw,
+    extract_sfw_metadata,
+    inject_sfw_metadata,
+)
 from safari_writer.proofing import make_checker
 from safari_writer.state import AppState
 

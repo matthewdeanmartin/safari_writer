@@ -4,8 +4,12 @@ import pytest
 from rich.text import Text
 
 from safari_writer.file_types import resolve_file_profile
-from safari_writer.syntax_highlight import (Highlighter, create_highlighter,
-                                            highlight_buffer, highlight_line)
+from safari_writer.syntax_highlight import (
+    Highlighter,
+    create_highlighter,
+    highlight_buffer,
+    highlight_line,
+)
 
 
 class TestHighlighterCreation:

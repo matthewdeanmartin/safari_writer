@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from safari_writer.screens.style_switcher import (THEME_NAMES,
-                                                  StyleSwitcherScreen)
+from safari_writer.screens.style_switcher import THEME_NAMES, StyleSwitcherScreen
 from safari_writer.themes import DEFAULT_THEME, THEMES
 
 

@@ -26,10 +26,12 @@ from textual.widgets import Static
 
 import safari_writer.locale_info as _locale_info
 from safari_writer.file_types import FileProfile, HighlightProfile, StorageMode
-from safari_writer.program_runner import (decode_stdin_text,
-                                          is_runnable_profile,
-                                          program_may_need_stdin,
-                                          run_program_source)
+from safari_writer.program_runner import (
+    decode_stdin_text,
+    is_runnable_profile,
+    program_may_need_stdin,
+    run_program_source,
+)
 from safari_writer.screens.file_ops import FilePromptScreen
 from safari_writer.screens.output_screen import OutputScreen
 from safari_writer.state import AppState
@@ -465,8 +467,7 @@ class EditorArea(Widget, can_focus=True):
         return cast(_EditorApp, self.app)
 
     def _is_slide_document(self) -> bool:
-        from safari_slides.services import (is_slide_filename,
-                                            looks_like_slide_markdown)
+        from safari_slides.services import is_slide_filename, looks_like_slide_markdown
 
         return is_slide_filename(self.state.filename) or looks_like_slide_markdown(
             "\n".join(self.state.buffer)
@@ -1913,8 +1914,7 @@ class EditorScreen(Screen):
             self.query_one("#tab-bar", Static).update(self._tab_bar_text())
 
     def _help_bar_text(self) -> str:
-        from safari_slides.services import (is_slide_filename,
-                                            looks_like_slide_markdown)
+        from safari_slides.services import is_slide_filename, looks_like_slide_markdown
 
         fed_active = (
             hasattr(self.app, "_fed_compose_active") and self.app._fed_compose_active

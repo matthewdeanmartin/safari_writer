@@ -8,10 +8,12 @@ import asyncio
 
 from PIL import Image
 
-from safari_view.ui_terminal.textual_app import (MIN_RENDER_HEIGHT_ROWS,
-                                                 MIN_RENDER_WIDTH,
-                                                 SafariViewApp,
-                                                 resolve_render_target)
+from safari_view.ui_terminal.textual_app import (
+    MIN_RENDER_HEIGHT_ROWS,
+    MIN_RENDER_WIDTH,
+    SafariViewApp,
+    resolve_render_target,
+)
 from safari_view.ui_terminal.widgets import ChunkyImage
 
 
@@ -64,7 +66,7 @@ def test_load_and_render_uses_stable_dimensions(tmp_path):
         async with app.run_test() as pilot:
             await pilot.pause()
             screen = app.screen
-            
+
             def fake_process(path, mode, context):
                 captured["path"] = path
                 captured["mode"] = mode
@@ -72,9 +74,9 @@ def test_load_and_render_uses_stable_dimensions(tmp_path):
                 return Image.new("RGB", (32, 32), color="green")
 
             screen.pipeline.process = fake_process
-            
+
             image_path = tmp_path / "sample.png"
-            image_path.write_text("fake", encoding="utf-8") # Must exist
+            image_path.write_text("fake", encoding="utf-8")  # Must exist
             screen._load_and_render_image(image_path)
             await pilot.pause()
 

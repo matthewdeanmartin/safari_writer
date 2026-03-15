@@ -126,28 +126,33 @@ Use these files as the first stop for module names, visible headings, and user-f
 For each feature or module you touch, check all relevant surfaces:
 
 1. **Root product docs**
+
    - `README.md`
    - `docs\README.md`
    - `docs\index.md`
    - `mkdocs.yml`
 
 1. **Module docs**
+
    - `docs\modules\*.md`
    - Add missing module pages when appropriate.
 
 1. **Task/topic docs**
+
    - `docs\usage\*.md`
    - `docs\overview\*.md`
    - `docs\reference\*.md`
    - Make sure new or existing pages are linked from `mkdocs.yml` nav if they are user-facing.
 
 1. **In-app help / visible H1-style screen titles**
+
    - Help constants like `HELP_CONTENT`, `CHAT_HELP_CONTENT`, `DOS_HELP_CONTENT`, `FED_HELP_CONTENT`
    - Title widgets like `yield Static("*** SAFARI WRITER ***", id="title")`
    - Modal titles like `=== SAFARI CHAT — KEY COMMANDS ===`
    - App/window titles like `TITLE = "Safari Chat"` or `self.app.title = ...`
 
 1. **Safari Chat knowledge base**
+
    - `safari_chat\default_help.md`
    - Update this when user-facing workflows, names, commands, modules, or feature summaries changed.
 

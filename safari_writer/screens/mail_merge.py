@@ -14,13 +14,20 @@ from textual.widgets import Static
 
 import safari_writer.locale_info as _locale_info
 from safari_writer.mail_merge_db import DEFAULT_FIELDS as _DEFAULT_FIELDS
-from safari_writer.mail_merge_db import (MAX_FIELD_DATA_LEN,
-                                         MAX_FIELD_NAME_LEN, MAX_FIELDS)
+from safari_writer.mail_merge_db import (
+    MAX_FIELD_DATA_LEN,
+    MAX_FIELD_NAME_LEN,
+    MAX_FIELDS,
+)
 from safari_writer.mail_merge_db import MAX_RECORDS as _MAX_RECORDS
-from safari_writer.mail_merge_db import (FieldDef, MailMergeDB,
-                                         load_mail_merge_db,
-                                         save_mail_merge_db)
+from safari_writer.mail_merge_db import (
+    FieldDef,
+    MailMergeDB,
+    load_mail_merge_db,
+    save_mail_merge_db,
+)
 from safari_writer.state import AppState
+from safari_writer.windows_api import get_kernel32
 
 
 def _(s: str) -> str:
@@ -626,16 +633,19 @@ class MailMergeScreen(Screen):
         system = platform.system()
         drives: list[Path] = []
         if system == "Windows":
-            import ctypes
-
-            bitmask = ctypes.windll.kernel32.GetLogicalDrives()
-            for i in range(26):
-                if bitmask & (1 << i):
-                    letter = chr(65 + i)
-                    drive_path = f"{letter}:\\"
-                    drive_type = ctypes.windll.kernel32.GetDriveTypeW(drive_path)
-                    if drive_type in (2, 3) and Path(drive_path).anchor != Path.cwd().anchor:
-                        drives.append(Path(drive_path))
+            kernel32 = get_kernel32()
+            if kernel32 is not None:
+                bitmask = int(kernel32.GetLogicalDrives())
+                for i in range(26):
+                    if bitmask & (1 << i):
+                        letter = chr(65 + i)
+                        drive_path = f"{letter}:\\"
+                        drive_type = int(kernel32.GetDriveTypeW(drive_path))
+                        if (
+                            drive_type in (2, 3)
+                            and Path(drive_path).anchor != Path.cwd().anchor
+                        ):
+                            drives.append(Path(drive_path))
         elif system == "Darwin":
             volumes = Path("/Volumes")
             if volumes.exists():

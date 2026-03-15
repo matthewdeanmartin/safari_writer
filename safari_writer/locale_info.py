@@ -16,6 +16,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from safari_writer.windows_api import get_kernel32
+
 __all__ = [
     "LANGUAGE",
     "LOCALE",
@@ -97,11 +99,11 @@ def _detect_os_locale() -> str:
     # --- Windows ---
     if system == "Windows":
         try:
-            import ctypes
-
-            lcid = ctypes.windll.kernel32.GetUserDefaultUILanguage()
-            if lcid in _LCID_MAP:
-                return _LCID_MAP[lcid]
+            kernel32 = get_kernel32()
+            if kernel32 is not None:
+                lcid = int(kernel32.GetUserDefaultUILanguage())
+                if lcid in _LCID_MAP:
+                    return _LCID_MAP[lcid]
         except Exception:
             pass
 

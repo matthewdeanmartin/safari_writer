@@ -2,10 +2,19 @@
 
 from __future__ import annotations
 
-from safari_chat.engine import (find_callback_candidates, parse_document,
-                                plan_response, retrieve_chunks, score_distress)
-from safari_chat.safety import (crisis_response, detect_crisis, detect_refusal,
-                                refusal_response)
+from safari_chat.engine import (
+    find_callback_candidates,
+    parse_document,
+    plan_response,
+    retrieve_chunks,
+    score_distress,
+)
+from safari_chat.safety import (
+    crisis_response,
+    detect_crisis,
+    detect_refusal,
+    refusal_response,
+)
 from safari_chat.state import DistressLevel, ResponseMode, SafariChatState
 from safari_chat.synonyms import apply_variation
 

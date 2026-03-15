@@ -84,14 +84,21 @@ ______________________________________________________________________
 **Tools:**
 
 - **B** **Base** (Address Book) — open Safari Base
+
 - **H** **Help Chat** — open Safari Chat
+
 - **N** **Net Safari Fed** — open Safari Fed
+
 - **J** **Slide Projector** — open Safari Slides
+
 - **R** **Run Safari REPL** — open Safari REPL
+
 - **W** **Image Viewer** — open Safari View
 
 - **T** Try **Demo Mode** — load a sample document
+
 - **X** **Style Switcher** — choose a color theme
+
 - **Q** **Quit** — exit the program
 
 ______________________________________________________________________
@@ -934,13 +941,21 @@ Safari Base currently focuses on a keyboard-driven shell:
 Important keys include:
 
 - **F1** — help
+
 - **F6** — structure
+
 - **F7** — tables
+
 - **F8** — browse mode
+
 - **F10 / F2** — Assist menu
+
 - **F3 / Ctrl + A** — append mode
+
 - **Insert** — toggle insert mode
+
 - **CapsLock / F9** — toggle caps mode
+
 - **Ctrl + Q** — quit
 
 - \[Go back to Safari Base\](#Safari Base)
@@ -1030,18 +1045,31 @@ ______________________________________________________________________
 Safari Reader uses standard Safari Suite navigation keys for reading your books:
 
 - **Page Down / Space** — next page
+
 - **Page Up** — previous page
+
 - **Ctrl + Page Down** — next chapter
+
 - **Ctrl + Page Up** — previous chapter
+
 - **Home / End** — jump to the start or end of the current chapter
+
 - **/** — search inside the current book
+
 - **B** — set a bookmark
+
 - **G** — go to a percent, chapter, or bookmark
+
 - **T** — table of contents
+
 - **+ / =** — bigger text
+
 - **-** — smaller text
-- **] / [** — more or less line spacing
+
+- **\] / \[** — more or less line spacing
+
 - **L** — return to the library
+
 - **H** — help
 
 - \[Tell me about export\](#Reader Handoff)

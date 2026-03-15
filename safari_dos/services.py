@@ -467,8 +467,10 @@ $items | ConvertTo-Json -Compress
         if not isinstance(item, dict):
             continue
         original_raw = str(item.get("OriginalPath") or "").strip()
-        original_path = Path(original_raw) if original_raw else Path(
-            str(item.get("Name") or item.get("ItemId") or "recycled-item")
+        original_path = (
+            Path(original_raw)
+            if original_raw
+            else Path(str(item.get("Name") or item.get("ItemId") or "recycled-item"))
         )
         name = str(item.get("Name") or original_path.name or original_path)
         entries.append(
