@@ -9,7 +9,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.events import Key
 from textual.screen import Screen
-from textual.widgets import Label, ListItem, ListView, Static
+from textual.widgets import Static
 
 from safari_fed.feed_state import FeedRecord, SafariFeedState
 from safari_fed.services import (
@@ -75,6 +75,8 @@ class SafariFedMainScreen(Screen[None]):
     CSS = _FEED_SCREEN_CSS
 
     BINDINGS = [
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
         Binding("enter", "open_selected", "Open", show=False),
         Binding("r", "rescan", "Rescan", show=False),
         Binding("q", "go_back", "Back", show=False),
@@ -85,6 +87,7 @@ class SafariFedMainScreen(Screen[None]):
     def __init__(self, state: SafariFeedState) -> None:
         super().__init__()
         self.state = state
+        self._selected_index = 0
         self._digit_buffer = ""
         self._digit_timer = None
         if not self.state.opml_documents:
@@ -101,28 +104,14 @@ class SafariFedMainScreen(Screen[None]):
                 f"  No OPML files found in {config_dir}\n"
                 "  Drop one or more *.opml files there, then press R to rescan."
             )
-        else:
-            items: list[ListItem] = []
-            for index, document in enumerate(self.state.opml_documents):
-                label = (
-                    f"  {index + 1:>3}. {document.filename:<30}"
-                    f" {document.modified_label:<16} {document.feed_count:>4} feeds"
-                )
-                items.append(ListItem(Label(label), id=f"opml-{index}"))
-            yield ListView(*items, id="feed-opml-list")
+        yield Static("", id="feed-opml-list")
         yield Static("", id="feed-library-status")
         yield Static(
-            f"[{_FOOTER_STYLE}]  Enter=Open  R=Rescan  Q=Back  H=Help  [/{_FOOTER_STYLE}]"
+            f"[{_FOOTER_STYLE}]  Up/Down=Move  Enter=Open  R=Rescan  Q=Back  H=Help  [/{_FOOTER_STYLE}]"
         )
 
     def on_mount(self) -> None:
         self._refresh_documents()
-        matches = self.query("#feed-opml-list")
-        if matches:
-            list_view = matches.first(ListView)
-            if list_view.index is None and self.state.opml_documents:
-                list_view.index = 0
-            list_view.focus()
 
     def _refresh_documents(self) -> None:
         self.state.opml_documents = scan_opml_documents(self.state.config_dir)
@@ -132,44 +121,63 @@ class SafariFedMainScreen(Screen[None]):
         self.query_one("#feed-library-status", Static).update(
             f"  {self.state.status_message}"
         )
+        self._render_list()
+
+    def _render_list(self) -> None:
+        if not self.state.opml_documents:
+            self.query_one("#feed-opml-list", Static).update("")
+            return
+        lines: list[str] = []
+        for index, document in enumerate(self.state.opml_documents):
+            line = (
+                f"  {index + 1:>3}. {document.filename:<30}"
+                f" {document.modified_label:<16} {document.feed_count:>4} feeds"
+            )
+            if index == self._selected_index:
+                line = f"[reverse]{line}[/reverse]"
+            lines.append(line)
+        self.query_one("#feed-opml-list", Static).update("\n".join(lines))
+
+    def _clamp_index(self) -> None:
+        count = len(self.state.opml_documents)
+        if count == 0:
+            self._selected_index = 0
+        else:
+            self._selected_index = max(0, min(self._selected_index, count - 1))
 
     def _selected_document(self):
-        matches = self.query("#feed-opml-list")
-        if not matches:
-            return None
-        list_view = matches.first(ListView)
-        if list_view.index is None:
-            return None
-        if 0 <= list_view.index < len(self.state.opml_documents):
-            return self.state.opml_documents[list_view.index]
+        if 0 <= self._selected_index < len(self.state.opml_documents):
+            return self.state.opml_documents[self._selected_index]
         return None
 
-    def _list_view(self) -> ListView | None:
-        matches = self.query("#feed-opml-list")
-        if not matches:
-            return None
-        return matches.first(ListView)
+    def action_cursor_up(self) -> None:
+        if self._selected_index > 0:
+            self._selected_index -= 1
+            self._render_list()
 
-    def _set_selected_index(self, index: int) -> None:
-        list_view = self._list_view()
-        if list_view is None:
-            return
-        list_view.index = index
-        list_view.focus()
+    def action_cursor_down(self) -> None:
+        if self._selected_index < len(self.state.opml_documents) - 1:
+            self._selected_index += 1
+            self._render_list()
 
     def _commit_digit_selection(self) -> None:
+        """Apply accumulated digit buffer as a selection jump."""
         if not self._digit_buffer:
             return
         index = int(self._digit_buffer) - 1
         self._digit_buffer = ""
         self._digit_timer = None
-        if not 0 <= index < len(self.state.opml_documents):
-            return
-        self._set_selected_index(index)
-        self.action_open_selected()
+        if 0 <= index < len(self.state.opml_documents):
+            self._selected_index = index
+            self._render_list()
 
     def on_key(self, event: Key) -> None:
         if not event.character or not event.character.isdigit():
+            if self._digit_buffer:
+                self._digit_buffer = ""
+                if self._digit_timer is not None:
+                    self._digit_timer.stop()
+                    self._digit_timer = None
             return
         if event.character == "0" and not self._digit_buffer:
             return
@@ -182,6 +190,7 @@ class SafariFedMainScreen(Screen[None]):
             if len(str(number)) > len(candidate)
         )
         if not has_exact and not has_longer_prefix:
+            self._digit_buffer = ""
             return
         self._digit_buffer = candidate
         event.stop()
@@ -189,11 +198,13 @@ class SafariFedMainScreen(Screen[None]):
         if self._digit_timer is not None:
             self._digit_timer.stop()
         if has_exact:
-            self._set_selected_index(value - 1)
+            self._selected_index = value - 1
+            self._render_list()
         if has_exact and not has_longer_prefix:
-            self._commit_digit_selection()
+            self._digit_buffer = ""
+            self._digit_timer = None
             return
-        self._digit_timer = self.set_timer(0.6, self._commit_digit_selection)
+        self._digit_timer = self.set_timer(0.8, self._commit_digit_selection)
 
     def action_open_selected(self) -> None:
         document = self._selected_document()
@@ -205,12 +216,6 @@ class SafariFedMainScreen(Screen[None]):
         self.state.current_feed_index = 0
         self.state.current_item_index = 0
         self.app.push_screen(SafariFeedListScreen(self.state))
-
-    def on_list_view_selected(self, event: ListView.Selected) -> None:
-        if event.list_view.id != "feed-opml-list":
-            return
-        event.stop()
-        self.action_open_selected()
 
     def action_rescan(self) -> None:
         self.state.status_message = "OPML library rescanned"
@@ -234,6 +239,8 @@ class SafariFeedListScreen(Screen[None]):
     CSS = _FEED_SCREEN_CSS
 
     BINDINGS = [
+        Binding("up", "cursor_up", "Up", show=False),
+        Binding("down", "cursor_down", "Down", show=False),
         Binding("enter", "open_feed", "Open Feed", show=False),
         Binding("f", "fetch_current", "Fetch", show=False),
         Binding("a", "fetch_all", "Fetch All", show=False),
@@ -245,6 +252,7 @@ class SafariFeedListScreen(Screen[None]):
     def __init__(self, state: SafariFeedState) -> None:
         super().__init__()
         self.state = state
+        self._selected_index = state.current_feed_index
         self._digit_buffer = ""
         self._digit_timer = None
 
@@ -253,60 +261,66 @@ class SafariFeedListScreen(Screen[None]):
         yield Static(f"[{_STATUS_BAR_STYLE}]  FEEDS — {title}  [/{_STATUS_BAR_STYLE}]")
         if not self.state.feeds:
             yield Static("  No feeds in this OPML file.")
-        else:
-            items: list[ListItem] = []
-            for index, feed in enumerate(self.state.feeds):
-                label = (
-                    f"  {index + 1:>3}. {feed.group[:16]:<16} {feed.title[:28]:<28}"
-                    f" {feed.domain[:18]:<18} {feed.unread_count:>4} unread  {feed.last_fetched or 'never':<16}"
-                )
-                items.append(ListItem(Label(label), id=f"feed-{index}"))
-            yield ListView(*items, id="feed-list")
+        yield Static("", id="feed-list")
         yield Static(f"  {self.state.status_message}", id="feed-list-status")
         yield Static(
-            f"[{_FOOTER_STYLE}]  Enter=Open Feed  F=Fetch  A=Fetch All  R=Refresh List  Q=Back  [/{_FOOTER_STYLE}]"
+            f"[{_FOOTER_STYLE}]  Up/Down=Move  Enter=Open Feed  F=Fetch  A=Fetch All  R=Refresh List  Q=Back  [/{_FOOTER_STYLE}]"
         )
 
     def on_mount(self) -> None:
-        matches = self.query("#feed-list")
-        if matches:
-            list_view = matches.first(ListView)
-            if list_view.index is None and self.state.feeds:
-                list_view.index = self.state.current_feed_index
-            list_view.focus()
+        self._clamp_index()
+        self._render_list()
 
-    def _selected_index(self) -> int | None:
-        list_view = self._list_view()
-        if list_view is None:
-            return None
-        return list_view.index
+    def _clamp_index(self) -> None:
+        count = len(self.state.feeds)
+        if count == 0:
+            self._selected_index = 0
+        else:
+            self._selected_index = max(0, min(self._selected_index, count - 1))
 
-    def _list_view(self) -> ListView | None:
-        matches = self.query("#feed-list")
-        if not matches:
-            return None
-        return matches.first(ListView)
-
-    def _set_selected_index(self, index: int) -> None:
-        list_view = self._list_view()
-        if list_view is None:
+    def _render_list(self) -> None:
+        if not self.state.feeds:
+            self.query_one("#feed-list", Static).update("")
             return
-        list_view.index = index
-        list_view.focus()
+        lines: list[str] = []
+        for index, feed in enumerate(self.state.feeds):
+            line = (
+                f"  {index + 1:>3}. {feed.group[:16]:<16} {feed.title[:28]:<28}"
+                f" {feed.domain[:18]:<18} {feed.unread_count:>4} unread  {feed.last_fetched or 'never':<16}"
+            )
+            if index == self._selected_index:
+                line = f"[reverse]{line}[/reverse]"
+            lines.append(line)
+        self.query_one("#feed-list", Static).update("\n".join(lines))
+
+    def action_cursor_up(self) -> None:
+        if self._selected_index > 0:
+            self._selected_index -= 1
+            self._render_list()
+
+    def action_cursor_down(self) -> None:
+        if self._selected_index < len(self.state.feeds) - 1:
+            self._selected_index += 1
+            self._render_list()
 
     def _commit_digit_selection(self) -> None:
+        """Apply accumulated digit buffer as a selection jump."""
         if not self._digit_buffer:
             return
         index = int(self._digit_buffer) - 1
         self._digit_buffer = ""
         self._digit_timer = None
-        if not 0 <= index < len(self.state.feeds):
-            return
-        self._set_selected_index(index)
-        self.action_open_feed()
+        if 0 <= index < len(self.state.feeds):
+            self._selected_index = index
+            self._render_list()
 
     def on_key(self, event: Key) -> None:
         if not event.character or not event.character.isdigit():
+            if self._digit_buffer:
+                self._digit_buffer = ""
+                if self._digit_timer is not None:
+                    self._digit_timer.stop()
+                    self._digit_timer = None
             return
         if event.character == "0" and not self._digit_buffer:
             return
@@ -319,6 +333,7 @@ class SafariFeedListScreen(Screen[None]):
             if len(str(number)) > len(candidate)
         )
         if not has_exact and not has_longer_prefix:
+            self._digit_buffer = ""
             return
         self._digit_buffer = candidate
         event.stop()
@@ -326,19 +341,18 @@ class SafariFeedListScreen(Screen[None]):
         if self._digit_timer is not None:
             self._digit_timer.stop()
         if has_exact:
-            self._set_selected_index(value - 1)
+            self._selected_index = value - 1
+            self._render_list()
         if has_exact and not has_longer_prefix:
-            self._commit_digit_selection()
+            self._digit_buffer = ""
+            self._digit_timer = None
             return
-        self._digit_timer = self.set_timer(0.6, self._commit_digit_selection)
+        self._digit_timer = self.set_timer(0.8, self._commit_digit_selection)
 
     def _selected_feed(self) -> FeedRecord | None:
-        index = self._selected_index()
-        if index is None:
-            return None
-        if 0 <= index < len(self.state.feeds):
-            self.state.current_feed_index = index
-            return self.state.feeds[index]
+        if 0 <= self._selected_index < len(self.state.feeds):
+            self.state.current_feed_index = self._selected_index
+            return self.state.feeds[self._selected_index]
         return None
 
     def action_open_feed(self) -> None:
@@ -347,12 +361,6 @@ class SafariFeedListScreen(Screen[None]):
             return
         self.state.current_item_index = 0
         self.app.push_screen(SafariFeedReaderScreen(self.state))
-
-    def on_list_view_selected(self, event: ListView.Selected) -> None:
-        if event.list_view.id != "feed-list":
-            return
-        event.stop()
-        self.action_open_feed()
 
     def action_fetch_current(self) -> None:
         feed = self._selected_feed()
@@ -457,11 +465,13 @@ class SafariFeedReaderScreen(Screen[None]):
             return "No items. Press F to fetch this feed."
         lines = [" # U Published           Title", "-" * 60]
         for index, item in enumerate(feed.items, start=1):
-            cursor = ">" if index - 1 == self.state.current_item_index else " "
             unread = "*" if item.unread else " "
             published = (item.published or "")[:18]
             title = item.title[:34]
-            lines.append(f"{cursor}{index:>2} {unread} {published:<18} {title}")
+            line = f" {index:>2} {unread} {published:<18} {title}"
+            if index - 1 == self.state.current_item_index:
+                line = f"[reverse]{line}[/reverse]"
+            lines.append(line)
         return "\n".join(lines)
 
     def _render_detail(self, item) -> str:
