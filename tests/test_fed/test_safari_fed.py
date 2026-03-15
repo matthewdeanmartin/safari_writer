@@ -435,6 +435,166 @@ def test_export_opml_skips_mastodon_profile_feeds(tmp_path):
     assert "@bob.rss" not in written
 
 
+def test_export_opml_skips_unknown_mastodon_instances_dynamically(tmp_path):
+    """OPML export detects unknown fediverse instances by HTML markers."""
+    identity = load_default_identity(
+        {
+            "MASTODON_ID_MAIN_BASE_URL": "https://mastodon.social",
+            "MASTODON_ID_MAIN_ACCESS_TOKEN": "token",
+        }
+    )
+    assert identity is not None
+
+    class FakeMastodon:
+        def __init__(self, **kwargs) -> None:
+            self.kwargs = kwargs
+
+        def account_verify_credentials(self):
+            return {"id": "me"}
+
+        def account_following(self, account_id: str, limit: int = 200):
+            return [
+                {
+                    "display_name": "Carol",
+                    "acct": "carol@obscure.toot.zone",
+                    # obscure.toot.zone is NOT in the known domain list
+                    "url": "https://obscure.toot.zone/@carol",
+                    "fields": [
+                        {
+                            "name": "Blog",
+                            "value": '<a href="https://carol.example/blog">blog</a>',
+                        }
+                    ],
+                },
+                {
+                    "display_name": "Dave",
+                    "acct": "dave@my-masto.club",
+                    # Custom domain that is actually a Mastodon instance
+                    "fields": [
+                        {
+                            "name": "Site",
+                            "value": '<a href="https://my-masto.club/about">site</a>',
+                        }
+                    ],
+                },
+            ]
+
+    # The obscure.toot.zone/@carol page has Mastodon markers — should be
+    # caught by the /@user path pattern (already in static check).
+    # my-masto.club/about is a Mastodon "about" page with fediverse markers.
+    pages = {
+        "https://carol.example/blog": WebDocument(
+            url="https://carol.example/blog",
+            text=(
+                '<html><head><title>Carol Blog</title>'
+                '<link rel="alternate" type="application/rss+xml" '
+                'href="/feed.xml"></head></html>'
+            ),
+            content_type="text/html",
+        ),
+        "https://my-masto.club/about": WebDocument(
+            url="https://my-masto.club/about",
+            text=(
+                '<html><head><title>my-masto.club - Mastodon</title>'
+                '<link rel="alternate" type="application/activity+json" '
+                'href="/about.json">'
+                '<div id="mastodon-data" data-props="{}"></div>'
+                '<script id="initial-state">{"nodeinfo":"2.0"}</script>'
+                '</head></html>'
+            ),
+            content_type="text/html",
+        ),
+    }
+
+    client = SafariFedClient(identity=identity, mastodon_factory=FakeMastodon)
+    output_path = tmp_path / "feeds.opml"
+    subscriptions = export_followed_feeds_to_opml(
+        client,
+        output_path,
+        fetcher=lambda url: pages.get(url),
+    )
+
+    # Carol's blog should be found; Dave's Mastodon instance page should be skipped
+    assert len(subscriptions) == 1
+    assert subscriptions[0].xml_url == "https://carol.example/feed.xml"
+    written = output_path.read_text(encoding="utf-8")
+    assert "my-masto.club" not in written
+
+
+def test_export_opml_runs_fetches_concurrently(tmp_path):
+    """Feed discovery fetches URLs concurrently, not sequentially."""
+    import threading
+    import time
+
+    identity = load_default_identity(
+        {
+            "MASTODON_ID_MAIN_BASE_URL": "https://mastodon.social",
+            "MASTODON_ID_MAIN_ACCESS_TOKEN": "token",
+        }
+    )
+    assert identity is not None
+
+    class FakeMastodon:
+        def __init__(self, **kwargs) -> None:
+            pass
+
+        def account_verify_credentials(self):
+            return {"id": "me"}
+
+        def account_following(self, account_id: str, limit: int = 200):
+            return [
+                {
+                    "display_name": f"User{i}",
+                    "acct": f"user{i}@example",
+                    "fields": [
+                        {
+                            "name": "blog",
+                            "value": f'<a href="https://user{i}.example">blog</a>',
+                        }
+                    ],
+                }
+                for i in range(10)
+            ]
+
+    peak_concurrent = [0]
+    current_concurrent = [0]
+    lock = threading.Lock()
+
+    def slow_fetcher(url):
+        with lock:
+            current_concurrent[0] += 1
+            if current_concurrent[0] > peak_concurrent[0]:
+                peak_concurrent[0] = current_concurrent[0]
+        time.sleep(0.05)  # simulate network latency
+        with lock:
+            current_concurrent[0] -= 1
+        # Return a feed for each user
+        return WebDocument(
+            url=url + "/feed.xml",
+            text='<?xml version="1.0"?><rss version="2.0"></rss>',
+            content_type="application/rss+xml",
+        )
+
+    client = SafariFedClient(identity=identity, mastodon_factory=FakeMastodon)
+    start = time.monotonic()
+    subscriptions = export_followed_feeds_to_opml(
+        client,
+        tmp_path / "feeds.opml",
+        fetcher=slow_fetcher,
+        max_feeds=10,
+    )
+    elapsed = time.monotonic() - start
+
+    assert len(subscriptions) == 10
+    # With 10 URLs at 50ms each, sequential would take ~500ms.
+    # Concurrent should finish much faster. Allow generous margin.
+    assert elapsed < 0.4, f"took {elapsed:.2f}s — looks sequential"
+    # At least some fetches should have been concurrent
+    assert peak_concurrent[0] >= 3, (
+        f"peak concurrency was {peak_concurrent[0]} — expected parallel execution"
+    )
+
+
 def test_build_opml_document_renders_outline_rows():
     opml = build_opml_document([])
 

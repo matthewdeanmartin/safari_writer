@@ -23,8 +23,9 @@ from safari_dos.state import SafariDosState
 from safari_fed.app import build_fed_state
 from safari_fed.feed_state import SafariFeedState
 from safari_fed.screens import (
-    SafariFedMainScreen as SafariFeedMainScreen,
+    SafariFedMainScreen,
     SafariFeedListScreen,
+    SafariFeedMainScreen,
     SafariFeedReaderScreen,
 )
 from safari_fed.state import SafariFedState
@@ -811,7 +812,7 @@ class SafariWriterApp(App):
     def _action_safari_fed(self) -> None:
         if self.fed_state is None:
             self.fed_state = build_fed_state()
-        self.set_message("Safari Fed is available as the Mastodon reader entry.")
+        self.push_screen(SafariFedMainScreen(self.fed_state))
 
     def _action_safari_feed(self) -> None:
         if self.feed_reader_state is None:

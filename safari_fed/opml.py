@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html import escape
@@ -27,6 +28,7 @@ __all__ = [
 
 DEFAULT_MAX_ACCOUNTS = 100
 DEFAULT_MAX_FEEDS = 20
+_MAX_WORKERS = 12
 
 _FEED_CONTENT_TYPES = (
     "application/rss+xml",
@@ -87,6 +89,27 @@ _FEDIVERSE_PATH_PATTERNS = (
     re.compile(r"^/users/[^/]+/?$"),      # ActivityPub /users/user
 )
 
+# Signals in HTML that indicate a Mastodon / fediverse instance page.
+_MASTODON_HTML_MARKERS = (
+    "mastodon",
+    "data-props",           # Mastodon React root
+    "initial-state",        # Mastodon server-rendered state
+    "activity+json",        # ActivityPub content negotiation link
+    "nodeinfo",             # Fediverse nodeinfo link
+    "misskey",
+    "pleroma",
+    "akkoma",
+    "gotosocial",
+    "pixelfed",
+    "firefish",
+    "sharkey",
+    "iceshrimp",
+    "calckey",
+    "hometown",
+    "glitch-soc",
+    "fediverse",
+)
+
 
 def _is_fediverse_profile_url(url: str) -> bool:
     """Return True if *url* points to a fediverse profile, not a blog."""
@@ -105,6 +128,20 @@ def _is_fediverse_profile_url(url: str) -> bool:
         if pat.match(path):
             return True
     return False
+
+
+def _is_fediverse_document(document: WebDocument) -> bool:
+    """Check if a fetched document looks like a Mastodon/fediverse instance page."""
+    # Check headers for ActivityPub / Mastodon signatures
+    content_type = document.content_type.lower()
+    if "activity+json" in content_type:
+        return True
+    # Scan the first 4KB of HTML for fediverse markers
+    snippet = document.text[:4096].lower()
+    matched = sum(1 for marker in _MASTODON_HTML_MARKERS if marker in snippet)
+    # Require at least 2 markers to reduce false positives
+    return matched >= 2
+
 
 
 @dataclass(frozen=True)
@@ -211,28 +248,43 @@ def export_followed_feeds_to_opml(
     max_accounts: int = DEFAULT_MAX_ACCOUNTS,
     max_feeds: int = DEFAULT_MAX_FEEDS,
 ) -> list[FeedSubscription]:
-    """Discover followed-profile feeds and write them as OPML."""
+    """Discover followed-profile feeds and write them as OPML.
 
+    Uses a thread pool to fetch candidate URLs concurrently for performance.
+    Detects fediverse instances dynamically (not just by domain list) and
+    filters them out — we want blogs, not Mastodon profile RSS feeds.
+    """
     fetch = _fetch_document if fetcher is None else fetcher
     accounts = _load_followed_accounts(fed_client, limit=max_accounts)
+
+    # Phase 1: collect all (account, candidate_url) pairs, pre-filtering
+    # known fediverse URLs without any network calls.
+    work_items: list[tuple[Mapping[str, Any], str]] = []
+    for account in accounts:
+        for url in _candidate_urls_for_account(account):
+            work_items.append((account, url))
+
+    # Phase 2: discover feeds concurrently across all accounts.
     subscriptions: list[FeedSubscription] = []
     seen_xml_urls: set[str] = set()
 
-    for account in accounts:
-        if len(subscriptions) >= max_feeds:
-            break
-        for candidate_url in _candidate_urls_for_account(account):
-            subscription = _discover_subscription(
-                candidate_url,
-                account=account,
-                fetcher=fetch,
+    workers = min(_MAX_WORKERS, len(work_items)) if work_items else 1
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        future_to_item = {
+            pool.submit(_discover_subscription, url, account=account, fetcher=fetch): (
+                account,
+                url,
             )
+            for account, url in work_items
+        }
+        for future in as_completed(future_to_item):
+            if len(subscriptions) >= max_feeds:
+                break
+            subscription = future.result()
             if subscription is None or subscription.xml_url in seen_xml_urls:
                 continue
             seen_xml_urls.add(subscription.xml_url)
             subscriptions.append(subscription)
-            if len(subscriptions) >= max_feeds:
-                break
 
     subscriptions.sort(key=lambda item: item.title.lower())
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -306,6 +358,12 @@ def _discover_subscription(
     direct_document = fetcher(url)
     if direct_document is None:
         return None
+
+    # Dynamic fediverse detection: if the page looks like a Mastodon/fediverse
+    # instance, skip it entirely — we want blogs.
+    if _is_fediverse_document(direct_document):
+        return None
+
     if _looks_like_feed(direct_document):
         return FeedSubscription(
             title=_subscription_title(account, fallback=url),

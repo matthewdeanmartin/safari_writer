@@ -8,7 +8,7 @@ from textual.app import App
 
 from safari_fed.feed_state import FeedRecord, SafariFeedState
 from safari_fed.screens import (
-    SafariFedMainScreen,
+    SafariFeedMainScreen,
     SafariFeedListScreen,
     SafariFeedReaderScreen,
 )
@@ -22,7 +22,7 @@ class FeedScreenApp(App[None]):
         self._state = state
 
     def on_mount(self) -> None:
-        self.push_screen(SafariFedMainScreen(self._state))
+        self.push_screen(SafariFeedMainScreen(self._state))
 
 
 def test_opml_screen_selects_first_item_and_opens_with_enter(tmp_path):
@@ -39,7 +39,7 @@ def test_opml_screen_selects_first_item_and_opens_with_enter(tmp_path):
         app = FeedScreenApp(SafariFeedState(config_dir=tmp_path))
         async with app.run_test() as pilot:
             await pilot.pause()
-            assert isinstance(app.screen, SafariFedMainScreen)
+            assert isinstance(app.screen, SafariFeedMainScreen)
             assert app.screen._selected_index == 0
             await pilot.press("enter")
             await pilot.pause()
@@ -62,13 +62,13 @@ def test_opml_screen_jumps_selection_with_number_key(tmp_path):
         app = FeedScreenApp(SafariFeedState(config_dir=tmp_path))
         async with app.run_test() as pilot:
             await pilot.pause()
-            assert isinstance(app.screen, SafariFedMainScreen)
+            assert isinstance(app.screen, SafariFeedMainScreen)
             # Number key jumps selection but does NOT auto-open
             await pilot.press("1")
             await pilot.pause()
             assert app.screen._selected_index == 0
             # Still on OPML screen — need Enter to open
-            assert isinstance(app.screen, SafariFedMainScreen)
+            assert isinstance(app.screen, SafariFeedMainScreen)
             await pilot.press("enter")
             await pilot.pause()
             assert isinstance(app.screen, SafariFeedListScreen)
@@ -153,7 +153,7 @@ def test_opml_screen_arrow_keys_move_selection(tmp_path):
         app = FeedScreenApp(SafariFeedState(config_dir=tmp_path))
         async with app.run_test() as pilot:
             await pilot.pause()
-            assert isinstance(app.screen, SafariFedMainScreen)
+            assert isinstance(app.screen, SafariFeedMainScreen)
             assert app.screen._selected_index == 0
             await pilot.press("down")
             await pilot.pause()
