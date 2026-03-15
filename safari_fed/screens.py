@@ -8,7 +8,7 @@ from textwrap import shorten, wrap
 from textual import events, work
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal
+from textual.containers import Container, Horizontal, VerticalScroll
 from textual.events import Key
 from textual.screen import ModalScreen, Screen
 from textual.timer import Timer
@@ -981,6 +981,23 @@ class SafariFedMainScreen(Screen[None]):
 
 _STATUS_BAR_STYLE = "bold reverse"
 _FOOTER_STYLE = "reverse"
+
+
+def _scroll_to_cursor(
+    lines: list[str],
+    cursor: int,
+    height: int,
+    offset: int,
+) -> int:
+    """Return a new scroll offset that keeps `cursor` row visible."""
+    if height <= 0:
+        return offset
+    offset = min(offset, cursor)
+    offset = max(offset, cursor - height + 1)
+    offset = max(0, min(offset, len(lines) - 1))
+    return offset
+
+
 _FEED_SCREEN_CSS = """
 SafariFeedMainScreen,
 SafariFeedListScreen,
@@ -998,6 +1015,7 @@ SafariFeedReaderScreen {
 #feed-opml-list,
 #feed-list {
     height: 1fr;
+    overflow: hidden;
 }
 
 #feed-reader-body {
@@ -1010,11 +1028,16 @@ SafariFeedReaderScreen {
     min-width: 32;
     height: 1fr;
     padding: 0 1;
+    overflow: hidden;
+}
+
+#feed-reader-detail-scroll {
+    width: 1fr;
+    height: 1fr;
 }
 
 #feed-reader-detail {
     width: 1fr;
-    height: 1fr;
     padding: 0 1;
 }
 """
@@ -1039,6 +1062,7 @@ class SafariFeedMainScreen(Screen[None]):
         super().__init__()
         self.state = state
         self._selected_index = 0
+        self._scroll_offset = 0
         self._digit_buffer = ""
         self._digit_timer = None
         if not self.state.opml_documents:
@@ -1078,7 +1102,7 @@ class SafariFeedMainScreen(Screen[None]):
         if not self.state.opml_documents:
             self.query_one("#feed-opml-list", Static).update("")
             return
-        lines: list[str] = []
+        rows: list[str] = []
         for index, document in enumerate(self.state.opml_documents):
             line = (
                 f"  {index + 1:>3}. {document.filename:<30}"
@@ -1086,8 +1110,13 @@ class SafariFeedMainScreen(Screen[None]):
             )
             if index == self._selected_index:
                 line = f"[reverse]{line}[/reverse]"
-            lines.append(line)
-        self.query_one("#feed-opml-list", Static).update("\n".join(lines))
+            rows.append(line)
+        visible_height = self.query_one("#feed-opml-list").size.height
+        self._scroll_offset = _scroll_to_cursor(
+            rows, self._selected_index, visible_height, self._scroll_offset
+        )
+        visible = rows[self._scroll_offset : self._scroll_offset + max(1, visible_height)]
+        self.query_one("#feed-opml-list", Static).update("\n".join(visible))
 
     def _clamp_index(self) -> None:
         count = len(self.state.opml_documents)
@@ -1206,6 +1235,7 @@ class SafariFeedListScreen(Screen[None]):
         super().__init__()
         self.state = state
         self._selected_index = state.current_feed_index
+        self._scroll_offset = 0
         self._digit_buffer = ""
         self._digit_timer = None
 
@@ -1235,7 +1265,7 @@ class SafariFeedListScreen(Screen[None]):
         if not self.state.feeds:
             self.query_one("#feed-list", Static).update("")
             return
-        lines: list[str] = []
+        rows: list[str] = []
         for index, feed in enumerate(self.state.feeds):
             line = (
                 f"  {index + 1:>3}. {feed.group[:16]:<16} {feed.title[:28]:<28}"
@@ -1243,8 +1273,13 @@ class SafariFeedListScreen(Screen[None]):
             )
             if index == self._selected_index:
                 line = f"[reverse]{line}[/reverse]"
-            lines.append(line)
-        self.query_one("#feed-list", Static).update("\n".join(lines))
+            rows.append(line)
+        visible_height = self.query_one("#feed-list").size.height
+        self._scroll_offset = _scroll_to_cursor(
+            rows, self._selected_index, visible_height, self._scroll_offset
+        )
+        visible = rows[self._scroll_offset : self._scroll_offset + max(1, visible_height)]
+        self.query_one("#feed-list", Static).update("\n".join(visible))
 
     def action_cursor_up(self) -> None:
         if self._selected_index > 0:
@@ -1374,6 +1409,8 @@ class SafariFeedReaderScreen(Screen[None]):
         Binding("v", "toggle_render", "Toggle Render", show=False),
         Binding("n", "next_unread", "Next Unread", show=False),
         Binding("p", "previous_unread", "Prev Unread", show=False),
+        Binding("pageup", "scroll_detail_up", "Scroll Up", show=False),
+        Binding("pagedown", "scroll_detail_down", "Scroll Down", show=False),
         Binding("q", "go_back", "Back", show=False),
         Binding("escape", "go_back", "Back", show=False),
     ]
@@ -1381,15 +1418,18 @@ class SafariFeedReaderScreen(Screen[None]):
     def __init__(self, state: SafariFeedState) -> None:
         super().__init__()
         self.state = state
+        self._index_scroll = 0
+        self._last_item_index = -1
 
     def compose(self) -> ComposeResult:
         yield Static("", id="feed-reader-header")
         with Horizontal(id="feed-reader-body"):
             yield Static("", id="feed-reader-index")
-            yield Static("", id="feed-reader-detail")
+            with VerticalScroll(id="feed-reader-detail-scroll"):
+                yield Static("", id="feed-reader-detail")
         yield Static("", id="feed-reader-status")
         yield Static(
-            f"[{_FOOTER_STYLE}]  Up/Down=Move  Enter=Read  M=Mark  F=Fetch Feed  O=Fetch Article  T=Feed/Fetched  V=Markdown/ANSI  Q=Back  [/{_FOOTER_STYLE}]"
+            f"[{_FOOTER_STYLE}]  Up/Down=Move  Enter=Read  M=Mark  F=Fetch Feed  O=Fetch Article  T=Feed/Fetched  V=Markdown/ANSI  PgUp/PgDn=Scroll  Q=Back  [/{_FOOTER_STYLE}]"
         )
 
     def on_mount(self) -> None:
@@ -1407,7 +1447,14 @@ class SafariFeedReaderScreen(Screen[None]):
             self.query_one("#feed-reader-detail", Static).update("")
             self.query_one("#feed-reader-status", Static).update("READY")
             return
-        position = self.state.current_item_index + 1 if item is not None else 0
+        # Reset detail scroll when the selected item changes
+        cur = self.state.current_item_index
+        if cur != self._last_item_index:
+            self._last_item_index = cur
+            self.query_one("#feed-reader-detail-scroll", VerticalScroll).scroll_home(
+                animate=False
+            )
+        position = cur + 1 if item is not None else 0
         total = len(feed.items)
         self.query_one("#feed-reader-header", Static).update(
             f"[{_STATUS_BAR_STYLE}]  {feed.title}  {position}/{total}  "
@@ -1423,7 +1470,8 @@ class SafariFeedReaderScreen(Screen[None]):
     def _render_index(self, feed: FeedRecord) -> str:
         if not feed.items:
             return "No items. Press F to fetch this feed."
-        lines = [" # U Published           Title", "-" * 60]
+        header = [" # U Published           Title", "-" * 60]
+        rows: list[str] = []
         for index, item in enumerate(feed.items, start=1):
             unread = "*" if item.unread else " "
             published = (item.published or "")[:18]
@@ -1431,8 +1479,14 @@ class SafariFeedReaderScreen(Screen[None]):
             line = f" {index:>2} {unread} {published:<18} {title}"
             if index - 1 == self.state.current_item_index:
                 line = f"[reverse]{line}[/reverse]"
-            lines.append(line)
-        return "\n".join(lines)
+            rows.append(line)
+        # Scroll to keep cursor visible (account for 2 header lines)
+        visible_height = self.query_one("#feed-reader-index").size.height - len(header)
+        self._index_scroll = _scroll_to_cursor(
+            rows, self.state.current_item_index, visible_height, self._index_scroll
+        )
+        visible = rows[self._index_scroll : self._index_scroll + max(1, visible_height)]
+        return "\n".join(header + visible)
 
     def _render_detail(self, item) -> str:
         if item is None:
@@ -1564,6 +1618,16 @@ class SafariFeedReaderScreen(Screen[None]):
                 return
         self.state.status_message = "No previous unread item"
         self._refresh()
+
+    def action_scroll_detail_up(self) -> None:
+        self.query_one("#feed-reader-detail-scroll", VerticalScroll).scroll_page_up(
+            animate=False
+        )
+
+    def action_scroll_detail_down(self) -> None:
+        self.query_one("#feed-reader-detail-scroll", VerticalScroll).scroll_page_down(
+            animate=False
+        )
 
     def action_go_back(self) -> None:
         self.app.pop_screen()
