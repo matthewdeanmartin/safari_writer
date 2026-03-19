@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## name: shortcut_audit description: Audit keyboard shortcuts for consistency, Textual conflicts, missing bindings, and documentation drift across app modules.
+---
+name: shortcut_audit
+description: Audit keyboard shortcuts for consistency, Textual conflicts, missing bindings, and documentation drift across app modules.
+---
 
 # Shortcut Audit
 

@@ -1,0 +1,19 @@
+{
+  "name": "safari-writer-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "jspdf": "^2.5.1",
+    "nspell": "^2.1.5"
+  },
+  "devDependencies": {
+    "dictionary-en": "^4.0.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}

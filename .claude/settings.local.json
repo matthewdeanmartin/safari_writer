@@ -25,7 +25,13 @@
       "Bash(.venv/Scripts/pip.exe install:*)",
       "Bash(uv pip:*)",
       "Bash(find:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(npx -y dictionary-en@latest)",
+      "Bash(cp /c/github/safari_writer/web/node_modules/dictionary-en/index.aff /c/github/safari_writer/web/public/dict/en_US.aff)",
+      "Bash(cp /c/github/safari_writer/web/node_modules/dictionary-en/index.dic /c/github/safari_writer/web/public/dict/en_US.dic)"
     ]
   }
 }

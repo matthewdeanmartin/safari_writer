@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## name: i18n_audit description: Audit and update release-ready internationalization strings without re-learning the repo's i18n basics.
+---
+name: i18n_audit
+description: Audit and update release-ready internationalization strings without re-learning the repo's i18n basics.
+---
 
 # i18n Audit
 

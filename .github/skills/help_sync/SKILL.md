@@ -1,6 +1,7 @@
-______________________________________________________________________
-
-## name: help_sync description: Systematically sync docs, module help screens, README, and Safari Chat default help against current code.
+---
+name: help_sync
+description: Systematically sync docs, module help screens, README, and Safari Chat default help against current code.
+---
 
 # Help Sync
 
