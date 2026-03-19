@@ -49,8 +49,8 @@ safari-view = "safari_view.main:main"
 safari-view-tk = "safari_view.ui_tk.tk_app:main"
 
 [project.urls]
-"Bug Tracker" = "https://github.com/matthewdeanmartin/safari-writer/issues"
-"Change Log" = "https://github.com/matthewdeanmartin/safari-writer/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/matthewdeanmartin/safari_writer/issues"
+"Change Log" = "https://github.com/matthewdeanmartin/safari_writer/blob/main/CHANGELOG.md"
 "Documentation" = "https://safari-writer.readthedocs.io/en/latest/"
 
 [build-system]
