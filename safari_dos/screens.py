@@ -183,6 +183,10 @@ SafariDosMainMenuScreen {
     height: 100%;
 }
 
+#dos-body {
+    height: 1fr;
+}
+
 #dos-browser-list.hidden {
     display: none;
 }
@@ -539,6 +543,7 @@ class SafariDosBrowserScreen(Screen):
         )
         self._entries: list[DirectoryEntry] = []
         self._selected_index = 0
+        self._list_scroll_offset = 0
         self._message = "Ready"
 
     def compose(self) -> ComposeResult:
@@ -688,6 +693,7 @@ class SafariDosBrowserScreen(Screen):
             self._entries = entries
         self._selected_index = min(self._selected_index, max(len(self._entries) - 1, 0))
         self._apply_initial_selection()
+        self._ensure_selected_visible()
         self._refresh_view()
 
     def _apply_initial_selection(self) -> None:
@@ -713,6 +719,33 @@ class SafariDosBrowserScreen(Screen):
         entry = self._selected_entry()
         return [entry.path] if entry is not None else []
 
+    def _list_visible_height(self) -> int:
+        """Return the number of file rows that fit in the list body."""
+        if not self.is_mounted:
+            return max(len(self._entries), 1)
+        try:
+            body = self.query_one("#dos-body", Static)
+        except Exception:
+            return max(len(self._entries), 1)
+        return max(body.size.height, 1)
+
+    def _ensure_selected_visible(self) -> None:
+        """Adjust the rendered window so the current selection stays on-screen."""
+        if not self._entries:
+            self._list_scroll_offset = 0
+            return
+
+        visible_height = self._list_visible_height()
+        max_offset = max(len(self._entries) - visible_height, 0)
+        offset = min(max(self._list_scroll_offset, 0), max_offset)
+
+        if self._selected_index < offset:
+            offset = self._selected_index
+        elif self._selected_index >= offset + visible_height:
+            offset = self._selected_index - visible_height + 1
+
+        self._list_scroll_offset = min(max(offset, 0), max_offset)
+
     def _refresh_view(self) -> None:
         path_line = f"Location: {self._state.current_path}"
         if self._state.filter_text:
@@ -722,8 +755,13 @@ class SafariDosBrowserScreen(Screen):
         if not self._entries:
             body = "<empty>"
         else:
+            self._ensure_selected_visible()
+            visible_height = self._list_visible_height()
+            start = self._list_scroll_offset
+            end = min(len(self._entries), start + visible_height)
             lines: list[str] = []
-            for index, entry in enumerate(self._entries):
+            for index in range(start, end):
+                entry = self._entries[index]
                 size = "---" if entry.size_bytes is None else f"{entry.size_bytes:>7}"
                 selected = "*" if entry.name in self._state.selected_names else " "
                 flags = [

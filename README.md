@@ -41,16 +41,19 @@ Most people start with `safari-writer` and open the other tools from the Main Me
 ## Features
 
 - **Safari Writer**: The core word processor.
-  - Keybindings mostly modern, but somewhat influenced by original Atari.
-  - Search and replace, word count, and alphabetize.
-  - Style codes/printer codes for formatting.
-  - Print/export to markdown, ANSI preview, postscript, or PDF.
+    - Keybindings mostly modern, but somewhat influenced by original Atari.
+    - Search and replace, word count, and alphabetize.
+    - Style codes/printer codes for formatting.
+    - Print/export to markdown, ANSI preview, postscript, or PDF.
 - **Proofreader**: A built-in spell checker.
 - **Mailmerge**: Database-driven form letters with a dedicated record editor.
-- **Safari DOS**: A menu-driven way to do file browsing and manipulation, featuring a classic two-pane layout and a "Garbage" bin for file recovery.
-- **Safari Chat**: A "Clippy" style helper based on ELIZA. It answers your questions using the help docs and offers emotional support—no LLMs involved.
+- **Safari DOS**: A menu-driven way to do file browsing and manipulation, featuring a classic two-pane layout and a "
+  Garbage" bin for file recovery.
+- **Safari Chat**: A "Clippy" style helper based on ELIZA. It answers your questions using the help docs and offers
+  emotional support—no LLMs involved.
 - **Safari Base**: A dBASE-style shell for browsing and updating SQLite-backed address-book style data.
-- **Safari Fed**: A calm, keyboard-driven Mastodon client styled after Pine and retro BBS readers. Queue-based reading, folder metaphors, thread view, and a direct handoff to Safari Writer.
+- **Safari Fed**: A calm, keyboard-driven Mastodon client styled after Pine and retro BBS readers. Queue-based reading,
+  folder metaphors, thread view, and a direct handoff to Safari Writer.
 - **Safari Reader**: A keyboard-first library, catalog, and long-form reading app.
 - **Safari REPL**: A small Atari BASIC REPL and `.BAS` file runner with Writer handoff for loaded files.
 - **Safari Slides**: A SlideMD presentation viewer with notes and fragment support.
@@ -72,16 +75,17 @@ Dual licensed with a Shareware license. Dual meaning, you pick which of the two 
 
 ## Languages / Internationalization
 
-Safari Writer automatically uses your operating system's locale. If you want to run the app in a different language, set the `SAFARI_LOCALE` environment variable before launching.
+Safari Writer automatically uses your operating system's locale. If you want to run the app in a different language, set
+the `SAFARI_LOCALE` environment variable before launching.
 
-| Code | Language |
-|------|------------|
-| `en` | English |
+| Code | Language  |
+|------|-----------|
+| `en` | English   |
 | `eo` | Esperanto |
-| `es` | Spanish |
-| `fr` | French |
+| `es` | Spanish   |
+| `fr` | French    |
 | `is` | Icelandic |
-| `ru` | Russian |
+| `ru` | Russian   |
 
 **Linux / macOS:**
 
@@ -101,4 +105,5 @@ $env:SAFARI_LOCALE="eo"; safari-writer
 set SAFARI_LOCALE=eo && safari-writer
 ```
 
-You can use a bare language code (`eo`) or a full IETF tag (`eo_EO`). If no catalog exists for the full tag, the bare code is tried automatically. If neither is found, the app falls back to English.
+You can use a bare language code (`eo`) or a full IETF tag (`eo_EO`). If no catalog exists for the full tag, the bare
+code is tried automatically. If neither is found, the app falls back to English.

@@ -523,6 +523,24 @@ def test_dos_browser_run_selected_prompts_for_stdin(monkeypatch, tmp_path):
     assert callback is not None
 
 
+def test_dos_browser_keeps_selected_row_in_visible_window(tmp_path):
+    for index in range(10):
+        (tmp_path / f"file{index}.txt").write_text(str(index), encoding="utf-8")
+
+    state = SafariDosState(current_path=tmp_path)
+    screen = SafariDosBrowserScreen(state)
+    screen._entries = list_directory(tmp_path)
+    screen._list_visible_height = lambda: 3
+
+    screen._selected_index = 5
+    screen._ensure_selected_visible()
+    assert screen._list_scroll_offset == 3
+
+    screen._selected_index = 1
+    screen._ensure_selected_visible()
+    assert screen._list_scroll_offset == 1
+
+
 # ---------------------------------------------------------------------------
 # get_preview_text
 # ---------------------------------------------------------------------------
