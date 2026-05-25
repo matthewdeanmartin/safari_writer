@@ -154,4 +154,6 @@ module = ["reportlab", "reportlab.*"]
 ignore_missing_imports = true
 
 [tool.uv]
+
+[tool.uv.pip]
 universal = true
