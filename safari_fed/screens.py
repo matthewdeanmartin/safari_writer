@@ -667,9 +667,7 @@ class SafariFedMainScreen(Screen[None]):
         """Ask for bounded OPML export limits before starting."""
         self.app.push_screen(FedOpmlLimitsScreen(), self._on_opml_limits_selected)
 
-    def _on_opml_limits_selected(
-        self, result: tuple[int, int] | None
-    ) -> None:
+    def _on_opml_limits_selected(self, result: tuple[int, int] | None) -> None:
         """Start OPML export if the user confirmed limits."""
         if result is None:
             self.set_message("OPML export cancelled")
@@ -677,9 +675,7 @@ class SafariFedMainScreen(Screen[None]):
         max_accounts, max_feeds = result
         self._export_opml_in_background(max_accounts=max_accounts, max_feeds=max_feeds)
 
-    def _export_opml_in_background(
-        self, max_accounts: int, max_feeds: int
-    ) -> None:
+    def _export_opml_in_background(self, max_accounts: int, max_feeds: int) -> None:
         """Start followed-feed OPML export in a worker thread."""
         if self.state.client is None:
             self.set_message("No Mastodon credentials found; cannot export OPML")
@@ -1115,7 +1111,9 @@ class SafariFeedMainScreen(Screen[None]):
         self._scroll_offset = _scroll_to_cursor(
             rows, self._selected_index, visible_height, self._scroll_offset
         )
-        visible = rows[self._scroll_offset : self._scroll_offset + max(1, visible_height)]
+        visible = rows[
+            self._scroll_offset : self._scroll_offset + max(1, visible_height)
+        ]
         self.query_one("#feed-opml-list", Static).update("\n".join(visible))
 
     def _clamp_index(self) -> None:
@@ -1278,7 +1276,9 @@ class SafariFeedListScreen(Screen[None]):
         self._scroll_offset = _scroll_to_cursor(
             rows, self._selected_index, visible_height, self._scroll_offset
         )
-        visible = rows[self._scroll_offset : self._scroll_offset + max(1, visible_height)]
+        visible = rows[
+            self._scroll_offset : self._scroll_offset + max(1, visible_height)
+        ]
         self.query_one("#feed-list", Static).update("\n".join(visible))
 
     def action_cursor_up(self) -> None:

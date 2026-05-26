@@ -27,7 +27,6 @@ from safari_writer.screens.editor import CTRL_MERGE
 from safari_writer.screens.print_screen import (
     _apply_record,
     _buffer_has_merge_markers,
-    _render_document,
     _render_with_mail_merge,
 )
 from safari_writer.state import GlobalFormat

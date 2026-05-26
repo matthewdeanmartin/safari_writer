@@ -49,53 +49,55 @@ _HREF_RE = re.compile(r"""href\s*=\s*["']([^"'<> ]+)["']""", re.IGNORECASE)
 
 # Known fediverse server software domains and patterns.
 # Profile URLs on these instances are NOT personal blogs.
-_FEDIVERSE_DOMAINS = frozenset({
-    "mastodon.social",
-    "mastodon.online",
-    "mastodon.world",
-    "mstdn.social",
-    "mstdn.jp",
-    "mas.to",
-    "fosstodon.org",
-    "hachyderm.io",
-    "infosec.exchange",
-    "tech.lgbt",
-    "toot.community",
-    "universeodon.com",
-    "c.im",
-    "sfba.social",
-    "aus.social",
-    "social.coop",
-    "kolektiva.social",
-    "mathstodon.xyz",
-    "scholar.social",
-    "masto.ai",
-    "sciences.social",
-    "sigmoid.social",
-    "pixel.kitchen",
-    "octodon.social",
-    "ruby.social",
-    "phpc.social",
-    "chaos.social",
-    "nrw.social",
-    "social.linux.pizza",
-    "social.tchncs.de",
-    "ioc.exchange",
-})
+_FEDIVERSE_DOMAINS = frozenset(
+    {
+        "mastodon.social",
+        "mastodon.online",
+        "mastodon.world",
+        "mstdn.social",
+        "mstdn.jp",
+        "mas.to",
+        "fosstodon.org",
+        "hachyderm.io",
+        "infosec.exchange",
+        "tech.lgbt",
+        "toot.community",
+        "universeodon.com",
+        "c.im",
+        "sfba.social",
+        "aus.social",
+        "social.coop",
+        "kolektiva.social",
+        "mathstodon.xyz",
+        "scholar.social",
+        "masto.ai",
+        "sciences.social",
+        "sigmoid.social",
+        "pixel.kitchen",
+        "octodon.social",
+        "ruby.social",
+        "phpc.social",
+        "chaos.social",
+        "nrw.social",
+        "social.linux.pizza",
+        "social.tchncs.de",
+        "ioc.exchange",
+    }
+)
 
 # Patterns that mark a URL as a fediverse profile (not a personal blog).
 _FEDIVERSE_PATH_PATTERNS = (
-    re.compile(r"^/@[^/]+/?$"),          # mastodon-style /@user
-    re.compile(r"^/users/[^/]+/?$"),      # ActivityPub /users/user
+    re.compile(r"^/@[^/]+/?$"),  # mastodon-style /@user
+    re.compile(r"^/users/[^/]+/?$"),  # ActivityPub /users/user
 )
 
 # Signals in HTML that indicate a Mastodon / fediverse instance page.
 _MASTODON_HTML_MARKERS = (
     "mastodon",
-    "data-props",           # Mastodon React root
-    "initial-state",        # Mastodon server-rendered state
-    "activity+json",        # ActivityPub content negotiation link
-    "nodeinfo",             # Fediverse nodeinfo link
+    "data-props",  # Mastodon React root
+    "initial-state",  # Mastodon server-rendered state
+    "activity+json",  # ActivityPub content negotiation link
+    "nodeinfo",  # Fediverse nodeinfo link
     "misskey",
     "pleroma",
     "akkoma",
@@ -141,7 +143,6 @@ def _is_fediverse_document(document: WebDocument) -> bool:
     matched = sum(1 for marker in _MASTODON_HTML_MARKERS if marker in snippet)
     # Require at least 2 markers to reduce false positives
     return matched >= 2
-
 
 
 @dataclass(frozen=True)
@@ -289,7 +290,9 @@ def export_followed_feeds_to_opml(
     subscriptions.sort(key=lambda item: item.title.lower())
     output_path.parent.mkdir(parents=True, exist_ok=True)
     title = f"Safari Fed feeds ({fed_client.identity.name})"
-    output_path.write_text(build_opml_document(subscriptions, title=title), encoding="utf-8")
+    output_path.write_text(
+        build_opml_document(subscriptions, title=title), encoding="utf-8"
+    )
     return subscriptions
 
 
@@ -328,7 +331,9 @@ def _candidate_urls_for_account(account: Mapping[str, Any]) -> list[str]:
     return candidates
 
 
-def _collect_candidate_url(value: object, seen: set[str], candidates: list[str]) -> None:
+def _collect_candidate_url(
+    value: object, seen: set[str], candidates: list[str]
+) -> None:
     if not value:
         return
     for url in _extract_urls(str(value)):

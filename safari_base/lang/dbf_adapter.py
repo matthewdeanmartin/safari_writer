@@ -6,9 +6,6 @@ This isolates the dbf dependency so it can be swapped later.
 from __future__ import annotations
 
 import datetime
-import os
-import shutil
-from pathlib import Path
 from typing import Any
 
 import dbf  # type: ignore[import-untyped]

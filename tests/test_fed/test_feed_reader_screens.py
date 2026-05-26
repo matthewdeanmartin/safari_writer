@@ -8,8 +8,8 @@ from textual.app import App
 
 from safari_fed.feed_state import FeedRecord, SafariFeedState
 from safari_fed.screens import (
-    SafariFeedMainScreen,
     SafariFeedListScreen,
+    SafariFeedMainScreen,
     SafariFeedReaderScreen,
 )
 
@@ -179,7 +179,9 @@ def test_reader_screen_uses_reverse_highlight(tmp_path):
             xml_url="https://example.com/feed.xml",
             items=[
                 FeedItem(item_id="1", title="First Post", link="https://example.com/1"),
-                FeedItem(item_id="2", title="Second Post", link="https://example.com/2"),
+                FeedItem(
+                    item_id="2", title="Second Post", link="https://example.com/2"
+                ),
             ],
         ),
     ]
@@ -198,7 +200,7 @@ def test_reader_screen_uses_reverse_highlight(tmp_path):
             # The index pane should contain [reverse] markup for highlighting
             from textual.widgets import Static
 
-            index_widget = app.screen.query_one("#feed-reader-index", Static)
+            _index_widget = app.screen.query_one("#feed-reader-index", Static)
             # The render uses Rich markup — the underlying _content should have reverse
             rendered = app.screen._render_index(state.current_feed())
             assert "[reverse]" in rendered

@@ -22,8 +22,7 @@ from safari_fed.services import (
 
 
 def test_parse_opml_document_preserves_groups():
-    feeds = parse_opml_document(
-        """<?xml version="1.0"?>
+    feeds = parse_opml_document("""<?xml version="1.0"?>
         <opml version="2.0">
           <body>
             <outline text="Tech">
@@ -32,8 +31,7 @@ def test_parse_opml_document_preserves_groups():
                 htmlUrl="https://example.com/" />
             </outline>
           </body>
-        </opml>"""
-    )
+        </opml>""")
 
     assert len(feeds) == 1
     assert feeds[0].group == "Tech"
@@ -69,13 +67,11 @@ def test_fetch_feed_populates_items():
     def fake_get(url: str) -> httpx.Response:
         return httpx.Response(
             200,
-            text=(
-                """<?xml version="1.0"?>
+            text=("""<?xml version="1.0"?>
                 <rss version="2.0"><channel><title>Example</title>
                 <item><guid>a</guid><title>One</title><link>https://example.com/1</link>
                 <description><![CDATA[<p>Alpha</p>]]></description></item>
-                </channel></rss>"""
-            ),
+                </channel></rss>"""),
             request=httpx.Request("GET", url),
         )
 

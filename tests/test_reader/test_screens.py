@@ -33,9 +33,24 @@ def test_catalog_list_accepts_arrow_navigation(tmp_path):
     async def run() -> None:
         app = SafariReaderApp(library_dir=tmp_path / "library")
         app.state.catalog_results = [
-            {"id": "1", "title": "First Book", "author": "Alpha", "download_count": "10"},
-            {"id": "2", "title": "Second Book", "author": "Beta", "download_count": "20"},
-            {"id": "3", "title": "Third Book", "author": "Gamma", "download_count": "30"},
+            {
+                "id": "1",
+                "title": "First Book",
+                "author": "Alpha",
+                "download_count": "10",
+            },
+            {
+                "id": "2",
+                "title": "Second Book",
+                "author": "Beta",
+                "download_count": "20",
+            },
+            {
+                "id": "3",
+                "title": "Third Book",
+                "author": "Gamma",
+                "download_count": "30",
+            },
         ]
 
         async with app.run_test() as pilot:

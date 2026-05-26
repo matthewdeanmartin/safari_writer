@@ -1,8 +1,7 @@
 import io
 
-import pytest
 
-from safari_basic.interpreter import BasicError, SafariBasic
+from safari_basic.interpreter import SafariBasic
 from safari_basic.repl import SafariREPL
 
 

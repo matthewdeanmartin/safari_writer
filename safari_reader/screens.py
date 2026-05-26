@@ -356,7 +356,11 @@ class SafariReaderMainMenuScreen(Screen):
 
     def _recent_books(self) -> list[BookMeta]:
         return sorted(
-            [book for book in self.state.library if book.file_path and book.file_path.exists()],
+            [
+                book
+                for book in self.state.library
+                if book.file_path and book.file_path.exists()
+            ],
             key=lambda book: (book.last_opened or book.added or "", book.title.lower()),
             reverse=True,
         )[:9]
@@ -1250,7 +1254,11 @@ class SafariReaderDiskBrowserScreen(Screen):
         self.query_one("#disk-browser-path", Static).update(f"  {self.current_dir}")
         body = self.query_one("#disk-browser-body", Vertical)
         body.remove_children()
-        parent = self.current_dir.parent if self.current_dir.parent != self.current_dir else None
+        parent = (
+            self.current_dir.parent
+            if self.current_dir.parent != self.current_dir
+            else None
+        )
         self._entries = []
         items: list[ListItem] = []
         if parent is not None:

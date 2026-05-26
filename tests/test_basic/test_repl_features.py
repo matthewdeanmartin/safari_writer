@@ -8,9 +8,7 @@ and persistent history.
 import io
 import os
 import tempfile
-import time
 
-import pytest
 
 from safari_basic.interpreter import BasicError, SafariBasic
 from safari_basic.repl import BASIC_KEYWORDS, HELP_TOPICS, SafariREPL
@@ -412,7 +410,7 @@ class TestTronVars:
         # It may appear as just "B = 2" in trace but not as var trace
         lines = result.strip().split("\n")
         # After TROFF, no "  B = 2" (indented var trace)
-        var_trace_b = [l for l in lines if l.strip() == "B = 2" and l.startswith("  ")]
+        var_trace_b = [line for line in lines if line.strip() == "B = 2" and line.startswith("  ")]
         assert len(var_trace_b) == 0
 
     def test_plain_tron_still_works(self):
@@ -647,7 +645,7 @@ class TestHistory:
 
     def test_history_save_load(self):
         repl, out = make_repl()
-        old_file = repl.HISTORY_FILE
+        _old_file = repl.HISTORY_FILE
         repl.HISTORY_FILE = ".safari_test_history"
         try:
             repl.process_line('PRINT "HI"')

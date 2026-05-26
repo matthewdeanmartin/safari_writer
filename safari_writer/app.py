@@ -35,8 +35,8 @@ from safari_fed.screens import (
     SafariFeedMainScreen,
     SafariFeedReaderScreen,
 )
-from safari_fed.state import SafariFedState
 from safari_fed.services import config_dir as safari_feed_config_dir
+from safari_fed.state import SafariFedState
 from safari_reader.screens import SafariReaderMainMenuScreen
 from safari_reader.state import SafariReaderState
 from safari_repl.screens import ReplEditorScreen, ReplMainMenuScreen
@@ -833,7 +833,9 @@ class SafariWriterApp(App):
 
     def _action_safari_feed(self) -> None:
         if self.feed_reader_state is None:
-            self.feed_reader_state = SafariFeedState(config_dir=safari_feed_config_dir())
+            self.feed_reader_state = SafariFeedState(
+                config_dir=safari_feed_config_dir()
+            )
         self.push_screen(SafariFeedMainScreen(self.feed_reader_state))
 
     def quit_fed(self) -> None:

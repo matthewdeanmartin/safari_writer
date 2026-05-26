@@ -1,13 +1,11 @@
 """Unit tests for GlobalFormatScreen parameter editing logic."""
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from safari_writer.screens.global_format import (
     KEY_TO_PARAM,
     PARAMS,
-    GFRow,
     GlobalFormatScreen,
 )
 from safari_writer.state import GlobalFormat

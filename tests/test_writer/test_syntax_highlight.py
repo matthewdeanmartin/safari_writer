@@ -1,6 +1,5 @@
 """Tests for syntax highlighting (spec 10 §9–10)."""
 
-import pytest
 from rich.text import Text
 
 from safari_writer.file_types import resolve_file_profile

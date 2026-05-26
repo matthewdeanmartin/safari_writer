@@ -11,11 +11,9 @@ Two test levels:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from safari_writer.export_md import export_markdown
 from safari_writer.export_ps import export_postscript
@@ -30,9 +28,7 @@ from safari_writer.screens.editor import CTRL_MERGE
 from safari_writer.screens.mail_merge import (
     MODE_ENTER,
     MODE_ENTER_CONFIRM,
-    MODE_LOAD,
     MODE_MAIN,
-    MODE_SAVE,
     MODE_UPDATE,
     MailMergeScreen,
 )
@@ -160,7 +156,6 @@ class TestE2ENonUI:
         db = _make_db(LETTER_FIELDS, LETTER_RECORDS)
         fmt = _fmt()
         lines = _render_with_mail_merge(LETTER_BUFFER, fmt, db)
-        joined = "\n".join(lines)
         # Count "Record N" separators (records 2..N get a separator)
         separator_count = sum(1 for ln in lines if "═" in ln and "Record" in ln)
         assert separator_count == 2  # separators before record 2 and 3
@@ -303,7 +298,7 @@ class TestE2ENonUI:
         n = 5
         fields = [(f"F{i}", 10) for i in range(1, n + 1)]
         values = [f"val{i}" for i in range(1, n + 1)]
-        db = _make_db(fields, [values])
+        _db = _make_db(fields, [values])
         buf = [" ".join(f"{MERGE}{i}" for i in range(1, n + 1))]
         merged = _apply_record(buf, values)
         assert merged[0] == "val1 val2 val3 val4 val5"
@@ -706,7 +701,7 @@ class TestE2EEdgeCases:
         """Maximum 15 fields all get merged correctly."""
         fields = [(f"F{i}", 10) for i in range(1, 16)]
         values = [f"v{i}" for i in range(1, 16)]
-        db = _make_db(fields, [values])
+        _db = _make_db(fields, [values])
         # Reference all 15 fields
         buf = [" ".join(f"{MERGE}{i}" for i in range(1, 16))]
         merged = _apply_record(buf, values)

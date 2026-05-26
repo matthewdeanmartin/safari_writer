@@ -1,6 +1,5 @@
 """Tests for safari_writer.format_codec — .sfw encode/decode and control stripping."""
 
-import pytest
 
 from safari_writer.format_codec import (
     decode_sfw,

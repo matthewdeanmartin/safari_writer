@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from safari_writer.screens.editor import (
     CTRL_BOLD,
@@ -14,15 +13,12 @@ from safari_writer.screens.editor import (
     CTRL_FORM,
     CTRL_HEADER,
     CTRL_HEADING,
-    CTRL_MERGE,
     CTRL_PARA,
-    CTRL_RIGHT,
     CTRL_SUB,
     CTRL_SUPER,
     CTRL_UNDERLINE,
     TOGGLE_MARKERS,
     EditorArea,
-    _selection_range,
 )
 from safari_writer.state import AppState
 

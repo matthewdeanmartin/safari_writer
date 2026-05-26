@@ -1,9 +1,8 @@
 """Unit tests for ProofreaderScreen logic."""
 
 import asyncio
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 from textual.widgets import Static
 
 from safari_writer.app import SafariWriterApp
@@ -19,7 +18,6 @@ from safari_writer.screens.proofreader import (
     MODE_PRINT,
     ProofreaderScreen,
     _check_word,
-    _dict_lookup,
     _extract_words,
 )
 from safari_writer.state import AppState
@@ -326,7 +324,7 @@ class TestCorrectionWorkflow:
     def test_enter_keeps_word(self):
         screen = self._screen_with_error()
         screen._advance_to_next_error = MagicMock()
-        ev = make_key("enter")
+        _ev = make_key("enter")
         screen._handle_correct_menu_key("enter")
         assert "teh" in screen._state.kept_spellings
 

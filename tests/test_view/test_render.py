@@ -4,7 +4,6 @@ Tests for SafariView Rendering Pipeline.
 
 from pathlib import Path
 
-import pytest
 from PIL import Image
 
 from safari_view.render import RenderContext, RenderMode, create_pipeline

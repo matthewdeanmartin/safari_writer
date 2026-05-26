@@ -107,7 +107,9 @@ class SafariFeedState:
             self.current_feed_index = 0
             self.current_item_index = 0
             return
-        self.current_feed_index = max(0, min(self.current_feed_index, len(self.feeds) - 1))
+        self.current_feed_index = max(
+            0, min(self.current_feed_index, len(self.feeds) - 1)
+        )
         feed = self.current_feed()
         items = feed.items if feed is not None else []
         if not items:

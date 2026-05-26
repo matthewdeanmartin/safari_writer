@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 
 from safari_writer.document_io import (
     load_document_buffer,

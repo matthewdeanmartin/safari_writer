@@ -1,6 +1,5 @@
 """Tests for the ANSI print preview rendering engine."""
 
-import pytest
 
 from safari_writer.mail_merge_db import FieldDef, MailMergeDB
 from safari_writer.screens.editor import (
@@ -8,7 +7,6 @@ from safari_writer.screens.editor import (
     CTRL_CENTER,
     CTRL_CHAIN,
     CTRL_EJECT,
-    CTRL_ELONGATE,
     CTRL_FOOTER,
     CTRL_FORM,
     CTRL_HEADER,
@@ -16,8 +14,6 @@ from safari_writer.screens.editor import (
     CTRL_MERGE,
     CTRL_PARA,
     CTRL_RIGHT,
-    CTRL_SUB,
-    CTRL_SUPER,
     CTRL_UNDERLINE,
     TOGGLE_MARKERS,
 )
@@ -115,7 +111,7 @@ class TestRenderDocument:
         buf = ["Before", CTRL_EJECT, "After"]
         lines = _render_document(buf, default_fmt())
         # Should have page separator rule
-        rule_lines = [l for l in lines if "─" in l and "Page" in l]
+        rule_lines = [line for line in lines if "─" in line and "Page" in line]
         assert len(rule_lines) >= 1
 
     def test_section_heading(self):
@@ -150,7 +146,7 @@ class TestRenderDocument:
         buf = [f"{CTRL_CENTER}Centered"]
         lines = _render_document(buf, default_fmt(left_margin=0))
         # Centered text should have leading spaces
-        content_lines = [l for l in lines if "Centered" in l]
+        content_lines = [line for line in lines if "Centered" in line]
         assert len(content_lines) > 0
         # With margin 0 and width 70, should have some leading spaces
         assert content_lines[0].startswith(" ")
@@ -158,7 +154,7 @@ class TestRenderDocument:
     def test_right_alignment(self):
         buf = [f"{CTRL_RIGHT}Right"]
         lines = _render_document(buf, default_fmt(left_margin=0))
-        content_lines = [l for l in lines if "Right" in l]
+        content_lines = [line for line in lines if "Right" in line]
         assert len(content_lines) > 0
         assert content_lines[0].startswith(" ")
 
@@ -166,7 +162,7 @@ class TestRenderDocument:
         buf = [f"{CTRL_PARA}Indented line"]
         fmt = default_fmt(left_margin=0, para_indent=5)
         lines = _render_document(buf, fmt)
-        content_lines = [l for l in lines if "Indented" in l]
+        content_lines = [line for line in lines if "Indented" in line]
         assert len(content_lines) > 0
         assert content_lines[0].startswith("     ")
 
@@ -174,7 +170,7 @@ class TestRenderDocument:
         buf = ["Hello"]
         fmt = default_fmt(left_margin=4)
         lines = _render_document(buf, fmt)
-        content_lines = [l for l in lines if "Hello" in l]
+        content_lines = [line for line in lines if "Hello" in line]
         assert len(content_lines) > 0
         assert content_lines[0].startswith("    ")
 

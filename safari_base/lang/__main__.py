@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
 from safari_base.lang.environment import Environment
 from safari_base.lang.interpreter import Interpreter

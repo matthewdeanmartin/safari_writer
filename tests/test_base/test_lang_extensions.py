@@ -1,6 +1,4 @@
-from pathlib import Path
 
-import pytest
 
 from safari_base.lang.interpreter import Interpreter
 

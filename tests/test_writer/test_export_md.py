@@ -1,6 +1,5 @@
 """Tests for Markdown export."""
 
-import pytest
 
 from safari_writer.export_md import export_markdown
 from safari_writer.screens.editor import (
@@ -126,7 +125,7 @@ class TestParagraphMark:
         result = export_markdown(buf, fmt())
         lines = result.split("\n")
         # Should have blank line before indented content
-        idx = next(i for i, l in enumerate(lines) if "Indented" in l)
+        idx = next(i for i, line in enumerate(lines) if "Indented" in line)
         assert idx > 0
         assert lines[idx - 1] == ""
 

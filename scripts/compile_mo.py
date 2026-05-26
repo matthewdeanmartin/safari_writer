@@ -8,9 +8,6 @@ into the corresponding safari_writer.mo binary.
 
 from __future__ import annotations
 
-import array
-import os
-import re
 import struct
 from pathlib import Path
 
@@ -29,7 +26,7 @@ def _parse_po(po_text: str) -> list[tuple[str, str]]:
         return s.encode("raw_unicode_escape").decode("unicode_escape")
 
     header_msgstr = ""
-    in_header = False
+    _in_header = False
 
     for raw_line in po_text.splitlines():
         line = raw_line.strip()
@@ -41,7 +38,7 @@ def _parse_po(po_text: str) -> list[tuple[str, str]]:
                     pairs.append((msgid, msgstr))
                 msgid = msgstr = ""
             in_msgid = in_msgstr = False
-            in_header = False
+            _in_header = False
             continue
         if line.startswith("msgid "):
             if in_msgstr:
@@ -53,7 +50,7 @@ def _parse_po(po_text: str) -> list[tuple[str, str]]:
             msgstr = ""
             in_msgid = True
             in_msgstr = False
-            in_header = msgid == ""
+            _in_header = msgid == ""
         elif line.startswith("msgstr "):
             msgstr = _unescape(line[8:-1])
             in_msgid = False

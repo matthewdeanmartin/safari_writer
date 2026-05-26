@@ -18,9 +18,13 @@ from safari_fed.client import (
 from safari_fed.config import load_default_identity, load_mastodon_identities
 from safari_fed.main import main as safari_fed_main
 from safari_fed.main import parse_args
-from safari_fed.opml import (DEFAULT_MAX_ACCOUNTS, DEFAULT_MAX_FEEDS,
-                             WebDocument, build_opml_document,
-                             export_followed_feeds_to_opml)
+from safari_fed.opml import (
+    DEFAULT_MAX_ACCOUNTS,
+    DEFAULT_MAX_FEEDS,
+    WebDocument,
+    build_opml_document,
+    export_followed_feeds_to_opml,
+)
 from safari_fed.screens import SafariFedMainScreen
 from safari_fed.state import (
     FedPost,
@@ -299,7 +303,7 @@ def test_export_followed_feeds_to_opml_scavenges_profile_links(tmp_path):
         "https://alice.example/blog": WebDocument(
             url="https://alice.example/blog",
             text=(
-                '<html><head><title>Alice Blog</title>'
+                "<html><head><title>Alice Blog</title>"
                 '<link rel="alternate" type="application/rss+xml" '
                 'href="/feed.xml"></head></html>'
             ),
@@ -342,8 +346,16 @@ def test_export_followed_feeds_to_opml_stops_at_feed_limit(tmp_path):
             assert account_id == "me"
             assert limit == 100
             return [
-                {"display_name": "One", "acct": "one@example", "url": "https://one.example"},
-                {"display_name": "Two", "acct": "two@example", "url": "https://two.example"},
+                {
+                    "display_name": "One",
+                    "acct": "one@example",
+                    "url": "https://one.example",
+                },
+                {
+                    "display_name": "Two",
+                    "acct": "two@example",
+                    "url": "https://two.example",
+                },
             ]
 
     pages = {
@@ -409,7 +421,7 @@ def test_export_opml_skips_mastodon_profile_feeds(tmp_path):
         "https://bob.example/blog": WebDocument(
             url="https://bob.example/blog",
             text=(
-                '<html><head><title>Bob Blog</title>'
+                "<html><head><title>Bob Blog</title>"
                 '<link rel="alternate" type="application/rss+xml" '
                 'href="/feed.xml"></head></html>'
             ),
@@ -419,7 +431,7 @@ def test_export_opml_skips_mastodon_profile_feeds(tmp_path):
         "https://mastodon.social/@bob": WebDocument(
             url="https://mastodon.social/@bob",
             text=(
-                '<html><head><title>Bob on Mastodon</title>'
+                "<html><head><title>Bob on Mastodon</title>"
                 '<link rel="alternate" type="application/rss+xml" '
                 'href="https://mastodon.social/@bob.rss"></head></html>'
             ),
@@ -494,7 +506,7 @@ def test_export_opml_skips_unknown_mastodon_instances_dynamically(tmp_path):
         "https://carol.example/blog": WebDocument(
             url="https://carol.example/blog",
             text=(
-                '<html><head><title>Carol Blog</title>'
+                "<html><head><title>Carol Blog</title>"
                 '<link rel="alternate" type="application/rss+xml" '
                 'href="/feed.xml"></head></html>'
             ),
@@ -503,12 +515,12 @@ def test_export_opml_skips_unknown_mastodon_instances_dynamically(tmp_path):
         "https://my-masto.club/about": WebDocument(
             url="https://my-masto.club/about",
             text=(
-                '<html><head><title>my-masto.club - Mastodon</title>'
+                "<html><head><title>my-masto.club - Mastodon</title>"
                 '<link rel="alternate" type="application/activity+json" '
                 'href="/about.json">'
                 '<div id="mastodon-data" data-props="{}"></div>'
                 '<script id="initial-state">{"nodeinfo":"2.0"}</script>'
-                '</head></html>'
+                "</head></html>"
             ),
             content_type="text/html",
         ),
@@ -598,15 +610,15 @@ def test_export_opml_runs_fetches_concurrently(tmp_path):
     # Concurrent should finish much faster. Allow generous margin.
     assert elapsed < 0.4, f"took {elapsed:.2f}s — looks sequential"
     # At least some fetches should have been concurrent
-    assert peak_concurrent[0] >= 3, (
-        f"peak concurrency was {peak_concurrent[0]} — expected parallel execution"
-    )
+    assert (
+        peak_concurrent[0] >= 3
+    ), f"peak concurrency was {peak_concurrent[0]} — expected parallel execution"
 
 
 def test_build_opml_document_renders_outline_rows():
     opml = build_opml_document([])
 
-    assert "<opml version=\"2.0\">" in opml
+    assert '<opml version="2.0">' in opml
     assert "<body>" in opml
 
 

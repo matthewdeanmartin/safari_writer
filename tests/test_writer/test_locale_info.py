@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
 
 from safari_writer.locale_info import (
     _normalize_tag,
@@ -210,7 +209,6 @@ class TestGetTranslation:
         assert trans.gettext("Quit") == "Quit"
 
     def test_none_uses_current_locale(self):
-        import safari_writer.locale_info as li
 
         trans = get_translation(None)
         # Just verify we get a translation object back
