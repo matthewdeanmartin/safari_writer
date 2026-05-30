@@ -107,3 +107,11 @@ set SAFARI_LOCALE=eo && safari-writer
 
 You can use a bare language code (`eo`) or a full IETF tag (`eo_EO`). If no catalog exists for the full tag, the bare
 code is tried automatically. If neither is found, the app falls back to English.
+
+## Project Links
+
+- [GitHub](https://github.com/matthewdeanmartin/safari_writer)
+- [PyPI](https://pypi.org/project/safari-writer/)
+- [Documentation](https://safari-writer.readthedocs.io/en/latest/)
+- [Bug Tracker](https://github.com/matthewdeanmartin/safari_writer/issues)
+- [Change Log](https://github.com/matthewdeanmartin/safari_writer/blob/main/CHANGELOG.md)
