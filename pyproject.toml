@@ -108,6 +108,12 @@ dev = [
     "pytest-xdist>=3.5.0; python_version >= '3.8'",
     "pytest-xdist>=3.8.0",
     "pytest-randomly>=4.0.1",
+    # Mock Mastodon server (published on PyPI) — lets test_integration/ run
+    # safari_fed's real Mastodon client against a local HTTP server instead of a
+    # live instance. The [test] extra adds the zero-boilerplate fixtures /
+    # MockServer helper. Requires Python >=3.13; the fed integration suite
+    # self-skips otherwise.
+    "mastodon_mock[test]; python_version >= '3.13'",
     # other
     "textual-dev>=1.0.0",
     "hatch",

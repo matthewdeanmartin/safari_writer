@@ -48,6 +48,16 @@ def test_parse_args_supports_bare_file_shorthand():
     assert args.file == "draft.sfw"
 
 
+def test_parse_args_supports_bare_file_shorthand_with_trailing_options():
+    args = parse_args(["draft.sfw", "--cursor-line", "3", "--no-splash"])
+
+    assert args.command == "tui"
+    assert args.tui_command == "edit"
+    assert args.file == "draft.sfw"
+    assert args.cursor_line == 3
+    assert args.no_splash is True
+
+
 def test_parse_args_supports_no_splash_flag():
     args = parse_args(["--no-splash"])
 
@@ -83,6 +93,7 @@ def test_public_submodule_exports_are_explicit():
     assert document_io.__all__ == [
         "DEMO_DOCUMENT_RESOURCE",
         "DEMO_MAILMERGE_RESOURCE",
+        "create_empty_document_state",
         "load_demo_document_buffer",
         "load_demo_mail_merge_db",
         "load_document_buffer",
@@ -300,6 +311,52 @@ def test_main_honors_cwd_for_bare_file(monkeypatch, tmp_path):
 
     assert exit_code == 0
     assert captured["state"].filename == str(document.resolve())
+
+
+def test_main_opens_missing_file_as_blank_named_document(monkeypatch, tmp_path):
+    captured: dict[str, object] = {}
+    missing = tmp_path / "missing.sfw"
+
+    def fake_launch(state, request, args):
+        captured["state"] = state
+        captured["request"] = request
+        return 0
+
+    monkeypatch.setattr("safari_writer.main._launch_tui", fake_launch)
+
+    exit_code = main(["tui", "edit", "--file", str(missing)])
+
+    assert exit_code == 0
+    assert captured["state"].filename == str(missing.resolve())
+    assert captured["state"].buffer == [""]
+    assert captured["state"].modified is False
+
+
+def test_main_sets_read_only_state_for_supported_destination(monkeypatch, tmp_path):
+    captured: dict[str, object] = {}
+    document = tmp_path / "draft.sfw"
+    document.write_text("Hello", encoding="utf-8")
+
+    def fake_launch(state, request, args):
+        captured["state"] = state
+        captured["request"] = request
+        return 0
+
+    monkeypatch.setattr("safari_writer.main._launch_tui", fake_launch)
+
+    exit_code = main(["tui", "edit", "--file", str(document), "--read-only"])
+
+    assert exit_code == 0
+    assert captured["request"].read_only is True
+    assert captured["state"].read_only is True
+
+
+def test_main_rejects_unsupported_read_only_destination(capsys):
+    exit_code = main(["tui", "global-format", "--read-only"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert "--read-only is not supported for Global Format." in captured.err
 
 
 def test_export_markdown_stdout(capsys, tmp_path):

@@ -33,12 +33,24 @@ def test_parse_args_accepts_optional_input() -> None:
     assert args.input == "talk.slides.md"
 
 
-def test_main_returns_error_for_missing_deck(capsys) -> None:
-    exit_code = main(["missing.slides.md"])
+def test_main_launches_app_for_missing_deck(monkeypatch, tmp_path) -> None:
+    launched: list[str] = []
+    main_module = importlib.import_module("safari_slides.main")
+    missing = tmp_path / "missing.slides.md"
 
-    captured = capsys.readouterr()
-    assert exit_code == 2
-    assert "Slide deck not found" in captured.err
+    class FakeApp:
+        def __init__(self, source_path):
+            launched.append(str(source_path))
+
+        def run(self) -> None:
+            launched.append("run")
+
+    monkeypatch.setattr(main_module, "SafariSlidesApp", FakeApp)
+
+    exit_code = main_module.main([str(missing)])
+
+    assert exit_code == 0
+    assert launched == [str(missing.resolve()), "run"]
 
 
 def test_main_launches_app_when_input_exists(monkeypatch, tmp_path) -> None:

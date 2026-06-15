@@ -7,8 +7,13 @@ import sys
 from pathlib import Path
 
 from safari_slides.app import SafariSlidesApp
+from safari_writer.cli_version import version_string
 
 __all__ = ["build_parser", "main", "parse_args"]
+
+
+def _version_string() -> str:
+    return version_string()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -18,6 +23,11 @@ def build_parser() -> argparse.ArgumentParser:
         prog="safari-slides",
         description="Safari Slides — a keyboard-first SlideMD viewer.",
         allow_abbrev=False,
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {_version_string()}",
     )
     parser.add_argument(
         "input",
@@ -40,8 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     source_path: Path | None = None
     if args.input:
         source_path = Path(args.input).resolve()
-        if not source_path.exists():
-            print(f"Slide deck not found: {source_path}", file=sys.stderr)
+        if source_path.exists() and source_path.is_dir():
+            print(f"Slide deck path is a directory: {source_path}", file=sys.stderr)
             return 2
     app = SafariSlidesApp(source_path=source_path)
     app.run()

@@ -420,6 +420,21 @@ class TestApplyCorrection:
         screen._apply_correction()
         assert screen._state.buffer[0] == "the quick brown fox"
 
+    def test_read_only_mode_blocks_correction(self):
+        screen = make_screen(["teh quick brown fox"])
+        screen._state.read_only = True
+        screen._current_error = (0, 0, "teh")
+        screen._replacement = "the"
+        screen._enter_correct_menu = MagicMock()
+        screen._advance_to_next_error = MagicMock()
+
+        screen._apply_correction()
+
+        assert screen._state.buffer[0] == "teh quick brown fox"
+        assert screen._state.modified is False
+        screen._enter_correct_menu.assert_called_once()
+        screen._set_message.assert_called_with("Read-only mode is enabled")
+
 
 # ---------------------------------------------------------------------------
 # Dictionary search
@@ -555,6 +570,20 @@ class TestPersonalDictionary:
         import os
 
         assert not os.path.exists(filename)
+
+    def test_save_personal_dict_is_blocked_in_read_only_mode(self, tmp_path):
+        screen = make_screen()
+        screen._state.read_only = True
+        screen._state.kept_spellings = {"foo"}
+        screen._personal = set()
+        screen._enter_menu = MagicMock()
+        filename = str(tmp_path / "personal.txt")
+
+        screen._save_personal_dict(filename)
+
+        assert not tmp_path.joinpath("personal.txt").exists()
+        screen._enter_menu.assert_called_once()
+        screen._set_message.assert_called_with("Read-only mode is enabled")
 
     def test_load_personal_dict(self, tmp_path):
         filename = tmp_path / "personal.txt"

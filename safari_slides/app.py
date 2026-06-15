@@ -7,6 +7,7 @@ from pathlib import Path
 
 from textual.app import App
 
+from safari_slides.parser import parse_slidemd
 from safari_slides.screens import SafariSlidesMainScreen
 from safari_slides.services import build_welcome_deck, load_presentation
 from safari_slides.state import SafariSlidesState
@@ -42,6 +43,13 @@ class SafariSlidesApp(App[None]):
         if self._source_path is None:
             presentation = build_welcome_deck()
             self.state.set_presentation(presentation)
+        elif not self._source_path.exists():
+            presentation = parse_slidemd("")
+            self.state.set_presentation(
+                presentation,
+                source_path=self._source_path,
+                source_text="",
+            )
         else:
             source_text = self._source_path.read_text(encoding="utf-8")
             presentation = load_presentation(self._source_path)

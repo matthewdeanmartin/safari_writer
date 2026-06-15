@@ -138,6 +138,12 @@ test-verbose:
 	@echo pytest-randomly seed: $(PYTEST_RANDOM_SEED)
 	@uv run pytest tests/ $(PYTEST_VERBOSE_FLAGS)
 
+# safari_fed's Mastodon client driven against the local mastodon_mock server (no
+# live instance, no API keys). Self-skips on Python <3.13 or if mastodon_mock
+# isn't installed. See test_integration/README_fed_mock.md.
+test-fed-integration:
+	@uv run pytest test_integration/test_fed_against_mock.py -v
+
 coverage:
 	@echo pytest-randomly seed: $(PYTEST_RANDOM_SEED)
 	@uv run pytest tests/ $(PYTEST_DEFAULT_FLAGS) $(foreach module,$(PYTEST_COVERAGE_MODULES),--cov=$(module)) $(PYTEST_COVERAGE_REPORT_FLAGS)

@@ -65,6 +65,8 @@ class AppState:
     filename: str = ""
     # Dirty flag
     modified: bool = False
+    # Session-level read-only flag
+    read_only: bool = False
     # Session-kept spellings (Proofreader "Keep This Spelling")
     kept_spellings: set[str] = field(default_factory=set)
     # Selection anchor: (row, col) where the selection started, or None

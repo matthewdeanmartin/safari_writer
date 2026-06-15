@@ -7,8 +7,13 @@ import sys
 from pathlib import Path
 
 from safari_base.app import SafariBaseApp
+from safari_writer.cli_version import version_string
 
 __all__ = ["build_parser", "main", "parse_args"]
+
+
+def _version_string() -> str:
+    return version_string()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -18,6 +23,11 @@ def build_parser() -> argparse.ArgumentParser:
         prog="safari-base",
         description="Safari Base dBASE-style shell.",
         allow_abbrev=False,
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {_version_string()}",
     )
     parser.add_argument("database", nargs="?", help="Optional SQLite database path.")
     return parser

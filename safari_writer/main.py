@@ -6,13 +6,17 @@ import argparse
 import json
 import os
 import sys
-from importlib import metadata
 from pathlib import Path
 from typing import Callable
 
 from safari_writer.ansi_preview import extract_ansi_page, render_ansi_preview
+from safari_writer.cli_version import version_string
 from safari_writer.cli_types import StartupRequest
-from safari_writer.document_io import load_document_buffer, load_document_state
+from safari_writer.document_io import (
+    create_empty_document_state,
+    load_document_buffer,
+    load_document_state,
+)
 from safari_writer.format_codec import decode_sfw, encode_sfw, strip_controls
 from safari_writer.mail_merge_db import (
     MailMergeDB,
@@ -36,13 +40,16 @@ from safari_writer.themes import load_settings
 __all__ = ["build_parser", "build_startup_request", "main", "parse_args"]
 
 TOP_LEVEL_COMMANDS = {"tui", "export", "proof", "format", "mail-merge", "doctor"}
+GLOBAL_OPTIONS_WITH_VALUE = {"--cwd", "--encoding"}
+GLOBAL_FLAG_OPTIONS = {"--version", "--no-splash", "-q", "--quiet", "-v", "--verbose"}
+READ_ONLY_UNSUPPORTED_DESTINATIONS = {
+    "global_format": "Global Format",
+    "mail_merge": "Mail Merge",
+}
 
 
 def _version_string() -> str:
-    try:
-        return metadata.version("safari-writer")
-    except metadata.PackageNotFoundError:
-        return "0.1.0"
+    return version_string()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -418,38 +425,34 @@ def _add_output_flags(parser: argparse.ArgumentParser, label: str) -> None:
 
 
 def _normalize_argv(argv: list[str]) -> list[str]:
-    normalized: list[str] = []
+    if not argv:
+        return []
+
+    global_tokens: list[str] = []
+    remainder: list[str] = []
     index = 0
     while index < len(argv):
         token = argv[index]
-        normalized.append(token)
-        if token in {"--cwd", "--encoding"}:
+        if token in GLOBAL_OPTIONS_WITH_VALUE:
             index += 1
-            if index < len(argv):
-                normalized.append(argv[index])
-        elif not token.startswith("-"):
-            break
+            if index >= len(argv):
+                return argv
+            global_tokens.extend([token, argv[index]])
+        elif token in GLOBAL_FLAG_OPTIONS:
+            global_tokens.append(token)
+        else:
+            remainder.append(token)
         index += 1
 
-    if not argv:
-        return []
-    first_non_option_index = len(normalized) - 1 if normalized else 0
-    if first_non_option_index >= len(argv):
-        return argv
-    first_non_option = argv[first_non_option_index]
-    remaining = argv[first_non_option_index:]
+    if not remainder:
+        return global_tokens
+
+    first_non_option = remainder[0]
     if first_non_option in TOP_LEVEL_COMMANDS:
         return argv
     if first_non_option.startswith("-"):
         return argv
-    if len(remaining) == 1:
-        return argv[:first_non_option_index] + [
-            "tui",
-            "edit",
-            "--file",
-            first_non_option,
-        ]
-    return argv
+    return global_tokens + ["tui", "edit", "--file", first_non_option, *remainder[1:]]
 
 
 def _apply_cwd(args: argparse.Namespace) -> None:
@@ -560,9 +563,14 @@ def build_startup_request(args: argparse.Namespace) -> StartupRequest:
 def _handle_tui_command(args: argparse.Namespace) -> int:
     state = AppState()
     request = build_startup_request(args)
+    _validate_read_only_request(request)
 
     if request.document_path:
-        state = load_document_state(request.document_path, encoding=args.encoding)
+        if request.document_path.exists():
+            state = load_document_state(request.document_path, encoding=args.encoding)
+        else:
+            state = create_empty_document_state(request.document_path)
+    state.read_only = request.read_only
     if request.mail_merge_database_path:
         state.mail_merge_db = load_mail_merge_db(
             request.mail_merge_database_path,
@@ -592,6 +600,14 @@ def _handle_tui_command(args: argparse.Namespace) -> int:
 
     _show_tui_splash(args)
     return _launch_tui(state, request, args)
+
+
+def _validate_read_only_request(request: StartupRequest) -> None:
+    if not request.read_only:
+        return
+    unsupported = READ_ONLY_UNSUPPORTED_DESTINATIONS.get(request.destination)
+    if unsupported is not None:
+        raise ValueError(f"--read-only is not supported for {unsupported}.")
 
 
 def _show_tui_splash(args: argparse.Namespace) -> None:

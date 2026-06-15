@@ -498,6 +498,10 @@ class ProofreaderScreen(Screen):
             self._enter_correct_menu()
 
     def _apply_correction(self) -> None:
+        if self._state.read_only:
+            self._enter_correct_menu()
+            self._set_message(_("Read-only mode is enabled"))
+            return
         r, c, w = self._require_current_error()
         repl = self._replacement
         line = self._state.buffer[r]
@@ -622,6 +626,10 @@ class ProofreaderScreen(Screen):
             self._set_body(f"Save personal dictionary to file:\n\n> {self._input_buf}")
 
     def _save_personal_dict(self, filename: str) -> None:
+        if self._state.read_only:
+            self._enter_menu()
+            self._set_message(_("Read-only mode is enabled"))
+            return
         words = sorted(self._state.kept_spellings | self._personal)
         if not words:
             self._set_message(_("No words to save."))

@@ -1,76 +1,88 @@
 # Command Line Interface
 
-You can use Safari Writer from the command line without the full interface.
+Safari Writer ships several small CLIs. Every standalone app now supports `--version`.
 
-## Safari Writer Commands
+## Safari Writer
 
-- `safari-writer` — Launch the main menu and editor shell.
+| Command | Behavior |
+| --- | --- |
+| `safari-writer` | Launch the main menu and editor shell. |
+| `safari-writer FILE.sfw` | Shorthand for `safari-writer tui edit --file FILE.sfw`. |
+| `safari-writer FILE.sfw --cursor-line 10 --no-splash` | Bare-file shorthand still accepts trailing global and edit options. |
+| `safari-writer tui edit --new` | Open an untitled blank document. |
+| `safari-writer tui edit --file FILE.sfw` | Open a document directly in the editor. If the file does not exist yet, Safari Writer opens a blank unsaved document associated with that path and does not create the file until you save. |
+| `safari-writer tui proofreader --file FILE.sfw --mode correct` | Open directly in the proofreader. |
+| `safari-writer tui global-format --file FILE.sfw` | Open Global Format. |
+| `safari-writer tui mail-merge --database DATA.json --mode update` | Open Mail Merge. |
+| `safari-writer tui print --file FILE.sfw --target pdf` | Jump straight to print/export flow. |
+| `safari-writer tui safari-dos --path PATH` | Open Safari DOS inside Safari Writer. |
+| `safari-writer tui safari-reader` | Open Safari Reader inside Safari Writer. |
+| `safari-writer tui safari-repl --file PROGRAM.bas` | Open Safari REPL inside Safari Writer. |
+| `safari-writer tui safari-slides --file DECK.slides.md` | Open Safari Slides inside Safari Writer. |
+
+`--read-only` is supported for `menu`, `edit`, `proofreader`, `print`, and embedded `safari-slides`. In read-only mode Safari Writer blocks editing, correction, saving, delete/create actions, and similar write paths. `--read-only` is rejected for `global-format` and `mail-merge`.
 
 ## Export Commands
 
-- `safari-writer export markdown INPUT -o OUTPUT` — Export a `.sfw` file to Markdown.
-- `safari-writer export postscript INPUT -o OUTPUT` — Export a `.sfw` file to PostScript.
-- `safari-writer export ansi INPUT` — View formatted output in your terminal.
+- `safari-writer export markdown INPUT -o OUTPUT`
+- `safari-writer export postscript INPUT -o OUTPUT`
+- `safari-writer export pdf INPUT -o OUTPUT`
+- `safari-writer export slides INPUT -o OUTPUT`
+- `safari-writer export ansi INPUT --page 2`
 
-## Proofreading Commands
+## Proofing and Formatting
 
-- `safari-writer proof check INPUT` — Scan for misspelled words.
-- `safari-writer proof suggest WORD` — Get spelling suggestions for a word.
+- `safari-writer proof check INPUT`
+- `safari-writer proof suggest WORD`
+- `safari-writer format strip INPUT -o OUTPUT`
+- `safari-writer format encode INPUT -o OUTPUT`
+- `safari-writer mail-merge validate DATABASE`
+- `safari-writer mail-merge inspect DATABASE`
 
-## Formatting Commands
+## Safari DOS
 
-- `safari-writer format strip INPUT -o OUTPUT` — Remove all formatting codes from a file.
-- `safari-writer format encode INPUT -o OUTPUT` — Add or fix formatting markers.
+- `safari-dos`
+- `safari-dos browse PATH --show-hidden --sort date --descending`
+- `safari-dos ls PATH --sort type`
+- `safari-dos help`
 
-## Mail Merge Commands
+## Safari Chat
 
-- `safari-writer mail-merge validate DATABASE` — Check a database for errors.
-- `safari-writer mail-merge inspect DATABASE` — View database schema and records.
+- `safari-chat`
+- `safari-chat PATH_TO_HELP.md`
 
-## Safari DOS Commands
+## Safari Fed
 
-- `safari-dos` — Launch the DOS main menu.
-- `safari-dos browse PATH --show-hidden --sort date --descending` — Open the browser on a directory with startup options.
-- `safari-dos ls PATH --sort type` — List a directory without opening the TUI.
-- `safari-dos help` — Jump straight to the DOS help screen.
+- `safari-fed`
+- `safari-fed --folder FOLDER`
+- `safari-fed --account NAME`
 
-## Safari Chat Commands
+## Safari Reader
 
-- `safari-chat` — Launch Safari Chat with the bundled default help document.
-- `safari-chat PATH_TO_HELP.md` — Load a specific Markdown help document instead.
+- `safari-reader`
+- `safari-reader --library PATH`
 
-## Safari Fed Commands
+## Safari REPL
 
-- `safari-fed` — Launch the Mastodon client in demo mode (no credentials needed).
-- `safari-fed --folder FOLDER` — Open a specific folder on launch (`Home`, `Mentions`, `Bookmarks`, `Drafts`, `Sent`, `Deferred`).
-- `safari-fed --account NAME` — Start with a named Mastodon identity selected.
+- `safari-repl`
+- `safari-repl FILE.bas`
 
-## Safari Reader Commands
+## Safari Slides
 
-- `safari-reader` — Launch the reader with the default local library.
-- `safari-reader --library PATH` — Use a specific library directory.
+- `safari-slides`
+- `safari-slides DECK.slides.md`
 
-## Safari REPL Commands
+If the requested deck does not exist yet, Safari Slides opens a blank unsaved deck associated with that filename and waits for an explicit save.
 
-- `safari-repl` — Launch the standalone Atari BASIC REPL.
-- `safari-repl FILE` — Load a `.BAS` program on startup.
-- `safari-writer tui safari-repl` — Open Safari REPL inside the Safari Writer shell.
-- `safari-writer tui safari-repl --file FILE` — Open the embedded REPL with a `.BAS` file preloaded.
+## Safari View
 
-## Safari Slides Commands
+- `safari-view`
+- `safari-view open IMAGE --mode st --no-dithering`
+- `safari-view browse PATH --select IMAGE`
+- `safari-view render IMAGE --mode 2600 --width 160 --height 192 -o OUTPUT.png`
+- `safari-view tk --image IMAGE --mode native`
 
-- `safari-slides` — Launch Safari Slides with the built-in welcome deck.
-- `safari-slides DECK.slides.md` — Open a specific SlideMD deck.
+## Safari Base
 
-## Safari View Commands
-
-- `safari-view` — Legacy shorthand for opening the Textual browser.
-- `safari-view open IMAGE --mode st --no-dithering` — Open one image directly in the Textual viewer.
-- `safari-view browse PATH --select IMAGE` — Start in a directory-focused browser session.
-- `safari-view render IMAGE --mode 2600 --width 160 --height 192 -o OUTPUT.png` — Render an image through the retro pipeline without opening the UI.
-- `safari-view tk --image IMAGE --mode native` — Launch the Tk frontend.
-
-## Safari Base Commands
-
-- `safari-base` — Launch Safari Base with an in-memory session.
-- `safari-base ADDRESS_BOOK.db` — Open a specific SQLite database file.
+- `safari-base`
+- `safari-base ADDRESS_BOOK.db`

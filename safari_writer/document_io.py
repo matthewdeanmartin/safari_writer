@@ -27,6 +27,7 @@ DEMO_MAILMERGE_RESOURCE = "demo_mailmerge.json"
 __all__ = [
     "DEMO_DOCUMENT_RESOURCE",
     "DEMO_MAILMERGE_RESOURCE",
+    "create_empty_document_state",
     "load_demo_document_buffer",
     "load_demo_mail_merge_db",
     "load_document_buffer",
@@ -35,6 +36,20 @@ __all__ = [
     "sanitize_plain_buffer",
     "serialize_document_buffer",
 ]
+
+
+def create_empty_document_state(path: Path | None = None) -> AppState:
+    """Create an unsaved blank document state, optionally tied to a target path."""
+
+    state = AppState()
+    state.buffer = [""]
+    state.cursor_row = 0
+    state.cursor_col = 0
+    state.filename = str(path) if path is not None else ""
+    state.modified = False
+    state.file_profile = resolve_file_profile(path.name if path is not None else "untitled.sfw")
+    state.doc_language = ""
+    return state
 
 
 def load_document_buffer(
@@ -88,14 +103,8 @@ def load_demo_mail_merge_db(encoding: str = "utf-8") -> "MailMergeDB":
 def load_document_state(path: Path, encoding: str = "utf-8") -> AppState:
     """Load a document into an AppState instance."""
 
-    state = AppState()
+    state = create_empty_document_state(path)
     state.buffer = load_document_buffer(path, encoding=encoding)
-    state.filename = str(path)
-    state.cursor_row = 0
-    state.cursor_col = 0
-    state.modified = False
-    # Resolve file profile from filename
-    state.file_profile = resolve_file_profile(path.name)
     # Per-document language (i18n Level 1)
     state.doc_language = load_sfw_language(path, encoding=encoding)
     # Sanitize buffer if loading a plain file that somehow has control chars

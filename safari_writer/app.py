@@ -140,6 +140,7 @@ class SafariWriterApp(App):
 
     def _apply_startup_request(self) -> None:
         request = self.startup_request
+        self.state.read_only = request.read_only
         destination = request.destination
         if destination == "menu":
             return
@@ -316,6 +317,8 @@ class SafariWriterApp(App):
             self._last_backup_path = None
 
     def _action_backup_restore(self) -> None:
+        if self._block_read_only_action(_("Backup restore is unavailable in read-only mode")):
+            return
         self.push_screen(
             BackupScreen(on_resume=self._on_backup_resume),
         )
@@ -517,6 +520,8 @@ class SafariWriterApp(App):
             self.set_message(f"Export error: {e}")
 
     def _action_create(self) -> None:
+        if self._block_read_only_action(_("Create is unavailable in read-only mode")):
+            return
         has_content = self.state.buffer != [""] or self.state.filename
         if not has_content:
             # Empty buffer with no file — just open editor
@@ -578,6 +583,8 @@ class SafariWriterApp(App):
         self._open_editor()
 
     def _action_demo(self) -> None:
+        if self._block_read_only_action(_("Demo load is unavailable in read-only mode")):
+            return
         if self.state.modified:
             self.push_screen(
                 ConfirmScreen(_("Unsaved changes will be lost. Continue?")),
@@ -646,6 +653,8 @@ class SafariWriterApp(App):
             self.set_message(f"Load error: {e}")
 
     def _on_save_file(self, filename: str | None) -> None:
+        if self._block_read_only_action(_("Save is unavailable in read-only mode")):
+            return
         if not filename:
             return
         if not is_sfw(filename) and has_controls(self.state.buffer):
@@ -742,6 +751,8 @@ class SafariWriterApp(App):
             self.set_message(f"Garbage error: {e}")
 
     def _on_new_folder(self, name: str | None) -> None:
+        if self._block_read_only_action(_("Folder creation is unavailable in read-only mode")):
+            return
         if not name:
             return
         try:
@@ -755,6 +766,12 @@ class SafariWriterApp(App):
         start_path = self._picker_start_path()
         self.dos_state = self._build_safari_dos_state(start_path)
         self.push_screen(SafariDosBrowserScreen(self.dos_state))
+
+    def _block_read_only_action(self, message: str) -> bool:
+        if not self.state.read_only:
+            return False
+        self.set_message(message)
+        return True
 
     def _action_index_external_via_safari_dos(self) -> None:
         """Open the safari_dos devices screen for 'Index External Drive'."""
@@ -1158,6 +1175,8 @@ class SafariWriterApp(App):
         self._open_editor()
 
     def _action_save_via_safari_dos(self) -> None:
+        if self._block_read_only_action(_("Save is unavailable in read-only mode")):
+            return
         # If file already has a name, save directly without prompting
         if self.state.filename:
             target = Path(self.state.filename)
@@ -1168,6 +1187,8 @@ class SafariWriterApp(App):
         self._action_save_as()
 
     def _action_save_as(self) -> None:
+        if self._block_read_only_action(_("Save As is unavailable in read-only mode")):
+            return
         self.push_screen(
             FilePromptScreen("Save File Name", self._default_save_name()),
             callback=self._on_choose_save_name,
@@ -1213,6 +1234,8 @@ class SafariWriterApp(App):
         self._on_save_file(str(directory / self._pending_save_filename))
 
     def _action_delete_via_safari_dos(self) -> None:
+        if self._block_read_only_action(_("Delete is unavailable in read-only mode")):
+            return
         self.push_screen(
             SafariDosBrowserScreen(
                 self._build_safari_dos_state(self._picker_start_path()),

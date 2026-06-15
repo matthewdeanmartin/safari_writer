@@ -479,7 +479,15 @@ class EditorArea(Widget, can_focus=True):
             self.state.push_undo()
             self._last_undo_action = action
 
+    def _deny_write_access(self, message: str | None = None) -> bool:
+        if not self.state.read_only:
+            return False
+        self._set_screen_message(message or _("Read-only mode is enabled"))
+        return True
+
     def _undo(self) -> None:
+        if self._deny_write_access():
+            return
         if self.state.pop_undo():
             self._last_undo_action = ""
             self._set_screen_message("Undo")
@@ -874,6 +882,11 @@ class EditorArea(Widget, can_focus=True):
             self._page_scroll(1)
         elif key == "tab":
             self._clear_selection()
+            if s.insert_mode and self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._tab_forward()
         elif key == "ctrl+t":
             self._clear_selection()
@@ -884,6 +897,11 @@ class EditorArea(Widget, can_focus=True):
 
         # Enter — split line
         elif key == "enter":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._push_undo("enter")
             if self._has_selection():
                 self._delete_selection()
@@ -898,22 +916,42 @@ class EditorArea(Widget, can_focus=True):
             self._update_status()
         elif key == "shift+f3":
             self._clear_selection()
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._toggle_case_at_cursor()
 
         # Deletion
         elif key == "backspace":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._push_undo("backspace")
             if self._has_selection():
                 self._delete_selection()
             else:
                 self._backspace()
         elif key == "delete":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._push_undo("delete")
             if self._has_selection():
                 self._delete_selection()
             else:
                 self._delete_char()
         elif key == "shift+delete":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._push_undo("delete_eol")
             self._clear_selection()
             self._delete_to_eol()
@@ -921,6 +959,11 @@ class EditorArea(Widget, can_focus=True):
             self._clear_selection()
             self._undo()
         elif key == "ctrl+shift+delete":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._push_undo("delete_eof")
             self._clear_selection()
             self._delete_to_eof()
@@ -929,6 +972,11 @@ class EditorArea(Widget, can_focus=True):
         elif key == "alt+w":
             self._word_count()
         elif key == "alt+a":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._push_undo("alphabetize")
             self._alphabetize()
 
@@ -944,49 +992,139 @@ class EditorArea(Widget, can_focus=True):
         elif key == "alt+h":
             self._prompt_replace()
         elif key == "alt+n":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._replace_current_and_find_next()
         elif key == "alt+r":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._global_replace()
 
         # Inline formatting
         elif key == "ctrl+b":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_BOLD)
         elif key == "ctrl+u":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_UNDERLINE)
         elif key == "ctrl+g":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_ELONGATE)
         elif key == "ctrl+left_square_bracket":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_SUPER)
         elif key == "ctrl+right_square_bracket":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_SUB)
         elif key == "ctrl+e":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_CENTER)
         elif key == "ctrl+r":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_RIGHT)
         elif key == "ctrl+m":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_PARA)
         elif key == "alt+m":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_MERGE)
         elif key == "alt+f":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_control(CTRL_FORM)
 
         # Document structure markers
         elif key == "ctrl+shift+h":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_structure_marker(CTRL_HEADER)
         elif key == "ctrl+shift+f":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._insert_structure_marker(CTRL_FOOTER)
         elif key == "ctrl+shift+s":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._prompt_heading()
         elif key == "ctrl+shift+e":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             if self._is_slide_document():
                 self._insert_slide_separator()
             else:
                 self._insert_structure_marker(CTRL_EJECT)
         elif key == "ctrl+shift+c":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._prompt_chain()
 
         # Document title (display name without filesystem save)
         elif key == "ctrl+shift+n":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._prompt_title()
 
         # Save — delegate to app-level save handler
@@ -999,6 +1137,11 @@ class EditorArea(Widget, can_focus=True):
 
         # Macro runner — Ctrl+\
         elif key == "ctrl+backslash":
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._run_macro()
 
         # Exit — return to Fed screen if composing, else main menu
@@ -1014,6 +1157,11 @@ class EditorArea(Widget, can_focus=True):
 
         # Printable characters
         elif event.character and event.character.isprintable():
+            if self._deny_write_access():
+                event.stop()
+                self.refresh()
+                self._update_status()
+                return
             self._push_undo("type")
             if self._has_selection():
                 self._delete_selection()
@@ -1039,6 +1187,10 @@ class EditorArea(Widget, can_focus=True):
             self.state.clipboard,
         )
         event.stop()
+        if self._deny_write_access():
+            self.refresh()
+            self._update_status()
+            return
         # Ctrl+V arrives as a Paste event, not a Key event, so the binding never fires.
         # Paste from our internal clipboard instead.
         self._paste()
@@ -1612,6 +1764,10 @@ class EditorArea(Widget, can_focus=True):
         self._update_status()
 
     def action_editor_paste(self) -> None:
+        if self._deny_write_access():
+            self.refresh()
+            self._update_status()
+            return
         _log.debug(
             "action_editor_paste: clipboard=%r cursor=(%d,%d)",
             self.state.clipboard,
@@ -1630,6 +1786,10 @@ class EditorArea(Widget, can_focus=True):
         self._update_status()
 
     def action_editor_cut(self) -> None:
+        if self._deny_write_access():
+            self.refresh()
+            self._update_status()
+            return
         _log.debug("action_editor_cut: selection=%r", self._has_selection())
         self._push_undo("cut")
         self._cut()
@@ -1879,6 +2039,7 @@ class EditorScreen(Screen):
 
         parts = [
             f" [{doc_name}]",
+            "[Read Only]" if s.read_only else "",
             f"[{mode}]",
             f"[{caps}]",
             f"[{storage}]",
@@ -1887,7 +2048,7 @@ class EditorScreen(Screen):
         ]
         if acct_label:
             parts.append(f"[Masto: {acct_label}]")
-        return "   ".join(parts)
+        return " ".join(part for part in parts if part)
 
     def _tab_bar_text(self) -> str:
         try:
