@@ -160,6 +160,11 @@ tox-verbose:
 
 check: test lint mypy
 
+# CI alias: what the build server runs. Mirrors `check` but named explicitly so
+# workflows can target a stable name. No format-check here — formatting happens
+# locally, not on paid build minutes.
+check-ci: test lint mypy
+
 check-verbose: test-verbose lint-verbose mypy-verbose
 
 lint: lint-all

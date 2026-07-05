@@ -89,6 +89,14 @@ def main(argv: list[str] | None = None) -> int:
 def _handle_export_opml(args: argparse.Namespace) -> int:
     """Export discovered followed-profile feeds to an OPML file."""
 
+    # Validate argument ranges before touching credentials: a bad --max-* is a
+    # usage error regardless of whether the environment is configured.
+    if args.max_accounts < 1:
+        print("--max-accounts must be at least 1", file=sys.stderr)
+        return 2
+    if args.max_feeds < 1:
+        print("--max-feeds must be at least 1", file=sys.stderr)
+        return 2
     clients, default_account = load_clients_from_env()
     if not clients:
         print("No Mastodon credentials found; cannot export OPML.", file=sys.stderr)
@@ -106,12 +114,6 @@ def _handle_export_opml(args: argparse.Namespace) -> int:
         if args.output
         else default_opml_export_path(account_name)
     )
-    if args.max_accounts < 1:
-        print("--max-accounts must be at least 1", file=sys.stderr)
-        return 2
-    if args.max_feeds < 1:
-        print("--max-feeds must be at least 1", file=sys.stderr)
-        return 2
     subscriptions = export_followed_feeds_to_opml(
         clients[account_name],
         output_path,
