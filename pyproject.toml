@@ -117,7 +117,7 @@ dev = [
     # other
     "textual-dev>=1.0.0",
     "hatch",
-    "keepachangelog-manager-fork[all]>=6.5.0",
+    "keepachangelog-manager-fork[all]>=6.6.0",
 ]
 
 [tool.mypy]
