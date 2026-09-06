@@ -17,7 +17,9 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
 ]
 dependencies = [
     "textual>=1.0.0",
@@ -78,10 +80,59 @@ include = [
     "safari_reader/py.typed",
     "safari_slides/py.typed",
     "safari_view/py.typed",
-    "/README.md", "LICENSE",
+    "/README.md", "/LICENSE",
 ]
 
-
+# hatchling's default sdist (no explicit target) falls back to including every
+# file on disk that isn't gitignored by a *tracked* .gitignore, but the
+# untracked web/node_modules/ directory (built locally, ignored only by
+# web/.gitignore, never committed) still gets swept in -- gitignore does not
+# gate the sdist file walk. Restrict the sdist to the same source tree as the
+# wheel, plus tests/docs/spec that belong in a source release.
+[tool.hatch.build.targets.sdist]
+include = [
+    "safari_writer/**/*.py",
+    "safari_dos/**/*.py",
+    "safari_chat/**/*.py",
+    "safari_base/**/*.py",
+    "safari_fed/**/*.py",
+    "safari_basic/**/*.py",
+    "safari_asm/**/*.py",
+    "safari_repl/**/*.py",
+    "safari_reader/**/*.py",
+    "safari_slides/**/*.py",
+    "safari_view/**/*.py",
+    "safari_writer/locales/LC_MESSAGES/*.mo",
+    "safari_writer/locales/LC_MESSAGES/*.po",
+    "safari_writer/locales/**/*.mo",
+    "safari_writer/locales/**/*.po",
+    "safari_writer/*.sfw",
+    "safari_writer/*.json",
+    "safari_writer/macros/*.bas",
+    "safari_writer/*.png",
+    "safari_writer/py.typed",
+    "safari_dos/py.typed",
+    "safari_base/examples/*.dbf",
+    "safari_base/examples/*.prg",
+    "safari_basic/examples/*.bas",
+    "safari_basic/*.md",
+    "safari_basic/py.typed",
+    "safari_chat/default_help.md",
+    "safari_chat/extra_help.md",
+    "safari_chat/help_schema.md",
+    "safari_chat/py.typed",
+    "safari_base/py.typed",
+    "safari_fed/py.typed",
+    "safari_asm/example/*.asm",
+    "safari_asm/py.typed",
+    "safari_repl/py.typed",
+    "safari_reader/py.typed",
+    "safari_slides/py.typed",
+    "safari_view/py.typed",
+    "safari_view/README.md",
+    "/tests/**/*.py",
+    "/README.md", "/LICENSE",
+]
 
 
 
@@ -117,7 +168,11 @@ dev = [
     # other
     "textual-dev>=1.0.0",
     "hatch",
-    "keepachangelog-manager-fork[all]>=6.6.0",
+    # The [all] extra pulls in google-re2, which has no cp315 wheel and fails to
+    # build on Windows (missing absl headers). The base package is pure Python and
+    # provides the `kaclm validate` functionality this repo actually uses.
+    "keepachangelog-manager-fork[all]>=6.6.0; python_version < '3.15'",
+    "keepachangelog-manager-fork>=6.6.0; python_version >= '3.15'",
 ]
 
 [tool.mypy]
