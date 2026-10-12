@@ -6,12 +6,12 @@ import hashlib
 import json
 import os
 import re
+from collections.abc import Callable
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Callable
 from urllib.parse import urljoin, urlparse
 from xml.etree import ElementTree as ET
 
@@ -170,7 +170,7 @@ def scan_opml_documents(base_dir: Path | None = None) -> list[OpmlDocument]:
             feed_count = len(parse_opml_document(text))
         except OSError:
             feed_count = 0
-        modified = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        modified = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
         documents.append(
             OpmlDocument(
                 path=path,
@@ -296,7 +296,7 @@ def stable_item_key(link: str, title: str, published: str) -> str:
 
     if link:
         return link
-    digest = hashlib.sha1(f"{title}|{published}".encode("utf-8")).hexdigest()
+    digest = hashlib.sha1(f"{title}|{published}".encode()).hexdigest()
     return digest
 
 
@@ -466,7 +466,7 @@ def _extract_title(html: str) -> str:
 
 
 def _now_label() -> str:
-    return datetime.now(tz=timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M")
+    return datetime.now(tz=UTC).astimezone().strftime("%Y-%m-%d %H:%M")
 
 
 def _child_text(node: ET.Element, name: str) -> str:

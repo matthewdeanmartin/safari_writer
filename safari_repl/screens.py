@@ -26,8 +26,8 @@ from safari_basic.repl import SafariREPL
 from safari_repl.state import ReplState
 
 __all__ = [
-    "ReplMainMenuScreen",
     "ReplEditorScreen",
+    "ReplMainMenuScreen",
 ]
 
 REPL_CSS = """

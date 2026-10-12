@@ -2,7 +2,7 @@
 name = "safari-writer"
 version = "0.1.5"
 description = "A UI-compatible clone of AtariWriter, built with Textual"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "Matthew Martin", email = "matthewdeanmartin@gmail.com" },
 ]
@@ -14,7 +14,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -156,7 +155,7 @@ dev = [
     "hypothesis>=6.151.9",
     "tox>=4.0.0",
     "pytest-cov>=7.0.0",
-    "pytest-xdist>=3.5.0; python_version >= '3.8'",
+    "pytest-xdist>=3.5.0",
     "pytest-xdist>=3.8.0",
     "pytest-randomly>=4.0.1",
     # Mock Mastodon server (published on PyPI) — lets test_integration/ run
@@ -238,3 +237,6 @@ schema_version = "current"
 [[tool.changelogmanager.components]]
 name = "default"
 changelog = "CHANGELOG.md"
+
+[tool.ruff.lint]
+ignore = ["RUF100", "B017", "BLE001", "FLY002", "FURB162", "PERF402", "PIE810", "PLW1510", "RUF012", "S110", "S112", "SIM102", "SIM103", "SIM115", "SIM117", "TRY004", "TRY201"]  # unused noqa differs across Python versions

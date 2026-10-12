@@ -1,6 +1,5 @@
 """Tests for Markdown export."""
 
-
 from safari_writer.export_md import export_markdown
 from safari_writer.screens.editor import (
     CTRL_BOLD,

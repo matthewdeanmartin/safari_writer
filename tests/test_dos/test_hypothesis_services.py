@@ -29,7 +29,9 @@ PATH_TEXT = st.text(
 WINDOWS_DEVICE_NAMES = {"CON", "PRN", "AUX", "NUL"} | {
     f"{prefix}{number}" for prefix in ("COM", "LPT") for number in range(1, 10)
 }
-FILESYSTEM_TEXT = PATH_TEXT.filter(lambda name: name.upper() not in WINDOWS_DEVICE_NAMES)
+FILESYSTEM_TEXT = PATH_TEXT.filter(
+    lambda name: name.upper() not in WINDOWS_DEVICE_NAMES
+)
 
 
 def _entry(name: str, *, is_dir: bool, modified_at: datetime) -> DirectoryEntry:

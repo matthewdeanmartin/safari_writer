@@ -32,9 +32,9 @@ def assert_module_retrieval(
         kw.lower() in heading or kw.lower() in top_chunk.body.lower()
         for kw in expected_keywords
     )
-    assert (
-        found
-    ), f"Query '{query}' returned '{top_chunk.heading}', which does not match expected keywords {expected_keywords}"
+    assert found, (
+        f"Query '{query}' returned '{top_chunk.heading}', which does not match expected keywords {expected_keywords}"
+    )
 
 
 class TestSafariWriterRetrieval:

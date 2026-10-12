@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 from safari_base.lang.errors import DBaseError
 
 
-def call_function(name: str, args: list[Any], env: "Environment") -> Any:
+def call_function(name: str, args: list[Any], env: Environment) -> Any:
     """Dispatch a built-in function call."""
     name_upper = name.upper()
     fn = _FUNCTIONS.get(name_upper)
@@ -23,32 +23,32 @@ def call_function(name: str, args: list[Any], env: "Environment") -> Any:
 # -- Database/navigation functions -------------------------------------------
 
 
-def _eof(args: list[Any], env: "Environment") -> bool:
+def _eof(args: list[Any], env: Environment) -> bool:
     wa = env.current_work_area()
     return wa.eof if wa else True
 
 
-def _bof(args: list[Any], env: "Environment") -> bool:
+def _bof(args: list[Any], env: Environment) -> bool:
     wa = env.current_work_area()
     return wa.bof if wa else True
 
 
-def _found(args: list[Any], env: "Environment") -> bool:
+def _found(args: list[Any], env: Environment) -> bool:
     wa = env.current_work_area()
     return wa.found if wa else False
 
 
-def _recno(args: list[Any], env: "Environment") -> int:
+def _recno(args: list[Any], env: Environment) -> int:
     wa = env.current_work_area()
     return wa.recno if wa else 0
 
 
-def _reccount(args: list[Any], env: "Environment") -> int:
+def _reccount(args: list[Any], env: Environment) -> int:
     wa = env.current_work_area()
     return wa.record_count if wa else 0
 
 
-def _deleted(args: list[Any], env: "Environment") -> bool:
+def _deleted(args: list[Any], env: Environment) -> bool:
     wa = env.current_work_area()
     return wa.is_deleted() if wa else False
 
@@ -56,12 +56,12 @@ def _deleted(args: list[Any], env: "Environment") -> bool:
 # -- String functions --------------------------------------------------------
 
 
-def _len(args: list[Any], env: "Environment") -> int:
+def _len(args: list[Any], env: Environment) -> int:
     _check_args("LEN", args, 1)
     return len(str(args[0]))
 
 
-def _substr(args: list[Any], env: "Environment") -> str:
+def _substr(args: list[Any], env: Environment) -> str:
     _check_args("SUBSTR", args, 2, 3)
     s = str(args[0])
     start = max(1, int(args[1])) - 1  # dBASE is 1-based
@@ -69,39 +69,39 @@ def _substr(args: list[Any], env: "Environment") -> str:
     return s[start : start + length]
 
 
-def _left(args: list[Any], env: "Environment") -> str:
+def _left(args: list[Any], env: Environment) -> str:
     _check_args("LEFT", args, 2)
     return str(args[0])[: int(args[1])]
 
 
-def _right(args: list[Any], env: "Environment") -> str:
+def _right(args: list[Any], env: Environment) -> str:
     _check_args("RIGHT", args, 2)
     s = str(args[0])
     n = int(args[1])
     return s[-n:] if n > 0 else ""
 
 
-def _ltrim(args: list[Any], env: "Environment") -> str:
+def _ltrim(args: list[Any], env: Environment) -> str:
     _check_args("LTRIM", args, 1)
     return str(args[0]).lstrip()
 
 
-def _rtrim(args: list[Any], env: "Environment") -> str:
+def _rtrim(args: list[Any], env: Environment) -> str:
     _check_args("RTRIM", args, 1)
     return str(args[0]).rstrip()
 
 
-def _trim(args: list[Any], env: "Environment") -> str:
+def _trim(args: list[Any], env: Environment) -> str:
     _check_args("TRIM", args, 1)
     return str(args[0]).strip()
 
 
-def _upper(args: list[Any], env: "Environment") -> str:
+def _upper(args: list[Any], env: Environment) -> str:
     _check_args("UPPER", args, 1)
     return str(args[0]).upper()
 
 
-def _lower(args: list[Any], env: "Environment") -> str:
+def _lower(args: list[Any], env: Environment) -> str:
     _check_args("LOWER", args, 1)
     return str(args[0]).lower()
 
@@ -109,7 +109,7 @@ def _lower(args: list[Any], env: "Environment") -> str:
 # -- Conversion functions ----------------------------------------------------
 
 
-def _str_fn(args: list[Any], env: "Environment") -> str:
+def _str_fn(args: list[Any], env: Environment) -> str:
     _check_args("STR", args, 1, 3)
     val = float(args[0])
     if len(args) >= 2:
@@ -121,7 +121,7 @@ def _str_fn(args: list[Any], env: "Environment") -> str:
     return str(int(val)) if val == int(val) else str(val)
 
 
-def _val(args: list[Any], env: "Environment") -> float:
+def _val(args: list[Any], env: Environment) -> float:
     _check_args("VAL", args, 1)
     try:
         return float(str(args[0]).strip())
@@ -129,7 +129,7 @@ def _val(args: list[Any], env: "Environment") -> float:
         return 0.0
 
 
-def _dtoc(args: list[Any], env: "Environment") -> str:
+def _dtoc(args: list[Any], env: Environment) -> str:
     _check_args("DTOC", args, 1)
     val = args[0]
     if isinstance(val, datetime.date):
@@ -137,7 +137,7 @@ def _dtoc(args: list[Any], env: "Environment") -> str:
     return str(val)
 
 
-def _ctod(args: list[Any], env: "Environment") -> datetime.date:
+def _ctod(args: list[Any], env: Environment) -> datetime.date:
     _check_args("CTOD", args, 1)
     s = str(args[0]).strip()
     # Try YYYY-MM-DD first, then MM/DD/YYYY
@@ -152,11 +152,11 @@ def _ctod(args: list[Any], env: "Environment") -> datetime.date:
 # -- Date functions ----------------------------------------------------------
 
 
-def _date(args: list[Any], env: "Environment") -> datetime.date:
+def _date(args: list[Any], env: Environment) -> datetime.date:
     return datetime.date.today()
 
 
-def _year(args: list[Any], env: "Environment") -> int:
+def _year(args: list[Any], env: Environment) -> int:
     _check_args("YEAR", args, 1)
     val = args[0]
     if isinstance(val, datetime.date):
@@ -164,7 +164,7 @@ def _year(args: list[Any], env: "Environment") -> int:
     return 0
 
 
-def _month(args: list[Any], env: "Environment") -> int:
+def _month(args: list[Any], env: Environment) -> int:
     _check_args("MONTH", args, 1)
     val = args[0]
     if isinstance(val, datetime.date):
@@ -172,7 +172,7 @@ def _month(args: list[Any], env: "Environment") -> int:
     return 0
 
 
-def _day(args: list[Any], env: "Environment") -> int:
+def _day(args: list[Any], env: Environment) -> int:
     _check_args("DAY", args, 1)
     val = args[0]
     if isinstance(val, datetime.date):
@@ -183,22 +183,22 @@ def _day(args: list[Any], env: "Environment") -> int:
 # -- Math functions (bonuses) ------------------------------------------------
 
 
-def _int_fn(args: list[Any], env: "Environment") -> int:
+def _int_fn(args: list[Any], env: Environment) -> int:
     _check_args("INT", args, 1)
     return int(float(args[0]))
 
 
-def _abs_fn(args: list[Any], env: "Environment") -> float:
+def _abs_fn(args: list[Any], env: Environment) -> float:
     _check_args("ABS", args, 1)
     return abs(float(args[0]))
 
 
-def _round_fn(args: list[Any], env: "Environment") -> float:
+def _round_fn(args: list[Any], env: Environment) -> float:
     _check_args("ROUND", args, 2)
     return round(float(args[0]), int(args[1]))
 
 
-def _type_fn(args: list[Any], env: "Environment") -> str:
+def _type_fn(args: list[Any], env: Environment) -> str:
     """TYPE() — return single-char type indicator."""
     _check_args("TYPE", args, 1)
     val = args[0]
@@ -218,7 +218,7 @@ def _type_fn(args: list[Any], env: "Environment") -> str:
 # -- Hash functions ----------------------------------------------------------
 
 
-def _hlen(args: list[Any], env: "Environment") -> int:
+def _hlen(args: list[Any], env: Environment) -> int:
     """HLEN(hashname$) — return number of keys in a hashmap."""
     _check_args("HLEN", args, 1)
     name = str(args[0]).upper()
@@ -228,7 +228,7 @@ def _hlen(args: list[Any], env: "Environment") -> int:
     return len(val)
 
 
-def _hhas(args: list[Any], env: "Environment") -> bool:
+def _hhas(args: list[Any], env: Environment) -> bool:
     """HHAS(hashname$, key$) — return .T. if key exists."""
     _check_args("HHAS", args, 2)
     name = str(args[0]).upper()
@@ -239,7 +239,7 @@ def _hhas(args: list[Any], env: "Environment") -> bool:
     return key in val
 
 
-def _hdel(args: list[Any], env: "Environment") -> bool:
+def _hdel(args: list[Any], env: Environment) -> bool:
     """HDEL(hashname$, key$) — delete a key, return .T. if existed."""
     _check_args("HDEL", args, 2)
     name = str(args[0]).upper()
@@ -253,14 +253,14 @@ def _hdel(args: list[Any], env: "Environment") -> bool:
     return False
 
 
-def _hkeys(args: list[Any], env: "Environment") -> str:
+def _hkeys(args: list[Any], env: Environment) -> str:
     """HKEYS(hashname$) — return comma-separated list of keys."""
     _check_args("HKEYS", args, 1)
     name = str(args[0]).upper()
     val = env.variables.get(name)
     if not isinstance(val, dict):
         raise DBaseError(f"HKEYS: {name} is not a hashmap")
-    return ",".join(str(k) for k in val.keys())
+    return ",".join(str(k) for k in val)
 
 
 # -- Helpers -----------------------------------------------------------------

@@ -10,8 +10,8 @@ from safari_base.database import (
 from safari_base.main import build_parser, main, parse_args
 
 __all__ = [
-    "BaseSession",
     "DEFAULT_ADDRESS_SCHEMA",
+    "BaseSession",
     "SafariBaseApp",
     "build_parser",
     "ensure_database",

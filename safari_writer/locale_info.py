@@ -8,6 +8,7 @@ Detection priority:
 
 from __future__ import annotations
 
+import contextlib
 import gettext as _gettext_mod
 import locale
 import os
@@ -320,10 +321,8 @@ def available_languages() -> list[str]:
 # ---------------------------------------------------------------------------
 
 # Try to set LC_TIME once at import time so strftime picks up locale formats.
-try:
+with contextlib.suppress(locale.Error):
     locale.setlocale(locale.LC_TIME, "")
-except locale.Error:
-    pass
 
 
 def format_datetime(dt: datetime, style: str = "full") -> str:

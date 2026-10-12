@@ -6,7 +6,6 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
-
 from safari_writer.screens.git_screen import (
     GitPublishScreen,
     _find_repo_root,

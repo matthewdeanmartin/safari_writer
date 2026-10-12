@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import importlib
 import json
-import unittest.mock as mock
 from pathlib import Path
+from unittest import mock
 
 import safari_dos
 import safari_dos.services as dos_services
@@ -321,7 +321,6 @@ def test_main_browse_launches_with_startup_state(monkeypatch, tmp_path):
 
         def run(self):
             captured["ran"] = True
-            return None
 
     monkeypatch.setattr(safari_dos_main_module, "SafariDosApp", FakeApp)
 

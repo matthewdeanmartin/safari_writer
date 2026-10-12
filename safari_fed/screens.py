@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from datetime import datetime
 from textwrap import shorten, wrap
 
@@ -409,10 +410,8 @@ class SafariFedMainScreen(Screen[None]):
         self._refresh_title()
 
     def _refresh_title(self) -> None:
-        try:
+        with contextlib.suppress(Exception):
             self.query_one("#fed-title", Static).update(self._render_title())
-        except Exception:
-            pass
 
     def set_message(self, message: str) -> None:
         """Update the status message."""

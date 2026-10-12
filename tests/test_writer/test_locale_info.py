@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 from unittest.mock import patch
 
-
 from safari_writer.locale_info import (
     _normalize_tag,
     available_languages,

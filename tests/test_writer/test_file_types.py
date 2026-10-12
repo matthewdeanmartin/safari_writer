@@ -1,6 +1,5 @@
 """Tests for file type awareness (spec 10)."""
 
-
 from safari_writer.file_types import (
     HighlightProfile,
     StorageMode,

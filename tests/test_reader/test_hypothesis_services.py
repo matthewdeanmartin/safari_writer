@@ -51,7 +51,7 @@ def test_parse_chapters_returns_offsets_inside_document(
     chapters = parse_chapters(document)
 
     assert len(chapters) == len(sections)
-    for (label, offset), (prefix, title) in zip(chapters, sections):
+    for (label, offset), (prefix, title) in zip(chapters, sections, strict=False):
         assert label.startswith(prefix)
         assert title.strip() in label
         assert 0 <= offset < len(document)

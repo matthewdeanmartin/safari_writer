@@ -47,7 +47,9 @@ def create_empty_document_state(path: Path | None = None) -> AppState:
     state.cursor_col = 0
     state.filename = str(path) if path is not None else ""
     state.modified = False
-    state.file_profile = resolve_file_profile(path.name if path is not None else "untitled.sfw")
+    state.file_profile = resolve_file_profile(
+        path.name if path is not None else "untitled.sfw"
+    )
     state.doc_language = ""
     return state
 
@@ -85,7 +87,7 @@ def load_demo_document_buffer(encoding: str = "utf-8") -> list[str]:
     return decode_sfw(text)
 
 
-def load_demo_mail_merge_db(encoding: str = "utf-8") -> "MailMergeDB":
+def load_demo_mail_merge_db(encoding: str = "utf-8") -> MailMergeDB:
     """Load the bundled demo mail merge database."""
     import json
 

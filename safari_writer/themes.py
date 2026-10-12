@@ -8,8 +8,8 @@ from pathlib import Path
 from textual.theme import Theme
 
 __all__ = [
-    "THEMES",
     "DEFAULT_THEME",
+    "THEMES",
     "load_settings",
     "save_settings",
 ]

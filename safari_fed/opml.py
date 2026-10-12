@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html import escape
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 from urllib.parse import urljoin, urlparse
 
 import httpx2
@@ -218,7 +219,7 @@ def build_opml_document(
 ) -> str:
     """Render an OPML document for the discovered subscriptions."""
 
-    created = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S UTC")
+    created = datetime.now(UTC).strftime("%a, %d %b %Y %H:%M:%S UTC")
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<opml version="2.0">',

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import string
-from datetime import timedelta, timezone
+from datetime import UTC, timedelta, timezone
 
 from hypothesis import given
 from hypothesis import strategies as st
@@ -50,12 +50,12 @@ def test_plain_text_removes_tags_and_unescapes_entities(fragments: list[str]) ->
 def test_parse_datetime_treats_naive_iso_strings_as_utc(value) -> None:
     parsed = _client()._parse_datetime(value.isoformat())
 
-    assert parsed == value.replace(tzinfo=timezone.utc)
+    assert parsed == value.replace(tzinfo=UTC)
 
 
 @given(st.datetimes(timezones=UTC_OFFSETS))
 def test_parse_datetime_normalizes_aware_iso_strings_to_utc(value) -> None:
     parsed = _client()._parse_datetime(value.isoformat())
 
-    assert parsed == value.astimezone(timezone.utc)
-    assert parsed.tzinfo == timezone.utc
+    assert parsed == value.astimezone(UTC)
+    assert parsed.tzinfo == UTC

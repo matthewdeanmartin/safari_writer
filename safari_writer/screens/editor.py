@@ -1333,7 +1333,7 @@ class EditorArea(Widget, can_focus=True):
 
         # Wrap to top if enabled
         if wrap:
-            for row in range(0, start_row + 1):
+            for row in range(start_row + 1):
                 line = s.buffer[row]
                 # Stop if we hit original cursor pos
                 # col_end = start_col if row == start_row else len(line)

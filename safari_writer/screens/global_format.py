@@ -151,10 +151,7 @@ class GFRow(Static):
         key = f"[bold underline]{self._param.key}[/]"
         label = self._param.label.ljust(25)
         val_str = str(self._value).ljust(5)
-        if self._editing:
-            val = f"[bold reverse]{val_str}[/]"
-        else:
-            val = f"[bold]{val_str}[/]"
+        val = f"[bold reverse]{val_str}[/]" if self._editing else f"[bold]{val_str}[/]"
         hint = f"[dim]{self._param.hint}[/]"
         return f" {key}  {label} {val} {hint}"
 

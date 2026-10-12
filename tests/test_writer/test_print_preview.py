@@ -1,6 +1,5 @@
 """Tests for the ANSI print preview rendering engine."""
 
-
 from safari_writer.mail_merge_db import FieldDef, MailMergeDB
 from safari_writer.screens.editor import (
     CTRL_BOLD,
@@ -39,28 +38,28 @@ class TestRenderInline:
         return {m: False for m in TOGGLE_MARKERS}
 
     def test_plain_text(self):
-        text, state = _render_inline("Hello world", self._init_state())
+        text, _state = _render_inline("Hello world", self._init_state())
         assert "Hello world" in text
 
     def test_bold_markup(self):
         line = f"{CTRL_BOLD}bold{CTRL_BOLD}"
-        text, state = _render_inline(line, self._init_state())
+        text, _state = _render_inline(line, self._init_state())
         assert "[bold]" in text
         assert "bold" in text
 
     def test_underline_markup(self):
         line = f"{CTRL_UNDERLINE}text{CTRL_UNDERLINE}"
-        text, state = _render_inline(line, self._init_state())
+        text, _state = _render_inline(line, self._init_state())
         assert "[underline]" in text
 
     def test_merge_field_display(self):
         line = f"Dear {CTRL_MERGE}1"
-        text, state = _render_inline(line, self._init_state())
+        text, _state = _render_inline(line, self._init_state())
         assert "<<@1>>" in text
 
     def test_form_blank_display(self):
         line = f"Name: {CTRL_FORM}"
-        text, state = _render_inline(line, self._init_state())
+        text, _state = _render_inline(line, self._init_state())
         assert "[________]" in text
 
     def test_toggle_state_carries(self):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 import textwrap
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -82,9 +82,7 @@ def search_gutenberg(
 ) -> list[dict[str, str]]:
     """Search the Gutendex API. Returns simplified result dicts."""
     params: dict[str, str | int] = {"page": page}
-    if search_field == "title":
-        params["search"] = query
-    elif search_field == "author":
+    if search_field == "title" or search_field == "author":
         params["search"] = query
     elif search_field == "topic":
         params["topic"] = query
@@ -358,7 +356,7 @@ def import_local_file(path: Path, state: SafariReaderState) -> BookMeta:
     else:
         dest = _unique_library_path(state.library_dir, path.name)
     dest.write_text(text, encoding="utf-8")
-    now = datetime.now(tz=timezone.utc).isoformat()
+    now = datetime.now(tz=UTC).isoformat()
     if existing is not None:
         existing.title = path.stem.replace("_", " ").replace("-", " ").title()
         existing.file_path = dest
@@ -404,7 +402,7 @@ def add_book_to_library(
 ) -> BookMeta:
     """Register a downloaded file in the library."""
     text = file_path.read_text(encoding="utf-8", errors="replace")
-    now = datetime.now(tz=timezone.utc).isoformat()
+    now = datetime.now(tz=UTC).isoformat()
     meta = BookMeta(
         title=detail.get("title", file_path.stem),
         author=detail.get("author", ""),
@@ -445,7 +443,7 @@ def open_book(book: BookMeta, state: SafariReaderState) -> None:
     state.current_text = text
     state.current_chapters = parse_chapters(text)
     book.total_chars = len(text)
-    book.last_opened = datetime.now(tz=timezone.utc).isoformat()
+    book.last_opened = datetime.now(tz=UTC).isoformat()
     load_reading_state(state)
     save_library(state)
 

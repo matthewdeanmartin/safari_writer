@@ -26,8 +26,8 @@ __all__ = [
     "get_entry_info",
     "get_preview_syntax",
     "get_preview_text",
-    "list_favorites",
     "list_directory",
+    "list_favorites",
     "list_garbage",
     "list_recent_documents",
     "list_recent_locations",
@@ -202,12 +202,12 @@ def _format_copy_name(path: Path, index: int) -> str:
 def _directory_sort_key(entry: DirectoryEntry, sort_field: str) -> tuple[object, ...]:
     common = (not entry.is_dir,)
     if sort_field == "date":
-        return common + (-entry.modified_at.timestamp(), entry.name.lower())
+        return (*common, -entry.modified_at.timestamp(), entry.name.lower())
     if sort_field == "size":
-        return common + (-(entry.size_bytes or 0), entry.name.lower())
+        return (*common, -(entry.size_bytes or 0), entry.name.lower())
     if sort_field == "type":
-        return common + (entry.kind.lower(), entry.name.lower())
-    return common + (entry.name.lower(),)
+        return (*common, entry.kind.lower(), entry.name.lower())
+    return (*common, entry.name.lower())
 
 
 def list_directory(

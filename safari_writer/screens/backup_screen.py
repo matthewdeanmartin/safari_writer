@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -149,10 +150,8 @@ class BackupScreen(Screen):
 
     def _set_status(self, msg: str) -> None:
         self._status = msg
-        try:
+        with contextlib.suppress(Exception):
             self.query_one("#backup-status", Static).update(msg)
-        except Exception:
-            pass
 
     def action_resume(self) -> None:
         meta = self._selected_meta()

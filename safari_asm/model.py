@@ -20,7 +20,7 @@ class Operand:
 
     kind: str
     value: Any
-    index: "Operand | None" = None
+    index: Operand | None = None
 
 
 @dataclass(frozen=True, slots=True)

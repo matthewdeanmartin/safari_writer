@@ -58,7 +58,7 @@ class TestBranchingLogic:
         chunks = parse_document(BRANCH_DOC)
         state = SafariChatState(chunks=chunks)
 
-        mode, resp, cids = plan_response("tell me about the main menu", state)
+        mode, resp, _cids = plan_response("tell me about the main menu", state)
         assert mode == ResponseMode.GROUNDED
         assert "Disk Full error" in resp
         assert "Finding Files" in resp
@@ -85,7 +85,7 @@ class TestBranchingLogic:
         plan_response("main menu", state)
 
         # Use different casing
-        mode, resp, cids = plan_response("DISK FULL ERROR", state)
+        mode, resp, _cids = plan_response("DISK FULL ERROR", state)
 
         assert mode == ResponseMode.GROUNDED
         assert "Your storage device is full" in resp
@@ -97,7 +97,7 @@ class TestBranchingLogic:
         plan_response("main menu", state)
 
         # Typo should not trigger exact branch match but might still hit retrieval
-        mode, resp, cids = plan_response("Disk Full errrr", state)
+        _mode, resp, _cids = plan_response("Disk Full errrr", state)
 
         # It should still find the chunk via keyword retrieval if threshold allows
         assert (

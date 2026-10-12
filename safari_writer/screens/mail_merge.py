@@ -18,14 +18,12 @@ from safari_writer.mail_merge_db import (
     MAX_FIELD_DATA_LEN,
     MAX_FIELD_NAME_LEN,
     MAX_FIELDS,
-)
-from safari_writer.mail_merge_db import MAX_RECORDS as _MAX_RECORDS
-from safari_writer.mail_merge_db import (
     FieldDef,
     MailMergeDB,
     load_mail_merge_db,
     save_mail_merge_db,
 )
+from safari_writer.mail_merge_db import MAX_RECORDS as _MAX_RECORDS
 from safari_writer.state import AppState
 from safari_writer.windows_api import get_kernel32
 
@@ -479,9 +477,7 @@ class MailMergeScreen(Screen):
         self._input_buf = ""
         self._render_subset()
         self._set_message(
-            "Build Subset: enter field number (1–{}) to filter on".format(
-                len(self._db.fields)
-            )
+            f"Build Subset: enter field number (1–{len(self._db.fields)}) to filter on"
         )
         self._set_help(" Enter Confirm  Esc Cancel")
 

@@ -75,7 +75,9 @@ class TestMailMergeDBConstruction:
     def test_empty_db_has_default_fields(self):
         db = MailMergeDB()
         assert len(db.fields) == len(DEFAULT_FIELDS)
-        for (expected_name, expected_len), actual in zip(DEFAULT_FIELDS, db.fields):
+        for (expected_name, expected_len), actual in zip(
+            DEFAULT_FIELDS, db.fields, strict=False
+        ):
             assert actual.name == expected_name
             assert actual.max_len == expected_len
 

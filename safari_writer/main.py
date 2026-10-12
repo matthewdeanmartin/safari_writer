@@ -6,12 +6,12 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from safari_writer.ansi_preview import extract_ansi_page, render_ansi_preview
-from safari_writer.cli_version import version_string
 from safari_writer.cli_types import StartupRequest
+from safari_writer.cli_version import version_string
 from safari_writer.document_io import (
     create_empty_document_state,
     load_document_buffer,
@@ -452,7 +452,7 @@ def _normalize_argv(argv: list[str]) -> list[str]:
         return argv
     if first_non_option.startswith("-"):
         return argv
-    return global_tokens + ["tui", "edit", "--file", first_non_option, *remainder[1:]]
+    return [*global_tokens, "tui", "edit", "--file", first_non_option, *remainder[1:]]
 
 
 def _apply_cwd(args: argparse.Namespace) -> None:

@@ -53,7 +53,9 @@ FRIEND_TOKEN = "friend_token"
 INTEGRATION_SEED = SeedConfig(
     accounts=[
         SeedAccount(username="me", display_name="Safari User", access_token=ME_TOKEN),
-        SeedAccount(username="friend", display_name="A Friend", access_token=FRIEND_TOKEN),
+        SeedAccount(
+            username="friend", display_name="A Friend", access_token=FRIEND_TOKEN
+        ),
     ],
     follows=[SeedFollow(follower="me", following="friend")],
     statuses=[
@@ -73,7 +75,9 @@ def mock_server_url() -> Iterator[str]:
         yield server.base_url
 
 
-def _identity(base_url: str, name: str = "MAIN", token: str = ME_TOKEN) -> MastodonIdentity:
+def _identity(
+    base_url: str, name: str = "MAIN", token: str = ME_TOKEN
+) -> MastodonIdentity:
     return MastodonIdentity(
         name=name,
         base_url=base_url,
@@ -92,7 +96,9 @@ def fed_client(mock_server_url: str) -> SafariFedClient:
 @pytest.fixture
 def friend_client(mock_server_url: str) -> SafariFedClient:
     """A second client (as "friend") to set up state the "me" client reads."""
-    return SafariFedClient(_identity(mock_server_url, name="FRIEND", token=FRIEND_TOKEN))
+    return SafariFedClient(
+        _identity(mock_server_url, name="FRIEND", token=FRIEND_TOKEN)
+    )
 
 
 # --- Read surface -----------------------------------------------------------
@@ -127,7 +133,9 @@ def test_mention_notification_is_flagged(
     Exercises the notifications→mention branch of fetch_sync_result and the
     summary counter.
     """
-    sent = friend_client.send_post("hey @me look at this specific thing", visibility="public")
+    sent = friend_client.send_post(
+        "hey @me look at this specific thing", visibility="public"
+    )
     result = fed_client.fetch_sync_result(limit=40)
     mentions = [post for post in result.posts if post.mention]
     assert mentions, "the @mention should appear as a mention-flagged post"
@@ -199,7 +207,9 @@ def test_send_post_with_spoiler_text(fed_client: SafariFedClient) -> None:
     assert any("CW: CW here" in line for line in sent.content_lines)
 
 
-def test_favourite_then_reblog(fed_client: SafariFedClient, friend_client: SafariFedClient) -> None:
+def test_favourite_then_reblog(
+    fed_client: SafariFedClient, friend_client: SafariFedClient
+) -> None:
     target = friend_client.send_post("boost me maybe", visibility="public")
     # These return None; success is "no exception" against a real HTTP server.
     fed_client.favourite(target.post_id)

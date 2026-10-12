@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -29,14 +29,14 @@ from safari_reader.services import (
 from safari_reader.state import Bookmark, BookMeta, SafariReaderState
 
 __all__ = [
-    "SafariReaderMainMenuScreen",
-    "SafariReaderLibraryScreen",
-    "SafariReaderScreen",
-    "SafariReaderCatalogScreen",
     "SafariReaderBookDetailScreen",
     "SafariReaderBookmarksScreen",
+    "SafariReaderCatalogScreen",
     "SafariReaderDiskBrowserScreen",
     "SafariReaderHelpScreen",
+    "SafariReaderLibraryScreen",
+    "SafariReaderMainMenuScreen",
+    "SafariReaderScreen",
     "SafariReaderSearchScreen",
 ]
 
@@ -726,7 +726,7 @@ class SafariReaderScreen(Screen):
         self.app.push_screen(SafariReaderSearchScreen(self.state))
 
     def action_bookmark(self) -> None:
-        now = datetime.now(tz=timezone.utc).isoformat()
+        now = datetime.now(tz=UTC).isoformat()
         excerpt = self.state.current_text[
             self.state.current_position : self.state.current_position + 60
         ].replace("\n", " ")

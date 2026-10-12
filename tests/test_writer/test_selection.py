@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-
 from safari_writer.screens.editor import (
     EditorArea,
     _from_flat,

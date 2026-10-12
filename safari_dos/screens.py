@@ -688,7 +688,7 @@ class SafariDosBrowserScreen(Screen):
                 is_dir=True,
                 is_link=False,
             )
-            self._entries = [parent_entry] + entries
+            self._entries = [parent_entry, *entries]
         else:
             self._entries = entries
         self._selected_index = min(self._selected_index, max(len(self._entries) - 1, 0))
@@ -974,10 +974,10 @@ class SafariDosBrowserScreen(Screen):
         self._sync_recent_documents(path)
         app = self.app
         if hasattr(app, "handle_safari_dos_open"):
-            getattr(app, "handle_safari_dos_open")(path)
+            app.handle_safari_dos_open(path)
             return
         if hasattr(app, "request_writer_launch"):
-            getattr(app, "request_writer_launch")(path)
+            app.request_writer_launch(path)
             return
         self.set_message("No writer integration available")
 

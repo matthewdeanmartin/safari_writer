@@ -4,13 +4,11 @@ import random
 import re
 import sys
 from dataclasses import dataclass
-from typing import Dict, List, NoReturn, Optional, TextIO, Tuple, Union, cast
+from typing import NoReturn, TextIO, cast
 
 
 class BasicError(Exception):
     """Custom exception for runtime errors in the Safari Basic interpreter."""
-
-    pass
 
 
 @dataclass
@@ -70,26 +68,26 @@ class Scanner:
 
 class SafariBasic:
     def __init__(
-        self, out_stream: Optional[TextIO] = None, in_stream: Optional[TextIO] = None
+        self, out_stream: TextIO | None = None, in_stream: TextIO | None = None
     ):
         self.out_stream = out_stream or sys.stdout
         self.in_stream = in_stream or sys.stdin
-        self.files: Dict[int, TextIO] = {}
+        self.files: dict[int, TextIO] = {}
         self.tracing = False
         self.trace_vars = False
         self.reset()
 
     def reset(self) -> None:
         """Clears the entire program, variables, and state (NEW command)."""
-        self.lines: Dict[int, str] = {}
-        self.line_order: List[int] = []
+        self.lines: dict[int, str] = {}
+        self.line_order: list[int] = []
         self._clear_vars()
         self.halted = False
         self.stopped = False
         self.pc_idx = -1
         self.stmt_idx = 0
-        self._undo_stack: List[Dict[int, str]] = []
-        self._redo_stack: List[Dict[int, str]] = []
+        self._undo_stack: list[dict[int, str]] = []
+        self._redo_stack: list[dict[int, str]] = []
 
     def _save_undo(self) -> None:
         self._undo_stack.append(self.lines.copy())
@@ -147,11 +145,11 @@ class SafariBasic:
         return len(old_to_new)
 
     def _clear_vars(self) -> None:
-        self.vars: Dict[str, Union[float, str]] = {}
-        self.arrays: Dict[str, List[float]] = {}
-        self.string_caps: Dict[str, int] = {}
-        self.for_stack: List[ForFrame] = []
-        self.gosub_stack: List[GosubFrame] = []
+        self.vars: dict[str, float | str] = {}
+        self.arrays: dict[str, list[float]] = {}
+        self.string_caps: dict[str, int] = {}
+        self.for_stack: list[ForFrame] = []
+        self.gosub_stack: list[GosubFrame] = []
 
     def print_out(self, text: str, end: str = "\n") -> None:
         self.out_stream.write(text + end)
@@ -160,7 +158,7 @@ class SafariBasic:
     def _error(self, message: str) -> NoReturn:
         raise BasicError(message)
 
-    def _split_statements(self, text: str) -> List[str]:
+    def _split_statements(self, text: str) -> list[str]:
         stmts = []
         current = []
         in_string = False
@@ -190,7 +188,7 @@ class SafariBasic:
         stmts.append("".join(current))
         return stmts
 
-    def run_program(self, start_line: Optional[int] = None) -> None:
+    def run_program(self, start_line: int | None = None) -> None:
         if start_line is not None:
             if start_line not in self.lines:
                 self._error(f"Line {start_line} not found")
@@ -414,7 +412,7 @@ class SafariBasic:
             if start <= num <= end:
                 self.print_out(f"{num} {self.lines[num]}")
 
-    def _get_var_ref(self, scanner: Scanner) -> Tuple[str, bool, Optional[int]]:
+    def _get_var_ref(self, scanner: Scanner) -> tuple[str, bool, int | None]:
         scanner.skip_spaces()
         match = re.match(r"^[A-Za-z][A-Za-z0-9_]*\$?", scanner.remaining())
         if not match:
@@ -437,7 +435,7 @@ class SafariBasic:
         return name, is_string, idx
 
     def _set_var(
-        self, name: str, is_string: bool, idx: Optional[int], val: Union[float, str]
+        self, name: str, is_string: bool, idx: int | None, val: float | str
     ) -> None:
         if is_string:
             if not isinstance(val, str):
@@ -599,7 +597,7 @@ class SafariBasic:
         if not scanner.consume_keyword("TO"):
             self._error("Expected TO")
         end_val = self._eval_expr(scanner)
-        step_val: Union[float, str] = 1.0
+        step_val: float | str = 1.0
         scanner.skip_spaces()
         if scanner.consume_keyword("STEP"):
             step_val = self._eval_expr(scanner)
@@ -701,7 +699,7 @@ class SafariBasic:
             self.files[fd].close()
             del self.files[fd]
 
-    def _eval_expr(self, scanner: Scanner) -> Union[float, str]:
+    def _eval_expr(self, scanner: Scanner) -> float | str:
         """Evaluates an expression, handling relational operators with lowest precedence."""
         left = self._eval_sum(scanner)
         while scanner.remaining():
@@ -714,21 +712,12 @@ class SafariBasic:
             if rel_op:
                 scanner.advance(len(rel_op))
                 right = self._eval_sum(scanner)
-                if isinstance(left, float) and isinstance(right, float):
-                    if rel_op == "=":
-                        res = left == right
-                    elif rel_op == "<>":
-                        res = left != right
-                    elif rel_op == "<":
-                        res = left < right
-                    elif rel_op == ">":
-                        res = left > right
-                    elif rel_op == "<=":
-                        res = left <= right
-                    else:  # rel_op == ">="
-                        res = left >= right
-                    left = 1.0 if res else 0.0
-                elif isinstance(left, str) and isinstance(right, str):
+                if (
+                    isinstance(left, float)
+                    and isinstance(right, float)
+                    or isinstance(left, str)
+                    and isinstance(right, str)
+                ):
                     if rel_op == "=":
                         res = left == right
                     elif rel_op == "<>":
@@ -748,7 +737,7 @@ class SafariBasic:
                 break
         return left
 
-    def _eval_sum(self, scanner: Scanner) -> Union[float, str]:
+    def _eval_sum(self, scanner: Scanner) -> float | str:
         """Evaluates addition and subtraction, which have higher precedence than comparisons."""
         left = self._eval_term(scanner)
         while scanner.remaining():
@@ -758,9 +747,12 @@ class SafariBasic:
                 scanner.advance()
                 right = self._eval_term(scanner)
                 if op == "+":
-                    if isinstance(left, str) and isinstance(right, str):
-                        left = left + right
-                    elif isinstance(left, float) and isinstance(right, float):
+                    if (
+                        isinstance(left, str)
+                        and isinstance(right, str)
+                        or isinstance(left, float)
+                        and isinstance(right, float)
+                    ):
                         left = left + right
                     else:
                         self._error("Type mismatch")
@@ -772,7 +764,7 @@ class SafariBasic:
                 break
         return left
 
-    def _eval_term(self, scanner: Scanner) -> Union[float, str]:
+    def _eval_term(self, scanner: Scanner) -> float | str:
         left = self._eval_power(scanner)
         while scanner.remaining():
             scanner.skip_spaces()
@@ -792,7 +784,7 @@ class SafariBasic:
                 break
         return left
 
-    def _eval_power(self, scanner: Scanner) -> Union[float, str]:
+    def _eval_power(self, scanner: Scanner) -> float | str:
         left = self._eval_factor(scanner)
         scanner.skip_spaces()
         if scanner.peek() == "^":
@@ -803,7 +795,7 @@ class SafariBasic:
             left = math.pow(left, right)
         return left
 
-    def _eval_factor(self, scanner: Scanner) -> Union[float, str]:
+    def _eval_factor(self, scanner: Scanner) -> float | str:
         scanner.skip_spaces()
         char = scanner.peek()
         if char == "(":
@@ -932,7 +924,7 @@ class SafariBasic:
             return self.vars.get(name, 0.0)
         self._error("Syntax error in expression")
 
-    def inject_variable(self, name: str, value: Union[float, str]) -> None:
+    def inject_variable(self, name: str, value: float | str) -> None:
         name = name.upper()
         if isinstance(value, str):
             if not name.endswith("$"):

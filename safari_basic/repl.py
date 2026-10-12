@@ -1,8 +1,9 @@
+import contextlib
 import os
 import re
 import threading
 from pathlib import Path
-from typing import List, Optional, TextIO
+from typing import TextIO
 
 from safari_basic.interpreter import BasicError, SafariBasic
 
@@ -125,16 +126,16 @@ class SafariREPL:
     MAX_HISTORY = 500
 
     def __init__(
-        self, out_stream: Optional[TextIO] = None, in_stream: Optional[TextIO] = None
+        self, out_stream: TextIO | None = None, in_stream: TextIO | None = None
     ):
         self.interpreter = SafariBasic(out_stream=out_stream, in_stream=in_stream)
         self.out_stream = self.interpreter.out_stream
         self.in_stream = self.interpreter.in_stream
-        self.current_filename: Optional[str] = None
+        self.current_filename: str | None = None
         self.modified = False
-        self.history: List[str] = []
+        self.history: list[str] = []
         self._autosave_enabled = False
-        self._autosave_timer: Optional[threading.Timer] = None
+        self._autosave_timer: threading.Timer | None = None
         self._load_history()
 
     def _load_history(self) -> None:
@@ -142,7 +143,7 @@ class SafariREPL:
             path = os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
-                    self.history = [line.rstrip("\n") for line in f.readlines()][
+                    self.history = [line.rstrip("\n") for line in f][
                         -self.MAX_HISTORY :
                     ]
         except Exception:
@@ -152,8 +153,9 @@ class SafariREPL:
         try:
             path = os.path.join(os.path.expanduser("~"), self.HISTORY_FILE)
             with open(path, "w", encoding="utf-8") as f:
-                for entry in self.history[-self.MAX_HISTORY :]:
-                    f.write(entry + "\n")
+                f.writelines(
+                    entry + "\n" for entry in self.history[-self.MAX_HISTORY :]
+                )
         except Exception:
             pass
 
@@ -169,7 +171,7 @@ class SafariREPL:
         """Returns True if there are unsaved changes (caller should warn)."""
         return self.modified
 
-    def complete(self, prefix: str) -> List[str]:
+    def complete(self, prefix: str) -> list[str]:
         """Return tab-completion candidates for the given prefix."""
         upper = prefix.upper()
         results = []
@@ -375,10 +377,8 @@ class SafariREPL:
 
         if len(parts) > 1:
             if parts[1].strip():
-                try:
+                with contextlib.suppress(ValueError):
                     end = int(parts[1].strip())
-                except ValueError:
-                    pass
             else:
                 end = float("inf")
 
@@ -391,7 +391,9 @@ class SafariREPL:
         filename = (
             match.group(1)
             if match
-            else line.split()[-1] if len(line.split()) > 1 else self.current_filename
+            else line.split()[-1]
+            if len(line.split()) > 1
+            else self.current_filename
         )
 
         if not filename:
@@ -401,8 +403,8 @@ class SafariREPL:
         try:
             with open(filename, "r", encoding="utf-8") as f:
                 self.interpreter.reset()
-                for line in f:
-                    self.process_line(line.strip())
+                for source_line in f:
+                    self.process_line(source_line.strip())
                 self.current_filename = filename
                 self.modified = False
                 self.print_out(f"LOADED {filename}")
@@ -414,7 +416,9 @@ class SafariREPL:
         filename = (
             match.group(1)
             if match
-            else line.split()[-1] if len(line.split()) > 1 else self.current_filename
+            else line.split()[-1]
+            if len(line.split()) > 1
+            else self.current_filename
         )
 
         if not filename:
@@ -423,8 +427,10 @@ class SafariREPL:
 
         try:
             with open(filename, "w", encoding="utf-8") as f:
-                for num in self.interpreter.line_order:
-                    f.write(f"{num} {self.interpreter.lines[num]}\n")
+                f.writelines(
+                    f"{num} {self.interpreter.lines[num]}\n"
+                    for num in self.interpreter.line_order
+                )
                 self.current_filename = filename
                 self.modified = False
                 self.print_out(f"SAVED {filename}")
@@ -464,7 +470,7 @@ class SafariREPL:
             else:
                 self.print_out(f"{name} = {val}")
         for name, arr in sorted(self.interpreter.arrays.items()):
-            self.print_out(f"{name}({len(arr)-1}) = [ARRAY]")
+            self.print_out(f"{name}({len(arr) - 1}) = [ARRAY]")
 
     def _do_edit(self, line: str) -> None:
         parts = line.split()
@@ -613,8 +619,10 @@ class SafariREPL:
         if self._autosave_enabled and self.current_filename and self.modified:
             try:
                 with open(self.current_filename, "w", encoding="utf-8") as f:
-                    for num in self.interpreter.line_order:
-                        f.write(f"{num} {self.interpreter.lines[num]}\n")
+                    f.writelines(
+                        f"{num} {self.interpreter.lines[num]}\n"
+                        for num in self.interpreter.line_order
+                    )
                 self.modified = False
             except Exception:
                 pass

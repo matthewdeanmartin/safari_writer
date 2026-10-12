@@ -138,8 +138,7 @@ def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
     top_margin_pt = fmt.top_margin * (font_size * 0.6)
     bottom_margin_pt = fmt.bottom_margin * (font_size * 0.6)
     text_width = right_margin_pt - left_margin_pt
-    if text_width < 72:
-        text_width = 72
+    text_width = max(text_width, 72)
 
     usable_height = _PAGE_H - top_margin_pt - bottom_margin_pt
     lines_per_page = max(3, int(usable_height / line_height))
@@ -307,7 +306,7 @@ def _export_single(buffer: list[str], fmt: GlobalFormat) -> str:
 
 
 class _Span:
-    __slots__ = ("text", "bold", "underline", "elongated", "superscript", "subscript")
+    __slots__ = ("bold", "elongated", "subscript", "superscript", "text", "underline")
 
     def __init__(
         self,
@@ -328,7 +327,7 @@ class _Span:
 
 
 class _Line:
-    __slots__ = ("text", "align", "indent", "bold", "is_blank", "page_break", "spans")
+    __slots__ = ("align", "bold", "indent", "is_blank", "page_break", "spans", "text")
 
     def __init__(
         self,
@@ -401,10 +400,7 @@ def _parse_spans(text: str) -> list[_Span]:
         elif ch == CTRL_FORM:
             flush()
             spans.append(_Span("[________]"))
-        elif ch == CTRL_PARA:
-            i += 1
-            continue
-        elif ord(ch) < 0x20 and ch != "\t":
+        elif ch == CTRL_PARA or ord(ch) < 0x20 and ch != "\t":
             i += 1
             continue
         else:

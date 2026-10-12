@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-
 from safari_writer.screens.editor import EditorArea
 from safari_writer.state import AppState
 

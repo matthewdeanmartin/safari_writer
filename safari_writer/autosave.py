@@ -14,6 +14,7 @@ delete_backup(path)   -> None
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 from dataclasses import dataclass
@@ -27,9 +28,9 @@ if TYPE_CHECKING:
 __all__ = [
     "BackupMeta",
     "backup_dir",
+    "delete_backup",
     "list_backups",
     "write_backup",
-    "delete_backup",
 ]
 
 # Backup interval used by the app (seconds)
@@ -57,7 +58,7 @@ def _slug(filename: str) -> str:
     return _SLUG_RE.sub("_", stem)[:40]
 
 
-def write_backup(state: "AppState") -> Path | None:
+def write_backup(state: AppState) -> Path | None:
     """Write a backup for *state*.
 
     Returns the backup path, or None if the document was empty / not modified.
@@ -142,12 +143,8 @@ def list_backups() -> list[BackupMeta]:
 
 def delete_backup(path: Path) -> None:
     """Delete an .sfw backup and its sidecar .json."""
-    try:
+    with contextlib.suppress(OSError):
         path.unlink(missing_ok=True)
-    except OSError:
-        pass
     meta = path.with_suffix(".json")
-    try:
+    with contextlib.suppress(OSError):
         meta.unlink(missing_ok=True)
-    except OSError:
-        pass

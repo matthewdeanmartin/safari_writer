@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html import unescape
-from typing import Any, Mapping, cast
+from typing import Any, cast
 
 from mastodon import Mastodon
 
@@ -21,8 +21,8 @@ from safari_fed.state import FedPost
 __all__ = [
     "FedSyncResult",
     "SafariFedClient",
-    "load_clients_from_env",
     "load_client_from_env",
+    "load_clients_from_env",
 ]
 
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -271,13 +271,13 @@ class SafariFedClient:
         parsed = self._parse_datetime(value)
         if parsed is None:
             return "unknown"
-        return format_datetime(parsed.astimezone(timezone.utc), style="short") + " UTC"
+        return format_datetime(parsed.astimezone(UTC), style="short") + " UTC"
 
     def _format_age(self, value: object) -> str:
         parsed = self._parse_datetime(value)
         if parsed is None:
             return "now"
-        seconds = max(0, int((datetime.now(timezone.utc) - parsed).total_seconds()))
+        seconds = max(0, int((datetime.now(UTC) - parsed).total_seconds()))
         if seconds < 60:
             return f"{seconds}s"
         if seconds < 3600:
@@ -289,8 +289,8 @@ class SafariFedClient:
     def _parse_datetime(self, value: object) -> datetime | None:
         if isinstance(value, datetime):
             if value.tzinfo is None:
-                return value.replace(tzinfo=timezone.utc)
-            return value.astimezone(timezone.utc)
+                return value.replace(tzinfo=UTC)
+            return value.astimezone(UTC)
         if not value:
             return None
         text = str(value).replace("Z", "+00:00")
@@ -299,8 +299,8 @@ class SafariFedClient:
         except ValueError:
             return None
         if parsed.tzinfo is None:
-            return parsed.replace(tzinfo=timezone.utc)
-        return parsed.astimezone(timezone.utc)
+            return parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(UTC)
 
     def _as_list(self, value: object) -> list[object]:
         if value is None:

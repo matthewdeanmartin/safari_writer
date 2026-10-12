@@ -231,11 +231,7 @@ def create_table(path: str, columns: list[tuple[str, str, int, int]]) -> dbf.Tab
             field_specs.append(f"{name} {tc}({width},{decimals})")
         elif tc == "C":
             field_specs.append(f"{name} {tc}({width})")
-        elif tc == "D":
-            field_specs.append(f"{name} {tc}")
-        elif tc == "L":
-            field_specs.append(f"{name} {tc}")
-        elif tc == "M":
+        elif tc == "D" or tc == "L" or tc == "M":
             field_specs.append(f"{name} {tc}")
         else:
             field_specs.append(f"{name} C({width})")

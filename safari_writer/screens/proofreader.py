@@ -398,9 +398,7 @@ class ProofreaderScreen(Screen):
                 self.action_activate()
             else:
                 self._handle_menu_key(key)
-        elif mode == MODE_HIGHLIGHT:
-            self._enter_menu()
-        elif mode == MODE_PRINT:
+        elif mode == MODE_HIGHLIGHT or mode == MODE_PRINT:
             self._enter_menu()
         elif mode == MODE_CORRECT_MENU:
             self._handle_correct_menu_key(key)

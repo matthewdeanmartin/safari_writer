@@ -11,11 +11,11 @@ from safari_writer.typed import MailMergeData, MailMergeFieldInfo, MailMergeInsp
 
 __all__ = [
     "DEFAULT_FIELDS",
-    "FieldDef",
+    "MAX_FIELDS",
     "MAX_FIELD_DATA_LEN",
     "MAX_FIELD_NAME_LEN",
-    "MAX_FIELDS",
     "MAX_RECORDS",
+    "FieldDef",
     "MailMergeDB",
     "apply_mail_merge_to_buffer",
     "inspect_mail_merge_db",
@@ -82,7 +82,7 @@ class MailMergeDB:
         }
 
     @classmethod
-    def from_dict(cls, data: object) -> "MailMergeDB":
+    def from_dict(cls, data: object) -> MailMergeDB:
         errors = validate_mail_merge_data(data)
         if errors:
             raise ValueError("; ".join(errors))
@@ -95,12 +95,12 @@ class MailMergeDB:
         db.filename = ""
         return db
 
-    def schema_matches(self, other: "MailMergeDB") -> bool:
+    def schema_matches(self, other: MailMergeDB) -> bool:
         if len(self.fields) != len(other.fields):
             return False
         return all(
             left.name == right.name and left.max_len == right.max_len
-            for left, right in zip(self.fields, other.fields)
+            for left, right in zip(self.fields, other.fields, strict=False)
         )
 
     def apply_subset(self, field_idx: int, low: str, high: str) -> list[int]:

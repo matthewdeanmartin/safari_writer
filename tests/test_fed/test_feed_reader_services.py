@@ -67,11 +67,13 @@ def test_fetch_feed_populates_items():
     def fake_get(url: str) -> httpx2.Response:
         return httpx2.Response(
             200,
-            text=("""<?xml version="1.0"?>
+            text=(
+                """<?xml version="1.0"?>
                 <rss version="2.0"><channel><title>Example</title>
                 <item><guid>a</guid><title>One</title><link>https://example.com/1</link>
                 <description><![CDATA[<p>Alpha</p>]]></description></item>
-                </channel></rss>"""),
+                </channel></rss>"""
+            ),
             request=httpx2.Request("GET", url),
         )
 

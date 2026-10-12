@@ -19,9 +19,11 @@ from safari_writer.mail_merge_db import FieldDef
 
 IDENTIFIER_CHARS = string.ascii_letters + string.digits + "_"
 IDENTIFIER_TEXT = st.text(alphabet=IDENTIFIER_CHARS, min_size=1, max_size=12).filter(
-    lambda value: value.strip() != ""
-    and not value.lower().startswith("sqlite_")
-    and '"' not in value
+    lambda value: (
+        value.strip() != ""
+        and not value.lower().startswith("sqlite_")
+        and '"' not in value
+    )
 )
 FIELD_NAME_TEXT = st.text(
     alphabet=string.ascii_letters + string.digits + "_ ",
@@ -55,7 +57,10 @@ def field_defs(draw: st.DrawFn) -> list[FieldDef]:
             max_size=len(names),
         )
     )
-    return [FieldDef(name.strip(), width) for name, width in zip(names, widths)]
+    return [
+        FieldDef(name.strip(), width)
+        for name, width in zip(names, widths, strict=False)
+    ]
 
 
 def _mixed_case(text: str) -> str:

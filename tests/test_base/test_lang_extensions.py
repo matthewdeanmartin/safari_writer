@@ -1,5 +1,3 @@
-
-
 from safari_base.lang.interpreter import Interpreter
 
 

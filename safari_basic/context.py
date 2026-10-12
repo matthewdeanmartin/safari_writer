@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    pass
+from typing import Any
 
 __all__ = ["MacroContext"]
 

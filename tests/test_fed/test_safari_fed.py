@@ -171,7 +171,7 @@ def test_build_fed_state_uses_demo_posts_only_without_accounts(monkeypatch):
 def test_build_fed_state_starts_configured_account_empty_before_sync(monkeypatch):
     import safari_fed.app as fed_app
 
-    monkeypatch.setattr(fed_app, "_load_fed_cache", lambda: {})
+    monkeypatch.setattr(fed_app, "_load_fed_cache", dict)
 
     class FakeClient:
         def __init__(self, label: str) -> None:
@@ -583,8 +583,7 @@ def test_export_opml_runs_fetches_concurrently(tmp_path):
     def slow_fetcher(url):
         with lock:
             current_concurrent[0] += 1
-            if current_concurrent[0] > peak_concurrent[0]:
-                peak_concurrent[0] = current_concurrent[0]
+            peak_concurrent[0] = max(peak_concurrent[0], current_concurrent[0])
         time.sleep(0.05)  # simulate network latency
         with lock:
             current_concurrent[0] -= 1
@@ -610,9 +609,9 @@ def test_export_opml_runs_fetches_concurrently(tmp_path):
     # Concurrent should finish much faster. Allow generous margin.
     assert elapsed < 0.4, f"took {elapsed:.2f}s — looks sequential"
     # At least some fetches should have been concurrent
-    assert (
-        peak_concurrent[0] >= 3
-    ), f"peak concurrency was {peak_concurrent[0]} — expected parallel execution"
+    assert peak_concurrent[0] >= 3, (
+        f"peak concurrency was {peak_concurrent[0]} — expected parallel execution"
+    )
 
 
 def test_build_opml_document_renders_outline_rows():

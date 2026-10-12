@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from PIL import Image
 
 from safari_view.main import main, parse_args

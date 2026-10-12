@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 
 import safari_slides
-from safari_slides.main import main, parse_args
+from safari_slides.main import parse_args
 
 
 def test_public_exports_are_explicit() -> None:

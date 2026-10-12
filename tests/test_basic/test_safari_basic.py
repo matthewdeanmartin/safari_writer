@@ -1,6 +1,5 @@
 import io
 
-
 from safari_basic.interpreter import SafariBasic
 from safari_basic.repl import SafariREPL
 

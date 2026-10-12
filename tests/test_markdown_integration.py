@@ -1,4 +1,3 @@
-
 import pytest
 
 from safari_writer.export_html import export_html

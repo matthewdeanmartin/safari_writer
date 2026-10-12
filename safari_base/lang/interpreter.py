@@ -674,7 +674,7 @@ class Interpreter:
             recno = wa.append_blank()
 
             # Set fields
-            for field_name, val in zip(stmt.fields, evaled_values):
+            for field_name, val in zip(stmt.fields, evaled_values, strict=False):
                 wa.set_field(field_name, val)
 
             return CommandResult(

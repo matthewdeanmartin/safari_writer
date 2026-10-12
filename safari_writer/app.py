@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 from pathlib import Path
 from typing import Any
@@ -317,7 +318,9 @@ class SafariWriterApp(App):
             self._last_backup_path = None
 
     def _action_backup_restore(self) -> None:
-        if self._block_read_only_action(_("Backup restore is unavailable in read-only mode")):
+        if self._block_read_only_action(
+            _("Backup restore is unavailable in read-only mode")
+        ):
             return
         self.push_screen(
             BackupScreen(on_resume=self._on_backup_resume),
@@ -340,10 +343,8 @@ class SafariWriterApp(App):
         hint = Path(original_filename).name if original_filename else backup_path.stem
         self.set_message(f"Restored backup: {hint}  — use Save As to keep it")
         # Pop the backup screen, then open editor
-        try:
+        with contextlib.suppress(Exception):
             self.pop_screen()
-        except Exception:
-            pass
         self._open_editor()
 
     def _action_print(self) -> None:
@@ -583,7 +584,9 @@ class SafariWriterApp(App):
         self._open_editor()
 
     def _action_demo(self) -> None:
-        if self._block_read_only_action(_("Demo load is unavailable in read-only mode")):
+        if self._block_read_only_action(
+            _("Demo load is unavailable in read-only mode")
+        ):
             return
         if self.state.modified:
             self.push_screen(
@@ -751,7 +754,9 @@ class SafariWriterApp(App):
             self.set_message(f"Garbage error: {e}")
 
     def _on_new_folder(self, name: str | None) -> None:
-        if self._block_read_only_action(_("Folder creation is unavailable in read-only mode")):
+        if self._block_read_only_action(
+            _("Folder creation is unavailable in read-only mode")
+        ):
             return
         if not name:
             return

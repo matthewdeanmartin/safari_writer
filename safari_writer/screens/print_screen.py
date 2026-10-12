@@ -618,8 +618,7 @@ def _paginate(
     top_margin = max(fmt.top_margin // 2, 1)
     bottom_margin = max(fmt.bottom_margin // 2, 1)
     body_height = page_lines - top_margin - bottom_margin
-    if body_height < 3:
-        body_height = 3
+    body_height = max(body_height, 3)
 
     left = fmt.left_margin
     page_num = fmt.page_number_start

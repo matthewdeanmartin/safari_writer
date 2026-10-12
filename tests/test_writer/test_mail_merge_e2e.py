@@ -14,7 +14,6 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-
 from safari_writer.export_md import export_markdown
 from safari_writer.export_ps import export_postscript
 from safari_writer.mail_merge_db import (
@@ -399,9 +398,9 @@ def _enter_record_via_ui(
         _press(screen, "enter")
 
     # After last field, should be in MODE_ENTER_CONFIRM
-    assert (
-        screen._mode == MODE_ENTER_CONFIRM
-    ), f"Expected MODE_ENTER_CONFIRM after last field, got {screen._mode}"
+    assert screen._mode == MODE_ENTER_CONFIRM, (
+        f"Expected MODE_ENTER_CONFIRM after last field, got {screen._mode}"
+    )
     # Confirm with 'y' to save the record
     _press(screen, "y")
     # Now in "Enter another? Y/N" state (still MODE_ENTER_CONFIRM but
@@ -409,9 +408,9 @@ def _enter_record_via_ui(
     assert screen._mode == MODE_ENTER_CONFIRM
     # Press 'n' to decline entering another and return to main menu
     _press(screen, "n")
-    assert (
-        screen._mode == MODE_MAIN
-    ), f"Expected MODE_MAIN after declining another, got {screen._mode}"
+    assert screen._mode == MODE_MAIN, (
+        f"Expected MODE_MAIN after declining another, got {screen._mode}"
+    )
 
 
 class TestE2EUI:

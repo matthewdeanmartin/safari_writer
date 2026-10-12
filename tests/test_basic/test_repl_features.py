@@ -5,11 +5,11 @@ TRON VARS, tab completion, better error reporting, AUTOSAVE, HELP <topic>,
 and persistent history.
 """
 
+import contextlib
 import io
 import os
 import tempfile
 from pathlib import Path
-
 
 from safari_basic.interpreter import BasicError, SafariBasic
 from safari_basic.repl import BASIC_KEYWORDS, HELP_TOPICS, SafariREPL
@@ -92,14 +92,14 @@ class TestDelete:
         assert "NO LINES IN RANGE" in output(out)
 
     def test_delete_sets_modified(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('10 PRINT "A"')
         repl.modified = False
         repl.process_line("DELETE 10")
         assert repl.modified is True
 
     def test_delete_supports_undo(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('10 PRINT "A"')
         repl.process_line('20 PRINT "B"')
         repl.process_line("DELETE 10,20")
@@ -119,16 +119,16 @@ class TestDelete:
 
 class TestDirtyState:
     def test_new_program_not_modified(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         assert repl.modified is False
 
     def test_adding_line_sets_modified(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('10 PRINT "HI"')
         assert repl.modified is True
 
     def test_save_clears_modified(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('10 PRINT "HI"')
         with tempfile.NamedTemporaryFile(suffix=".bas", delete=False) as f:
             fname = f.name
@@ -139,7 +139,7 @@ class TestDirtyState:
             os.unlink(fname)
 
     def test_load_clears_modified(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         with tempfile.NamedTemporaryFile(mode="w", suffix=".bas", delete=False) as f:
             f.write('10 PRINT "HI"\n')
             fname = f.name
@@ -252,7 +252,7 @@ class TestPwdCd:
         assert os.getcwd() in output(out)
 
     def test_cd_quoted(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         old_dir = os.getcwd()
         with tempfile.TemporaryDirectory() as tmpdir:
             try:
@@ -262,7 +262,7 @@ class TestPwdCd:
                 os.chdir(old_dir)
 
     def test_cd_unquoted(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         old_dir = os.getcwd()
         with tempfile.TemporaryDirectory() as tmpdir:
             try:
@@ -349,14 +349,14 @@ class TestReplace:
         assert "NOT FOUND" in output(out)
 
     def test_replace_sets_modified(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('10 PRINT "A"')
         repl.modified = False
         repl.process_line('REPLACE "PRINT","?"')
         assert repl.modified is True
 
     def test_replace_supports_undo(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('10 PRINT "HELLO"')
         repl.process_line('REPLACE "HELLO","BYE"')
         assert repl.interpreter.lines[10] == 'PRINT "BYE"'
@@ -411,7 +411,9 @@ class TestTronVars:
         # It may appear as just "B = 2" in trace but not as var trace
         lines = result.strip().split("\n")
         # After TROFF, no "  B = 2" (indented var trace)
-        var_trace_b = [line for line in lines if line.strip() == "B = 2" and line.startswith("  ")]
+        var_trace_b = [
+            line for line in lines if line.strip() == "B = 2" and line.startswith("  ")
+        ]
         assert len(var_trace_b) == 0
 
     def test_plain_tron_still_works(self):
@@ -431,17 +433,17 @@ class TestTronVars:
 
 class TestTabCompletion:
     def test_keyword_completion(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         results = repl.complete("PRI")
         assert "PRINT" in results
 
     def test_keyword_completion_case(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         results = repl.complete("pri")
         assert "PRINT" in results
 
     def test_line_number_completion(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('10 PRINT "A"')
         repl.process_line('20 PRINT "B"')
         repl.process_line('100 PRINT "C"')
@@ -451,13 +453,13 @@ class TestTabCompletion:
         assert "20" not in results
 
     def test_empty_prefix(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         results = repl.complete("")
         # Should return all keywords
         assert len(results) >= len(BASIC_KEYWORDS)
 
     def test_no_match(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         results = repl.complete("ZZZZZ")
         # Should still return file matches potentially, but no keywords
         kw_matches = [r for r in results if r in BASIC_KEYWORDS]
@@ -472,10 +474,8 @@ class TestBetterErrors:
         out = io.StringIO()
         interp = SafariBasic(out_stream=out)
         interp.add_program_line("10 GOTO 999")
-        try:
+        with contextlib.suppress(BasicError):
             interp.run_program()
-        except BasicError:
-            pass
         result = out.getvalue()
         assert "AT LINE 10" in result
 
@@ -483,10 +483,8 @@ class TestBetterErrors:
         out = io.StringIO()
         interp = SafariBasic(out_stream=out)
         interp.add_program_line("10 X = 1 / 0")
-        try:
+        with contextlib.suppress(BasicError):
             interp.run_program()
-        except BasicError:
-            pass
         result = out.getvalue()
         assert "Division by zero" in result
 
@@ -494,10 +492,8 @@ class TestBetterErrors:
         out = io.StringIO()
         interp = SafariBasic(out_stream=out)
         interp.add_program_line('10 A = "HELLO" + 5')
-        try:
+        with contextlib.suppress(BasicError):
             interp.run_program()
-        except BasicError:
-            pass
         result = out.getvalue()
         assert "Type mismatch" in result
 
@@ -505,10 +501,8 @@ class TestBetterErrors:
         out = io.StringIO()
         interp = SafariBasic(out_stream=out)
         interp.add_program_line("10 GOTO 500")
-        try:
+        with contextlib.suppress(BasicError):
             interp.run_program()
-        except BasicError:
-            pass
         result = out.getvalue()
         assert "500" in result
 
@@ -546,7 +540,7 @@ class TestAutosave:
         assert "OFF" in output(out)
 
     def test_autosave_tick_saves(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         with tempfile.NamedTemporaryFile(suffix=".bas", delete=False, mode="w") as f:
             fname = f.name
         try:
@@ -624,7 +618,7 @@ class TestHelpTopics:
 
 class TestHistory:
     def test_history_recorded(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line('PRINT "HI"')
         repl.process_line("LIST")
         assert len(repl.history) >= 2
@@ -632,27 +626,27 @@ class TestHistory:
         assert "LIST" in repl.history
 
     def test_no_duplicate_history(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line("LIST")
         repl.process_line("LIST")
         count = repl.history.count("LIST")
         assert count == 1
 
     def test_empty_line_not_recorded(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.history = []  # Clear any loaded history
         repl.process_line("")
         assert len(repl.history) == 0
 
     def test_history_save_load(self, tmp_path: Path) -> None:
         history_path = str(tmp_path / "history")
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.HISTORY_FILE = history_path
         repl.process_line('PRINT "HI"')
         repl.process_line("LIST")
         repl._save_history()
 
-        repl2, out2 = make_repl()
+        repl2, _out2 = make_repl()
         repl2.HISTORY_FILE = history_path
         repl2._load_history()
         assert 'PRINT "HI"' in repl2.history
@@ -720,12 +714,12 @@ class TestExamples:
         assert "HELLO" in output(out)
 
     def test_examples_load_case_insensitive(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line("EXAMPLES hello")
         assert 10 in repl.interpreter.lines
 
     def test_examples_load_with_extension(self):
-        repl, out = make_repl()
+        repl, _out = make_repl()
         repl.process_line("EXAMPLES hello.bas")
         assert 10 in repl.interpreter.lines
 

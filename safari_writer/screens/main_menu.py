@@ -1,5 +1,6 @@
 """Main Menu screen — the hub for all Safari Writer operations."""
 
+import contextlib
 from datetime import datetime
 
 from textual.app import ComposeResult
@@ -239,22 +240,21 @@ class MainMenuScreen(Screen):
             """Translate msgid and derive the label portion (after the hotkey)."""
             return _menu_label_suffix(key, _(msgid))
 
-        with Container(id="menu-body"):
-            with Container(id="menu-container"):
-                yield Static(_("*** SAFARI WRITER ***"), id="title")
-                with Horizontal(id="menu-columns"):
-                    with Container(id="menu-col-1"):
-                        yield Static(_("*** Words ***"), classes="menu-header")
-                        for key, msgid, action in _COL1_DEFS:
-                            yield MenuItem(key, _label(key, msgid), action)
-                    with Container(id="menu-col-2"):
-                        yield Static(_("*** DOS ***"), classes="menu-header")
-                        for key, msgid, action in _COL2_DEFS:
-                            yield MenuItem(key, _label(key, msgid), action)
-                    with Container(id="menu-col-3"):
-                        yield Static(_("*** Tools ***"), classes="menu-header")
-                        for key, msgid, action in _COL3_DEFS:
-                            yield MenuItem(key, _label(key, msgid), action)
+        with Container(id="menu-body"), Container(id="menu-container"):
+            yield Static(_("*** SAFARI WRITER ***"), id="title")
+            with Horizontal(id="menu-columns"):
+                with Container(id="menu-col-1"):
+                    yield Static(_("*** Words ***"), classes="menu-header")
+                    for key, msgid, action in _COL1_DEFS:
+                        yield MenuItem(key, _label(key, msgid), action)
+                with Container(id="menu-col-2"):
+                    yield Static(_("*** DOS ***"), classes="menu-header")
+                    for key, msgid, action in _COL2_DEFS:
+                        yield MenuItem(key, _label(key, msgid), action)
+                with Container(id="menu-col-3"):
+                    yield Static(_("*** Tools ***"), classes="menu-header")
+                    for key, msgid, action in _COL3_DEFS:
+                        yield MenuItem(key, _label(key, msgid), action)
 
         with Container(id="menu-footer"):
             yield Static(self._context_text(), id="context-bar")
@@ -357,10 +357,8 @@ class MainMenuScreen(Screen):
         return format_datetime(datetime.now(), style="full")
 
     def _update_clock(self) -> None:
-        try:
+        with contextlib.suppress(Exception):
             self.query_one("#status-clock", Static).update(self._clock_text())
-        except Exception:
-            pass
 
     def _status_text(self) -> str:
         state = self.app.state  # type: ignore[attr-defined]
@@ -401,17 +399,14 @@ class MainMenuScreen(Screen):
 
         # Git folder indicator
         doc_path = state.filename
-        if doc_path:
-            folder = Path(doc_path).resolve().parent
-        else:
-            folder = Path.cwd()
+        folder = Path(doc_path).resolve().parent if doc_path else Path.cwd()
         if (folder / ".git").exists() or any(
             (folder / (".git")).exists()
-            for folder in [folder] + list(folder.parents)[:3]
+            for folder in [folder, *list(folder.parents)[:3]]
         ):
             # Find the git root name
             git_root = folder
-            for candidate in [folder] + list(folder.parents)[:4]:
+            for candidate in [folder, *list(folder.parents)[:4]]:
                 if (candidate / ".git").exists():
                     git_root = candidate
                     break

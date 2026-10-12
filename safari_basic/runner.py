@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -52,17 +53,13 @@ def run_macro(
     doc_lines = context.document_lines[:_MAX_DOC_LINES]
     for i in range(1, _MAX_DOC_LINES + 1):
         line = doc_lines[i - 1] if i <= len(doc_lines) else ""
-        try:
+        with contextlib.suppress(Exception):
             interp.inject_variable(f"DOC{i}$", line)
-        except Exception:
-            pass
 
     # Pre-inject selected lines as SEL1$ … SELN$
     for i, line in enumerate(context.selected_lines(), start=1):
-        try:
+        with contextlib.suppress(Exception):
             interp.inject_variable(f"SEL{i}$", line)
-        except Exception:
-            pass
 
     try:
         interp.run_program()
@@ -73,8 +70,7 @@ def run_macro(
 
     output = buf.getvalue()
     # Strip trailing newline so caller controls final line spacing
-    if output.endswith("\n"):
-        output = output[:-1]
+    output = output.removesuffix("\n")
     context.output_lines = output.splitlines()
     return output, ""
 

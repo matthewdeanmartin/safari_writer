@@ -6,7 +6,6 @@ the Widget.__init__ so Textual's app context isn't required.
 
 from unittest.mock import MagicMock, patch
 
-
 from safari_writer.file_types import resolve_file_profile
 from safari_writer.program_runner import ProgramExecutionResult
 from safari_writer.screens.editor import (
@@ -419,10 +418,12 @@ class TestProgramExecution:
         fake_app.push_screen.side_effect = pushed.append
         monkeypatch.setattr(
             "safari_writer.screens.editor.run_program_source",
-            lambda source, *, profile, filename, working_path, stdin_text: ProgramExecutionResult(
-                title="SAFARI BASIC OUTPUT",
-                output="HI",
-                success=True,
+            lambda source, *, profile, filename, working_path, stdin_text: (
+                ProgramExecutionResult(
+                    title="SAFARI BASIC OUTPUT",
+                    output="HI",
+                    success=True,
+                )
             ),
         )
 

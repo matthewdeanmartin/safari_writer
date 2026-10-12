@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-
 from safari_writer.screens.global_format import (
     KEY_TO_PARAM,
     PARAMS,
@@ -58,9 +57,9 @@ class TestParamTable:
         fmt = GlobalFormat()
         for p in PARAMS:
             val = getattr(fmt, p.attr)
-            assert (
-                p.min_val <= val <= p.max_val
-            ), f"{p.key} default {val} out of [{p.min_val}, {p.max_val}]"
+            assert p.min_val <= val <= p.max_val, (
+                f"{p.key} default {val} out of [{p.min_val}, {p.max_val}]"
+            )
 
 
 # ---------------------------------------------------------------------------

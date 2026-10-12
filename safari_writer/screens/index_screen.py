@@ -35,9 +35,11 @@ def _find_external_drives() -> list[Path]:
                 letter = chr(65 + i)
                 drive_path = f"{letter}:\\"
                 drive_type = int(kernel32.GetDriveTypeW(drive_path))
-                if drive_type == DRIVE_REMOVABLE:
-                    drives.append(Path(drive_path))
-                elif drive_type == DRIVE_FIXED and letter not in ("C",):
+                if (
+                    drive_type == DRIVE_REMOVABLE
+                    or drive_type == DRIVE_FIXED
+                    and letter not in ("C",)
+                ):
                     drives.append(Path(drive_path))
     elif system == "Darwin":
         volumes = Path("/Volumes")
@@ -363,7 +365,7 @@ class DrivePickerScreen(Screen):
                 free = _format_size(shutil.disk_usage(drive).free)
             except OSError:
                 free = "???"
-            line = f"  {i + 1:<4} {str(drive):<40} {free:>10}"
+            line = f"  {i + 1:<4} {drive!s:<40} {free:>10}"
             if i == self._selected:
                 line = f"[reverse]{line}[/reverse]"
             lines.append(line)

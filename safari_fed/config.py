@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
-from typing import Mapping
 
 from dotenv import load_dotenv
 
@@ -109,4 +109,4 @@ def load_default_identity(
         return identities[preferred]
     if "MAIN" in identities:
         return identities["MAIN"]
-    return identities[sorted(identities)[0]]
+    return identities[min(identities)]

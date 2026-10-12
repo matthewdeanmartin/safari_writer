@@ -95,7 +95,6 @@ KEYWORDS = frozenset(
         "DEFAULT",
         "DELETED",
         "RECORD",
-        "AVERAGE",
     }
 )
 

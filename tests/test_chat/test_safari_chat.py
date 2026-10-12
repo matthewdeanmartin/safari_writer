@@ -172,7 +172,7 @@ class TestSynonyms:
 class TestDistressScoring:
     def test_low_distress(self) -> None:
         state = SafariChatState()
-        level, score = score_distress("How do I save a file?", state)
+        level, _score = score_distress("How do I save a file?", state)
         assert level == DistressLevel.LOW
 
     def test_elevated_distress(self) -> None:
@@ -187,7 +187,7 @@ class TestDistressScoring:
 
     def test_crisis_distress(self) -> None:
         state = SafariChatState()
-        level, score = score_distress("I want to kill myself", state)
+        level, _score = score_distress("I want to kill myself", state)
         assert level in (DistressLevel.HIGH, DistressLevel.CRITICAL)
 
 
@@ -235,20 +235,20 @@ class TestPlanResponse:
     def test_reflective_response(self) -> None:
         state = SafariChatState()
         # No document loaded -> no retrieval -> should fall to ELIZA or fallback.
-        mode, resp, ids = plan_response("I feel lost", state)
+        mode, resp, _ids = plan_response("I feel lost", state)
         assert mode in (ResponseMode.REFLECTIVE, ResponseMode.CLARIFICATION)
         assert len(resp) > 0
 
     def test_safety_response(self) -> None:
         state = SafariChatState()
-        mode, resp, ids = plan_response("I want to kill myself", state)
+        mode, resp, _ids = plan_response("I want to kill myself", state)
         assert mode == ResponseMode.SAFETY
         assert "crisis" in resp.lower() or "emergency" in resp.lower()
         assert state.distress_level == DistressLevel.CRITICAL
 
     def test_refusal_response(self) -> None:
         state = SafariChatState()
-        mode, resp, ids = plan_response("best way to kill myself", state)
+        mode, _resp, _ids = plan_response("best way to kill myself", state)
         assert mode == ResponseMode.SAFETY
 
     def test_conversation_grows(self) -> None:

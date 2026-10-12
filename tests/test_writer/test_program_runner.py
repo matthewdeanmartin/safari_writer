@@ -1,4 +1,3 @@
-
 from safari_writer.file_types import resolve_file_profile
 from safari_writer.program_runner import (
     is_runnable_path,

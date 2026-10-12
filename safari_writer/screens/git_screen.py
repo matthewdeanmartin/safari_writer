@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator, Optional, Protocol, Sequence, cast
+from typing import Any, Protocol, cast
 
 from textual import events
 from textual.app import ComposeResult
@@ -215,7 +216,7 @@ MENU_TEXT = """\
 # ---------------------------------------------------------------------------
 
 
-def _find_repo_root(start: Path) -> Optional[Path]:
+def _find_repo_root(start: Path) -> Path | None:
     """Walk up from *start* to find a .git directory; return its root or None."""
     current = start.resolve()
     for parent in [current, *current.parents]:
@@ -470,7 +471,7 @@ class GitPublishScreen(Screen):
     def __init__(self, document_path: str = "") -> None:
         super().__init__()
         self._document_path = document_path
-        self._repo_path: Optional[Path] = self._auto_detect_repo(document_path)
+        self._repo_path: Path | None = self._auto_detect_repo(document_path)
         self._status_text = ""
         self._history_text = ""
 
@@ -478,7 +479,7 @@ class GitPublishScreen(Screen):
     # Repo detection
     # ------------------------------------------------------------------
 
-    def _auto_detect_repo(self, doc_path: str) -> Optional[Path]:
+    def _auto_detect_repo(self, doc_path: str) -> Path | None:
         """Find repo root from document path, then cwd."""
         if doc_path:
             found = _find_repo_root(Path(doc_path).parent)
@@ -531,10 +532,7 @@ class GitPublishScreen(Screen):
         self.query_one("#git-status-body", Static).update(text)
 
     def _refresh_history(self) -> None:
-        if not self._repo_path:
-            text = "(no repository)"
-        else:
-            text = _git_log(self._repo_path)
+        text = "(no repository)" if not self._repo_path else _git_log(self._repo_path)
         self.query_one("#git-history-body", Static).update(text)
 
     def _update_footer(self, msg: str) -> None:

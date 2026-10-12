@@ -50,7 +50,10 @@ def markdown_sections(draw: st.DrawFn) -> tuple[str, list[str]]:
         )
     )
     bodies = draw(st.lists(WORD_TEXT, min_size=len(headings), max_size=len(headings)))
-    sections = [f"# {heading}\n\n**{body}**" for heading, body in zip(headings, bodies)]
+    sections = [
+        f"# {heading}\n\n**{body}**"
+        for heading, body in zip(headings, bodies, strict=False)
+    ]
     return "\n\n---\n\n".join(sections), headings
 
 

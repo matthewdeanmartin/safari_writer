@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 import re
 import subprocess
@@ -13,8 +14,8 @@ from pathlib import Path
 from safari_writer.file_types import FileProfile, HighlightProfile, resolve_file_profile
 
 __all__ = [
-    "decode_stdin_text",
     "ProgramExecutionResult",
+    "decode_stdin_text",
     "is_runnable_path",
     "is_runnable_profile",
     "path_may_need_stdin",
@@ -316,10 +317,8 @@ def _run_python(
         )
     finally:
         if temp_name is not None:
-            try:
+            with contextlib.suppress(OSError):
                 Path(temp_name).unlink()
-            except OSError:
-                pass
 
 
 def _resolve_base_work_dir(

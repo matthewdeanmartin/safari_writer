@@ -231,4 +231,4 @@ def _normalize_section(section: list[str], index: int) -> list[str]:
     first_non_empty = next((line for line in section if line.strip()), "")
     if first_non_empty.startswith("#"):
         return section
-    return [f"# Slide {index}", ""] + section
+    return [f"# Slide {index}", "", *section]

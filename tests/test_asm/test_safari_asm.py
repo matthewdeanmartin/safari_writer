@@ -171,9 +171,9 @@ def test_example_folder_contains_copious_scripts():
 def test_all_example_scripts_parse():
     for path in sorted(EXAMPLE_DIR.glob("*.asm")):
         program = parse_source(path.read_text(encoding="utf-8"), source_name=str(path))
-        assert (
-            program.instructions
-        ), f"{path.name} should contain executable instructions"
+        assert program.instructions, (
+            f"{path.name} should contain executable instructions"
+        )
 
 
 @pytest.mark.parametrize(

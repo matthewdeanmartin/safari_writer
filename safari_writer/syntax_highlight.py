@@ -17,9 +17,9 @@ from rich.text import Text
 from safari_writer.file_types import PYGMENTS_LEXER_MAP, FileProfile, HighlightProfile
 
 __all__ = [
-    "highlight_line",
-    "highlight_buffer",
     "create_highlighter",
+    "highlight_buffer",
+    "highlight_line",
 ]
 
 
@@ -111,7 +111,6 @@ _FUNCTION_WORDS = frozenset(
         "nor",
         "so",
         "yet",
-        "for",
         "although",
         "because",
         "since",
@@ -160,7 +159,6 @@ _FUNCTION_WORDS = frozenset(
         "which",
         "what",
         "this",
-        "that",
         "these",
         "those",
         # Auxiliary / modal verbs

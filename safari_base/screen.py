@@ -986,7 +986,7 @@ class SafariBaseScreen(Screen[None]):
             return lines
         for rowid, values in rows:
             lines.append(f" Record {rowid}")
-            for name, value in zip(columns, values):
+            for name, value in zip(columns, values, strict=False):
                 lines.append(f"   {name:<10} {value}")
             lines.append("")
         return lines[:-1] if lines and lines[-1] == "" else lines
@@ -1040,7 +1040,7 @@ class SafariBaseScreen(Screen[None]):
         header_cells = ["REC#".ljust(5)]
         divider_cells = ["".ljust(5, "-")]
         for column_index, (name, width) in enumerate(
-            zip(visible_columns, adjusted_widths), start=start_col
+            zip(visible_columns, adjusted_widths, strict=False), start=start_col
         ):
             if column_index == self._cursor_col:
                 header_cells.append(self._focus_cell(name, width))
@@ -1061,7 +1061,7 @@ class SafariBaseScreen(Screen[None]):
             row_cells = [f"{pointer}{str(rowid).rjust(4)}"]
             visible_values = values[start_col : start_col + len(adjusted_widths)]
             for column_index, (value, width) in enumerate(
-                zip(visible_values, adjusted_widths), start=start_col
+                zip(visible_values, adjusted_widths, strict=False), start=start_col
             ):
                 if (
                     absolute_index == self._cursor_row

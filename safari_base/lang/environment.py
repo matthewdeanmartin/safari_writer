@@ -116,10 +116,7 @@ class Environment:
 
     def resolve_dbf_path(self, name: str) -> str:
         """Resolve a table name to a full .dbf path."""
-        if os.path.isabs(name):
-            p = Path(name)
-        else:
-            p = self.default_dir / name
+        p = Path(name) if os.path.isabs(name) else self.default_dir / name
 
         if not p.suffix:
             p = p.with_suffix(".dbf")
@@ -130,10 +127,7 @@ class Environment:
 
     def resolve_path(self, name: str) -> Path:
         """Resolve a general file path."""
-        if os.path.isabs(name):
-            p = Path(name)
-        else:
-            p = self.work_dir / name
+        p = Path(name) if os.path.isabs(name) else self.work_dir / name
         resolved = p.resolve()
         self._check_sandbox(resolved)
         return resolved

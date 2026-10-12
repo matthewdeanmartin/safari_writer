@@ -7,16 +7,18 @@ import json
 from pathlib import Path
 
 import safari_writer
-import safari_writer.ansi_preview as ansi_preview
 import safari_writer.app as app_module
-import safari_writer.cli_types as cli_types
-import safari_writer.document_io as document_io
 import safari_writer.export_md as export_md_module
 import safari_writer.export_ps as export_ps_module
-import safari_writer.format_codec as format_codec
-import safari_writer.mail_merge_db as mail_merge_db
-import safari_writer.proofing as proofing
 import safari_writer.state as state_module
+from safari_writer import (
+    ansi_preview,
+    cli_types,
+    document_io,
+    format_codec,
+    mail_merge_db,
+    proofing,
+)
 from safari_writer.cli_types import StartupRequest
 from safari_writer.main import build_startup_request, main, parse_args
 from safari_writer.screens.editor import CTRL_BOLD, CTRL_MERGE
