@@ -8,6 +8,7 @@ and persistent history.
 import io
 import os
 import tempfile
+from pathlib import Path
 
 
 from safari_basic.interpreter import BasicError, SafariBasic
@@ -643,24 +644,19 @@ class TestHistory:
         repl.process_line("")
         assert len(repl.history) == 0
 
-    def test_history_save_load(self):
+    def test_history_save_load(self, tmp_path: Path) -> None:
+        history_path = str(tmp_path / "history")
         repl, out = make_repl()
-        _old_file = repl.HISTORY_FILE
-        repl.HISTORY_FILE = ".safari_test_history"
-        try:
-            repl.process_line('PRINT "HI"')
-            repl.process_line("LIST")
-            repl._save_history()
+        repl.HISTORY_FILE = history_path
+        repl.process_line('PRINT "HI"')
+        repl.process_line("LIST")
+        repl._save_history()
 
-            repl2, out2 = make_repl()
-            repl2.HISTORY_FILE = ".safari_test_history"
-            repl2._load_history()
-            assert 'PRINT "HI"' in repl2.history
-            assert "LIST" in repl2.history
-        finally:
-            path = os.path.join(os.path.expanduser("~"), ".safari_test_history")
-            if os.path.exists(path):
-                os.unlink(path)
+        repl2, out2 = make_repl()
+        repl2.HISTORY_FILE = history_path
+        repl2._load_history()
+        assert 'PRINT "HI"' in repl2.history
+        assert "LIST" in repl2.history
 
 
 # ─── EXAMPLE FILES ───────────────────────────────────────────────────────

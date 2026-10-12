@@ -115,3 +115,17 @@ code is tried automatically. If neither is found, the app falls back to English.
 - [Documentation](https://safari-writer.readthedocs.io/en/latest/)
 - [Bug Tracker](https://github.com/matthewdeanmartin/safari_writer/issues)
 - [Change Log](https://github.com/matthewdeanmartin/safari_writer/blob/main/CHANGELOG.md)
+
+
+## Python 3.15 verification (2026-10-04)
+
+See the subsequent HTTPX2 verification below; it supersedes the earlier HTTPX bound.
+
+Locks refreshed with `uv lock --upgrade`. Every dependency install used published wheels only in fresh environments; no source builds. Full developer groups still have wheel blockers, so unit-suite success does not certify the full developer setup. Evidence and limits: `C:/github/python315_batch6_2026-10-04.md`. Human operators review and file upstream bugs.
+
+
+## HTTPX2 verification (2026-10-04)
+
+HTTPX2 2.13.1 replaces direct HTTPX use in Reader and feed/article fetching. All 1308 tests pass on Python 3.15.0rc3 with stable and prerelease-allowed dependencies and on 3.14.7; three real localhost transport tests also pass against the installed wheel. CHANGELOG Unreleased / Changed records the migration. This supersedes the earlier HTTPX <1 workaround. HTTPS now uses the operating system trust store. No live external integration was certified.
+
+Dependency installs require published wheels; no native builds or GitHub jobs. Experimental mode allows prereleases but the successful HTTPX2 test environments selected stable packages. Locks were upgraded with `uv lock --upgrade`. Changes are local; human operators decide publishing and upstream reports.

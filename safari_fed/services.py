@@ -15,7 +15,7 @@ from typing import Callable
 from urllib.parse import urljoin, urlparse
 from xml.etree import ElementTree as ET
 
-import httpx
+import httpx2
 
 from safari_fed.feed_state import FeedArticle, FeedItem, FeedRecord, OpmlDocument
 
@@ -303,7 +303,7 @@ def stable_item_key(link: str, title: str, published: str) -> str:
 def fetch_feed(
     feed: FeedRecord,
     *,
-    fetcher: Callable[[str], httpx.Response] | None = None,
+    fetcher: Callable[[str], httpx2.Response] | None = None,
 ) -> FeedRecord:
     """Fetch and parse a feed on demand."""
 
@@ -322,7 +322,7 @@ def fetch_feed(
 def fetch_article(
     item: FeedItem,
     *,
-    fetcher: Callable[[str], httpx.Response] | None = None,
+    fetcher: Callable[[str], httpx2.Response] | None = None,
 ) -> FeedArticle:
     """Fetch an article body for one feed item and cache it."""
 
@@ -447,8 +447,8 @@ def _hash_url(url: str) -> str:
     return hashlib.sha1(url.encode("utf-8")).hexdigest()
 
 
-def _default_get(url: str) -> httpx.Response:
-    return httpx.get(
+def _default_get(url: str) -> httpx2.Response:
+    return httpx2.get(
         url,
         timeout=20,
         follow_redirects=True,

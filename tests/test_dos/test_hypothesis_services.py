@@ -24,6 +24,14 @@ PATH_TEXT = st.text(
 )
 
 
+# These strategies create real paths on every supported platform. Windows device
+# names are reserved even with a suffix, so omit them from file and directory inputs.
+WINDOWS_DEVICE_NAMES = {"CON", "PRN", "AUX", "NUL"} | {
+    f"{prefix}{number}" for prefix in ("COM", "LPT") for number in range(1, 10)
+}
+FILESYSTEM_TEXT = PATH_TEXT.filter(lambda name: name.upper() not in WINDOWS_DEVICE_NAMES)
+
+
 def _entry(name: str, *, is_dir: bool, modified_at: datetime) -> DirectoryEntry:
     return DirectoryEntry(
         path=Path(name),
@@ -63,7 +71,7 @@ def test_directory_sort_key_keeps_directories_before_files(
 
 
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-@given(base_name=PATH_TEXT, index=st.integers(min_value=1, max_value=9))
+@given(base_name=FILESYSTEM_TEXT, index=st.integers(min_value=1, max_value=9))
 def test_format_copy_name_preserves_file_suffix(
     tmp_path: Path, base_name: str, index: int
 ) -> None:
@@ -83,7 +91,7 @@ def test_format_copy_name_preserves_file_suffix(
 
 
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-@given(folder_name=PATH_TEXT, index=st.integers(min_value=1, max_value=9))
+@given(folder_name=FILESYSTEM_TEXT, index=st.integers(min_value=1, max_value=9))
 def test_format_copy_name_for_directories_omits_file_extension(
     tmp_path: Path, folder_name: str, index: int
 ) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import httpx
+import httpx2
 
 from safari_fed.feed_state import FeedItem, FeedRecord
 from safari_fed.services import (
@@ -64,15 +64,15 @@ def test_parse_feed_document_reads_rss_items():
 
 
 def test_fetch_feed_populates_items():
-    def fake_get(url: str) -> httpx.Response:
-        return httpx.Response(
+    def fake_get(url: str) -> httpx2.Response:
+        return httpx2.Response(
             200,
             text=("""<?xml version="1.0"?>
                 <rss version="2.0"><channel><title>Example</title>
                 <item><guid>a</guid><title>One</title><link>https://example.com/1</link>
                 <description><![CDATA[<p>Alpha</p>]]></description></item>
                 </channel></rss>"""),
-            request=httpx.Request("GET", url),
+            request=httpx2.Request("GET", url),
         )
 
     feed = FeedRecord(title="Stub", xml_url="https://example.com/feed.xml")
@@ -90,11 +90,11 @@ def test_fetch_article_caches_result(monkeypatch, tmp_path):
         lambda: tmp_path / "cache",
     )
 
-    def fake_get(url: str) -> httpx.Response:
-        return httpx.Response(
+    def fake_get(url: str) -> httpx2.Response:
+        return httpx2.Response(
             200,
             text="<html><head><title>Fetched</title></head><body><h1>Fetched</h1><p>Hello</p></body></html>",
-            request=httpx.Request("GET", url),
+            request=httpx2.Request("GET", url),
         )
 
     item = FeedItem(item_id="x", title="Hello", link="https://example.com/post")

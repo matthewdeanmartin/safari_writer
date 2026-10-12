@@ -27,7 +27,7 @@ def slide_sections(draw: st.DrawFn) -> list[tuple[str, list[str]]]:
     )
     bodies = draw(
         st.lists(
-            st.lists(TEXT_LINE, min_size=1, max_size=4),
+            st.lists(TEXT_LINE.filter(lambda line: line.strip() not in {"---", "----"}), min_size=1, max_size=4),
             min_size=len(titles),
             max_size=len(titles),
         )

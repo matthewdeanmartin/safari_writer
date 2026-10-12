@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+
+- Replace HTTPX with HTTPX2 for Reader downloads and feed/article fetching; HTTPX2 uses the operating system trust store for HTTPS verification.
 - Improvements to web version and sample app
 
 ## [0.1.5] - 2026-03-14

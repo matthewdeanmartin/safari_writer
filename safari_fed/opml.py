@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Mapping
 from urllib.parse import urljoin, urlparse
 
-import httpx
+import httpx2
 
 from safari_fed.client import SafariFedClient
 
@@ -435,9 +435,9 @@ def _looks_like_feed(document: WebDocument) -> bool:
 
 def _fetch_document(url: str) -> WebDocument | None:
     try:
-        response = httpx.get(url, timeout=10, follow_redirects=True)
+        response = httpx2.get(url, timeout=10, follow_redirects=True)
         response.raise_for_status()
-    except httpx.HTTPError:
+    except httpx2.HTTPError:
         return None
     return WebDocument(
         url=str(response.url),

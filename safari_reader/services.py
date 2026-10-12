@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 
-import httpx
+import httpx2
 
 from safari_reader.state import Bookmark, BookMeta, SafariReaderState
 
@@ -92,11 +92,11 @@ def search_gutenberg(
         params["search"] = query
 
     try:
-        resp = httpx.get(
+        resp = httpx2.get(
             GUTENBERG_API, params=params, timeout=15, follow_redirects=True
         )
         resp.raise_for_status()
-    except httpx.HTTPError:
+    except httpx2.HTTPError:
         return []
 
     data = resp.json()
@@ -121,11 +121,11 @@ def top_gutenberg(*, page: int = 1) -> list[dict[str, str]]:
     """Fetch popular Gutenberg books sorted by download count."""
     params: dict[str, str | int] = {"page": page, "sort": "popular"}
     try:
-        resp = httpx.get(
+        resp = httpx2.get(
             GUTENBERG_API, params=params, timeout=15, follow_redirects=True
         )
         resp.raise_for_status()
-    except httpx.HTTPError:
+    except httpx2.HTTPError:
         return []
 
     data = resp.json()
@@ -149,11 +149,11 @@ def top_gutenberg(*, page: int = 1) -> list[dict[str, str]]:
 def gutenberg_book_detail(book_id: str) -> dict[str, str]:
     """Fetch detailed metadata for a single Gutenberg book."""
     try:
-        resp = httpx.get(
+        resp = httpx2.get(
             f"{GUTENBERG_API}/{book_id}", timeout=15, follow_redirects=True
         )
         resp.raise_for_status()
-    except httpx.HTTPError:
+    except httpx2.HTTPError:
         return {}
 
     book = resp.json()
@@ -188,9 +188,9 @@ def download_gutenberg_text(book_id: str, dest_dir: Path) -> Path | None:
         return None
 
     try:
-        resp = httpx.get(detail["txt_url"], timeout=60, follow_redirects=True)
+        resp = httpx2.get(detail["txt_url"], timeout=60, follow_redirects=True)
         resp.raise_for_status()
-    except httpx.HTTPError:
+    except httpx2.HTTPError:
         return None
 
     slug = re.sub(r"[^\w]+", "_", detail.get("title", book_id).lower()).strip("_")

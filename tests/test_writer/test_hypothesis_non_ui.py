@@ -7,7 +7,7 @@ import string
 import tempfile
 from pathlib import Path
 
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from safari_writer.format_codec import (
@@ -259,6 +259,8 @@ def test_check_word_passes_stripped_word_to_checker(case: tuple[str, str]):
     assert checker.calls == [core]
 
 
+# This property performs filesystem I/O, whose timing varies on Windows.
+@settings(deadline=None)
 @given(
     st.lists(
         st.text(alphabet=string.ascii_letters, min_size=1, max_size=20),
