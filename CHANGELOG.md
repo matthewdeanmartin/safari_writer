@@ -1,24 +1,23 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Changed
-
 - Replace HTTPX with HTTPX2 for Reader downloads and feed/article fetching; HTTPX2 uses the operating system trust store for HTTPS verification.
 - Improvements to web version and sample app
+- Requires Python 3.11 or newer; Python 3.10 is no longer supported.
+
+### Added
+- Python 3.15 support.
 
 ## [0.1.5] - 2026-03-14
-
 ### Fixed
 - Packaging now requires `Pillow>=12.0.0` on Python 3.14+ and drops the unused `term-image` dependency that capped Pillow below 11
 
 ## [0.1.4] - 2026-03-14
-
 ### Added
 - Image viewer
 - Better support for Markdown
@@ -40,7 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Post to Mastodon functionality
 
 ## [0.1.3] - 2026-03-11
-
 ### Added
 - XBase clone language parser for BASIC support
 - Improved BASIC REPL
@@ -60,7 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fallback handling for missing or unsupported file types
 
 ## [0.1.2] - 2026-03-10
-
 ### Added
 - Internationalization framework
 - More consistent F1 styling
@@ -71,7 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reader improvements
 
 ## [0.1.1] - 2026-03-08
-
 ### Added
 - Safari Fed Mastodon client
 - File type awareness to distinguish between .swf files with formatting codes and plain text, with syntax coloring for .en and .py files
@@ -82,7 +78,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved documentation
 
 ## [0.1.0] - 2026-03-08
-
 ### Added
 - Application created
 
