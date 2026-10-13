@@ -59,6 +59,11 @@ def test_catalog_list_accepts_arrow_navigation(tmp_path):
             await pilot.pause()
             screen = app.screen
             list_view = screen.query_one("#catalog-list", ListView)
+            # Slow runners (Windows CI) can query before the list is populated.
+            for _ in range(40):
+                if list_view.index is not None:
+                    break
+                await pilot.pause(0.05)
             assert list_view.has_focus
             start_index = list_view.index
             await pilot.press("down")
